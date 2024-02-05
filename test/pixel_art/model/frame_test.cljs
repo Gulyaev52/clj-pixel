@@ -11,7 +11,8 @@
   (let [res-frame (->> (frame/create {:width 2 :height 3})
                        (frame/set-pixels [{:pos {:x 0 :y 0} :color "black"}
                                           {:pos {:x 1 :y 1} :color "red"}
-                                          {:pos {:x 0 :y 2} :color "yellow"}]))]
+                                          {:pos {:x 0 :y 2} :color "yellow"}
+                                          {:pos {:x 5 :y 5} :color "yellow"}]))]
     (t/is (= res-frame {:pixels
                         ["black" frame/transparent-color frame/transparent-color "red" "yellow" frame/transparent-color],
                         :size {:width 2, :height 3}}))))

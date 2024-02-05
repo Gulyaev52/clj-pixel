@@ -3,23 +3,27 @@
 
 (def transparent-color nil)
 
+(defn- pos->idx [{:keys [x y]} {:keys [width]}]
+  (+ x (* width y)))
+
+(defn- valid-pos? [{:keys [x y]} {:keys [width height]}]
+  (and (and (>= x 0) (< x width))
+       (and (>= y 0) (< y height))))
+
 (defn create [size]
   {:pixels (vec (repeat (* (:width size) (:height size)) transparent-color))
    :size size})
 
 (defn resize [size frame])
 
-(defn- pos->idx [pos size]
-  (let [y (->> (* (:width size) (:y pos))
-               (#(if (< % 0) 0 %)))]
-    (+ (:x pos) y)))
-
-(defn set-pixels [pixels-with-coords frame]
+(defn set-pixels [pixels-with-pos frame]
   (let [{:keys [pixels size]} frame]
     {:pixels (reduce (fn [res-pixels {:keys [pos color]}]
-                       (assoc res-pixels (pos->idx pos size) color))
+                       (if (valid-pos? pos size)
+                         (assoc res-pixels (pos->idx pos size) color)
+                         res-pixels))
                      pixels
-                     pixels-with-coords)
+                     pixels-with-pos)
      :size size}))
 
 (defn get-pixel [pos frame]
@@ -34,7 +38,7 @@
     (->> (:pixels frame)
          (partition width)
          (map (fn [row] (->> row
-                             (map (fn [x] (if x (nth x 0) "x")))
+                             (map (fn [x] (if x (nth x 0) "t")))
                              (string/join ""))))
          (string/join "\n")
          println)))

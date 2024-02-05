@@ -9,7 +9,7 @@
 ; You can make Calva auto-select this.
 ;   - See https://calva.io/connect-sequences/
 ; 
-; Starting Jack-in Terminal: pushd /home/kirill/projects/pixel-art ; npx shadow-cljs -d cider/cider-nrepl:0.28.5 watch :karma-test ; popd
+; Starting Jack-in Terminal: pushd /home/kirill/projects/pixel-art ; npx shadow-cljs -d cider/cider-nrepl:0.28.5 watch :app ; popd
 ; Using host:port localhost:8777 ...
 ; Hooking up nREPL sessions ...
 ; Connected session: clj
@@ -29,40 +29,6 @@ clj꞉shadow.user꞉> 
 ;   The Calva Connection Log might have more connection progress information.
 ; Please start your ClojureScript app (load it in the browser, or whatever is appropriate) so that Calva can connect to its REPL...
 ; Waiting for Shadow CLJS runtimes, start your CLJS app...
-; Waiting for Shadow CLJS runtimes, start your CLJS app...
-; Waiting for Shadow CLJS runtimes, start your CLJS app...
-; Execution error (FileNotFoundException) at pixel-art.model.frame-test/eval24118$loading (REPL:1).
-; Could not locate pixel_art/model/frame__init.class, pixel_art/model/frame.clj or pixel_art/model/frame.cljc on classpath. Please check that namespaces with dashes use underscores in the Clojure file name.
-clj꞉pixel-art.model.frame-test꞉> 
-; Waiting for Shadow CLJS runtimes, start your CLJS app...
-; Waiting for Shadow CLJS runtimes, start your CLJS app...
-; nREPL Connection was closed
-; Jacking in...
-; Connecting using "shadow-cljs" project type.
-; You can make Calva auto-select this.
-;   - See https://calva.io/connect-sequences/
-; 
-; Starting Jack-in Terminal: pushd /home/kirill/projects/pixel-art ; npx shadow-cljs -d cider/cider-nrepl:0.28.5 watch :app ; popd
-; Using host:port localhost:8777 ...
-; Hooking up nREPL sessions ...
-; Connected session: clj
-; TIPS:
-;   - You can edit the contents here. Use it as a REPL if you like.
-;   - `alt+enter` evaluates the current top level form.
-;   - `ctrl+enter` evaluates the current form.
-;   - `alt+up` and `alt+down` traverse up and down the REPL command history
-;      when the cursor is after the last contents at the prompt
-;   - Clojure lines in stack traces are peekable and clickable.
-; Evaluating code from settings: 'calva.autoEvaluateCode.onConnect.clj'
-nil
-clj꞉shadow.user꞉> 
-clj꞉shadow.user꞉> 
-; Creating cljs repl session...
-; Connecting cljs repl: shadow-cljs...
-;   The Calva Connection Log might have more connection progress information.
-; Please start your ClojureScript app (load it in the browser, or whatever is appropriate) so that Calva can connect to its REPL...
-; Waiting for Shadow CLJS runtimes, start your CLJS app...
-; Waiting for Shadow CLJS runtimes, start your CLJS app...
 ; Connected session: cljs, repl: :app
 ; TIPS: You can choose which REPL to use (clj or cljs):
 ;    *Calva: Toggle REPL connection*
@@ -72,251 +38,150 @@ nil
 clj꞉user꞉> 
 ; Jack-in done.
 clj꞉user꞉> 
-; Evaluating file: frame_test.cljs
-; ------ WARNING - :redef --------------------------------------------------------
-;  File: /home/kirill/projects/pixel-art/src/pixel_art/model/frame.cljs:12:1
-;  clone already refers to: cljs.core/clone being replaced by: pixel-art.model.frame/clone
-; --------------------------------------------------------------------------------
-; 
 nil
-cljs꞉pixel-art.model.frame-test꞉>  ; Use `alt+enter` to evaluate
-:repl/exception!
-; 
-; Execution error (TypeError) at (<cljs repl>:1).
-; Cannot read properties of undefined (reading 'report')
-cljs꞉pixel-art.model.frame-test꞉> 
-:repl/exception!
-; 
-; Execution error (TypeError) at (<cljs repl>:1).
-; Cannot read properties of undefined (reading 'frame')
-cljs꞉pixel-art.model.frame-test꞉> 
-nil
-; ------ WARNING - :redef --------------------------------------------------------
-;  File: /home/kirill/projects/pixel-art/src/pixel_art/model/frame.cljs:12:1
-;  clone already refers to: cljs.core/clone being replaced by: pixel-art.model.frame/clone
-; --------------------------------------------------------------------------------
-; 
-cljs꞉pixel-art.model.frame-test꞉> 
-:repl/exception!
-; 
-; Execution error (TypeError) at (<cljs repl>:1).
-; Cannot read properties of undefined (reading 'report')
-cljs꞉pixel-art.model.frame-test꞉> 
-; Evaluating file: frame.cljs
-#'pixel-art.model.frame/display-frame
-cljs꞉pixel-art.model.frame꞉> 
-; Evaluating file: frame_test.cljs
-; ------ WARNING - :redef --------------------------------------------------------
-;  File: /home/kirill/projects/pixel-art/src/pixel_art/model/frame.cljs:12:1
-;  clone already refers to: cljs.core/clone being replaced by: pixel-art.model.frame/clone
-; --------------------------------------------------------------------------------
-; 
-nil
-cljs꞉pixel-art.model.frame-test꞉> 
-nil
-cljs꞉pixel-art.model.frame-test꞉> 
-:repl/exception!
-; 
-; Execution error (TypeError) at (<cljs repl>:1).
-; Cannot read properties of undefined (reading 'report')
-cljs꞉pixel-art.model.frame-test꞉> 
-true
-cljs꞉pixel-art.model.frame-test꞉> 
-:repl/exception!
-; 
-; Execution error (TypeError) at (<cljs repl>:1).
-; Cannot read properties of undefined (reading 'report')
-cljs꞉pixel-art.model.frame-test꞉> 
+cljs꞉pixel-art.core-test꞉>  ; Use `alt+enter` to evaluate
 nil
 ; ------ WARNING - :undeclared-var -----------------------------------------------
-;  Resource: <eval>:1:4
-;  Use of undeclared Var pixel-art.model.frame-test/res-frame
+;  Resource: <eval>:1:2
+;  Use of undeclared Var pjstadig.humane-test-output/activate!
 ; --------------------------------------------------------------------------------
 ; 
-cljs꞉pixel-art.model.frame-test꞉> 
-true
-cljs꞉pixel-art.model.frame-test꞉> 
-{:pixels {0 nil}, :size nil}
-cljs꞉pixel-art.model.frame-test꞉> 
-{:pixels [nil nil nil nil nil nil],
- :size {:width 2, :height 3}}
-cljs꞉pixel-art.model.frame-test꞉> 
-{:pixels
- ["black" nil nil "red" nil nil],
- :size {:width 2, :height 3}}
-cljs꞉pixel-art.model.frame-test꞉> 
-{:pixels
- ["black" nil nil "red" nil nil],
- :size {:width 2, :height 3}}
-cljs꞉pixel-art.model.frame-test꞉> 
-:repl/exception!
-; 
-; Execution error (TypeError) at (<cljs repl>:1).
-; Cannot set properties of undefined (setting 'fram')
-cljs꞉pixel-art.model.frame-test꞉> 
-:repl/exception!
-; 
-; Execution error (TypeError) at (<cljs repl>:1).
-; Cannot set properties of undefined (setting 'a')
-cljs꞉pixel-art.model.frame-test꞉> 
+cljs꞉pixel-art.core-test꞉> 
+(require 'cljs.test)
 nil
-; ------ WARNING - :redef --------------------------------------------------------
-;  File: /home/kirill/projects/pixel-art/src/pixel_art/model/frame.cljs:12:1
-;  clone already refers to: cljs.core/clone being replaced by: pixel-art.model.frame/clone
-; --------------------------------------------------------------------------------
-; 
+cljs꞉pixel-art.core-test꞉> 
+(cljs.test/run-tests 'pixel-art.model.frame-test)
+
+Testing pixel-art.model.frame-test
+
+Ran 0 tests containing 0 assertions.
+0 failures, 0 errors.
+nil
+cljs꞉pixel-art.core-test꞉> 
+; Evaluating file: frame_test.cljs
+#'pixel-art.model.frame-test/get-pixel-test
 cljs꞉pixel-art.model.frame-test꞉> 
-:repl/exception!
-; 
-; Execution error (TypeError) at (<cljs repl>:1).
-; Cannot set properties of undefined (setting 'a')
+(cljs.test/run-tests 'pixel-art.model.frame-test)
+
+Testing pixel-art.model.frame-test
+
+ERROR in (set-pixels-test) (Error:NaN:NaN)
+Uncaught exception, not in assertion.
+expected: nil
+  actual: #object[Error Error: Index 15 out of bounds  [0,6]]
+
+Ran 3 tests containing 5 assertions.
+0 failures, 1 errors.
+nil
 cljs꞉pixel-art.model.frame-test꞉> 
-{:pixels
- ["black" nil nil "red" nil nil],
- :size {:width 2, :height 3}}
-cljs꞉pixel-art.model.frame-test꞉> 
-#'pixel-art.model.frame/frame
+21
 cljs꞉pixel-art.model.frame꞉> 
-#'pixel-art.model.frame/size
-cljs꞉pixel-art.model.frame꞉> 
-["black" nil nil "red" nil nil]
-cljs꞉pixel-art.model.frame꞉> 
-{:width 2, :height 3}
-cljs꞉pixel-art.model.frame꞉> 
-#'pixel-art.model.frame/get-pixel
-cljs꞉pixel-art.model.frame꞉> 
-"black"
-cljs꞉pixel-art.model.frame꞉> 
+(cljs.test/run-tests 'pixel-art.model.frame-test)
+
+Testing pixel-art.model.frame-test
+
+ERROR in (set-pixels-test) (Error:NaN:NaN)
+Uncaught exception, not in assertion.
+expected: nil
+  actual: #object[Error Error: Index 15 out of bounds  [0,6]]
+
+Ran 3 tests containing 5 assertions.
+0 failures, 1 errors.
 nil
 cljs꞉pixel-art.model.frame꞉> 
-nil
-cljs꞉pixel-art.model.frame꞉> 
-{:pixels
- ["black" nil nil "red" nil nil],
- :size {:width 2, :height 3}}
-cljs꞉pixel-art.model.frame꞉> 
-nil
-cljs꞉pixel-art.model.frame꞉> 
-bx
-xr
-xx
-nil
-cljs꞉pixel-art.model.frame꞉> 
-#'pixel-art.model.frame/pos
-cljs꞉pixel-art.model.frame꞉> 
-{:pixels
- ["black" nil nil "red" nil nil],
- :size {:width 2, :height 3}}
-cljs꞉pixel-art.model.frame꞉> 
-#'pixel-art.model.frame/size
-cljs꞉pixel-art.model.frame꞉> 
-1
-cljs꞉pixel-art.model.frame꞉> 
-"red"
+21
 cljs꞉pixel-art.model.frame꞉> 
 #'pixel-art.model.frame/pos->idx
 cljs꞉pixel-art.model.frame꞉> 
+(cljs.test/run-tests 'pixel-art.model.frame-test)
+
+Testing pixel-art.model.frame-test
+
+ERROR in (set-pixels-test) (Error:NaN:NaN)
+Uncaught exception, not in assertion.
+expected: nil
+  actual: #object[Error Error: Index 15 out of bounds  [0,6]]
+
+Ran 3 tests containing 5 assertions.
+0 failures, 1 errors.
+nil
+cljs꞉pixel-art.model.frame꞉> 
+false
+cljs꞉pixel-art.model.frame꞉> 
+true
+cljs꞉pixel-art.model.frame꞉> 
 #'pixel-art.model.frame/set-pixels
 cljs꞉pixel-art.model.frame꞉> 
-#'pixel-art.model.frame/get-pixel
-cljs꞉pixel-art.model.frame꞉> 
-#'pixel-art.model.frame/frame
-cljs꞉pixel-art.model.frame꞉> 
-"red"
-cljs꞉pixel-art.model.frame꞉> 
+(cljs.test/run-tests 'pixel-art.model.frame-test)
+
+Testing pixel-art.model.frame-test
+
+Ran 3 tests containing 5 assertions.
+0 failures, 0 errors.
 nil
 cljs꞉pixel-art.model.frame꞉> 
-{:x 0}
+#'pixel-art.model.frame/valid-pos?
 cljs꞉pixel-art.model.frame꞉> 
-"black"
+#'pixel-art.model.frame/set-pixels
 cljs꞉pixel-art.model.frame꞉> 
-#'pixel-art.model.frame/get-pixel
-cljs꞉pixel-art.model.frame꞉> 
-:repl/exception!
-; 
-; Execution error (TypeError) at (<cljs repl>:1).
-; Cannot read properties of undefined (reading 'report')
-cljs꞉pixel-art.model.frame-test꞉> 
-#'pixel-art.model.frame/get-pixels
-cljs꞉pixel-art.model.frame꞉> 
-("black")
-cljs꞉pixel-art.model.frame꞉> 
+(cljs.test/run-tests 'pixel-art.model.frame-test)
+
+Testing pixel-art.model.frame-test
+
+Ran 3 tests containing 5 assertions.
+0 failures, 0 errors.
 nil
-; ------ WARNING - :fn-arity -----------------------------------------------------
-;  Resource: <eval>:1:1
-;  Wrong number of args (1) passed to pixel-art.model.frame/get-pixels
-; --------------------------------------------------------------------------------
-; 
 cljs꞉pixel-art.model.frame꞉> 
-("black" nil)
+#'pixel-art.model.frame/set-pixels
 cljs꞉pixel-art.model.frame꞉> 
-("black" nil "red")
+(cljs.test/run-tests 'pixel-art.model.frame-test)
+
+Testing pixel-art.model.frame-test
+
+FAIL in (set-pixels-test) (:16:11)
+
+expected: {:pixels [nil nil nil nil nil nil],
+           :size {:width 2, :height 3}}
+  actual: {:pixels ["black" nil nil "red" "yellow" nil],
+           :size {:width 2, :height 3}}
+    diff: - {:pixels [nil nil nil nil nil]}
+          + {:pixels ["black" nil nil "red" "yellow"]}
+
+FAIL in (get-pixel-test) (:24:11)
+
+expected: "black"
+  actual: nil
+
+FAIL in (get-pixel-test) (:26:11)
+
+expected: "red"
+  actual: nil
+
+Ran 3 tests containing 5 assertions.
+3 failures, 0 errors.
+nil
 cljs꞉pixel-art.model.frame꞉> 
-:repl/exception!
-; 
-; Execution error (TypeError) at (<cljs repl>:1).
-; Cannot read properties of undefined (reading 'pen_test')
-cljs꞉pixel-art.tool.pen-test꞉> 
+#'pixel-art.model.frame/set-pixels
+cljs꞉pixel-art.model.frame꞉> 
+(cljs.test/run-tests 'pixel-art.model.frame-test)
+
+Testing pixel-art.model.frame-test
+
+Ran 3 tests containing 5 assertions.
+0 failures, 0 errors.
 nil
-; ------ WARNING - :redef --------------------------------------------------------
-;  File: /home/kirill/projects/pixel-art/src/pixel_art/model/frame.cljs:12:1
-;  clone already refers to: cljs.core/clone being replaced by: pixel-art.model.frame/clone
-; --------------------------------------------------------------------------------
-; 
-cljs꞉pixel-art.tool.pen-test꞉> 
-:repl/exception!
-; 
-; Execution error (TypeError) at (<cljs repl>:1).
-; Cannot read properties of undefined (reading 'pen_test')
-cljs꞉pixel-art.tool.pen-test꞉> 
-; nREPL Connection was closed
-; Jacking in...
-; Connecting using "shadow-cljs" project type.
-; You can make Calva auto-select this.
-;   - See https://calva.io/connect-sequences/
-; 
-; Starting Jack-in Terminal: pushd /home/kirill/projects/pixel-art ; npx shadow-cljs -d cider/cider-nrepl:0.28.5 watch :app ; popd
-; Using host:port localhost:8777 ...
-; Hooking up nREPL sessions ...
-; Connected session: clj
-; TIPS:
-;   - You can edit the contents here. Use it as a REPL if you like.
-;   - `alt+enter` evaluates the current top level form.
-;   - `ctrl+enter` evaluates the current form.
-;   - `alt+up` and `alt+down` traverse up and down the REPL command history
-;      when the cursor is after the last contents at the prompt
-;   - Clojure lines in stack traces are peekable and clickable.
-; Evaluating code from settings: 'calva.autoEvaluateCode.onConnect.clj'
+cljs꞉pixel-art.model.frame꞉> 
+#'pixel-art.model.frame/valid-pos?
+cljs꞉pixel-art.model.frame꞉> 
+#'pixel-art.model.frame/set-pixels
+cljs꞉pixel-art.model.frame꞉> 
+(cljs.test/run-tests 'pixel-art.model.frame-test)
+
+Testing pixel-art.model.frame-test
+
+Ran 3 tests containing 5 assertions.
+0 failures, 0 errors.
 nil
-clj꞉shadow.user꞉> 
-clj꞉shadow.user꞉> 
-; Creating cljs repl session...
-; Connecting cljs repl: shadow-cljs...
-;   The Calva Connection Log might have more connection progress information.
-; Please start your ClojureScript app (load it in the browser, or whatever is appropriate) so that Calva can connect to its REPL...
-; Waiting for Shadow CLJS runtimes, start your CLJS app...
-; Connected session: cljs, repl: :app
-; TIPS: You can choose which REPL to use (clj or cljs):
-;    *Calva: Toggle REPL connection*
-;    (There is a button in the status bar for this)
-; Evaluating code from settings: 'calva.autoEvaluateCode.onConnect.cljs'
-nil
-clj꞉user꞉> 
-; Jack-in done.
-clj꞉user꞉> 
-nil
-clj꞉pixel-art.tool.pen-test꞉> 
-#'pixel-art.tool.pen-test/source-frame
-clj꞉pixel-art.tool.pen-test꞉> 
-#'pixel-art.tool.pen-test/overlay-frame
-clj꞉pixel-art.tool.pen-test꞉> 
-#'pixel-art.tool.pen-test/tool
-clj꞉pixel-art.tool.pen-test꞉> 
-nil
-clj꞉pixel-art.model.frame-test꞉> 
-#'pixel-art.model.frame-test/create-test
-clj꞉pixel-art.model.frame-test꞉> 
-true
-clj꞉pixel-art.model.frame-test꞉> 
-true
-clj꞉pixel-art.model.frame-test꞉> 
+cljs꞉pixel-art.model.frame꞉> 
+#'pixel-art.model.frame/pos->idx
+cljs꞉pixel-art.model.frame꞉> 
