@@ -1,5 +1,6 @@
 (ns pixel-art.utils-test
-  (:require [cljs.test :as t]))
+  (:require [cljs.test :as t]
+            [pixel-art.model.frame :as frame]))
 
 (defn run-test-cases-without [behaviour initial-data test-cases]
   (->> test-cases

@@ -1,30 +1,27 @@
 (ns pixel-art.tool.rectangle-select
   (:require [pixel-art.model.frame :as frame]
             [pixel-art.utils.geometry :as geometry]
-            [clojure.set]))
-
-;; 2 состояния: select, moveSelection
-
-
-;; select -> moveSelection + стейт
-
-;; moveSelection
-;; когда select и mouse down вне, то сбрасываем селектион и коммитим изменения
-;; когда select и mouse down внутри то двигаем
+            [clojure.set]
+            [debux.cs.core :refer-macros [dbgn]]))
 
 ;; в истории сохраняется сразу?
 ;; selection должна накладывать опасити на цвет
 
-(def data pixel-art.tool.pen-test/data)
+(defn transpare-color [color] "t")
 
-(defn transpare-color [color] color)
+(defn- get-offset-pos [initial-pos new-pos]
+  (let [x (if (> (:x new-pos) (:x initial-pos))
+            (- (:x new-pos) (:x initial-pos))
+            (- (:x new-pos) (:x initial-pos)))
+        y (if (> (:y new-pos) (:y initial-pos))
+            (- (:y new-pos) (:y initial-pos))
+            (- (:y new-pos) (:y initial-pos)))]
+    {:x x :y y}))
 
-(defn move-selection [{:keys [tool-state event-pos highlighted? source-frame]}]
-  (let [{:keys [initial-mouse-down-pos initial-selection]} tool-state
-        offset-pos {:x (- (:x initial-mouse-down-pos)
-                          (:x event-pos))
-                    :y (- (:y initial-mouse-down-pos)
-                          (:y event-pos))}
+(defn- move-selection [data-r]
+  (let [{:keys [tool-state event-pos highlighted? source-frame]} data-r
+        {:keys [initial-mouse-down-pos initial-selection]} tool-state
+        offset-pos (get-offset-pos initial-mouse-down-pos event-pos)
         new-selection (map (fn [{:keys [pos color]}]
                              {:pos {:x (+ (:x pos) (:x offset-pos))
                                     :y (+ (:y pos) (:y offset-pos))}
@@ -73,7 +70,7 @@
       (cond
         (= :mouse-down (:type event))
         (if (some #{(:pos event)} (map :pos (-> tool :state :selection)))
-          {:tool (assoc tool :state {:initial-mouse-down-pos (:pos event)})
+          {:tool (assoc-in tool [:state :initial-mouse-down-pos] (:pos event))
            :overlay-frame overlay-frame}
           {:tool (assoc tool :state {:mode :select})
            :overlay-frame (-> (move-selection {:tool-state (:state tool)

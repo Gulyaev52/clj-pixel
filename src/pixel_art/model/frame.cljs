@@ -38,7 +38,7 @@
     (->> (:pixels frame)
          (partition width)
          (map (fn [row] (->> row
-                             (map (fn [x] (if x (nth x 0) "t")))
-                             (string/join ""))))
+                             (map (fn [x] (if x (nth x 0) "_")))
+                             (string/join " "))))
          (string/join "\n")
          println)))
