@@ -42,8 +42,8 @@
                          (frame/set-pixels cuted-selection))
      :new-selection new-selection}))
 
-(defn behaviour [data]
-  (let [{:keys [event source-frame overlay-frame tool]} data]
+(defn behaviour [event data]
+  (let [{:keys [source-frame overlay-frame tool]} data]
     (api/spy)
     ;; todo: init ?
     (case (or (-> tool :state :mode) :select)

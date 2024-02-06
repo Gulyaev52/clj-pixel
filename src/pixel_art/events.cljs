@@ -31,11 +31,11 @@
  (fn [db [_ tool-type]]
    (assoc db :tool {:type tool-type})))
 
-(defn run-behaviour [data]
+(defn run-behaviour [event data]
   (case (-> data :tool :type)
-    :pen (pen/behaviour data)
-    :rectangle (rectangle/behaviour data)
-    :rectangle-select (rectangle-select/behaviour data)))
+    :pen (pen/behaviour event data)
+    :rectangle (rectangle/behaviour event data)
+    :rectangle-select (rectangle-select/behaviour event data)))
 
 (re-frame/reg-event-fx
  ::handle-mouse-event
@@ -47,11 +47,11 @@
                                                      (:scale db)
                                                      (. js/document (getElementById "tutorial")))
                     {:keys [overlay-frame frame color tool]} db
-                    behaviour-res (run-behaviour {:source-frame frame
+                    behaviour-res (run-behaviour {:type event-type :pos mouse-pos}
+                                                 {:source-frame frame
                                                   :overlay-frame overlay-frame
                                                   :color color
-                                                  :tool tool
-                                                  :event {:type event-type :pos mouse-pos}})
+                                                  :tool tool})
                     new-overlay-frame (or (:overlay-frame behaviour-res) overlay-frame)]
                 (println event-type)
                 {:db (merge db

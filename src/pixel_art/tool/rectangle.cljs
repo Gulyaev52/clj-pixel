@@ -4,8 +4,8 @@
 
 (defn init [] {:type :rectangle})
 
-(defn behaviour [data]
-  (let [{:keys [event source-frame overlay-frame color tool]} data]
+(defn behaviour [event data]
+  (let [{:keys [source-frame overlay-frame color tool]} data]
     (case (:type event)
       :mouse-down
       {:tool (assoc tool :state {:initial-mouse-down-pos (:pos event)})
