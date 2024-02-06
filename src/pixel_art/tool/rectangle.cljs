@@ -2,6 +2,8 @@
   (:require [pixel-art.model.frame :as frame]
             [pixel-art.utils.geometry :as geometry]))
 
+(defn init [] {:type :rectangle})
+
 (defn behaviour [data]
   (let [{:keys [event source-frame overlay-frame color tool]} data]
     (case (:type event)

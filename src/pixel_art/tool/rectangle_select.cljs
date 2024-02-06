@@ -1,8 +1,9 @@
 (ns pixel-art.tool.rectangle-select
   (:require [pixel-art.model.frame :as frame]
             [pixel-art.utils.geometry :as geometry]
-            [clojure.set]
-            [debux.cs.core :refer-macros [dbgn]]))
+            [clojure.set]))
+
+(defn init [] {:type :rectangle-select :mode :select})
 
 ;; в истории сохраняется сразу?
 ;; selection должна накладывать опасити на цвет

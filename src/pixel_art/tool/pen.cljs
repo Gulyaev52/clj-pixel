@@ -1,6 +1,8 @@
 (ns pixel-art.tool.pen
   (:require [pixel-art.model.frame :as frame]))
 
+(defn init [] {:type :pen})
+
 (defn behaviour [data]
   (let [{:keys [event overlay-frame color]} data]
     (cond

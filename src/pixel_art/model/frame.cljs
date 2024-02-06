@@ -26,6 +26,8 @@
                      pixels-with-pos)
      :size size}))
 
+(def get-size :size)
+
 (defn get-pixel [pos frame]
   (let [{:keys [pixels size]} frame]
     (nth pixels (pos->idx pos size) transparent-color)))
