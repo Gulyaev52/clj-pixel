@@ -51,7 +51,9 @@
                                                  {:source-frame frame
                                                   :overlay-frame overlay-frame
                                                   :color color
-                                                  :tool tool})
+                                                  :tool tool
+                                                  :initial-mouse-down-pos (or (:initial-mouse-down-pos db)
+                                                                              mouse-pos)})
                     new-overlay-frame (or (:overlay-frame behaviour-res) overlay-frame)]
                 (println event-type)
                 {:db (merge db

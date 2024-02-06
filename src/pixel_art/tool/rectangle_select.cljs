@@ -23,10 +23,10 @@
             (- (:y new-pos) (:y initial-pos)))]
     {:x x :y y}))
 
-(defn- move-selection [data-r]
-  (let [{:keys [tool-state event-pos highlighted? source-frame]} data-r
-        {:keys [initial-mouse-down-pos initial-selection]} tool-state
-        offset-pos (get-offset-pos initial-mouse-down-pos event-pos)
+(defn- move-selection [{:keys [event highlighted?]} data-r]
+  (let [{:keys [tool initial-mouse-down-pos source-frame]} data-r
+        {:keys [initial-selection]} (:state tool)
+        offset-pos (get-offset-pos initial-mouse-down-pos (:pos event))
         new-selection (map (fn [{:keys [pos color]}]
                              {:pos {:x (+ (:x pos) (:x offset-pos))
                                     :y (+ (:y pos) (:y offset-pos))}
@@ -42,18 +42,15 @@
                          (frame/set-pixels cuted-selection))
      :new-selection new-selection}))
 
-(defn behaviour [event data]
-  (let [{:keys [source-frame overlay-frame tool]} data]
+(defn behaviour [event db]
+  (let [{:keys [source-frame overlay-frame tool initial-mouse-down-pos]} db]
     (api/spy)
     ;; todo: init ?
     (case (or (-> tool :state :mode) :select)
       :select
       (cond
-        (= :mouse-down (:type event))
-        {:tool (assoc tool :state {:initial-mouse-down-pos (:pos event)})}
-
-        (= :mouse-move (:type event))
-        (let [selection-points (geometry/get-rectange-points (-> tool :state :initial-mouse-down-pos)
+        (#{:mouse-down :mouse-move} (:type event))
+        (let [selection-points (geometry/get-rectange-points initial-mouse-down-pos
                                                              (:pos event))
               initial-selection (map (fn [pos color] {:pos pos :color color})
                                      selection-points
@@ -71,18 +68,16 @@
       (cond
         (= :mouse-down (:type event))
         (if (some #{(:pos event)} (map :pos (-> tool :state :selection)))
-          {:tool (assoc-in tool [:state :initial-mouse-down-pos] (:pos event))
-           :overlay-frame overlay-frame}
+          {:overlay-frame overlay-frame}
           {:tool (assoc tool :state {:mode :select})
            :overlay-frame (->> overlay-frame
                                (frame/set-pixels (-> tool :state :selection)))
            :commit-changes true})
 
         (= :mouse-move (:type event))
-        (let [{:keys [overlay-frame new-selection]} (move-selection {:tool-state (:state tool)
-                                                                     :event-pos (:pos event)
-                                                                     :highlighted? false
-                                                                     :source-frame source-frame})]
+        (let [{:keys [overlay-frame new-selection]} (move-selection {:event event
+                                                                     :highlighted? false}
+                                                                    db)]
           {:tool (assoc-in tool [:state :selection] new-selection)
            :overlay-frame overlay-frame})
 
