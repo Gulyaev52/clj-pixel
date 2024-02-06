@@ -24,7 +24,7 @@
 (re-frame/reg-event-fx
  ::initialize-canvas
  (fn [{:keys [db]} _]
-   {:draw-frame (:frame db)}))
+   {:draw-frame (:source-frame db)}))
 
 (re-frame/reg-event-db
  ::select-tool
@@ -46,15 +46,11 @@
               (let [mouse-pos (canvas-pos->frame-pos origin-event
                                                      (:scale db)
                                                      (. js/document (getElementById "tutorial")))
-                    {:keys [overlay-frame frame color tool]} db
                     behaviour-res (run-behaviour {:type event-type :pos mouse-pos}
-                                                 {:source-frame frame
-                                                  :overlay-frame overlay-frame
-                                                  :color color
-                                                  :tool tool
-                                                  :initial-mouse-down-pos (or (:initial-mouse-down-pos db)
-                                                                              mouse-pos)})
-                    new-overlay-frame (or (:overlay-frame behaviour-res) overlay-frame)]
+                                                 (assoc db
+                                                        :initial-mouse-down-pos
+                                                        (or (:initial-mouse-down-pos db) mouse-pos)))
+                    new-overlay-frame (or (:overlay-frame behaviour-res) (:overlay-frame db))]
                 (println event-type)
                 {:db (merge db
                             (when (= :mouse-down event-type)
@@ -62,9 +58,9 @@
                             (when (= :mouse-up event-type)
                               {:initial-mouse-down-pos nil})
                             {:overlay-frame new-overlay-frame
-                             :tool (or (:tool behaviour-res) tool)}
+                             :tool (or (:tool behaviour-res) (:tool db))}
                             (when (:commit-changes behaviour-res)
-                              {:frame (or (:overlay-frame behaviour-res) overlay-frame)}))
+                              {:source-frame (or (:overlay-frame behaviour-res) (:overlay-frame db))}))
                  :draw-frame new-overlay-frame}))))
 
 ;; (dissoc (:state (:tool @re-frame.db/app-db)) :initial-selection :selection)

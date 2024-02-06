@@ -8,7 +8,7 @@
                    (frame/set-pixels [{:pos {:x 0 :y 0} :color "black"}
                                       {:pos {:x 1 :y 1} :color "black"}]))]
     {:size size
-     :frame frame
+     :source-frame frame
      :overlay-frame frame
      :tool {:type :pen}
      :color "black"
