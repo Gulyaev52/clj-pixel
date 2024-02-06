@@ -1,14 +1,18 @@
 (ns pixel-art.tool.rectangle-select
-  (:require [pixel-art.model.frame :as frame]
+  (:require ["tinycolor2" :as tinycolor]
+            [clojure.set]
+            [pixel-art.model.frame :as frame]
             [pixel-art.utils.geometry :as geometry]
-            [clojure.set]))
+            [sc.api :as api]))
 
 (defn init [] {:type :rectangle-select :mode :select})
 
-;; в истории сохраняется сразу?
-;; selection должна накладывать опасити на цвет
-
-(defn transpare-color [color] "t")
+(defn get-transparent-color [color]
+  (if color
+    (.. (tinycolor (or color "white"))
+        (setAlpha 0.8)
+        (toRgbString))
+    "rgba(160, 215, 240, 0.6)"))
 
 (defn- get-offset-pos [initial-pos new-pos]
   (let [x (if (> (:x new-pos) (:x initial-pos))
@@ -27,7 +31,7 @@
                              {:pos {:x (+ (:x pos) (:x offset-pos))
                                     :y (+ (:y pos) (:y offset-pos))}
                               :color (if highlighted?
-                                       (transpare-color color)
+                                       (get-transparent-color color)
                                        color)})
                            initial-selection)
         cuted-selection (->> (clojure.set/difference (set (map :pos initial-selection))
@@ -40,17 +44,13 @@
 
 (defn behaviour [data]
   (let [{:keys [event source-frame overlay-frame tool]} data]
+    (api/spy)
     ;; todo: init ?
     (case (or (-> tool :state :mode) :select)
       :select
       (cond
         (= :mouse-down (:type event))
-        (let [color (frame/get-pixel (:pos event) source-frame)]
-          {:tool (assoc tool :state {:initial-mouse-down-pos (:pos event)})
-           :overlay-frame
-           (frame/set-pixels [{:pos (:pos event)
-                               :color (transpare-color color)}]
-                             source-frame)})
+        {:tool (assoc tool :state {:initial-mouse-down-pos (:pos event)})}
 
         (= :mouse-move (:type event))
         (let [selection-points (geometry/get-rectange-points (-> tool :state :initial-mouse-down-pos)
@@ -58,12 +58,12 @@
               initial-selection (map (fn [pos color] {:pos pos :color color})
                                      selection-points
                                      (frame/get-pixels selection-points source-frame))
-              highlighted-selection (map #(update % :color transpare-color) initial-selection)]
+              highlighted-selection (map #(update % :color get-transparent-color) initial-selection)]
           {:tool (update tool :state #(merge % {:initial-selection initial-selection
                                                 :selection initial-selection}))
            :overlay-frame (frame/set-pixels highlighted-selection source-frame)})
 
-        (= :mouse-up (:type event))
+        (and (= :mouse-up (:type event)) (-> tool :state :selection))
         {:tool (assoc-in tool [:state :mode] :move-selection)
          :overlay-frame overlay-frame})
 
@@ -74,11 +74,8 @@
           {:tool (assoc-in tool [:state :initial-mouse-down-pos] (:pos event))
            :overlay-frame overlay-frame}
           {:tool (assoc tool :state {:mode :select})
-           :overlay-frame (-> (move-selection {:tool-state (:state tool)
-                                               :event-pos (:pos event)
-                                               :highlighted? false
-                                               :source-frame source-frame})
-                              :overlay-frame)
+           :overlay-frame (->> overlay-frame
+                               (frame/set-pixels (-> tool :state :selection)))
            :commit-changes true})
 
         (= :mouse-move (:type event))
@@ -90,8 +87,7 @@
            :overlay-frame overlay-frame})
 
         (= :mouse-up (:type event))
-        {:overlay-frame (-> (move-selection {:tool-state (:state tool)
-                                             :event-pos (:pos event)
-                                             :highlighted? true
-                                             :source-frame source-frame})
-                            :overlay-frame)}))))
+        {:tool (assoc tool :state {:mode :select})
+         :overlay-frame (->> overlay-frame
+                             (frame/set-pixels (-> tool :state :selection)))
+         :commit-changes true}))))
