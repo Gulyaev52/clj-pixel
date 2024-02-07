@@ -17,21 +17,13 @@
         (toRgbString))
     "rgba(160, 215, 240, 0.6)"))
 
-(defn- get-offset-pos [initial-pos new-pos]
-  (let [x (if (> (:x new-pos) (:x initial-pos))
-            (- (:x new-pos) (:x initial-pos))
-            (- (:x new-pos) (:x initial-pos)))
-        y (if (> (:y new-pos) (:y initial-pos))
-            (- (:y new-pos) (:y initial-pos))
-            (- (:y new-pos) (:y initial-pos)))]
-    {:x x :y y}))
-
 (defn- move-selection [{:keys [event]} db]
   (let [{:keys [tool initial-mouse-down-pos source-frame]} db
         {:keys [initial-selection pasted?]} (:state tool)
 
         initial-selection-pos (set (map :pos initial-selection))
-        offset-pos (get-offset-pos initial-mouse-down-pos (:pos event))
+        offset-pos {:x (- (:x (:pos event)) (:x initial-mouse-down-pos))
+                    :y (- (:y (:pos event)) (:y initial-mouse-down-pos))}
         new-selection (map (fn [{:keys [pos color]}]
                              (let [new-pos {:x (+ (:x pos) (:x offset-pos))
                                             :y (+ (:y pos) (:y offset-pos))}]
