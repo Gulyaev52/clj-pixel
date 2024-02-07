@@ -6,3 +6,13 @@
  ::tool
  (fn [db]
    (:tool db)))
+
+(re-frame/reg-sub
+ ::last-mouse-pos
+ (fn [db]
+   (:last-mouse-pos db)))
+
+(re-frame/reg-sub
+ ::scale
+ (fn [db]
+   (:scale db)))

@@ -44,3 +44,13 @@
                              (string/join " "))))
          (string/join "\n")
          println)))
+
+(defn display-pixels [pixels size]
+  (let [{:keys [width]} size]
+    (->> pixels
+         (partition width)
+         (map (fn [row] (->> row
+                             (map (fn [{:keys [color]}] (if color (nth color 0) "_")))
+                             (string/join " "))))
+         (string/join "\n")
+         println)))

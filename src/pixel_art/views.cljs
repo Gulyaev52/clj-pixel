@@ -4,8 +4,18 @@
             [reagent.dom :as rdom]
             [pixel-art.events :as events]))
 
+(defn canvas-pos->frame-pos [event scale canvas]
+  (let [rect (. canvas getBoundingClientRect)]
+    {:x (. js/Math (floor (/ (- (. event -clientX) (. rect -left))
+                             scale)))
+     :y (. js/Math (floor (/ (- (. event -clientY) (. rect -top))
+                             scale)))}))
+
+(def !last-mouse-pos (atom nil))
+
 (defn main-panel []
-  (let [tool @(re-frame/subscribe [::subs/tool])]
+  (let [tool @(re-frame/subscribe [::subs/tool])
+        scale @(re-frame/subscribe [::subs/scale])]
     [:div
      [:select {:value (:type tool)
                :onChange (fn [event]
@@ -17,11 +27,24 @@
       [:canvas {:id "tutorial"
                 :style {:border "1px solid black"}
                 :onMouseDown (fn [event]
-                               (re-frame/dispatch [::events/handle-mouse-event :mouse-down event]))
+                               (let [mouse-pos (canvas-pos->frame-pos event
+                                                                      scale
+                                                                      (. js/document (getElementById "tutorial")))]
+                                 (re-frame/dispatch [::events/handle-mouse-event :mouse-down mouse-pos])))
                 :onMouseUp (fn [event]
-                             (re-frame/dispatch [::events/handle-mouse-event :mouse-up event]))
+                             (let [mouse-pos (canvas-pos->frame-pos event
+                                                                    scale
+                                                                    (. js/document (getElementById "tutorial")))]
+                               (reset! !last-mouse-pos mouse-pos)
+                               (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos])))
                 :onMouseMove (fn [event]
-                               (re-frame/dispatch [::events/handle-mouse-event :mouse-move event]))}]]]))
+                               (let [mouse-pos (canvas-pos->frame-pos event
+                                                                      scale
+                                                                      (. js/document (getElementById "tutorial")))]
+                                 (when (not= mouse-pos @!last-mouse-pos)
+                                   (do
+                                     (reset! !last-mouse-pos mouse-pos)
+                                     (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos])))))}]]]))
 
 (defn mount-root []
   (let [root-el (.getElementById js/document "app")]

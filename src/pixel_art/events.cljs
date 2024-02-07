@@ -9,13 +9,6 @@
             [re-frame.db]
             [sc.api :as api]))
 
-(defn canvas-pos->frame-pos [event scale canvas]
-  (let [rect (. canvas getBoundingClientRect)]
-    {:x (. js/Math (floor (/ (- (. event -clientX) (. rect -left))
-                             scale)))
-     :y (. js/Math (floor (/ (- (. event -clientY) (. rect -top))
-                             scale)))}))
-
 (re-frame/reg-event-fx
  ::initialize-db
  (fn [_ _]
@@ -39,19 +32,17 @@
 
 (re-frame/reg-event-fx
  ::handle-mouse-event
- (fn-traced [{:keys [db]} [_ event-type origin-event]]
+ (fn-traced [{:keys [db]} [_ event-type mouse-pos]]
+            (println event-type mouse-pos)
+            db
             (if (and (#{:mouse-move :mouse-up} event-type)
                      (not (:initial-mouse-down-pos db)))
               {:db db}
-              (let [mouse-pos (canvas-pos->frame-pos origin-event
-                                                     (:scale db)
-                                                     (. js/document (getElementById "tutorial")))
-                    behaviour-res (run-behaviour {:type event-type :pos mouse-pos}
+              (let [behaviour-res (run-behaviour {:type event-type :pos mouse-pos}
                                                  (assoc db
                                                         :initial-mouse-down-pos
                                                         (or (:initial-mouse-down-pos db) mouse-pos)))
                     new-overlay-frame (or (:overlay-frame behaviour-res) (:overlay-frame db))]
-                (println event-type)
                 (merge {:db (merge db
                                    (when (= :mouse-down event-type)
                                      {:initial-mouse-down-pos mouse-pos})
@@ -63,9 +54,6 @@
                                      {:source-frame (or (:overlay-frame behaviour-res) (:overlay-frame db))}))
                         :draw-frame new-overlay-frame}
                        (:effects behaviour-res))))))
-
-;; (dissoc (:state (:tool @re-frame.db/app-db)) :initial-selection :selection)
-;; @pixel-art.events.event-collector/event-store
 
 #_(api/last-ep-id)
 #_(defsc [709 -83])
