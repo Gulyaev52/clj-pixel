@@ -3,8 +3,8 @@
 
 (defn init [] {:type :pen})
 
-(defn behaviour [event data]
-  (let [{:keys [overlay-frame color]} data]
+(defn behaviour [event db]
+  (let [{:keys [overlay-frame color]} db]
     (cond
       (#{:mouse-down :mouse-move} (:type event))
       {:overlay-frame (frame/set-pixels [{:pos (:pos event) :color color}] overlay-frame)}

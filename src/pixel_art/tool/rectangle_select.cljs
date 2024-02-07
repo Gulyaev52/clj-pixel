@@ -3,6 +3,8 @@
             [clojure.set]
             [pixel-art.model.frame :as frame]
             [pixel-art.utils.geometry :as geometry]
+            [re-frame.core :as re-frame]
+            [re-pressed.core :as rp]
             [sc.api :as api]))
 
 (defn init [] {:type :rectangle-select :mode :select})
@@ -62,7 +64,15 @@
 
         (and (= :mouse-up (:type event)) (-> tool :state :selection))
         {:tool (assoc-in tool [:state :mode] :move-selection)
-         :overlay-frame overlay-frame})
+         :overlay-frame overlay-frame
+         :effects {:dispatch [::rp/set-keydown-rules
+                              {:event-keys [[[::copy-selection]
+                                             [{:keyCode 67 ;; c
+                                               :ctrlKey true}]]
+
+                                            [[::past-selection]
+                                             [{:keyCode 86 ;; v
+                                               :ctrlKey true}]]]}]}})
 
       :move-selection
       (cond
@@ -86,3 +96,18 @@
          :overlay-frame (->> overlay-frame
                              (frame/set-pixels (-> tool :state :selection)))
          :commit-changes true}))))
+
+(re-frame/reg-event-fx
+ ::copy-selection
+ (fn [{:keys [db]} _]
+   (let [tool (:tool db)]
+     (when (and (= (:type tool) :rectangle-select)
+                (-> tool :state :selection))
+       {:db (assoc-in db
+                      [:tool :state :copied-selection]
+                      (-> tool :state :initial-selection))}))))
+
+(re-frame/reg-event-fx
+ ::past-selection
+ (fn [_ _]
+   (js/alert)))

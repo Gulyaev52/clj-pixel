@@ -52,16 +52,17 @@
                                                         (or (:initial-mouse-down-pos db) mouse-pos)))
                     new-overlay-frame (or (:overlay-frame behaviour-res) (:overlay-frame db))]
                 (println event-type)
-                {:db (merge db
-                            (when (= :mouse-down event-type)
-                              {:initial-mouse-down-pos mouse-pos})
-                            (when (= :mouse-up event-type)
-                              {:initial-mouse-down-pos nil})
-                            {:overlay-frame new-overlay-frame
-                             :tool (or (:tool behaviour-res) (:tool db))}
-                            (when (:commit-changes behaviour-res)
-                              {:source-frame (or (:overlay-frame behaviour-res) (:overlay-frame db))}))
-                 :draw-frame new-overlay-frame}))))
+                (merge {:db (merge db
+                                   (when (= :mouse-down event-type)
+                                     {:initial-mouse-down-pos mouse-pos})
+                                   (when (= :mouse-up event-type)
+                                     {:initial-mouse-down-pos nil})
+                                   {:overlay-frame new-overlay-frame
+                                    :tool (or (:tool behaviour-res) (:tool db))}
+                                   (when (:commit-changes behaviour-res)
+                                     {:source-frame (or (:overlay-frame behaviour-res) (:overlay-frame db))}))
+                        :draw-frame new-overlay-frame}
+                       (:effects behaviour-res))))))
 
 ;; (dissoc (:state (:tool @re-frame.db/app-db)) :initial-selection :selection)
 ;; @pixel-art.events.event-collector/event-store
