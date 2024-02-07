@@ -44,6 +44,9 @@
                          (frame/set-pixels cuted-selection))
      :new-selection new-selection}))
 
+(defn- highlight-selection [selection]
+  (map #(update % :color get-transparent-color) selection))
+
 (defn behaviour [event db]
   (let [{:keys [source-frame overlay-frame tool initial-mouse-down-pos]} db]
     (api/spy)
@@ -57,7 +60,7 @@
               initial-selection (map (fn [pos color] {:pos pos :color color})
                                      selection-points
                                      (frame/get-pixels selection-points source-frame))
-              highlighted-selection (map #(update % :color get-transparent-color) initial-selection)]
+              highlighted-selection (highlight-selection initial-selection)]
           {:tool (update tool :state #(merge % {:initial-selection initial-selection
                                                 :selection initial-selection}))
            :overlay-frame (frame/set-pixels highlighted-selection source-frame)})
@@ -66,11 +69,11 @@
         {:tool (assoc-in tool [:state :mode] :move-selection)
          :overlay-frame overlay-frame
          :effects {:dispatch [::rp/set-keydown-rules
-                              {:event-keys [[[::copy-selection]
+                              {:event-keys [[[::copy-selection (-> tool :state :initial-selection)]
                                              [{:keyCode 67 ;; c
                                                :ctrlKey true}]]
 
-                                            [[::past-selection]
+                                            [[::past-selection] ;; todo: нужно коммитить текущ
                                              [{:keyCode 86 ;; v
                                                :ctrlKey true}]]]}]}})
 
@@ -99,15 +102,21 @@
 
 (re-frame/reg-event-fx
  ::copy-selection
- (fn [{:keys [db]} _]
-   (let [tool (:tool db)]
-     (when (and (= (:type tool) :rectangle-select)
-                (-> tool :state :selection))
-       {:db (assoc-in db
-                      [:tool :state :copied-selection]
-                      (-> tool :state :initial-selection))}))))
+ (fn [{:keys [db]} [_ selection]]
+   {:db (assoc-in db
+                  [:selection-manager :copied-selection]
+                  selection)}))
 
 (re-frame/reg-event-fx
  ::past-selection
- (fn [_ _]
-   (js/alert)))
+ (fn [{:keys [db]} _]
+   (let [selection (-> db :selection-manager :copied-selection)
+         overlay-frame (frame/set-pixels (highlight-selection selection) (:overlay-frame db))]
+     {:db (assoc db
+                 :tool
+                 {:type :rectangle-select
+                  :mode :move-selection
+                  :initial-selection selection
+                  :selection selection}
+                 :overlay-frame overlay-frame)
+      :draw-frame overlay-frame}))) ;;todo: всегда надо помнить о том что нужно отрендерить

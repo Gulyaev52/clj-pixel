@@ -12,4 +12,5 @@
      :overlay-frame frame
      :tool {:type :pen}
      :color "black"
+     :selection-manager {}
      :scale 20}))
