@@ -35,6 +35,9 @@
 (defn get-pixels [coll-pos frame]
   (map #(get-pixel % frame) coll-pos))
 
+(defn get-pixels-with-pos [coll-pos frame]
+  (map (fn [pos color] {:pos pos :color color}) coll-pos (map #(get-pixel % frame) coll-pos)))
+
 (defn display-frame [frame]
   (let [{:keys [width]} (:size frame)]
     (->> (:pixels frame)

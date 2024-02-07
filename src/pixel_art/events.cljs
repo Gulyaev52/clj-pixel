@@ -41,9 +41,12 @@
               (let [behaviour-res (run-behaviour {:type event-type :pos mouse-pos}
                                                  (assoc db
                                                         :initial-mouse-down-pos
-                                                        (or (:initial-mouse-down-pos db) mouse-pos)))
+                                                        (or (:initial-mouse-down-pos db) mouse-pos)
+                                                        :last-mouse-pos
+                                                        (or (:last-mouse-pos db) mouse-pos)))
                     new-overlay-frame (or (:overlay-frame behaviour-res) (:overlay-frame db))]
                 (merge {:db (merge db
+                                   {:last-mouse-pos mouse-pos}
                                    (when (= :mouse-down event-type)
                                      {:initial-mouse-down-pos mouse-pos})
                                    (when (= :mouse-up event-type)
