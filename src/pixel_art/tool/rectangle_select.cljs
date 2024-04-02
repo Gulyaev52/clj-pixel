@@ -56,7 +56,9 @@
            :overlay-frame (frame/set-pixels highlighted-selection source-frame)})
 
         (and (= :mouse-up (:type event)) (-> tool :state :selection))
-        {:tool (assoc-in tool [:state :mode] :move-selection)
+        {:tool (-> tool
+                   (assoc-in [:state :mode] :move-selection)
+                   (assoc-in [:state :show-selection-controls] true))
          :overlay-frame overlay-frame
          :effects {:dispatch [::rp/set-keydown-rules
                               {:event-keys [[[::copy-selection]
@@ -81,7 +83,8 @@
       (cond
         (= :mouse-down (:type event))
         (if (some #{(:pos event)} (map :pos (-> tool :state :selection)))
-          {:overlay-frame overlay-frame}
+          {:tool (assoc-in tool [:state :show-selection-controls] false)
+           :overlay-frame overlay-frame}
           {:tool (assoc tool :state {:mode :select})
            :overlay-frame (frame/set-pixels (-> tool :state :selection) overlay-frame)
            :commit-changes true})
@@ -97,7 +100,9 @@
         (let [{:keys [overlay-frame new-selection]} (move-selection {:event event
                                                                      :highlighted? true}
                                                                     db)]
-          {:tool (assoc-in tool [:state :selection] new-selection)
+          {:tool (-> tool
+                     (assoc-in [:state :selection] new-selection)
+                     (assoc-in [:state :show-selection-controls] true))
            :overlay-frame overlay-frame})))))
 
 (re-frame/reg-event-fx
