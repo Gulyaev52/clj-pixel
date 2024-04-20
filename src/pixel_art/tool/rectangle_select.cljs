@@ -25,13 +25,12 @@
         offset-pos (merge-with - (:pos event) last-mouse-pos)
         moved-selection (->> selection
                              (map-indexed (fn [idx {:keys [pos color]}]
-                                            (let [selection-color (:color (nth initial-selection idx))
+                                            (let [initial-selection-color (:color (nth initial-selection idx))
                                                   new-pos (merge-with + pos offset-pos)]
                                               {:pos new-pos
-                                               :color (if (= selection-color frame/transparent-color)
+                                               :color (if (= initial-selection-color frame/transparent-color)
                                                         (frame/get-pixel new-pos source-frame)
                                                         color)}))))
-        _ (println pasted?)
         cuted-selection (if pasted?
                           []
                           (map #(assoc % :color frame/transparent-color) initial-selection))]
@@ -88,6 +87,7 @@
           {:tool (assoc-in tool [:state :show-selection-controls] false)
            :overlay-frame overlay-frame}
           {:tool (assoc tool :state {:mode :select})
+           ;; remove highlight
            :overlay-frame (frame/set-pixels (-> tool :state :selection) overlay-frame)
            :commit-changes true})
 
@@ -106,9 +106,6 @@
                      (assoc-in [:state :selection] new-selection)
                      (assoc-in [:state :show-selection-controls] true))
            :overlay-frame overlay-frame})))))
-
-(defn commit-selection [overlay-frame {:keys [initial-selection selection]}]
-  (frame/set-pixels selection overlay-frame))
 
 (re-frame/reg-event-fx
  ::delete-selection
@@ -131,7 +128,8 @@
  ::copy-selection
  (fn [{:keys [db]} _]
    (let [{:keys [initial-selection]} (-> db :tool :state)
-         source-frame (commit-selection (:overlay-frame db) (-> db :tool :state))
+         ;; remove highlight and commit changes
+         source-frame (frame/set-pixels (-> db :tool :state :selection) (:overlay-frame db))
          db (-> db
                 (assoc-in
                  [:selection-manager :copied-selection]
@@ -148,7 +146,8 @@
  ::past-selection
  (fn [{:keys [db]} _]
    (let [copied-selection (-> db :selection-manager :copied-selection)
-         source-frame (commit-selection (:overlay-frame db) (-> db :tool :state))
+         ;; remove highlight and commit changes
+         source-frame (frame/set-pixels (-> db :tool :state :selection) (:overlay-frame db))
          overlay-frame (frame/set-pixels (->> copied-selection
                                               (map (fn [{:keys [pos color]}]
                                                      {:pos pos
