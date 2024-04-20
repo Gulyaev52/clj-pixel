@@ -23,13 +23,14 @@
         {:keys [initial-selection selection pasted?]} (:state tool)
 
         offset-pos (merge-with - (:pos event) last-mouse-pos)
-        new-selection (->> selection
-                           (map (fn [{:keys [pos color]}]
-                                  (let [new-pos (merge-with + pos offset-pos)]
-                                    {:pos new-pos
-                                     :color (if (= color frame/transparent-color)
-                                              (frame/get-pixel new-pos source-frame)
-                                              color)}))))
+        moved-selection (->> selection
+                             (map-indexed (fn [idx {:keys [pos color]}]
+                                            (let [selection-color (:color (nth initial-selection idx))
+                                                  new-pos (merge-with + pos offset-pos)]
+                                              {:pos new-pos
+                                               :color (if (= selection-color frame/transparent-color)
+                                                        (frame/get-pixel new-pos source-frame)
+                                                        color)}))))
         _ (println pasted?)
         cuted-selection (if pasted?
                           []
@@ -37,9 +38,10 @@
     {:overlay-frame (->> source-frame
                          (frame/set-pixels cuted-selection)
                          (frame/set-pixels (if highlighted?
-                                             (highlight-selection new-selection)
-                                             new-selection)))
-     :new-selection new-selection}))
+                                             (highlight-selection moved-selection)
+                                             moved-selection)))
+    ;;  todo: rename to moved-selection
+     :new-selection moved-selection}))
 
 (defn behaviour [event db]
   (let [{:keys [source-frame overlay-frame tool initial-mouse-down-pos]} db]
@@ -105,6 +107,9 @@
                      (assoc-in [:state :show-selection-controls] true))
            :overlay-frame overlay-frame})))))
 
+(defn commit-selection [overlay-frame {:keys [initial-selection selection]}]
+  (frame/set-pixels selection overlay-frame))
+
 (re-frame/reg-event-fx
  ::delete-selection
  (fn [{:keys [db]} _]
@@ -125,15 +130,12 @@
 (re-frame/reg-event-fx
  ::copy-selection
  (fn [{:keys [db]} _]
-   (let [{:keys [initial-selection selection]} (-> db :tool :state)
-         source-frame (->> (:source-frame db)
-                           (frame/set-pixels (map (fn [{:keys [pos]}] {:pos pos :color frame/transparent-color})
-                                                  initial-selection))
-                           (frame/set-pixels selection))
+   (let [{:keys [initial-selection]} (-> db :tool :state)
+         source-frame (commit-selection (:overlay-frame db) (-> db :tool :state))
          db (-> db
                 (assoc-in
                  [:selection-manager :copied-selection]
-                 selection)
+                 initial-selection)
                 (assoc-in
                  [:tool :state]
                  {:mode :select})
@@ -146,18 +148,21 @@
  ::past-selection
  (fn [{:keys [db]} _]
    (let [copied-selection (-> db :selection-manager :copied-selection)
-         {:keys [initial-selection selection]} (-> db :tool :state)
-         source-frame (->> (:source-frame db)
-                           (frame/set-pixels (map (fn [{:keys [pos]}] {:pos pos :color frame/transparent-color})
-                                                  initial-selection))
-                           (frame/set-pixels selection))
-         overlay-frame (frame/set-pixels (highlight-selection copied-selection)
+         source-frame (commit-selection (:overlay-frame db) (-> db :tool :state))
+         overlay-frame (frame/set-pixels (->> copied-selection
+                                              (map (fn [{:keys [pos color]}]
+                                                     {:pos pos
+                                                      :color (if (= color frame/transparent-color)
+                                                               (frame/get-pixel pos source-frame)
+                                                               color)}))
+                                              highlight-selection)
                                          source-frame)
          tool {:type :rectangle-select
                :state {:mode :move-selection
                        :initial-selection copied-selection
                        :selection copied-selection
                        :pasted? true}}]
+     (frame/display-frame source-frame)
      {:db (assoc db
                  :tool tool
                  :overlay-frame overlay-frame
