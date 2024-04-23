@@ -47,7 +47,8 @@
                          :height height
                          :left (:x top-left)
                          :top (:y top-left)
-                         :pointer-events "none"}}
+                         :pointer-events "none"
+                         :background-color "rgba(255, 255, 255, 0.2)"}}
            [drag-control-view {:top 0 :left 0 :transform "translateX(-50%) translateY(-50%)"}]
            [drag-control-view {:top 0 :left "100%" :transform "translateX(-50%) translateY(-50%)"}]
            [drag-control-view {:top 0 :left "50%" :transform "translateX(-50%) translateY(-50%)"}]
