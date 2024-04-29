@@ -1,149 +1,188 @@
 (ns pixel-art.tool.rectangle-select
   (:require [clojure.set]
+            [pixel-art.events.event-collector]
             [pixel-art.model.frame :as frame]
+            [pixel-art.tool.common :refer [commit-preview-changes
+                                           update-preview-and-draw]]
             [pixel-art.utils.geometry :as geometry]
             [re-frame.core :as re-frame]
+            [re-frame.db :as db]
+            [sc.api :as api]
             [re-pressed.core :as rp]))
+
+;; todo: grid; preview + outline clear; удалять хоткеи; нужно помнить о состояния превью; init
 
 (defn init [] {:type :rectangle-select :mode :select})
 
-(defn- move-selection [event db]
-  (let [{:keys [tool last-mouse-pos source-frame]} db
-        {:keys [initial-selection selection pasted?]} (:state tool)
+(defn map-vals [m f]
+  (->> (map (fn [[k v]] [k (f v)]) m)
+       (into {})))
 
-        offset-pos (merge-with - (:pos event) last-mouse-pos)
-        moved-selection (->> selection
-                             (map-indexed (fn [idx {:keys [pos color]}]
-                                            (let [initial-selection-color (:color (nth initial-selection idx))
-                                                  new-pos (merge-with + pos offset-pos)]
-                                              {:pos new-pos
-                                               :color (if (= initial-selection-color frame/transparent-color)
-                                                        (frame/get-pixel new-pos source-frame)
-                                                        color)}))))
-        cuted-selection (if pasted?
-                          []
-                          (map #(assoc % :color frame/transparent-color) initial-selection))]
-    {:overlay-frame (->> source-frame
-                         (frame/set-pixels cuted-selection)
-                         (frame/set-pixels moved-selection))
-    ;;  todo: rename to moved-selection
-     :new-selection moved-selection}))
+(defn map-keys [m f]
+  (->> (map (fn [[k v]] [(f k) v]) m)
+       (into {})))
+
+(defn contains-point [{:keys [top-left bottom-right]} point]
+  (and (>= (:x point) (:x top-left))
+       (<= (:x point) (:x bottom-right))
+       (>= (:y point) (:y top-left))
+       (<= (:y point) (:y bottom-right))))
 
 (defn behaviour [event db]
-  (let [{:keys [source-frame overlay-frame tool initial-mouse-down-pos]} db]
-    (case (or (-> tool :state :mode) :select)
+  (let [{:keys [tool source-frame initial-mouse-down-pos]} db]
+    (api/spy)
+    (case (or (-> tool :state :mode) :select) ;;todo: use init. todo: а зачем поле state
       :select
       (cond
         (#{:mouse-down :mouse-move} (:type event))
-        (let [selection-points (geometry/get-rectange-points initial-mouse-down-pos
-                                                             (:pos event))
-              initial-selection (frame/get-pixels-with-pos selection-points source-frame)]
-          {:tool (update tool :state #(merge % {:initial-selection initial-selection
-                                                :selection initial-selection
-                                                :show-selection-controls true}))
-           :overlay-frame source-frame})
+        {:db (assoc-in db [:tool :state] {:user-is-making-selection true})
+         :draw-selection-outline-on-preview [initial-mouse-down-pos (:pos event) {:clear true}]}
 
-        (and (= :mouse-up (:type event)) (-> tool :state :selection))
-        {:tool (-> tool
-                   (assoc-in [:state :mode] :move-selection)
-                   (assoc-in [:state :show-selection-controls] true))
-         :overlay-frame overlay-frame
-         :effects {:dispatch [::rp/set-keydown-rules
-                              {:event-keys [[[::copy-selection]
-                                             [{:keyCode 67 ;; c
-                                               :ctrlKey true}]]
+        (and (= :mouse-up (:type event))
+             (-> tool :state :user-is-making-selection))
+        (let [selection-points (geometry/get-ordered-rectangle-points initial-mouse-down-pos
+                                                                      (:pos event)) ;; todo: используем так как из selection-image удаляются прозр точки и если проверять вхож
+              selection-image (->> (geometry/get-rectange-points initial-mouse-down-pos (:pos event))
+                                   (map (fn [p] [p (frame/get-pixel p source-frame)]))
+                                   (filter (fn [[_ color]] (not= color frame/transparent-color)))
+                                   (into {}))
+              tool (assoc tool :state {:mode :move-selection
+                                       :initial-selection-image selection-image
+                                       :selection-image selection-image
+                                       :selection-points selection-points})]
+          {:db (assoc db :tool tool)
+           :draw-selection-outline-on-preview [initial-mouse-down-pos (:pos event) {:clear true}]
+           :dispatch [::rp/set-keydown-rules
+                      {:event-keys [[[::copy-selection]
+                                     [{:keyCode 67 ;; c
+                                       :ctrlKey true}]]
 
-                                            [[::past-selection]
-                                             [{:keyCode 86 ;; v
-                                               :ctrlKey true}]]
+                                    [[::past-selection]
+                                     [{:keyCode 86 ;; v
+                                       :ctrlKey true}]]
 
-                                            [[::delete-selection]
-                                             [{:keyCode 46 ;; delete
-                                               }]
-                                             [{:keyCode 8 ;; backspace
-                                               }]]
+                                    [[::delete-selection]
+                                     [{:keyCode 46 ;; delete
+                                       }]
+                                     [{:keyCode 8 ;; backspace
+                                       }]]
 
-                                            [[::cut-selection] ;;todo: implement
-                                             [{:keyCode 88 ;; x
-                                               }]]]}]}})
+                                    [[::cut-selection] ;;todo: implement
+                                     [{:keyCode 88 ;; x
+                                       }]]]}]})
+
+        :else {:db db})
 
       :move-selection
       (cond
-        (= :mouse-down (:type event))
-        (if (some #{(:pos event)} (map :pos (-> tool :state :selection)))
-          {:tool (assoc-in tool [:state :show-selection-controls] false)
-           :overlay-frame overlay-frame}
-          {:tool (assoc tool :state {:mode :select})
-           :overlay-frame overlay-frame
-           :commit-changes true})
+        (= (:type event) :mouse-down)
+        (if (not (contains-point (-> tool :state :selection-points) (:pos event)))
+          (-> (assoc db :tool (init))
+              (commit-preview-changes))
+          {:db db})
 
-        (= :mouse-move (:type event))
-        (let [{:keys [overlay-frame new-selection]} (move-selection event db)]
-          {:tool (assoc-in tool [:state :selection] new-selection)
-           :overlay-frame overlay-frame})
+        (= (:type event) :mouse-move)
+        (let [offset-pos (merge-with - (:pos event) initial-mouse-down-pos)
+              {:keys [initial-selection-image
+                      selection-image
+                      pasted?]}
+              (:state tool)
 
-        (= :mouse-up (:type event))
-        (let [{:keys [overlay-frame new-selection]} (move-selection event db)]
-          {:tool (-> tool
-                     (assoc-in [:state :selection] new-selection)
-                     (assoc-in [:state :show-selection-controls] true))
-           :overlay-frame overlay-frame})))))
+              cut-selection (when (not pasted?)
+                              (-> initial-selection-image
+                                  (map-vals (fn [_] frame/transparent-color))))
+              moved-selection-image (-> selection-image
+                                        (map-keys #(merge-with + % offset-pos)))
+              preview (merge cut-selection moved-selection-image)]
+          (update-preview-and-draw db
+                                   preview
+                                   {:clear true}))
+
+        (= (:type event) :mouse-up)
+        (let [offset-pos (merge-with - (:pos event) initial-mouse-down-pos)
+              {{:keys [selection-points selection-image]} :state} tool
+
+              moved-selection-points (map-vals selection-points #(merge-with + offset-pos %))
+              moved-selection-image (-> selection-image
+                                        (map-keys #(merge-with + % offset-pos)))
+              updated-tool (-> tool
+                               (assoc-in [:state :selection-points] moved-selection-points)
+                               (assoc-in [:state :selection-image] moved-selection-image))]
+          {:db (assoc db :tool updated-tool)
+           :draw-selection-outline-on-preview [(:top-left moved-selection-points)
+                                               (:bottom-right moved-selection-points)
+                                               {:clear false}]})))))
 
 (re-frame/reg-event-fx
  ::delete-selection
  (fn [{:keys [db]} _]
-   (let [{:keys [initial-selection pasted?]} (-> db :tool :state)
+   (let [{:keys [initial-selection-image pasted?]} (-> db :tool :state)
          cutted-initial-selection (if pasted?
-                                    []
-                                    (map (fn [{:keys [pos]}] {:pos pos :color frame/transparent-color})
-                                         initial-selection))
-         source-frame (->> (:source-frame db)
-                           (frame/set-pixels cutted-initial-selection))]
-     {:db (assoc db
-                 :overlay-frame source-frame
-                 :source-frame source-frame
-                 :tool {:type :rectangle-select
-                        :mode :select})
-      :draw-frame source-frame})))
+                                    {}
+                                    (map-vals initial-selection-image (fn [_] frame/transparent-color)))]
+     (-> db
+         (assoc :preview cutted-initial-selection)
+         (assoc :tool (init))
+         (commit-preview-changes))))) ;; todo: тут нет смысла в превью
 
 (re-frame/reg-event-fx
  ::copy-selection
  (fn [{:keys [db]} _]
-   (let [{:keys [initial-selection]} (-> db :tool :state)
-         source-frame (:overlay-frame db)
-         db (-> db
-                (assoc-in
-                 [:selection-manager :copied-selection]
-                 initial-selection)
-                (assoc-in
-                 [:tool :state]
-                 {:mode :select})
-                (assoc :overlay-frame source-frame)
-                (assoc :source-frame source-frame))]
-     {:db db
-      :draw-frame (:overlay-frame db)})))
+   (println "adfadf")
+   (let [{:keys [selection-image selection-points]} (-> db :tool :state)]
+     (-> db
+         (assoc
+          :selection-manager
+          {:selection-image selection-image
+           :selection-points selection-points})
+         (assoc-in
+          [:tool :state]
+          {:mode :select})
+         (commit-preview-changes)))))
 
 (re-frame/reg-event-fx
  ::past-selection
  (fn [{:keys [db]} _]
-   (let [copied-selection (-> db :selection-manager :copied-selection)
-         source-frame (:overlay-frame db)
-         overlay-frame (frame/set-pixels (->> copied-selection
-                                              (map (fn [{:keys [pos color]}]
-                                                     {:pos pos
-                                                      :color (if (= color frame/transparent-color)
-                                                               (frame/get-pixel pos source-frame)
-                                                               color)})))
-                                         source-frame)
+   (let [{:keys [selection-image selection-points]} (-> db :selection-manager)
          tool {:type :rectangle-select
                :state {:mode :move-selection
-                       :initial-selection copied-selection
-                       :selection copied-selection
-                       :pasted? true
-                       :show-selection-controls true}}]
-     (frame/display-frame source-frame)
-     {:db (assoc db
-                 :tool tool
-                 :overlay-frame overlay-frame
-                 :source-frame source-frame)
-      :draw-frame overlay-frame})))
+                       :initial-selection-image selection-image
+                       :selection-image selection-image
+                       :selection-points selection-points
+                       :pasted? true}}]
+     (-> db
+         (assoc :tool tool)
+         (commit-preview-changes)
+         (assoc :draw-preview [selection-image :selection-points {:clear true}])
+         (assoc :draw-selection-outline-on-preview [(:top-left selection-points)
+                                                    (:bottom-right selection-points)
+                                                    {:clear false}])))))
+
+(re-frame/reg-fx
+ :draw-selection-outline-on-preview
+ (fn [[p1 p2 {:keys [clear]}]]
+   (println clear)
+   (def p1 p1)
+   (def p2 p2)
+   (let [db @db/app-db
+
+         {:keys [top-left bottom-right]} (geometry/get-ordered-rectangle-points p1 p2)
+         width (inc (- (:x bottom-right) (:x top-left)))
+         height (inc (- (:y bottom-right) (:y top-left)))
+
+         canvas (. js/document (getElementById "preview"))
+         ctx (. canvas (getContext "2d"))
+
+         frame-size (frame/get-size (:source-frame db))
+         scale (:scale db)
+         canvas-size {:width (* scale (:width frame-size))
+                      :height (* scale (:height frame-size))}]
+     (when clear
+       (. ctx (clearRect 0 0 (:width canvas-size) (:height canvas-size))))
+     (set! (.-strokeStyle ctx) "#ffffff")
+     (.setLineDash ctx #js [5])
+     (.strokeRect ctx
+                  (* (:x top-left) scale)
+                  (* (:y top-left) scale)
+                  (* width scale)
+                  (* height scale)))))

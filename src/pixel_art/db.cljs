@@ -11,10 +11,11 @@
                                         {:pos {:x x :y y} :color "green"})))
                    (frame/set-pixels
                     [{:pos {:x 0 :y 0} :color "black"}
+                     {:pos {:x 0 :y 1} :color frame/transparent-color}
                      {:pos {:x 1 :y 1} :color "black"}]))]
     {:size size
      :source-frame frame
-     :overlay-frame frame
+     :preview {}
      :tool {:type :pen}
      :color "black"
      :selection-manager {}

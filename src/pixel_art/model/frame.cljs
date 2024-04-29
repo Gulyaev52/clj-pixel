@@ -26,6 +26,16 @@
                      pixels-with-pos)
      :size size}))
 
+(defn set-pixels-map [pixels-map frame]
+  (let [{:keys [pixels size]} frame]
+    {:pixels (reduce (fn [res-pixels [pos color]]
+                       (if (valid-pos? pos size)
+                         (assoc res-pixels (pos->idx pos size) color)
+                         res-pixels))
+                     pixels
+                     pixels-map)
+     :size size}))
+
 (def get-size :size)
 
 (defn get-pixel [pos frame]

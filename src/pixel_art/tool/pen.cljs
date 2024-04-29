@@ -1,14 +1,16 @@
 (ns pixel-art.tool.pen
-  (:require [pixel-art.model.frame :as frame]))
+  (:require [pixel-art.tool.common :refer [update-preview-and-draw commit-preview-changes]]))
 
 (defn init [] {:type :pen})
 
 (defn behaviour [event db]
-  (let [{:keys [overlay-frame color]} db]
+  (def event event)
+  (def db db)
+  (let [{:keys [preview color]} db]
     (cond
       (#{:mouse-down :mouse-move} (:type event))
-      {:overlay-frame (frame/set-pixels [{:pos (:pos event) :color color}] overlay-frame)}
+      (let [preview (assoc preview (:pos event) color)]
+        (update-preview-and-draw db preview {:clear false}))
 
       (= :mouse-up (:type event))
-      {:overlay-frame overlay-frame
-       :commit-changes true})))
+      (commit-preview-changes db))))
