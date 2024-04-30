@@ -18,10 +18,22 @@
 
 (defn release [] {})
 
-(defn remove-transparent-colors [selection-image]
+(defn- remove-transparent-colors [selection-image]
   (->> selection-image
        (filter (fn [[_ color]] (not= color frame/transparent-color)))
        (into {})))
+
+(defn- move-selection [tool initial-mouse-down-pos event]
+  (let [offset-pos (merge-with - (:pos event) initial-mouse-down-pos)
+        {:keys [initial-selection-image selection-image pasted?]} (:state tool)
+
+        deleted-initial-selection (when (not pasted?)
+                                    (update-vals initial-selection-image (fn [_] frame/transparent-color)))
+        moved-selection-image (-> selection-image
+                                  (update-keys #(merge-with + % offset-pos)))
+        preview (merge deleted-initial-selection
+                       (remove-transparent-colors moved-selection-image))]
+    {:preview preview :moved-selection-image moved-selection-image}))
 
 (defn behaviour [event db]
   (let [{:keys [tool source-frame initial-mouse-down-pos]} db]
@@ -72,29 +84,20 @@
           {:db db})
 
         (= (:type event) :mouse-move)
-        (let [offset-pos (merge-with - (:pos event) initial-mouse-down-pos)
-              {:keys [initial-selection-image selection-image pasted?]} (:state tool)
-
-              deleted-initial-selection (when (not pasted?)
-                                          (update-vals initial-selection-image (fn [_] frame/transparent-color)))
-              moved-selection-image (-> selection-image
-                                        (update-keys #(merge-with + % offset-pos))
-                                        remove-transparent-colors)
-              preview (merge deleted-initial-selection moved-selection-image)]
+        (let [{:keys [preview]} (move-selection tool initial-mouse-down-pos event)]
           (update-preview-and-draw db preview {:clear true}))
 
         (= (:type event) :mouse-up)
-        (let [offset-pos (merge-with - (:pos event) initial-mouse-down-pos)
-              {{:keys [selection-image]} :state} tool
-
-              moved-selection-image (update-keys selection-image #(merge-with + % offset-pos))
+        (let [{:keys [preview moved-selection-image]} (move-selection tool initial-mouse-down-pos event)
               updated-tool (assoc-in tool [:state :selection-image] moved-selection-image)
+              {:keys [top-left bottom-right]} (-> (keys moved-selection-image)
+                                                  geometry/get-rectange-top-left-and-bottom-right)]
+          (-> db
+              (assoc :tool updated-tool)
+              (update-preview-and-draw preview {:clear true})
+              (assoc :draw-selection-outline-on-preview [top-left bottom-right {:clear false}])))))))
 
-              {:keys [top-left bottom-right]} (geometry/get-rectange-top-left-and-bottom-right (keys moved-selection-image))]
-          {:db (assoc db :tool updated-tool)
-           :draw-selection-outline-on-preview [top-left bottom-right {:clear false}]})))))
-
-(defn copy-selection [db]
+(defn- copy-selection [db]
   (let [{:keys [selection-image]} (-> db :tool :state)]
     (-> db
         (assoc
@@ -102,7 +105,7 @@
          {:selection-image selection-image}))))
 ;; todo: copy-selection и delete-selection с commit-preview-changes
 
-(defn delete-selection-and-commit-preview [db]
+(defn- delete-selection-and-commit-preview [db]
   (let [{:keys [initial-selection-image pasted?]} (-> db :tool :state)
         deleted-initial-selection (if pasted?
                                     {}
