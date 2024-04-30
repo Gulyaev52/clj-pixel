@@ -51,9 +51,11 @@
                             :user-is-drawing true ;;todo: нужен ли если ли есть initial-mouse-down-pos 
                             :initial-mouse-down-pos (:pos event))
                      (handle-mouse-event-by-tool event))
+
                 :mouse-move
                 (->> (assoc db :user-is-drawing (:user-is-drawing db))
                      (handle-mouse-event-by-tool event))
+
                 :mouse-up
                 (->> (assoc db
                             :user-is-drawing false

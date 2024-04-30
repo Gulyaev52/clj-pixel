@@ -23,8 +23,6 @@
     :label "Mirror-x"}])
 
 (defn handle-mouse-event [event db]
-  (def event event)
-  (def db db)
   (let [{:keys [preview color user-is-drawing]} db]
     (cond
       (or (= (:type event) :mouse-down)

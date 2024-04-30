@@ -37,7 +37,6 @@
 
 (defn handle-mouse-event [event db]
   (let [{:keys [color initial-mouse-down-pos user-is-drawing]} db]
-    (api/spy)
     (cond
       (or (= (:type event) :mouse-down)
           (and (= (:type event) :mouse-move) user-is-drawing))

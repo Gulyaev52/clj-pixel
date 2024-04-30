@@ -43,7 +43,6 @@
 
 (defn handle-mouse-event [event db]
   (let [{:keys [tool source-frame initial-mouse-down-pos user-is-drawing]} db]
-    (api/spy)
     (case (-> tool :state :mode)
       :select
       (cond
