@@ -1,5 +1,5 @@
 (ns pixel-art.subs
-  (:require [pixel-art.tool.common :refer [get-tool-options]]
+  (:require [pixel-art.tool.utils :refer [get-tool-options]]
             [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub

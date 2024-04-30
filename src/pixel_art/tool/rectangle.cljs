@@ -1,7 +1,7 @@
 (ns pixel-art.tool.rectangle
-  (:require [pixel-art.tool.common :refer [commit-preview-changes
-                                           get-tool-options resize-pixel
-                                           update-preview-and-draw]]
+  (:require [pixel-art.tool.utils :refer [commit-preview-changes
+                                          get-tool-options resize-pixel
+                                          update-preview-and-draw]]
             [pixel-art.utils.geometry :as geometry]
             [sc.api :as api]))
 

@@ -1,9 +1,9 @@
 (ns pixel-art.views
   (:require [pixel-art.events :as events]
             [pixel-art.subs :as subs]
-            [pixel-art.tool.core :refer [tools-options-specs]]
             [re-frame.core :as re-frame]
-            [reagent.dom :as rdom]))
+            [reagent.dom :as rdom]
+            [pixel-art.tool.core :as tool]))
 
 (defn canvas-pos->frame-pos [event scale canvas]
   (let [rect (. canvas getBoundingClientRect)]
@@ -35,7 +35,7 @@
 
 (defn options-toolbar [tool-type]
   (let [options @(re-frame/subscribe [::subs/tool-options])
-        options-spec (tools-options-specs tool-type)]
+        options-spec (tool/options-specs tool-type)]
     [:div {:style {:display :flex :align-items :center :gap "6px"}}
      (map (fn [option-spec]
             (let [value (get options (:field option-spec))
@@ -56,9 +56,7 @@
      [:select {:value (:type tool)
                :onChange (fn [event]
                            (re-frame/dispatch [::events/select-tool (keyword (.. event -target -value))]))}
-      [:option {:value :pen} "pen"]
-      [:option {:value :rectangle} "rectangle"]
-      [:option {:value :rectangle-select} "rectangle-select"]]
+      (map (fn [t] [:option {:value t} (name t)]) tool/types)]
      [:div {:style {:display :flex :justify-content :center}}
       [:div {:style {:position "relative"
                      :border "1px solid black"}

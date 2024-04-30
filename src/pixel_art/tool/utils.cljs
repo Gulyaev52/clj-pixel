@@ -1,4 +1,4 @@
-(ns pixel-art.tool.common
+(ns pixel-art.tool.utils
   (:require [pixel-art.model.frame :as frame]
             [re-frame.db :as db]))
 

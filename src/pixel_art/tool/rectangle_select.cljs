@@ -2,12 +2,11 @@
   (:require [clojure.set]
             [pixel-art.events.event-collector]
             [pixel-art.model.frame :as frame]
-            [pixel-art.tool.common :refer [commit-preview-changes
-                                           update-preview-and-draw]]
+            [pixel-art.tool.utils :refer [commit-preview-changes
+                                          update-preview-and-draw]]
             [pixel-art.utils.geometry :as geometry]
             [re-frame.core :as re-frame]
             [re-frame.db :as db]
-            [sc.api :as api]
             [re-pressed.core :as rp]))
 
 ;; todo: grid; preview + outline clear; удалять хоткеи; нужно помнить о состояния превью; init

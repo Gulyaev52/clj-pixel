@@ -1,7 +1,6 @@
 (ns pixel-art.db
   (:require [pixel-art.model.frame :as frame]
-            [pixel-art.tool.core :refer [tools-options-specs]]
-            [pixel-art.tool.pen :as pen]))
+            [pixel-art.tool.core :as tool]))
 
 (defn get-initial-options [m]
   (-> m
@@ -23,8 +22,8 @@
     {:size size
      :source-frame frame
      :preview {}
-     :tool (pen/init)
-     :tools-options (get-initial-options tools-options-specs) ;; todo: добавить type в модуль; иметь какой-то массив со всеми опц
+     :tool (tool/init :pen)
+     :tools-options (get-initial-options tool/options-specs) ;; todo: добавить type в модуль; иметь какой-то массив со всеми опц
      :color "black"
      :selection-manager {}
      :scale 40}))

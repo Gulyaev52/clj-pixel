@@ -2,6 +2,7 @@
   (:require ["tinycolor2" :as tinycolor]
             [day8.re-frame.tracing :refer [fn-traced]]
             [pixel-art.db :as db]
+            [pixel-art.tool.core :as tool]
             [pixel-art.model.frame :as frame]
             [pixel-art.tool.pen :as pen]
             [pixel-art.tool.rectangle :as rectangle]
@@ -23,10 +24,7 @@
 (re-frame/reg-event-db
  ::select-tool
  (fn [db [_ tool-type]]
-   (let [tool (case tool-type
-                :pen (pen/init)
-                :rectangle (rectangle/init)
-                :rectangle-select (rectangle-select/init))]
+   (let [tool (tool/init tool-type)]
      (assoc db :tool tool))))
 
 (re-frame/reg-event-db
@@ -34,12 +32,6 @@
  (fn [db [_ field value]]
    (let [tool-type (-> db :tool :type)]
      (assoc-in db [:tools-options tool-type field] value))))
-
-(defn- handle-mouse-event-by-tool [event db]
-  (case (-> db :tool :type)
-    :pen (pen/handle-mouse-event event db)
-    :rectangle (rectangle/handle-mouse-event event db)
-    :rectangle-select (rectangle-select/handle-mouse-event event db)))
 
 (re-frame/reg-event-fx
  ::handle-mouse-event
@@ -50,17 +42,17 @@
                 (->> (assoc db
                             :user-is-drawing true ;;todo: нужен ли если ли есть initial-mouse-down-pos 
                             :initial-mouse-down-pos (:pos event))
-                     (handle-mouse-event-by-tool event))
+                     (tool/handle-mouse-event event))
 
                 :mouse-move
                 (->> (assoc db :user-is-drawing (:user-is-drawing db))
-                     (handle-mouse-event-by-tool event))
+                     (tool/handle-mouse-event event))
 
                 :mouse-up
                 (->> (assoc db
                             :user-is-drawing false
                             :initial-mouse-down-pos nil)
-                     (handle-mouse-event-by-tool event))))))
+                     (tool/handle-mouse-event event))))))
 
 #_(api/last-ep-id)
 #_(defsc [709 -83])

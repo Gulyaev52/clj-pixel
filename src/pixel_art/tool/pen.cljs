@@ -1,9 +1,8 @@
 (ns pixel-art.tool.pen
-  (:require [pixel-art.tool.common :refer [commit-preview-changes
-                                           get-tool-options resize-pixel
-                                           update-preview-and-draw]]))
+  (:require [pixel-art.tool.utils :refer [commit-preview-changes
+                                          get-tool-options resize-pixel
+                                          update-preview-and-draw]]))
 
-;; todo: использовать полиморфизм?
 (defn init [] {:type :pen})
 
 (def options-spec
