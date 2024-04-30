@@ -110,21 +110,21 @@
     (-> db
         (assoc :preview deleted-initial-selection)
         (assoc :tool (init))
-        (commit-preview-changes))))
+        (commit-preview-changes)))) ;; todo: тут нет смысла в превью
 
 (re-frame/reg-event-fx
  ::delete-selection
  (fn [{:keys [db]} _]
-   (delete-selection db))) ;; todo: тут нет смысла в превью
+   (delete-selection db)))
 
 (re-frame/reg-event-fx
  ::copy-selection
  (fn [{:keys [db]} _]
    (-> db
-       (copy-selection)
-       (assoc :tool (init))
-       (commit-preview-changes) ;; todo: по логике это должно делать раньше
-       )))
+       (commit-preview-changes) ;; сперва коммитим те изменения что были до копирования
+       (update :db #(-> %
+                        copy-selection
+                        (assoc :tool (init)))))))
 
 (re-frame/reg-event-fx
  ::past-selection
@@ -138,9 +138,8 @@
          preview (remove-transparent-colors selection-image)
          {:keys [top-left bottom-right]} (geometry/get-rectange-top-left-and-bottom-right (keys selection-image))]
      (-> db
-         (assoc :tool tool)
-         (commit-preview-changes)
-         (assoc-in [:db :preview] preview)
+         (commit-preview-changes) ;; сперва коммитим те изменения что были до вставки
+         (update :db #(assoc % :tool tool :preview preview))
          (assoc :draw-preview [preview {:clear true}])
          (assoc :draw-selection-outline-on-preview [top-left bottom-right {:clear false}])))))
 
