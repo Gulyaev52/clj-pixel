@@ -4,7 +4,7 @@
 
 (defn init [] {:type :rectangle})
 
-(defn behaviour [event db]
+(defn handle-mouse-event [event db]
   (let [{:keys [color initial-mouse-down-pos]} db]
     (cond
       (#{:mouse-down :mouse-move} (:type event))

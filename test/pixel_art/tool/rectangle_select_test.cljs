@@ -26,7 +26,7 @@
 (t/deftest behaviour-test
   (t/testing "when mode is select"
     (u/run-test-cases
-     rectangle-select/behaviour
+     rectangle-select/handle-mouse-event
      {:source-frame source-frame
       :overlay-frame source-frame
       :tool {:type :rectangle-select}
@@ -80,7 +80,7 @@
                         :selection initial-selection
                         :initial-selection initial-selection}}]
       (u/run-test-cases
-       rectangle-select/behaviour
+       rectangle-select/handle-mouse-event
        {:source-frame source-frame
         :overlay-frame (frame/set-pixels [{:pos {:x 0 :y 0} :color transpare-color}
                                           {:pos {:x 0 :y 1} :color transpare-color}

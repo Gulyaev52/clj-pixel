@@ -11,12 +11,9 @@
             [re-pressed.core :as rp]))
 
 ;; todo: grid; preview + outline clear; удалять хоткеи; нужно помнить о состояния превью; init
-
 ;; todo: используем так как из selection-image удаляются прозр точки(не работает днд) и если проверять вхож
 
-(defn init [] {:type :rectangle-select :mode :select})
-
-(defn release [] {})
+(defn init [] {:type :rectangle-select :state {:mode :select}})
 
 (defn- remove-transparent-colors [selection-image]
   (->> selection-image
@@ -35,7 +32,8 @@
                        (remove-transparent-colors moved-selection-image))]
     {:preview preview :moved-selection-image moved-selection-image}))
 
-(defn behaviour [event db]
+
+(defn handle-mouse-event [event db]
   (let [{:keys [tool source-frame initial-mouse-down-pos]} db]
     (api/spy)
     (case (or (-> tool :state :mode) :select) ;;todo: use init. todo: а зачем поле state
@@ -69,7 +67,7 @@
                                      [{:keyCode 8 ;; backspace
                                        }]]
 
-                                    [[::cut-selection] ;;todo: implement
+                                    [[::cut-selection]
                                      [{:keyCode 88 ;; x
                                        }]]]}]})
 

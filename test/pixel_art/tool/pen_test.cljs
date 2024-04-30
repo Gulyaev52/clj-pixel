@@ -7,7 +7,7 @@
 (def source-frame (frame/create {:width 2 :height 3}))
 
 (t/deftest behaviour-test
-  (u/run-test-cases pen/behaviour
+  (u/run-test-cases pen/handle-mouse-event
                     {:source-frame source-frame
                      :overlay-frame source-frame
                      :tool {:type :pen}

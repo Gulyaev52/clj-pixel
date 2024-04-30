@@ -25,11 +25,11 @@
  (fn [db [_ tool-type]]
    (assoc db :tool {:type tool-type})))
 
-(defn run-behaviour [event db]
+(defn handle-mouse-event-by-tool [event db]
   (case (-> db :tool :type)
-    :pen (pen/behaviour event db)
-    :rectangle (rectangle/behaviour event db)
-    :rectangle-select (rectangle-select/behaviour event db)))
+    :pen (pen/handle-mouse-event event db)
+    :rectangle (rectangle/handle-mouse-event event db)
+    :rectangle-select (rectangle-select/handle-mouse-event event db)))
 
 (re-frame/reg-event-fx
  ::handle-mouse-event
@@ -44,7 +44,7 @@
                               :last-mouse-pos
                               (or (:last-mouse-pos db) mouse-pos))]
                 (sc.api/spy)
-                (-> (run-behaviour {:type event-type :pos mouse-pos} db)
+                (-> (handle-mouse-event-by-tool {:type event-type :pos mouse-pos} db)
                     (#(if (= event-type :mouse-up)
                         (assoc-in % [:db :initial-mouse-down-pos] nil)
                         %)))))))
