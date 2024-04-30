@@ -29,7 +29,7 @@
 
 ;; todo: rename?
 (defn get-rectange-top-left-and-bottom-right [points]
-  (let [sorted (sort-by (fn [{:keys [pos]}] [(:x pos) (:y pos)]) points)]
+  (let [sorted (->> points (sort-by :x) (sort-by :y))]
     {:top-left (first sorted)
      :bottom-right (last sorted)}))
 

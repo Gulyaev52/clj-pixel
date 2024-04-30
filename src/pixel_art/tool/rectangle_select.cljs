@@ -16,6 +16,8 @@
 
 (defn init [] {:type :rectangle-select :mode :select})
 
+(defn release [] {})
+
 (defn remove-transparent-colors [selection-image]
   (->> selection-image
        (filter (fn [[_ color]] (not= color frame/transparent-color)))
@@ -64,7 +66,7 @@
       :move-selection
       (cond
         (= (:type event) :mouse-down)
-        (if (not (get (-> tool :state :selection-image) (:pos event)))
+        (if (not (contains? (-> tool :state :selection-image) (:pos event)))
           (-> (assoc db :tool (init))
               (commit-preview-changes))
           {:db db})
@@ -92,30 +94,37 @@
           {:db (assoc db :tool updated-tool)
            :draw-selection-outline-on-preview [top-left bottom-right {:clear false}]})))))
 
+(defn copy-selection [db]
+  (let [{:keys [selection-image]} (-> db :tool :state)]
+    (-> db
+        (assoc
+         :selection-manager
+         {:selection-image selection-image}))))
+;; todo: copy-selection и delete-selection с commit-preview-changes
+
+(defn delete-selection [db]
+  (let [{:keys [initial-selection-image pasted?]} (-> db :tool :state)
+        deleted-initial-selection (if pasted?
+                                    {}
+                                    (update-vals initial-selection-image (fn [_] frame/transparent-color)))]
+    (-> db
+        (assoc :preview deleted-initial-selection)
+        (assoc :tool (init))
+        (commit-preview-changes))))
+
 (re-frame/reg-event-fx
  ::delete-selection
  (fn [{:keys [db]} _]
-   (let [{:keys [initial-selection-image pasted?]} (-> db :tool :state)
-         deleted-initial-selection (if pasted?
-                                     {}
-                                     (update-vals initial-selection-image (fn [_] frame/transparent-color)))]
-     (-> db
-         (assoc :preview deleted-initial-selection)
-         (assoc :tool (init))
-         (commit-preview-changes))))) ;; todo: тут нет смысла в превью
+   (delete-selection db))) ;; todo: тут нет смысла в превью
 
 (re-frame/reg-event-fx
  ::copy-selection
  (fn [{:keys [db]} _]
-   (let [{:keys [selection-image]} (-> db :tool :state)]
-     (-> db
-         (assoc
-          :selection-manager
-          {:selection-image selection-image})
-         (assoc-in
-          [:tool :state]
-          {:mode :select})
-         (commit-preview-changes)))))
+   (-> db
+       (copy-selection)
+       (assoc :tool (init))
+       (commit-preview-changes) ;; todo: по логике это должно делать раньше
+       )))
 
 (re-frame/reg-event-fx
  ::past-selection
@@ -131,15 +140,20 @@
      (-> db
          (assoc :tool tool)
          (commit-preview-changes)
+         (assoc-in [:db :preview] preview)
          (assoc :draw-preview [preview {:clear true}])
          (assoc :draw-selection-outline-on-preview [top-left bottom-right {:clear false}])))))
+
+(re-frame/reg-event-fx
+ ::cut-selection
+ (fn [{:keys [db]} _]
+   (def db db)
+   (-> (copy-selection db)
+       (delete-selection))))
 
 (re-frame/reg-fx
  :draw-selection-outline-on-preview
  (fn [[p1 p2 {:keys [clear]}]]
-   (println clear)
-   (def p1 p1)
-   (def p2 p2)
    (let [db @db/app-db
 
          {:keys [top-left bottom-right]} (geometry/get-ordered-rectangle-points p1 p2)
