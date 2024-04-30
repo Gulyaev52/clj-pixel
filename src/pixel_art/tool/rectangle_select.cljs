@@ -102,7 +102,7 @@
          {:selection-image selection-image}))))
 ;; todo: copy-selection и delete-selection с commit-preview-changes
 
-(defn delete-selection [db]
+(defn delete-selection-and-commit-preview [db]
   (let [{:keys [initial-selection-image pasted?]} (-> db :tool :state)
         deleted-initial-selection (if pasted?
                                     {}
@@ -112,43 +112,49 @@
         (assoc :tool (init))
         (commit-preview-changes)))) ;; todo: тут нет смысла в превью
 
+(defn combine-event-handlers [[ev1 ev2]]
+  (fn [a1 a2]
+    (let [res1 (ev1 a1 a2)
+          res2 (ev2 (assoc a1 :db (:db res1)) a2)]
+      (merge res1 res2))))
+
 (re-frame/reg-event-fx
  ::delete-selection
  (fn [{:keys [db]} _]
-   (delete-selection db)))
+   (delete-selection-and-commit-preview db)))
 
 (re-frame/reg-event-fx
  ::copy-selection
- (fn [{:keys [db]} _]
-   (-> db
-       (commit-preview-changes) ;; сперва коммитим те изменения что были до копирования
-       (update :db #(-> %
-                        copy-selection
-                        (assoc :tool (init)))))))
+ (combine-event-handlers
+  [(fn [{:keys [db]}] (commit-preview-changes db))
+   (fn [{:keys [db]} _]
+     {:db (-> db
+              copy-selection
+              (assoc :tool (init)))})]))
 
 (re-frame/reg-event-fx
  ::past-selection
- (fn [{:keys [db]} _]
-   (let [{:keys [selection-image]} (-> db :selection-manager)
-         tool {:type :rectangle-select
-               :state {:mode :move-selection
-                       :initial-selection-image selection-image
-                       :selection-image selection-image
-                       :pasted? true}}
-         preview (remove-transparent-colors selection-image)
-         {:keys [top-left bottom-right]} (geometry/get-rectange-top-left-and-bottom-right (keys selection-image))]
-     (-> db
-         (commit-preview-changes) ;; сперва коммитим те изменения что были до вставки
-         (update :db #(assoc % :tool tool :preview preview))
-         (assoc :draw-preview [preview {:clear true}])
-         (assoc :draw-selection-outline-on-preview [top-left bottom-right {:clear false}])))))
+ (combine-event-handlers
+  [(fn [{:keys [db]}] (commit-preview-changes db))
+   (fn [{:keys [db]} _]
+     (let [{:keys [selection-image]} (:selection-manager db)
+           tool {:type :rectangle-select
+                 :state {:mode :move-selection
+                         :initial-selection-image selection-image
+                         :selection-image selection-image
+                         :pasted? true}}
+           preview (remove-transparent-colors selection-image)
+           {:keys [top-left bottom-right]} (geometry/get-rectange-top-left-and-bottom-right (keys selection-image))]
+       {:db (assoc db :tool tool :preview preview)
+        :draw-preview [preview {:clear true}]
+        :draw-selection-outline-on-preview [top-left bottom-right {:clear false}]}))]))
 
 (re-frame/reg-event-fx
  ::cut-selection
  (fn [{:keys [db]} _]
    (def db db)
    (-> (copy-selection db)
-       (delete-selection))))
+       (delete-selection-and-commit-preview))))
 
 (re-frame/reg-fx
  :draw-selection-outline-on-preview

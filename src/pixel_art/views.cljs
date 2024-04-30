@@ -50,10 +50,6 @@
        [:canvas {:id "preview"
                  :style {:position :absolute
                          :left 0
-                         :top 0}}]
-       [:canvas {:id "grid"
-                 :style {:position :absolute
-                         :left 0
                          :top 0}}]]]]))
 
 (defn mount-root []
