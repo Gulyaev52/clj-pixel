@@ -30,12 +30,8 @@
 ;; todo: rename?
 (defn get-rectange-top-left-and-bottom-right [points]
   (let [sorted (sort-by (fn [{:keys [pos]}] [(:x pos) (:y pos)]) points)]
-    [(first sorted) (last sorted)]))
-
-(defn contains-point [rectangle point]
-  (let [[x1 y1 x2 y2] rectangle
-        [x y] point]
-    (and (>= x x1) (<= x x2) (>= y y1) (<= y y2))))
+    {:top-left (first sorted)
+     :bottom-right (last sorted)}))
 
 (defn display-points [points size]
   (let [{:keys [width]} size

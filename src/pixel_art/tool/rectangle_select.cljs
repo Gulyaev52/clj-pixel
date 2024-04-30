@@ -12,6 +12,8 @@
 
 ;; todo: grid; preview + outline clear; удалять хоткеи; нужно помнить о состояния превью; init
 
+;; todo: используем так как из selection-image удаляются прозр точки(не работает днд) и если проверять вхож
+
 (defn init [] {:type :rectangle-select :mode :select})
 
 (defn map-vals [m f]
@@ -22,11 +24,10 @@
   (->> (map (fn [[k v]] [(f k) v]) m)
        (into {})))
 
-(defn contains-point [{:keys [top-left bottom-right]} point]
-  (and (>= (:x point) (:x top-left))
-       (<= (:x point) (:x bottom-right))
-       (>= (:y point) (:y top-left))
-       (<= (:y point) (:y bottom-right))))
+(defn remove-transparent-colors [selection-image]
+  (->> selection-image
+       (filter (fn [[_ color]] (not= color frame/transparent-color)))
+       (into {})))
 
 (defn behaviour [event db]
   (let [{:keys [tool source-frame initial-mouse-down-pos]} db]
@@ -38,18 +39,13 @@
         {:db (assoc-in db [:tool :state] {:user-is-making-selection true})
          :draw-selection-outline-on-preview [initial-mouse-down-pos (:pos event) {:clear true}]}
 
-        (and (= :mouse-up (:type event))
-             (-> tool :state :user-is-making-selection))
-        (let [selection-points (geometry/get-ordered-rectangle-points initial-mouse-down-pos
-                                                                      (:pos event)) ;; todo: используем так как из selection-image удаляются прозр точки и если проверять вхож
-              selection-image (->> (geometry/get-rectange-points initial-mouse-down-pos (:pos event))
+        (and (= :mouse-up (:type event)) (-> tool :state :user-is-making-selection))
+        (let [selection-image (->> (geometry/get-rectange-points initial-mouse-down-pos (:pos event))
                                    (map (fn [p] [p (frame/get-pixel p source-frame)]))
-                                   (filter (fn [[_ color]] (not= color frame/transparent-color)))
                                    (into {}))
               tool (assoc tool :state {:mode :move-selection
                                        :initial-selection-image selection-image
-                                       :selection-image selection-image
-                                       :selection-points selection-points})]
+                                       :selection-image selection-image})]
           {:db (assoc db :tool tool)
            :draw-selection-outline-on-preview [initial-mouse-down-pos (:pos event) {:clear true}]
            :dispatch [::rp/set-keydown-rules
@@ -76,65 +72,54 @@
       :move-selection
       (cond
         (= (:type event) :mouse-down)
-        (if (not (contains-point (-> tool :state :selection-points) (:pos event)))
+        (if (not (get (-> tool :state :selection-image) (:pos event)))
           (-> (assoc db :tool (init))
               (commit-preview-changes))
           {:db db})
 
         (= (:type event) :mouse-move)
         (let [offset-pos (merge-with - (:pos event) initial-mouse-down-pos)
-              {:keys [initial-selection-image
-                      selection-image
-                      pasted?]}
-              (:state tool)
+              {:keys [initial-selection-image selection-image pasted?]} (:state tool)
 
-              cut-selection (when (not pasted?)
-                              (-> initial-selection-image
-                                  (map-vals (fn [_] frame/transparent-color))))
+              deleted-initial-selection (when (not pasted?)
+                                          (map-vals initial-selection-image (fn [_] frame/transparent-color)))
               moved-selection-image (-> selection-image
-                                        (map-keys #(merge-with + % offset-pos)))
-              preview (merge cut-selection moved-selection-image)]
-          (update-preview-and-draw db
-                                   preview
-                                   {:clear true}))
+                                        (map-keys #(merge-with + % offset-pos))
+                                        remove-transparent-colors)
+              preview (merge deleted-initial-selection moved-selection-image)]
+          (update-preview-and-draw db preview {:clear true}))
 
         (= (:type event) :mouse-up)
         (let [offset-pos (merge-with - (:pos event) initial-mouse-down-pos)
-              {{:keys [selection-points selection-image]} :state} tool
+              {{:keys [selection-image]} :state} tool
 
-              moved-selection-points (map-vals selection-points #(merge-with + offset-pos %))
-              moved-selection-image (-> selection-image
-                                        (map-keys #(merge-with + % offset-pos)))
-              updated-tool (-> tool
-                               (assoc-in [:state :selection-points] moved-selection-points)
-                               (assoc-in [:state :selection-image] moved-selection-image))]
+              moved-selection-image (map-keys selection-image #(merge-with + % offset-pos))
+              updated-tool (assoc-in tool [:state :selection-image] moved-selection-image)
+
+              {:keys [top-left bottom-right]} (geometry/get-rectange-top-left-and-bottom-right (keys moved-selection-image))]
           {:db (assoc db :tool updated-tool)
-           :draw-selection-outline-on-preview [(:top-left moved-selection-points)
-                                               (:bottom-right moved-selection-points)
-                                               {:clear false}]})))))
+           :draw-selection-outline-on-preview [top-left bottom-right {:clear false}]})))))
 
 (re-frame/reg-event-fx
  ::delete-selection
  (fn [{:keys [db]} _]
    (let [{:keys [initial-selection-image pasted?]} (-> db :tool :state)
-         cutted-initial-selection (if pasted?
-                                    {}
-                                    (map-vals initial-selection-image (fn [_] frame/transparent-color)))]
+         deleted-initial-selection (if pasted?
+                                     {}
+                                     (map-vals initial-selection-image (fn [_] frame/transparent-color)))]
      (-> db
-         (assoc :preview cutted-initial-selection)
+         (assoc :preview deleted-initial-selection)
          (assoc :tool (init))
          (commit-preview-changes))))) ;; todo: тут нет смысла в превью
 
 (re-frame/reg-event-fx
  ::copy-selection
  (fn [{:keys [db]} _]
-   (println "adfadf")
-   (let [{:keys [selection-image selection-points]} (-> db :tool :state)]
+   (let [{:keys [selection-image]} (-> db :tool :state)]
      (-> db
          (assoc
           :selection-manager
-          {:selection-image selection-image
-           :selection-points selection-points})
+          {:selection-image selection-image})
          (assoc-in
           [:tool :state]
           {:mode :select})
@@ -143,20 +128,19 @@
 (re-frame/reg-event-fx
  ::past-selection
  (fn [{:keys [db]} _]
-   (let [{:keys [selection-image selection-points]} (-> db :selection-manager)
+   (let [{:keys [selection-image]} (-> db :selection-manager)
          tool {:type :rectangle-select
                :state {:mode :move-selection
                        :initial-selection-image selection-image
                        :selection-image selection-image
-                       :selection-points selection-points
-                       :pasted? true}}]
+                       :pasted? true}}
+         preview (remove-transparent-colors selection-image)
+         {:keys [top-left bottom-right]} (geometry/get-rectange-top-left-and-bottom-right (keys selection-image))]
      (-> db
          (assoc :tool tool)
          (commit-preview-changes)
-         (assoc :draw-preview [selection-image :selection-points {:clear true}])
-         (assoc :draw-selection-outline-on-preview [(:top-left selection-points)
-                                                    (:bottom-right selection-points)
-                                                    {:clear false}])))))
+         (assoc :draw-preview [preview {:clear true}])
+         (assoc :draw-selection-outline-on-preview [top-left bottom-right {:clear false}])))))
 
 (re-frame/reg-fx
  :draw-selection-outline-on-preview
