@@ -23,9 +23,13 @@
 (re-frame/reg-event-db
  ::select-tool
  (fn [db [_ tool-type]]
-   (assoc db :tool {:type tool-type})))
+   (let [tool (case tool-type
+                :pen (pen/init)
+                :rectangle (rectangle/init)
+                :rectangle-select (rectangle-select/init))]
+     (assoc db :tool tool))))
 
-(defn handle-mouse-event-by-tool [event db]
+(defn- handle-mouse-event-by-tool [event db]
   (case (-> db :tool :type)
     :pen (pen/handle-mouse-event event db)
     :rectangle (rectangle/handle-mouse-event event db)

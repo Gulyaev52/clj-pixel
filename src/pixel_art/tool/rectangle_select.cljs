@@ -12,6 +12,8 @@
 
 ;; todo: grid; preview + outline clear; удалять хоткеи; нужно помнить о состояния превью; init
 ;; todo: используем так как из selection-image удаляются прозр точки(не работает днд) и если проверять вхож
+;; todo: а зачем поле state
+;; ресайз
 
 (defn init [] {:type :rectangle-select :state {:mode :select}})
 
@@ -36,11 +38,11 @@
 (defn handle-mouse-event [event db]
   (let [{:keys [tool source-frame initial-mouse-down-pos]} db]
     (api/spy)
-    (case (or (-> tool :state :mode) :select) ;;todo: use init. todo: а зачем поле state
+    (case (-> tool :state :mode)
       :select
       (cond
         (#{:mouse-down :mouse-move} (:type event))
-        {:db (assoc-in db [:tool :state] {:user-is-making-selection true})
+        {:db (assoc-in db [:tool :state :user-is-making-selection] true)
          :draw-selection-outline-on-preview [initial-mouse-down-pos (:pos event) {:clear true}]}
 
         (and (= :mouse-up (:type event)) (-> tool :state :user-is-making-selection))

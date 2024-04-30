@@ -1,5 +1,6 @@
 (ns pixel-art.db
-  (:require [pixel-art.model.frame :as frame]))
+  (:require [pixel-art.model.frame :as frame]
+            [pixel-art.tool.pen :as pen]))
 
 (def default-db
   (let [size {:width 8
@@ -16,7 +17,7 @@
     {:size size
      :source-frame frame
      :preview {}
-     :tool {:type :pen}
+     :tool (pen/init)
      :color "black"
      :selection-manager {}
      :scale 40}))
