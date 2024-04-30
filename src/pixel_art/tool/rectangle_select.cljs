@@ -18,6 +18,8 @@
 
 (defn init [] {:type :rectangle-select :state {:mode :select}})
 
+(defn unselect [db] (commit-preview-changes db))
+
 (defn- remove-transparent-colors [selection-image]
   (->> selection-image
        (filter (fn [[_ color]] (not= color frame/transparent-color)))

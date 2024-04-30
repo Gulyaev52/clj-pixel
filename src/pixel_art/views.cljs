@@ -2,7 +2,8 @@
   (:require [pixel-art.subs :as subs]
             [re-frame.core :as re-frame]
             [reagent.dom :as rdom]
-            [pixel-art.events :as events]))
+            [pixel-art.events :as events]
+            [pixel-art.tool.pen :as pen]))
 
 (defn canvas-pos->frame-pos [event scale canvas]
   (let [rect (. canvas getBoundingClientRect)]
@@ -13,10 +14,49 @@
 
 (def !last-mouse-pos (atom nil))
 
+(defn slider [{:keys [value label min max onChange]}]
+  ;; todo: labels
+  [:div {:style {:display :flex :align-items :center}}
+   [:span (str label " (" value ")")]
+   [:input {:type "range"
+            :value value
+            :min min
+            :max max
+            :onChange (fn [e]
+                        (let [value (parse-double (.. e -target -value))]
+                          (onChange value)))}]])
+
+(defn checkbox [{:keys [value onChange label]}]
+  [:div {:style {:display :flex :align-items :center}}
+   [:input {:type "checkbox"
+            :checked value
+            :onChange (fn [e] (onChange (.. e -target -checked)))}]
+   [:span label]])
+
+(defn get-tool-options-spec [tool-type]
+  (case tool-type
+    :pen pen/options-spec))
+
+(defn options-toolbar [tool-type]
+  (let [options @(re-frame/subscribe [::subs/tool-options])
+        options-spec (get-tool-options-spec tool-type)]
+    [:div {:style {:display :flex :align-items :center :gap "6px"}}
+     (map (fn [option-spec]
+            (let [value (get options (:field option-spec))
+                  onChange #(re-frame/dispatch [::events/change-tool-option (:field option-spec) %])
+                  props (assoc option-spec
+                               :value value
+                               :onChange onChange)]
+              (case (:type option-spec)
+                :slider (slider props)
+                :checkbox (checkbox props))))
+          options-spec)]))
+
 (defn main-panel []
   (let [tool @(re-frame/subscribe [::subs/tool])
         scale @(re-frame/subscribe [::subs/scale])]
     [:div
+     [options-toolbar (:type tool)]
      [:select {:value (:type tool)
                :onChange (fn [event]
                            (re-frame/dispatch [::events/select-tool (keyword (.. event -target -value))]))}

@@ -1,5 +1,6 @@
 (ns pixel-art.tool.common
-  (:require [pixel-art.model.frame :as frame]))
+  (:require [pixel-art.model.frame :as frame]
+            [re-frame.db :as db]))
 
 (defn update-preview-and-draw [db preview {:keys [clear]}]
   {:db (assoc db :preview preview)
@@ -12,3 +13,6 @@
                 :source-frame source-frame)
      :draw-preview [nil {:clear true}]
      :draw-frame source-frame}))
+
+(defn get-tool-options [db]
+  (get (db :tools-options) (-> db :tool :type)))

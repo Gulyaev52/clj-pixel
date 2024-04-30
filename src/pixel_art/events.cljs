@@ -29,6 +29,12 @@
                 :rectangle-select (rectangle-select/init))]
      (assoc db :tool tool))))
 
+(re-frame/reg-event-db
+ ::change-tool-option
+ (fn [db [_ field value]]
+   (let [tool-type (-> db :tool :type)]
+     (assoc-in db [:tools-options tool-type field] value))))
+
 (defn- handle-mouse-event-by-tool [event db]
   (case (-> db :tool :type)
     :pen (pen/handle-mouse-event event db)
