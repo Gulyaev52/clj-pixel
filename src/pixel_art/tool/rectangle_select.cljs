@@ -16,14 +16,6 @@
 
 (defn init [] {:type :rectangle-select :mode :select})
 
-(defn map-vals [m f]
-  (->> (map (fn [[k v]] [k (f v)]) m)
-       (into {})))
-
-(defn map-keys [m f]
-  (->> (map (fn [[k v]] [(f k) v]) m)
-       (into {})))
-
 (defn remove-transparent-colors [selection-image]
   (->> selection-image
        (filter (fn [[_ color]] (not= color frame/transparent-color)))
@@ -82,9 +74,9 @@
               {:keys [initial-selection-image selection-image pasted?]} (:state tool)
 
               deleted-initial-selection (when (not pasted?)
-                                          (map-vals initial-selection-image (fn [_] frame/transparent-color)))
+                                          (update-vals initial-selection-image (fn [_] frame/transparent-color)))
               moved-selection-image (-> selection-image
-                                        (map-keys #(merge-with + % offset-pos))
+                                        (update-keys #(merge-with + % offset-pos))
                                         remove-transparent-colors)
               preview (merge deleted-initial-selection moved-selection-image)]
           (update-preview-and-draw db preview {:clear true}))
@@ -93,7 +85,7 @@
         (let [offset-pos (merge-with - (:pos event) initial-mouse-down-pos)
               {{:keys [selection-image]} :state} tool
 
-              moved-selection-image (map-keys selection-image #(merge-with + % offset-pos))
+              moved-selection-image (update-keys selection-image #(merge-with + % offset-pos))
               updated-tool (assoc-in tool [:state :selection-image] moved-selection-image)
 
               {:keys [top-left bottom-right]} (geometry/get-rectange-top-left-and-bottom-right (keys moved-selection-image))]
@@ -106,7 +98,7 @@
    (let [{:keys [initial-selection-image pasted?]} (-> db :tool :state)
          deleted-initial-selection (if pasted?
                                      {}
-                                     (map-vals initial-selection-image (fn [_] frame/transparent-color)))]
+                                     (update-vals initial-selection-image (fn [_] frame/transparent-color)))]
      (-> db
          (assoc :preview deleted-initial-selection)
          (assoc :tool (init))
