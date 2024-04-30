@@ -14,6 +14,7 @@
 ;; todo: используем так как из selection-image удаляются прозр точки(не работает днд) и если проверять вхож
 ;; todo: а зачем поле state
 ;; ресайз
+;; а нужно ли сбрасывать селектион на копирование и вставку и тогда зачем там вообще комитить что-то
 
 (defn init [] {:type :rectangle-select :state {:mode :select}})
 
@@ -55,7 +56,11 @@
           {:db (assoc db :tool tool)
            :draw-selection-outline-on-preview [initial-mouse-down-pos (:pos event) {:clear true}]
            :dispatch [::rp/set-keydown-rules
-                      {:event-keys [[[::copy-selection]
+                      {:event-keys [[[::cancel-selection]
+                                     [{:keyCode 27 ;; esc
+                                       }]]
+
+                                    [[::copy-selection]
                                      [{:keyCode 67 ;; c
                                        :ctrlKey true}]]
 
@@ -125,6 +130,13 @@
  ::delete-selection
  (fn [{:keys [db]} _]
    (delete-selection-and-commit-preview db)))
+
+(re-frame/reg-event-fx
+ ::cancel-selection
+ (combine-event-handlers
+  [(fn [{:keys [db]}] (commit-preview-changes db))
+   (fn [{:keys [db]} _]
+     {:db (assoc db :tool (init))})]))
 
 (re-frame/reg-event-fx
  ::copy-selection
