@@ -7,8 +7,7 @@
             [pixel-art.tool.rectangle :as rectangle]
             [pixel-art.tool.rectangle-select :as rectangle-select]
             [re-frame.core :as re-frame]
-            [re-frame.db]
-            [sc.api :as api]))
+            [re-frame.db]))
 
 (re-frame/reg-event-fx
  ::initialize-db
@@ -45,40 +44,26 @@
 (re-frame/reg-event-fx
  ::handle-mouse-event
  (fn-traced [{:keys [db]} [_ event-type mouse-pos]]
-            (def db db)
-            (def event-type event-type)
-            (def mouse-pos mouse-pos)
-            (let [db (assoc db
-                            :user-is-drawing (case event-type
-                                               :mouse-down true
-                                               :mouse-move (:initial-mouse-down-pos db)
-                                               :mouse-up false)
-                            :initial-mouse-down-pos (or (:initial-mouse-down-pos db)
-                                                        (when (= event-type :mouse-down) mouse-pos))
-                            :last-mouse-pos (or (:last-mouse-pos db) mouse-pos))]
-              (-> (handle-mouse-event-by-tool {:type event-type :pos mouse-pos} db)
-                  (#(if (= event-type :mouse-up)
-                      (assoc-in % [:db :initial-mouse-down-pos] nil)
-                      %))))))
+            (let [event {:type event-type :pos mouse-pos}]
+              (case event-type
+                :mouse-down
+                (->> (assoc db
+                            :user-is-drawing true ;;todo: нужен ли если ли есть initial-mouse-down-pos 
+                            :initial-mouse-down-pos (:pos event))
+                     (handle-mouse-event-by-tool event))
+                :mouse-move
+                (->> (assoc db :user-is-drawing (:user-is-drawing db))
+                     (handle-mouse-event-by-tool event))
+                :mouse-up
+                (->> (assoc db
+                            :user-is-drawing false
+                            :initial-mouse-down-pos nil)
+                     (handle-mouse-event-by-tool event))))))
 
 #_(api/last-ep-id)
 #_(defsc [709 -83])
 #_(pixel-art.events.event-collector/repeat-last-event)
 #_(re-frame/dispatch (second @pixel-art.events.event-collector/event-store))
-
-(defn draw-pixel-grid [frame-size canvas-size scale ctx]
-  (dotimes [y (:height frame-size)]
-    (doto ctx
-      (.beginPath)
-      (.moveTo 0 (* y scale))
-      (.lineTo (:width canvas-size) (* y scale))
-      (.stroke)))
-  (dotimes [x (:width frame-size)]
-    (doto ctx
-      (.beginPath)
-      (.moveTo (* x scale) 0)
-      (.lineTo (* x scale) (:height canvas-size))
-      (.stroke))))
 
 (defn get-highlight-color [color]
   (let [dark-color "rgba(0, 0, 0, 0.2)"
@@ -132,6 +117,20 @@
      (doseq [[pos color] preview]
        (set! (. ctx -fillStyle) (or color "white"))
        (. ctx (fillRect (* (:x pos) scale) (* (:y pos) scale) scale scale))))))
+
+(defn draw-pixel-grid [frame-size canvas-size scale ctx]
+  (dotimes [y (:height frame-size)]
+    (doto ctx
+      (.beginPath)
+      (.moveTo 0 (* y scale))
+      (.lineTo (:width canvas-size) (* y scale))
+      (.stroke)))
+  (dotimes [x (:width frame-size)]
+    (doto ctx
+      (.beginPath)
+      (.moveTo (* x scale) 0)
+      (.lineTo (* x scale) (:height canvas-size))
+      (.stroke))))
 
 (re-frame/reg-fx
  :draw-frame
