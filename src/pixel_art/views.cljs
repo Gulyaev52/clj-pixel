@@ -1,9 +1,9 @@
 (ns pixel-art.views
-  (:require [pixel-art.subs :as subs]
+  (:require [pixel-art.events :as events]
+            [pixel-art.subs :as subs]
+            [pixel-art.tool.core :refer [tools-options-specs]]
             [re-frame.core :as re-frame]
-            [reagent.dom :as rdom]
-            [pixel-art.events :as events]
-            [pixel-art.tool.pen :as pen]))
+            [reagent.dom :as rdom]))
 
 (defn canvas-pos->frame-pos [event scale canvas]
   (let [rect (. canvas getBoundingClientRect)]
@@ -33,13 +33,9 @@
             :onChange (fn [e] (onChange (.. e -target -checked)))}]
    [:span label]])
 
-(defn get-tool-options-spec [tool-type]
-  (case tool-type
-    :pen pen/options-spec))
-
 (defn options-toolbar [tool-type]
   (let [options @(re-frame/subscribe [::subs/tool-options])
-        options-spec (get-tool-options-spec tool-type)]
+        options-spec (tools-options-specs tool-type)]
     [:div {:style {:display :flex :align-items :center :gap "6px"}}
      (map (fn [option-spec]
             (let [value (get options (:field option-spec))

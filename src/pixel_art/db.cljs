@@ -1,22 +1,7 @@
 (ns pixel-art.db
   (:require [pixel-art.model.frame :as frame]
+            [pixel-art.tool.core :refer [tools-options-specs]]
             [pixel-art.tool.pen :as pen]))
-
-(def options-ui
-  [{:type :slider
-    :field :pixel-size
-    :label "Pixel size"
-    :initial-value 1
-    :min 1
-    :max 64}
-   {:type :checkbox
-    :field :pixel-perfect
-    :initial-value false
-    :label "Pixel perfect"}
-   {:type :checkbox
-    :field :mirror-x
-    :initial-value false
-    :label "Mirror-x"}])
 
 (defn get-initial-options [m]
   (-> m
@@ -39,7 +24,7 @@
      :source-frame frame
      :preview {}
      :tool (pen/init)
-     :tools-options (get-initial-options {:pen pen/options-spec}) ;; todo: добавить type в модуль; иметь какой-то массив со всеми опц
+     :tools-options (get-initial-options tools-options-specs) ;; todo: добавить type в модуль; иметь какой-то массив со всеми опц
      :color "black"
      :selection-manager {}
      :scale 40}))

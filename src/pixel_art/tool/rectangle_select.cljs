@@ -18,6 +18,9 @@
 
 (defn init [] {:type :rectangle-select :state {:mode :select}})
 
+(def options-spec
+  [])
+
 (defn unselect [db] (commit-preview-changes db))
 
 (defn- remove-transparent-colors [selection-image]
@@ -39,14 +42,19 @@
 
 
 (defn handle-mouse-event [event db]
-  (let [{:keys [tool source-frame initial-mouse-down-pos]} db]
+  (let [{:keys [tool source-frame initial-mouse-down-pos user-is-drawing]} db]
     (api/spy)
     (case (-> tool :state :mode)
       :select
       (cond
-        (#{:mouse-down :mouse-move} (:type event))
+        (or (= (:type event) :mouse-down)
+            (and (= (:type event) :mouse-move) user-is-drawing))
         {:db (assoc-in db [:tool :state :user-is-making-selection] true)
          :draw-selection-outline-on-preview [initial-mouse-down-pos (:pos event) {:clear true}]}
+
+        (= (:type event) :mouse-move)
+        {:db db
+         :highlight-pixels [(:pos event)]}
 
         (and (= :mouse-up (:type event)) (-> tool :state :user-is-making-selection))
         (let [selection-image (->> (geometry/get-rectange-points initial-mouse-down-pos (:pos event))
@@ -90,15 +98,15 @@
               (commit-preview-changes))
           {:db db})
 
-        (= (:type event) :mouse-move)
+        (or (= (:type event) :mouse-down)
+            (and (= (:type event) :mouse-move) user-is-drawing))
         (let [{:keys [preview]} (move-selection tool initial-mouse-down-pos event)]
           (update-preview-and-draw db preview {:clear true}))
 
         (= (:type event) :mouse-up)
         (let [{:keys [preview moved-selection-image]} (move-selection tool initial-mouse-down-pos event)
               updated-tool (assoc-in tool [:state :selection-image] moved-selection-image)
-              {:keys [top-left bottom-right]} (-> (keys moved-selection-image)
-                                                  geometry/get-rectange-top-left-and-bottom-right)]
+              {:keys [top-left bottom-right]} (geometry/get-ordered-rectangle-points (keys moved-selection-image))]
           (-> db
               (assoc :tool updated-tool)
               (update-preview-and-draw preview {:clear true})
@@ -161,7 +169,7 @@
                          :selection-image selection-image
                          :pasted? true}}
            preview (remove-transparent-colors selection-image)
-           {:keys [top-left bottom-right]} (geometry/get-rectange-top-left-and-bottom-right (keys selection-image))]
+           {:keys [top-left bottom-right]} (geometry/get-ordered-rectangle-points (keys selection-image))]
        {:db (assoc db :tool tool :preview preview)
         :draw-preview [preview {:clear true}]
         :draw-selection-outline-on-preview [top-left bottom-right {:clear false}]}))]))
@@ -178,7 +186,7 @@
  (fn [[p1 p2 {:keys [clear]}]]
    (let [db @db/app-db
 
-         {:keys [top-left bottom-right]} (geometry/get-ordered-rectangle-points p1 p2)
+         {:keys [top-left bottom-right]} (geometry/get-ordered-rectangle-points [p1 p2])
          width (inc (- (:x bottom-right) (:x top-left)))
          height (inc (- (:y bottom-right) (:y top-left)))
 

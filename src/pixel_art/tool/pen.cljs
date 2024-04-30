@@ -1,8 +1,7 @@
 (ns pixel-art.tool.pen
   (:require [pixel-art.tool.common :refer [commit-preview-changes
-                                           get-tool-options
-                                           update-preview-and-draw]]
-            [sc.api :as api]))
+                                           get-tool-options resize-pixel
+                                           update-preview-and-draw]]))
 
 ;; todo: использовать полиморфизм?
 (defn init [] {:type :pen})
@@ -23,31 +22,24 @@
     :initial-value false
     :label "Mirror-x"}])
 
-
-;; Resize the pixel at {col, row} for the provided size. Will return the array of pixels centered
-;; * around the original pixel, forming a pixel square of side=size
-(defn resize-pixel [point size]
-  (for [j (range 0 size)
-        i (range 0 size)]
-    {:x (+ (- (:x point) (. js/Math (floor (/ size 2)))) i)
-     :y (+ (- (:y point) (. js/Math (floor (/ size 2)))) j)}))
-(comment
-  (resize-pixel {:x 3 :y 3} 1)
-  (resize-pixel {:x 3 :y 3} 2)
-  (resize-pixel {:x 3 :y 3} 3))
-
 (defn handle-mouse-event [event db]
   (def event event)
   (def db db)
-  (let [{:keys [preview color]} db]
+  (let [{:keys [preview color user-is-drawing]} db]
     (cond
-      (#{:mouse-down :mouse-move} (:type event))
+      (or (= (:type event) :mouse-down)
+          (and (= (:type event) :mouse-move) user-is-drawing))
       (let [{:keys [pixel-size]} (get-tool-options db)
             new-preview (->> (resize-pixel (:pos event) pixel-size)
                              (map (fn [p] [p color]))
                              (into preview))]
-        (api/spy)
         (update-preview-and-draw db new-preview {:clear false}))
+
+      (and (= (:type event) :mouse-move) (not user-is-drawing))
+      (let [{:keys [pixel-size]} (get-tool-options db)
+            points (resize-pixel (:pos event) pixel-size)]
+        {:db db
+         :highlight-pixels points})
 
       (= :mouse-up (:type event))
       (commit-preview-changes db))))

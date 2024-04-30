@@ -1,5 +1,6 @@
 (ns pixel-art.events
-  (:require [day8.re-frame.tracing :refer [fn-traced]]
+  (:require ["tinycolor2" :as tinycolor]
+            [day8.re-frame.tracing :refer [fn-traced]]
             [pixel-art.db :as db]
             [pixel-art.model.frame :as frame]
             [pixel-art.tool.pen :as pen]
@@ -44,20 +45,21 @@
 (re-frame/reg-event-fx
  ::handle-mouse-event
  (fn-traced [{:keys [db]} [_ event-type mouse-pos]]
-            db
-            (if (and (#{:mouse-move :mouse-up} event-type)
-                     (not (:initial-mouse-down-pos db)))
-              {:db db}
-              (let [db (assoc db
-                              :initial-mouse-down-pos
-                              (or (:initial-mouse-down-pos db) mouse-pos)
-                              :last-mouse-pos
-                              (or (:last-mouse-pos db) mouse-pos))]
-                (sc.api/spy)
-                (-> (handle-mouse-event-by-tool {:type event-type :pos mouse-pos} db)
-                    (#(if (= event-type :mouse-up)
-                        (assoc-in % [:db :initial-mouse-down-pos] nil)
-                        %)))))))
+            (def db db)
+            (def event-type event-type)
+            (def mouse-pos mouse-pos)
+            (let [db (assoc db
+                            :user-is-drawing (case event-type
+                                               :mouse-down true
+                                               :mouse-move (:initial-mouse-down-pos db)
+                                               :mouse-up false)
+                            :initial-mouse-down-pos (or (:initial-mouse-down-pos db)
+                                                        (when (= event-type :mouse-down) mouse-pos))
+                            :last-mouse-pos (or (:last-mouse-pos db) mouse-pos))]
+              (-> (handle-mouse-event-by-tool {:type event-type :pos mouse-pos} db)
+                  (#(if (= event-type :mouse-up)
+                      (assoc-in % [:db :initial-mouse-down-pos] nil)
+                      %))))))
 
 #_(api/last-ep-id)
 #_(defsc [709 -83])
@@ -77,6 +79,37 @@
       (.moveTo (* x scale) 0)
       (.lineTo (* x scale) (:height canvas-size))
       (.stroke))))
+
+(defn get-highlight-color [color]
+  (let [dark-color "rgba(0, 0, 0, 0.2)"
+        light-color "rgba(255, 255, 255, 0.2)"]
+    (if (= color frame/transparent-color)
+      dark-color
+      (let [luminance (.. (tinycolor color) toHsl -l)]
+        (if (> luminance 0.5)
+          dark-color
+          light-color)))))
+
+(re-frame/reg-fx
+ :highlight-pixels
+ (fn [poses]
+   (let [db @re-frame.db/app-db
+
+         canvas (. js/document (getElementById "preview"))
+         ctx (. canvas (getContext "2d"))
+
+         source-frame (:source-frame db)
+         frame-size (frame/get-size source-frame)
+         scale (:scale db)
+         canvas-size {:width (* scale (:width frame-size))
+                      :height (* scale (:height frame-size))}]
+
+     (. ctx (clearRect 0 0 (:width canvas-size) (:height canvas-size)))
+
+     (doseq [pos poses]
+       (set! (. ctx -fillStyle) (->> (frame/get-pixel pos source-frame)
+                                     get-highlight-color))
+       (. ctx (fillRect (* (:x pos) scale) (* (:y pos) scale) scale scale))))))
 
 (re-frame/reg-fx
  :draw-preview
