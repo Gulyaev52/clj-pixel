@@ -16,6 +16,7 @@
 
 (defn resize [size frame])
 
+;; todo: remove
 (defn set-pixels [pixels-with-pos frame]
   (let [{:keys [pixels size]} frame]
     {:pixels (reduce (fn [res-pixels {:keys [pos color]}]
@@ -41,12 +42,6 @@
 (defn get-pixel [pos frame]
   (let [{:keys [pixels size]} frame]
     (nth pixels (pos->idx pos size) transparent-color)))
-
-(defn get-pixels [coll-pos frame]
-  (map #(get-pixel % frame) coll-pos))
-
-(defn get-pixels-with-pos [coll-pos frame]
-  (map (fn [pos color] {:pos pos :color color}) coll-pos (map #(get-pixel % frame) coll-pos)))
 
 (defn display-frame [frame]
   (let [{:keys [width]} (:size frame)]

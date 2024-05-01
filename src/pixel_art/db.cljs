@@ -25,4 +25,5 @@
      :tools-options (get-initial-options tool/options-specs) ;; todo: добавить type в модуль; иметь какой-то массив со всеми опц
      :color "black"
      :selection-manager {}
-     :scale 40}))
+     :scale 40
+     :pixels-grid-enabled true}))

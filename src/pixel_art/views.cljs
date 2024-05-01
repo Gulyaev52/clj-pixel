@@ -1,9 +1,9 @@
 (ns pixel-art.views
   (:require [pixel-art.events :as events]
             [pixel-art.subs :as subs]
+            [pixel-art.tool.core :as tool]
             [re-frame.core :as re-frame]
-            [reagent.dom :as rdom]
-            [pixel-art.tool.core :as tool]))
+            [reagent.dom :as rdom]))
 
 (defn canvas-pos->frame-pos [event scale canvas]
   (let [rect (. canvas getBoundingClientRect)]
@@ -50,13 +50,18 @@
 
 (defn main-panel []
   (let [tool @(re-frame/subscribe [::subs/tool])
-        scale @(re-frame/subscribe [::subs/scale])]
+        scale @(re-frame/subscribe [::subs/scale])
+        pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])]
     [:div
      [options-toolbar (:type tool)]
-     [:select {:value (:type tool)
-               :onChange (fn [event]
-                           (re-frame/dispatch [::events/select-tool (keyword (.. event -target -value))]))}
-      (map (fn [t] [:option {:value t} (name t)]) tool/types)]
+     [:div {:style {:display :flex :gap "8px"}}
+      [:select {:value (:type tool)
+                :onChange (fn [event]
+                            (re-frame/dispatch [::events/select-tool (keyword (.. event -target -value))]))}
+       (map (fn [t] [:option {:value t} (name t)]) tool/types)]
+      [checkbox {:value pixels-grid-enabled
+                 :label "grid"
+                 :onChange (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]]
      [:div {:style {:display :flex :justify-content :center}}
       [:div {:style {:position "relative"
                      :border "1px solid black"}
@@ -81,6 +86,10 @@
                                   (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos])))))}
        [:canvas {:id "tutorial"}]
        [:canvas {:id "preview"
+                 :style {:position :absolute
+                         :left 0
+                         :top 0}}]
+       [:canvas {:id "grid"
                  :style {:position :absolute
                          :left 0
                          :top 0}}]]]]))

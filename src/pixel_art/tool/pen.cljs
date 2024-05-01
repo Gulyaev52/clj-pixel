@@ -1,7 +1,6 @@
 (ns pixel-art.tool.pen
   (:require [pixel-art.tool.utils :refer [commit-changes get-tool-options
-                                          resize-pixel]]
-            [sc.api :as api]))
+                                          resize-pixel]]))
 
 (defn init [] {:type :pen :state {:visited-pixels {}}})
 
@@ -23,7 +22,6 @@
 
 (defn handle-mouse-event [event db]
   (let [{:keys [user-is-drawing]} db]
-    (api/spy)
     (cond
       (or (= (:type event) :mouse-down)
           (and (= (:type event) :mouse-move) user-is-drawing))

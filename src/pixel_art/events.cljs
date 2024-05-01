@@ -2,8 +2,8 @@
   (:require ["tinycolor2" :as tinycolor]
             [day8.re-frame.tracing :refer [fn-traced]]
             [pixel-art.db :as db]
-            [pixel-art.tool.core :as tool]
             [pixel-art.model.frame :as frame]
+            [pixel-art.tool.core :as tool]
             [re-frame.core :as re-frame]
             [re-frame.db]))
 
@@ -16,7 +16,8 @@
  ::initialize-canvas
  (fn [{:keys [db]} _]
    {:fx [[:init-canvases]
-         [:draw-frame (:source-frame db)]]}))
+         [:draw-frame (:source-frame db)]
+         [:draw-pixels-grid]]}))
 
 (re-frame/reg-event-db
  ::select-tool
@@ -29,6 +30,14 @@
  (fn [db [_ field value]]
    (let [tool-type (-> db :tool :type)]
      (assoc-in db [:tools-options tool-type field] value))))
+
+(re-frame/reg-event-fx
+ ::enable-pixels-grid
+ (fn [{:keys [db]} [_ enabled]]
+   {:db (assoc db :pixels-grid-enabled enabled)
+    :fx [(if enabled
+           [:draw-pixels-grid]
+           [:hide-pixels-grid])]}))
 
 (re-frame/reg-event-fx
  ::handle-mouse-event
@@ -77,6 +86,7 @@
 
          preview-canvas (. js/document (getElementById "preview"))
          main-canvas (. js/document (getElementById "tutorial"))
+         grid-canvas (. js/document (getElementById "grid"))
 
          frame-size (-> db :source-frame frame/get-size)
          scale (:scale db)
@@ -85,26 +95,17 @@
 
      (set! (. preview-canvas -width) (:width canvas-size))
      (set! (. preview-canvas -height) (:height canvas-size))
-
      (set! (. main-canvas -width) (:width canvas-size))
-     (set! (. main-canvas -height) (:height canvas-size)))))
+     (set! (. main-canvas -height) (:height canvas-size))
+     (set! (. grid-canvas -width) (:width canvas-size))
+     (set! (. grid-canvas -height) (:height canvas-size)))))
 
 (re-frame/reg-fx
  :clear-preview
  (fn []
-   (let [db @re-frame.db/app-db
-
-         canvas (. js/document (getElementById "preview"))
-         ctx (. canvas (getContext "2d"))
-
-         frame-size (-> db :source-frame frame/get-size)
-         scale (:scale db)
-         canvas-size {:width (* scale (:width frame-size))
-                      :height (* scale (:height frame-size))}]
-     (set! (. canvas -width) (:width canvas-size))
-     (set! (. canvas -height) (:height canvas-size))
-
-     (. ctx (clearRect 0 0 (:width canvas-size) (:height canvas-size))))))
+   (let [canvas (. js/document (getElementById "preview"))
+         ctx (. canvas (getContext "2d"))]
+     (. ctx (clearRect 0 0 (. canvas -width) (. canvas -height))))))
 
 (re-frame/reg-fx
  :highlight-pixels
@@ -133,19 +134,39 @@
        (set! (. ctx -fillStyle) (or color "white"))
        (. ctx (fillRect (* (:x pos) scale) (* (:y pos) scale) scale scale))))))
 
-(defn draw-pixel-grid [frame-size canvas-size scale ctx]
-  (dotimes [y (:height frame-size)]
-    (doto ctx
-      (.beginPath)
-      (.moveTo 0 (* y scale))
-      (.lineTo (:width canvas-size) (* y scale))
-      (.stroke)))
-  (dotimes [x (:width frame-size)]
-    (doto ctx
-      (.beginPath)
-      (.moveTo (* x scale) 0)
-      (.lineTo (* x scale) (:height canvas-size))
-      (.stroke))))
+(re-frame/reg-fx
+ :hide-pixels-grid
+ (fn [_]
+   (let [canvas (. js/document (getElementById "grid"))
+         ctx (. canvas (getContext "2d"))]
+     (. ctx (clearRect 0 0 (. canvas -width) (. canvas -height))))))
+
+(re-frame/reg-fx
+ :draw-pixels-grid
+ (fn [_]
+   (println "bla")
+   (let [db @re-frame.db/app-db
+
+         canvas (. js/document (getElementById "grid"))
+         ctx (. canvas (getContext "2d"))
+
+         frame-size (-> db :source-frame frame/get-size)
+         scale (:scale db)
+         canvas-size {:width (* scale (:width frame-size))
+                      :height (* scale (:height frame-size))}]
+     (set! (. ctx -strokeStyle) "blue") ;;todo: не видно на голубом
+     (dotimes [y (:height frame-size)]
+       (doto ctx
+         (.beginPath)
+         (.moveTo 0 (* y scale))
+         (.lineTo (:width canvas-size) (* y scale))
+         (.stroke)))
+     (dotimes [x (:width frame-size)]
+       (doto ctx
+         (.beginPath)
+         (.moveTo (* x scale) 0)
+         (.lineTo (* x scale) (:height canvas-size))
+         (.stroke))))))
 
 (re-frame/reg-fx
  :draw-frame
@@ -156,13 +177,9 @@
          ctx (. canvas (getContext "2d"))
 
          frame-size (frame/get-size frame)
-         scale (:scale db)
-         canvas-size {:width (* scale (:width frame-size))
-                      :height (* scale (:height frame-size))}]
+         scale (:scale db)]
      (doseq [x (range 0 (:width frame-size))
              y (range 0 (:height frame-size))]
        (set! (. ctx -fillStyle) (or (frame/get-pixel {:x x :y y} frame)
                                     "white"))
-       (. ctx (fillRect (* x scale) (* y scale) scale scale)))
-
-     (draw-pixel-grid frame-size canvas-size scale ctx))))
+       (. ctx (fillRect (* x scale) (* y scale) scale scale))))))
