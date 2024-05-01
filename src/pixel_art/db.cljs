@@ -22,7 +22,7 @@
     {:size size
      :source-frame frame
      :preview {}
-     :tool (tool/init :pen)
+     :tool (tool/init :shape-select)
      :tools-options (get-initial-options tool/options-specs) ;; todo: добавить type в модуль; иметь какой-то массив со всеми опц
      :color "black"
      :selection-manager {}

@@ -49,10 +49,9 @@
                      (tool/handle-mouse-event event))
 
                 :mouse-up
-                (->> (assoc db
-                            :user-is-drawing false
-                            :initial-mouse-down-pos nil)
-                     (tool/handle-mouse-event event))))))
+                (-> (assoc db :user-is-drawing false)
+                    (#(tool/handle-mouse-event event %)) ;; todo: оменять порядок арг
+                    (assoc-in [:db :initial-mouse-down-pos] nil))))))
 
 #_(api/last-ep-id)
 #_(defsc [709 -83])
@@ -93,6 +92,7 @@
 (re-frame/reg-fx
  :draw-preview
  (fn [[preview {:keys [clear]}]]
+   (println ":draw-preview")
    (let [db @re-frame.db/app-db
 
          canvas (. js/document (getElementById "preview"))

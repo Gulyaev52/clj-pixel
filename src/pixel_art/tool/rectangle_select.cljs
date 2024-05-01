@@ -1,5 +1,6 @@
 (ns pixel-art.tool.rectangle-select
-  (:require [clojure.set]
+  (:require ["tinycolor2" :as tinycolor]
+            [clojure.set]
             [pixel-art.events.event-collector]
             [pixel-art.model.frame :as frame]
             [pixel-art.tool.utils :refer [commit-preview-changes
@@ -22,12 +23,12 @@
 
 (defn unselect [db] (commit-preview-changes db))
 
-(defn- remove-transparent-colors [selection-image]
+(defn remove-transparent-colors [selection-image]
   (->> selection-image
        (filter (fn [[_ color]] (not= color frame/transparent-color)))
        (into {})))
 
-(defn- move-selection [tool initial-mouse-down-pos event]
+(defn move-selection [tool initial-mouse-down-pos event]
   (let [offset-pos (merge-with - (:pos event) initial-mouse-down-pos)
         {:keys [initial-selection-image selection-image pasted?]} (:state tool)
 
@@ -39,6 +40,9 @@
                        (remove-transparent-colors moved-selection-image))]
     {:preview preview :moved-selection-image moved-selection-image}))
 
+(defn- get-highlight-selection-by-2-points [p1 p2 source-frame]
+  (->> (geometry/get-rectange-points p1 p2)
+       (map (fn [p] [p (frame/get-pixel p source-frame)]))))
 
 (defn handle-mouse-event [event db]
   (let [{:keys [tool source-frame initial-mouse-down-pos user-is-drawing]} db]
@@ -48,9 +52,10 @@
         (or (= (:type event) :mouse-down)
             (and (= (:type event) :mouse-move) user-is-drawing))
         {:db (assoc-in db [:tool :state :user-is-making-selection] true)
-         :draw-selection-outline-on-preview [initial-mouse-down-pos (:pos event) {:clear true}]}
+         :highlight-selection [(get-highlight-selection-by-2-points initial-mouse-down-pos (:pos event) source-frame)
+                               {:clear true}]}
 
-        (= (:type event) :mouse-move)
+        (and (= (:type event) :mouse-move) (not user-is-drawing))
         {:db db
          :highlight-pixels [(:pos event)]}
 
@@ -62,7 +67,8 @@
                                        :initial-selection-image selection-image
                                        :selection-image selection-image})]
           {:db (assoc db :tool tool)
-           :draw-selection-outline-on-preview [initial-mouse-down-pos (:pos event) {:clear true}]
+           :highlight-selection [(get-highlight-selection-by-2-points initial-mouse-down-pos (:pos event) source-frame)
+                                 {:clear true}]
            :dispatch [::rp/set-keydown-rules
                       {:event-keys [[[::cancel-selection]
                                      [{:keyCode 27 ;; esc
@@ -103,12 +109,11 @@
 
         (= (:type event) :mouse-up)
         (let [{:keys [preview moved-selection-image]} (move-selection tool initial-mouse-down-pos event)
-              updated-tool (assoc-in tool [:state :selection-image] moved-selection-image)
-              {:keys [top-left bottom-right]} (geometry/get-ordered-rectangle-points (keys moved-selection-image))]
+              updated-tool (assoc-in tool [:state :selection-image] moved-selection-image)]
           (-> db
               (assoc :tool updated-tool)
               (update-preview-and-draw preview {:clear true})
-              (assoc :draw-selection-outline-on-preview [top-left bottom-right {:clear false}])))))))
+              (assoc :highlight-selection [moved-selection-image {:clear false}])))))))
 
 (defn- copy-selection [db]
   (let [{:keys [selection-image]} (-> db :tool :state)]
@@ -166,11 +171,10 @@
                          :initial-selection-image selection-image
                          :selection-image selection-image
                          :pasted? true}}
-           preview (remove-transparent-colors selection-image)
-           {:keys [top-left bottom-right]} (geometry/get-ordered-rectangle-points (keys selection-image))]
+           preview (remove-transparent-colors selection-image)]
        {:db (assoc db :tool tool :preview preview)
         :draw-preview [preview {:clear true}]
-        :draw-selection-outline-on-preview [top-left bottom-right {:clear false}]}))]))
+        :highlight-selection [selection-image {:clear false}]}))]))
 
 (re-frame/reg-event-fx
  ::cut-selection
@@ -179,28 +183,32 @@
    (-> (copy-selection db)
        (delete-selection-and-commit-preview))))
 
-(re-frame/reg-fx
- :draw-selection-outline-on-preview
- (fn [[p1 p2 {:keys [clear]}]]
-   (let [db @db/app-db
+(defn- get-highlight-color [color]
+  (let [dark-color "rgba(0, 0, 0, 0.2)"
+        light-color "rgba(255, 255, 255, 0.2)"]
+    (if (= color frame/transparent-color)
+      dark-color
+      (let [luminance (.. (tinycolor color) toHsl -l)]
+        (if (> luminance 0.5)
+          dark-color
+          light-color)))))
 
-         {:keys [top-left bottom-right]} (geometry/get-ordered-rectangle-points [p1 p2])
-         width (inc (- (:x bottom-right) (:x top-left)))
-         height (inc (- (:y bottom-right) (:y top-left)))
+(re-frame/reg-fx
+ :highlight-selection
+ (fn [[selection {:keys [clear]}]]
+   (let [db @re-frame.db/app-db
 
          canvas (. js/document (getElementById "preview"))
          ctx (. canvas (getContext "2d"))
 
-         frame-size (frame/get-size (:source-frame db))
+         source-frame (:source-frame db)
+         frame-size (frame/get-size source-frame)
          scale (:scale db)
          canvas-size {:width (* scale (:width frame-size))
                       :height (* scale (:height frame-size))}]
      (when clear
        (. ctx (clearRect 0 0 (:width canvas-size) (:height canvas-size))))
-     (set! (.-strokeStyle ctx) "#ffffff")
-     (.setLineDash ctx #js [5])
-     (.strokeRect ctx
-                  (* (:x top-left) scale)
-                  (* (:y top-left) scale)
-                  (* width scale)
-                  (* height scale)))))
+
+     (doseq [[pos color] selection]
+       (set! (. ctx -fillStyle) (get-highlight-color color))
+       (. ctx (fillRect (* (:x pos) scale) (* (:y pos) scale) scale scale))))))

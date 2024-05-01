@@ -70,7 +70,6 @@
                                                                  scale
                                                                  (. js/document (getElementById "tutorial")))]
                             (reset! !last-mouse-pos mouse-pos)
-                            (println "bla")
                             (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos])))
              :onMouseMove (fn [event]
                             (let [mouse-pos (canvas-pos->frame-pos event
