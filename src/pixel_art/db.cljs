@@ -21,8 +21,7 @@
                      {:pos {:x 1 :y 1} :color "black"}]))]
     {:size size
      :source-frame frame
-     :preview {}
-     :tool (tool/init :shape-select)
+     :tool (tool/init :rectangle-select)
      :tools-options (get-initial-options tool/options-specs) ;; todo: добавить type в модуль; иметь какой-то массив со всеми опц
      :color "black"
      :selection-manager {}

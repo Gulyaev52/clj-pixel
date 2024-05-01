@@ -1,21 +1,18 @@
 (ns pixel-art.tool.shape-select
   (:require [pixel-art.model.frame :as frame]
-            [pixel-art.tool.rectangle-select :as rectangle-select :refer [move-selection remove-transparent-colors]]
-            [pixel-art.tool.utils :refer [commit-preview-changes
-                                          update-preview-and-draw]]
+            [pixel-art.tool.rectangle-select :as rectangle-select :refer [copy-selection
+                                                                          move-selection
+                                                                          remove-transparent-colors]]
+            [pixel-art.tool.utils :refer [commit-changes]]
             [re-frame.core :as re-frame]
             [re-pressed.core :as rp]))
 
-;; todo: поправить цвет подсветки
-;; todo: user is drawgin
 ;; подумать как работать с preview и canvas
 
 (defn init [] {:type :shape-select :state {:mode :select}})
 
 (def options-spec
   [])
-
-(defn unselect [db] (commit-preview-changes db))
 
 (defn- valid-pos? [{:keys [x y]} {:keys [width height]}]
   (and (and (>= x 0) (< x width))
@@ -45,6 +42,12 @@
                {:x 0 :y 1} "white" {:x 1 :y 1} "white" {:x 2 :y 1} "white"})
   (flood-fill {:x 0 :y 0} {:width 8 :height 8} #(= (get matrix %) "black")))
 
+(defn commit-moved-selection [db]
+  (let [changes (-> db :tool :state :changes)]
+    (-> db
+        (assoc :tool (init))
+        (commit-changes changes))))
+
 (defn handle-mouse-event [event db]
   (let [{:keys [tool source-frame initial-mouse-down-pos user-is-drawing]} db]
     (case (-> tool :state :mode)
@@ -60,35 +63,38 @@
                                    (into {}))
               tool (assoc tool :state {:mode :move-selection
                                        :initial-selection-image selection-image
-                                       :selection-image selection-image})]
+                                       :selection-image selection-image
+                                       :changes []})]
           {:db (assoc db :tool tool)
-           :highlight-selection [selection-image {:clear true}]
-           :dispatch [::rp/set-keydown-rules
-                      {:event-keys [[[::cancel-selection]
-                                     [{:keyCode 27 ;; esc
-                                       }]]
+           :fx [[:clear-preview]
+                [:highlight-selection selection-image]
+                [:dispatch [::rp/set-keydown-rules
+                            {:event-keys [[[::cancel-selection]
+                                           [{:keyCode 27 ;; esc
+                                             }]]
 
-                                    [[::copy-selection]
-                                     [{:keyCode 67 ;; c
-                                       :ctrlKey true}]]
+                                          [[::copy-selection]
+                                           [{:keyCode 67 ;; c
+                                             :ctrlKey true}]]
 
-                                    [[::past-selection]
-                                     [{:keyCode 86 ;; v
-                                       :ctrlKey true}]]
+                                          [[::past-selection]
+                                           [{:keyCode 86 ;; v
+                                             :ctrlKey true}]]
 
-                                    [[::delete-selection]
-                                     [{:keyCode 46 ;; delete
-                                       }]
-                                     [{:keyCode 8 ;; backspace
-                                       }]]
+                                          [[::delete-selection]
+                                           [{:keyCode 46 ;; delete
+                                             }]
+                                           [{:keyCode 8 ;; backspace
+                                             }]]
 
-                                    [[::cut-selection]
-                                     [{:keyCode 88 ;; x
-                                       }]]]}]})
+                                          [[::cut-selection]
+                                           [{:keyCode 88 ;; x
+                                             }]]]}]]]})
 
         (= (:type event) :mouse-move)
         {:db db
-         :highlight-pixels [(:pos event)]}
+         :fx [[:clear-preview]
+              [:highlight-pixels [(:pos event)]]]}
 
         :else {:db db})
 
@@ -96,90 +102,76 @@
       (cond
         (= (:type event) :mouse-down)
         (if (not (contains? (-> tool :state :selection-image) (:pos event)))
-          (-> (assoc db :tool (init))
-              (commit-preview-changes))
-          {:db (assoc-in db [:tool :state :user-is-moving-selection] true)}) ;; todo: переключать мод на up и тогда это можно убрать
+          (commit-moved-selection db)
+          {:db (assoc-in db [:tool :state :user-is-moving-selection] true)})
 
         (and (or (= (:type event) :mouse-down)
                  (and (= (:type event) :mouse-move) user-is-drawing))
              (-> tool :state :user-is-moving-selection))
-        (let [{:keys [preview]} (move-selection tool initial-mouse-down-pos event)]
-          (update-preview-and-draw db preview {:clear true}))
+        (let [{:keys [changes]} (move-selection tool initial-mouse-down-pos event)]
+          {:db (assoc-in db [:tool :state :changes] changes)
+           :fx [[:clear-preview]
+                [:draw-preview changes]]})
 
         (and (= (:type event) :mouse-up) (-> tool :state :user-is-moving-selection))
-        (let [{:keys [preview moved-selection-image]} (move-selection tool initial-mouse-down-pos event)
-              updated-tool (assoc-in tool [:state :selection-image] moved-selection-image)]
-          (-> db
-              (assoc :tool updated-tool)
-              (update-preview-and-draw preview {:clear true})
-              (assoc :highlight-selection [moved-selection-image {:clear false}])))
+        (let [{:keys [changes moved-selection-image]} (move-selection tool initial-mouse-down-pos event)
+              updated-tool (-> tool
+                               (assoc-in [:state :selection-image] moved-selection-image)
+                               (assoc-in [:state :changes] changes))]
+          {:db (assoc db :tool updated-tool)
+           :fx [[:clear-preview]
+                [:draw-preview changes]
+                [:highlight-selection moved-selection-image]]})
 
         :else {:db db}))))
 
-(defn- copy-selection [db]
-  (let [{:keys [selection-image]} (-> db :tool :state)]
-    (-> db
-        (assoc
-         :selection-manager
-         {:selection-image selection-image}))))
-;; todo: copy-selection и delete-selection с commit-preview-changes
-
-(defn- delete-selection-and-commit-preview [db]
+(defn delete-selection-and-commit [db]
   (let [{:keys [initial-selection-image pasted?]} (-> db :tool :state)
         deleted-initial-selection (if pasted?
                                     {}
                                     (update-vals initial-selection-image (fn [_] frame/transparent-color)))]
     (-> db
-        (assoc :preview deleted-initial-selection)
         (assoc :tool (init))
-        (commit-preview-changes)))) ;; todo: тут нет смысла в превью
-
-(defn combine-event-handlers [[ev1 ev2]]
-  (fn [a1 a2]
-    (let [res1 (ev1 a1 a2)
-          res2 (ev2 (assoc a1 :db (:db res1)) a2)]
-      (merge res1 res2))))
+        (commit-changes deleted-initial-selection))))
 
 (re-frame/reg-event-fx
  ::delete-selection
  (fn [{:keys [db]} _]
-   (delete-selection-and-commit-preview db)))
-
-(re-frame/reg-event-fx
- ::cancel-selection
- (combine-event-handlers
-  [(fn [{:keys [db]}] (commit-preview-changes db))
-   (fn [{:keys [db]} _]
-     {:db (assoc db :tool (init))})]))
-
-(re-frame/reg-event-fx
- ::copy-selection
- (combine-event-handlers
-  [(fn [{:keys [db]}] (commit-preview-changes db))
-   (fn [{:keys [db]} _]
-     {:db (-> db
-              copy-selection
-              (assoc :tool (init)))})]))
-
-(re-frame/reg-event-fx
- ::past-selection
- (combine-event-handlers
-  [(fn [{:keys [db]}] (commit-preview-changes db))
-   (fn [{:keys [db]} _]
-     (let [{:keys [selection-image]} (:selection-manager db)
-           tool {:type :shape-select
-                 :state {:mode :move-selection
-                         :initial-selection-image selection-image
-                         :selection-image selection-image
-                         :pasted? true}}
-           preview (remove-transparent-colors selection-image)]
-       {:db (assoc db :tool tool :preview preview)
-        :draw-preview [preview {:clear true}]
-        :highlight-selection [selection-image {:clear false}]}))]))
+   (delete-selection-and-commit db)))
 
 (re-frame/reg-event-fx
  ::cut-selection
  (fn [{:keys [db]} _]
-   (def db db)
    (-> (copy-selection db)
-       (delete-selection-and-commit-preview))))
+       (delete-selection-and-commit))))
+
+(re-frame/reg-event-fx
+ ::cancel-selection
+ (fn [{:keys [db]} _]
+   (commit-moved-selection db)))
+
+(re-frame/reg-event-fx
+ ::copy-selection
+ (fn [{:keys [db]} _]
+   (-> db
+       copy-selection
+       commit-moved-selection)))
+
+(re-frame/reg-event-fx
+ ::past-selection
+ ;; todo: нужно что бы это было возможно только после копирования
+ (fn [{:keys [db]} _]
+   (let [{:keys [selection-image]} (:selection-manager db)
+         changes (remove-transparent-colors selection-image)
+         new-tool {:type :shape-select
+                   :state {:mode :move-selection
+                           :initial-selection-image selection-image
+                           :selection-image selection-image
+                           :changes (remove-transparent-colors selection-image)
+                           :pasted? true}}]
+     (-> db
+         commit-moved-selection
+         (assoc-in [:db :tool] new-tool)
+         (update :fx #(concat % [[:clear-preview]
+                                 [:draw-preview changes]
+                                 [:highlight-selection selection-image]]))))))

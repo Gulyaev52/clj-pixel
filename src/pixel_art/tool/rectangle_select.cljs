@@ -3,25 +3,21 @@
             [clojure.set]
             [pixel-art.events.event-collector]
             [pixel-art.model.frame :as frame]
-            [pixel-art.tool.utils :refer [commit-preview-changes
-                                          update-preview-and-draw]]
+            [pixel-art.tool.utils :refer [commit-changes]]
             [pixel-art.utils.geometry :as geometry]
             [re-frame.core :as re-frame]
             [re-frame.db :as db]
             [re-pressed.core :as rp]))
 
-;; todo: grid; preview + outline clear; удалять хоткеи; нужно помнить о состояния превью; init
+;; удалять хоткеи; нужно помнить о состояния превью; init
 ;; todo: используем так как из selection-image удаляются прозр точки(не работает днд) и если проверять вхож
 ;; todo: а зачем поле state
 ;; ресайз
-;; а нужно ли сбрасывать селектион на копирование и вставку и тогда зачем там вообще комитить что-то
 
 (defn init [] {:type :rectangle-select :state {:mode :select}})
 
 (def options-spec
   [])
-
-(defn unselect [db] (commit-preview-changes db))
 
 (defn remove-transparent-colors [selection-image]
   (->> selection-image
@@ -36,13 +32,21 @@
                                     (update-vals initial-selection-image (fn [_] frame/transparent-color)))
         moved-selection-image (-> selection-image
                                   (update-keys #(merge-with + % offset-pos)))
-        preview (merge deleted-initial-selection
+        changes (merge deleted-initial-selection
                        (remove-transparent-colors moved-selection-image))]
-    {:preview preview :moved-selection-image moved-selection-image}))
+    {:changes changes ;; todo: а это точно нужно?
+     :moved-selection-image moved-selection-image}))
 
-(defn- get-highlight-selection-by-2-points [p1 p2 source-frame]
+(defn- get-rectangle-selection-image [p1 p2 source-frame]
   (->> (geometry/get-rectange-points p1 p2)
-       (map (fn [p] [p (frame/get-pixel p source-frame)]))))
+       (map (fn [p] [p (frame/get-pixel p source-frame)]))
+       (into {})))
+
+(defn commit-moved-selection [db]
+  (let [changes (-> db :tool :state :changes)]
+    (-> db
+        (assoc :tool (init))
+        (commit-changes changes))))
 
 (defn handle-mouse-event [event db]
   (let [{:keys [tool source-frame initial-mouse-down-pos user-is-drawing]} db]
@@ -52,45 +56,45 @@
         (or (= (:type event) :mouse-down)
             (and (= (:type event) :mouse-move) user-is-drawing))
         {:db (assoc-in db [:tool :state :user-is-making-selection] true)
-         :highlight-selection [(get-highlight-selection-by-2-points initial-mouse-down-pos (:pos event) source-frame)
-                               {:clear true}]}
+         :fx [[:clear-preview]
+              [:highlight-selection (get-rectangle-selection-image initial-mouse-down-pos (:pos event) source-frame)]]}
 
         (and (= (:type event) :mouse-move) (not user-is-drawing))
         {:db db
-         :highlight-pixels [(:pos event)]}
+         :fx [[:clear-preview]
+              [:highlight-pixels [(:pos event)]]]}
 
         (and (= :mouse-up (:type event)) (-> tool :state :user-is-making-selection))
-        (let [selection-image (->> (geometry/get-rectange-points initial-mouse-down-pos (:pos event))
-                                   (map (fn [p] [p (frame/get-pixel p source-frame)]))
-                                   (into {}))
+        (let [selection-image (get-rectangle-selection-image initial-mouse-down-pos (:pos event) source-frame)
               tool (assoc tool :state {:mode :move-selection
                                        :initial-selection-image selection-image
-                                       :selection-image selection-image})]
+                                       :selection-image selection-image
+                                       :changes []})]
           {:db (assoc db :tool tool)
-           :highlight-selection [(get-highlight-selection-by-2-points initial-mouse-down-pos (:pos event) source-frame)
-                                 {:clear true}]
-           :dispatch [::rp/set-keydown-rules
-                      {:event-keys [[[::cancel-selection]
-                                     [{:keyCode 27 ;; esc
-                                       }]]
+           :fx [[:clear-preview]
+                [:highlight-selection selection-image]
+                [:dispatch [::rp/set-keydown-rules
+                            {:event-keys [[[::cancel-selection]
+                                           [{:keyCode 27 ;; esc
+                                             }]]
 
-                                    [[::copy-selection]
-                                     [{:keyCode 67 ;; c
-                                       :ctrlKey true}]]
+                                          [[::copy-selection]
+                                           [{:keyCode 67 ;; c
+                                             :ctrlKey true}]]
 
-                                    [[::past-selection]
-                                     [{:keyCode 86 ;; v
-                                       :ctrlKey true}]]
+                                          [[::past-selection]
+                                           [{:keyCode 86 ;; v
+                                             :ctrlKey true}]]
 
-                                    [[::delete-selection]
-                                     [{:keyCode 46 ;; delete
-                                       }]
-                                     [{:keyCode 8 ;; backspace
-                                       }]]
+                                          [[::delete-selection]
+                                           [{:keyCode 46 ;; delete
+                                             }]
+                                           [{:keyCode 8 ;; backspace
+                                             }]]
 
-                                    [[::cut-selection]
-                                     [{:keyCode 88 ;; x
-                                       }]]]}]})
+                                          [[::cut-selection]
+                                           [{:keyCode 88 ;; x
+                                             }]]]}]]]})
 
         :else {:db db})
 
@@ -98,90 +102,83 @@
       (cond
         (= (:type event) :mouse-down)
         (if (not (contains? (-> tool :state :selection-image) (:pos event)))
-          (-> (assoc db :tool (init))
-              (commit-preview-changes))
+          (commit-moved-selection db)
           {:db db})
 
         (or (= (:type event) :mouse-down)
             (and (= (:type event) :mouse-move) user-is-drawing))
-        (let [{:keys [preview]} (move-selection tool initial-mouse-down-pos event)]
-          (update-preview-and-draw db preview {:clear true}))
+        (let [{:keys [changes]} (move-selection tool initial-mouse-down-pos event)]
+          {:db (assoc-in db [:tool :state :changes] changes)
+           :fx [[:clear-preview]
+                [:draw-preview changes]]})
 
         (= (:type event) :mouse-up)
-        (let [{:keys [preview moved-selection-image]} (move-selection tool initial-mouse-down-pos event)
-              updated-tool (assoc-in tool [:state :selection-image] moved-selection-image)]
-          (-> db
-              (assoc :tool updated-tool)
-              (update-preview-and-draw preview {:clear true})
-              (assoc :highlight-selection [moved-selection-image {:clear false}])))))))
+        (let [{:keys [changes moved-selection-image]} (move-selection tool initial-mouse-down-pos event)
+              updated-tool (-> tool
+                               (assoc-in [:state :selection-image] moved-selection-image)
+                               (assoc-in [:state :changes] changes))]
+          {:db (assoc db :tool updated-tool)
+           :fx [[:clear-preview]
+                [:draw-preview changes]
+                [:highlight-selection moved-selection-image]]})))))
 
-(defn- copy-selection [db]
+(defn copy-selection [db]
   (let [{:keys [selection-image]} (-> db :tool :state)]
     (-> db
         (assoc
          :selection-manager
          {:selection-image selection-image}))))
-;; todo: copy-selection и delete-selection с commit-preview-changes
 
-(defn- delete-selection-and-commit-preview [db]
+(defn delete-selection-and-commit [db]
   (let [{:keys [initial-selection-image pasted?]} (-> db :tool :state)
         deleted-initial-selection (if pasted?
                                     {}
                                     (update-vals initial-selection-image (fn [_] frame/transparent-color)))]
     (-> db
-        (assoc :preview deleted-initial-selection)
         (assoc :tool (init))
-        (commit-preview-changes)))) ;; todo: тут нет смысла в превью
-
-(defn combine-event-handlers [[ev1 ev2]]
-  (fn [a1 a2]
-    (let [res1 (ev1 a1 a2)
-          res2 (ev2 (assoc a1 :db (:db res1)) a2)]
-      (merge res1 res2))))
+        (commit-changes deleted-initial-selection))))
 
 (re-frame/reg-event-fx
  ::delete-selection
  (fn [{:keys [db]} _]
-   (delete-selection-and-commit-preview db)))
-
-(re-frame/reg-event-fx
- ::cancel-selection
- (combine-event-handlers
-  [(fn [{:keys [db]}] (commit-preview-changes db))
-   (fn [{:keys [db]} _]
-     {:db (assoc db :tool (init))})]))
-
-(re-frame/reg-event-fx
- ::copy-selection
- (combine-event-handlers
-  [(fn [{:keys [db]}] (commit-preview-changes db))
-   (fn [{:keys [db]} _]
-     {:db (-> db
-              copy-selection
-              (assoc :tool (init)))})]))
-
-(re-frame/reg-event-fx
- ::past-selection
- (combine-event-handlers
-  [(fn [{:keys [db]}] (commit-preview-changes db))
-   (fn [{:keys [db]} _]
-     (let [{:keys [selection-image]} (:selection-manager db)
-           tool {:type :rectangle-select
-                 :state {:mode :move-selection
-                         :initial-selection-image selection-image
-                         :selection-image selection-image
-                         :pasted? true}}
-           preview (remove-transparent-colors selection-image)]
-       {:db (assoc db :tool tool :preview preview)
-        :draw-preview [preview {:clear true}]
-        :highlight-selection [selection-image {:clear false}]}))]))
+   (delete-selection-and-commit db)))
 
 (re-frame/reg-event-fx
  ::cut-selection
  (fn [{:keys [db]} _]
-   (def db db)
    (-> (copy-selection db)
-       (delete-selection-and-commit-preview))))
+       (delete-selection-and-commit))))
+
+(re-frame/reg-event-fx
+ ::cancel-selection
+ (fn [{:keys [db]} _]
+   (commit-moved-selection db)))
+
+(re-frame/reg-event-fx
+ ::copy-selection
+ (fn [{:keys [db]} _]
+   (-> db
+       copy-selection
+       commit-moved-selection)))
+
+(re-frame/reg-event-fx
+ ::past-selection
+ ;; todo: нужно что бы это было возможно только после копирования
+ (fn [{:keys [db]} _]
+   (let [{:keys [selection-image]} (:selection-manager db)
+         changes (remove-transparent-colors selection-image)
+         new-tool {:type :rectangle-select
+                   :state {:mode :move-selection
+                           :initial-selection-image selection-image
+                           :selection-image selection-image
+                           :changes (remove-transparent-colors selection-image)
+                           :pasted? true}}]
+     (-> db
+         commit-moved-selection
+         (assoc-in [:db :tool] new-tool)
+         (update :fx #(concat % [[:clear-preview]
+                                 [:draw-preview changes]
+                                 [:highlight-selection selection-image]]))))))
 
 (defn- get-highlight-color [color]
   (let [dark-color "rgba(0, 0, 0, 0.2)"
@@ -195,20 +192,11 @@
 
 (re-frame/reg-fx
  :highlight-selection
- (fn [[selection {:keys [clear]}]]
+ (fn [selection]
    (let [db @re-frame.db/app-db
-
          canvas (. js/document (getElementById "preview"))
          ctx (. canvas (getContext "2d"))
-
-         source-frame (:source-frame db)
-         frame-size (frame/get-size source-frame)
-         scale (:scale db)
-         canvas-size {:width (* scale (:width frame-size))
-                      :height (* scale (:height frame-size))}]
-     (when clear
-       (. ctx (clearRect 0 0 (:width canvas-size) (:height canvas-size))))
-
+         scale (:scale db)]
      (doseq [[pos color] selection]
        (set! (. ctx -fillStyle) (get-highlight-color color))
        (. ctx (fillRect (* (:x pos) scale) (* (:y pos) scale) scale scale))))))

@@ -1,11 +1,9 @@
 (ns pixel-art.tool.rectangle
-  (:require [pixel-art.tool.utils :refer [commit-preview-changes
-                                          get-tool-options resize-pixel
-                                          update-preview-and-draw]]
-            [pixel-art.utils.geometry :as geometry]
-            [sc.api :as api]))
+  (:require [pixel-art.tool.utils :refer [commit-changes get-tool-options
+                                          resize-pixel]]
+            [pixel-art.utils.geometry :as geometry]))
 
-(defn init [] {:type :rectangle})
+(defn init [] {:type :rectangle :state {:visited-pixels {}}})
 
 (def options-spec
   [{:type :slider
@@ -35,25 +33,34 @@
        (mapcat #(resize-pixel % pixel-size)) ;; todo: optimize
        dedupe))
 
+(defn- get-rectangle-image [db event]
+  (let [{:keys [color initial-mouse-down-pos]} db
+        {:keys [pixel-size fill]} (get-tool-options db)
+        rectangle-points (if fill
+                           (get-filled-rectangle-points initial-mouse-down-pos (:pos event) pixel-size)
+                           (get-outline-rectangle-points initial-mouse-down-pos (:pos event) pixel-size))]
+    (->> rectangle-points
+         (map (fn [p] [p color]))
+         (into {}))))
+
 (defn handle-mouse-event [event db]
-  (let [{:keys [color initial-mouse-down-pos user-is-drawing]} db]
+  (let [{:keys [user-is-drawing]} db]
     (cond
       (or (= (:type event) :mouse-down)
           (and (= (:type event) :mouse-move) user-is-drawing))
-      (let [{:keys [pixel-size fill]} (get-tool-options db)
-            rectangle-points (if fill
-                               (get-filled-rectangle-points initial-mouse-down-pos (:pos event) pixel-size)
-                               (get-outline-rectangle-points initial-mouse-down-pos (:pos event) pixel-size))
-            preview (->> rectangle-points
-                         (map (fn [p] [p color]))
-                         (into {}))]
-        (update-preview-and-draw db preview {:clear true}))
+      {:db db
+       :fx [[:clear-preview]
+            [:draw-preview (get-rectangle-image db event)]]}
 
       (and (= (:type event) :mouse-move) (not user-is-drawing))
       (let [{:keys [pixel-size]} (get-tool-options db)
             points (resize-pixel (:pos event) pixel-size)]
         {:db db
-         :highlight-pixels points})
+         :fx [[:clear-preview]
+              [:highlight-pixels points]]})
 
       (= :mouse-up (:type event))
-      (commit-preview-changes db))))
+      (let [rectangle-image (get-rectangle-image db event)]
+        (-> db
+            (assoc :tool (init))
+            (commit-changes rectangle-image))))))

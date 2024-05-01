@@ -4,9 +4,6 @@
             [pixel-art.db :as db]
             [pixel-art.tool.core :as tool]
             [pixel-art.model.frame :as frame]
-            [pixel-art.tool.pen :as pen]
-            [pixel-art.tool.rectangle :as rectangle]
-            [pixel-art.tool.rectangle-select :as rectangle-select]
             [re-frame.core :as re-frame]
             [re-frame.db]))
 
@@ -18,8 +15,8 @@
 (re-frame/reg-event-fx
  ::initialize-canvas
  (fn [{:keys [db]} _]
-   {:draw-frame (:source-frame db)
-    :draw-preview []}))
+   {:fx [[:init-canvases]
+         [:draw-frame (:source-frame db)]]}))
 
 (re-frame/reg-event-db
  ::select-tool
@@ -41,15 +38,20 @@
                 :mouse-down
                 (->> (assoc db
                             :user-is-drawing true ;;todo: нужен ли если ли есть initial-mouse-down-pos 
-                            :initial-mouse-down-pos (:pos event))
+                            :initial-mouse-down-pos (:pos event)
+                            :last-mouse-pos (:pos event)) ;; todo: удалить? пока нужно только в select'ах
                      (tool/handle-mouse-event event))
 
                 :mouse-move
-                (->> (assoc db :user-is-drawing (:user-is-drawing db))
+                (->> (assoc db
+                            :user-is-drawing (:user-is-drawing db)
+                            :last-mouse-pos (:pos event))
                      (tool/handle-mouse-event event))
 
                 :mouse-up
-                (-> (assoc db :user-is-drawing false)
+                (-> (assoc db
+                           :user-is-drawing false
+                           :last-mouse-pos (:pos event))
                     (#(tool/handle-mouse-event event %)) ;; todo: оменять порядок арг
                     (assoc-in [:db :initial-mouse-down-pos] nil))))))
 
@@ -69,30 +71,27 @@
           light-color)))))
 
 (re-frame/reg-fx
- :highlight-pixels
- (fn [poses]
+ :init-canvases
+ (fn []
    (let [db @re-frame.db/app-db
 
-         canvas (. js/document (getElementById "preview"))
-         ctx (. canvas (getContext "2d"))
+         preview-canvas (. js/document (getElementById "preview"))
+         main-canvas (. js/document (getElementById "tutorial"))
 
-         source-frame (:source-frame db)
-         frame-size (frame/get-size source-frame)
+         frame-size (-> db :source-frame frame/get-size)
          scale (:scale db)
          canvas-size {:width (* scale (:width frame-size))
                       :height (* scale (:height frame-size))}]
 
-     (. ctx (clearRect 0 0 (:width canvas-size) (:height canvas-size)))
+     (set! (. preview-canvas -width) (:width canvas-size))
+     (set! (. preview-canvas -height) (:height canvas-size))
 
-     (doseq [pos poses]
-       (set! (. ctx -fillStyle) (->> (frame/get-pixel pos source-frame)
-                                     get-highlight-color))
-       (. ctx (fillRect (* (:x pos) scale) (* (:y pos) scale) scale scale))))))
+     (set! (. main-canvas -width) (:width canvas-size))
+     (set! (. main-canvas -height) (:height canvas-size)))))
 
 (re-frame/reg-fx
- :draw-preview
- (fn [[preview {:keys [clear]}]]
-   (println ":draw-preview")
+ :clear-preview
+ (fn []
    (let [db @re-frame.db/app-db
 
          canvas (. js/document (getElementById "preview"))
@@ -105,8 +104,30 @@
      (set! (. canvas -width) (:width canvas-size))
      (set! (. canvas -height) (:height canvas-size))
 
-     (when clear
-       (. ctx (clearRect 0 0 (:width canvas-size) (:height canvas-size))))
+     (. ctx (clearRect 0 0 (:width canvas-size) (:height canvas-size))))))
+
+(re-frame/reg-fx
+ :highlight-pixels
+ (fn [poses]
+   (let [db @re-frame.db/app-db
+
+         canvas (. js/document (getElementById "preview"))
+         ctx (. canvas (getContext "2d"))
+
+         source-frame (:source-frame db)
+         scale (:scale db)]
+     (doseq [pos poses]
+       (set! (. ctx -fillStyle) (->> (frame/get-pixel pos source-frame)
+                                     get-highlight-color))
+       (. ctx (fillRect (* (:x pos) scale) (* (:y pos) scale) scale scale))))))
+
+(re-frame/reg-fx
+ :draw-preview
+ (fn [preview]
+   (let [db @re-frame.db/app-db
+         canvas (. js/document (getElementById "preview"))
+         ctx (. canvas (getContext "2d"))
+         scale (:scale db)]
 
      (doseq [[pos color] preview]
        (set! (. ctx -fillStyle) (or color "white"))
@@ -138,9 +159,6 @@
          scale (:scale db)
          canvas-size {:width (* scale (:width frame-size))
                       :height (* scale (:height frame-size))}]
-     (set! (. canvas -width) (:width canvas-size))
-     (set! (. canvas -height) (:height canvas-size))
-
      (doseq [x (range 0 (:width frame-size))
              y (range 0 (:height frame-size))]
        (set! (. ctx -fillStyle) (or (frame/get-pixel {:x x :y y} frame)
