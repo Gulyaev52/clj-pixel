@@ -4,6 +4,7 @@
             [pixel-art.db :as db]
             [pixel-art.model.frame :as frame]
             [pixel-art.tool.core :as tool]
+            [pixel-art.tool.utils :refer [get-current-frame]]
             [re-frame.core :as re-frame]
             [re-frame.db]))
 
@@ -16,7 +17,7 @@
  ::initialize-canvas
  (fn [{:keys [db]} _]
    {:fx [[:init-canvases]
-         [:draw-frame (:source-frame db)]
+         [:draw-frame (get-current-frame db)]
          [:draw-pixels-grid]]}))
 
 (re-frame/reg-event-db
@@ -88,7 +89,7 @@
          main-canvas (. js/document (getElementById "tutorial"))
          grid-canvas (. js/document (getElementById "grid"))
 
-         frame-size (-> db :source-frame frame/get-size)
+         frame-size (-> db get-current-frame frame/get-size)
          scale (:scale db)
          canvas-size {:width (* scale (:width frame-size))
                       :height (* scale (:height frame-size))}]
@@ -115,10 +116,10 @@
          canvas (. js/document (getElementById "preview"))
          ctx (. canvas (getContext "2d"))
 
-         source-frame (:source-frame db)
+         current-frame (get-current-frame db)
          scale (:scale db)]
      (doseq [pos poses]
-       (set! (. ctx -fillStyle) (->> (frame/get-pixel pos source-frame)
+       (set! (. ctx -fillStyle) (->> (frame/get-pixel pos current-frame)
                                      get-highlight-color))
        (. ctx (fillRect (* (:x pos) scale) (* (:y pos) scale) scale scale))))))
 
@@ -150,7 +151,7 @@
          canvas (. js/document (getElementById "grid"))
          ctx (. canvas (getContext "2d"))
 
-         frame-size (-> db :source-frame frame/get-size)
+         frame-size (-> db get-current-frame frame/get-size)
          scale (:scale db)
          canvas-size {:width (* scale (:width frame-size))
                       :height (* scale (:height frame-size))}]

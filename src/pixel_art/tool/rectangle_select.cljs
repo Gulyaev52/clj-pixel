@@ -3,7 +3,7 @@
             [clojure.set]
             [pixel-art.events.event-collector]
             [pixel-art.model.frame :as frame]
-            [pixel-art.tool.utils :refer [commit-changes]]
+            [pixel-art.tool.utils :refer [commit-changes get-current-frame]]
             [pixel-art.utils.geometry :as geometry]
             [re-frame.core :as re-frame]
             [re-frame.db :as db]
@@ -37,9 +37,9 @@
     {:changes changes ;; todo: а это точно нужно?
      :moved-selection-image moved-selection-image}))
 
-(defn- get-rectangle-selection-image [p1 p2 source-frame]
+(defn- get-rectangle-selection-image [p1 p2 current-frame]
   (->> (geometry/get-rectange-points p1 p2)
-       (map (fn [p] [p (frame/get-pixel p source-frame)]))
+       (map (fn [p] [p (frame/get-pixel p current-frame)]))
        (into {})))
 
 (defn commit-moved-selection [db]
@@ -49,7 +49,7 @@
         (commit-changes changes))))
 
 (defn handle-mouse-event [event db]
-  (let [{:keys [tool source-frame initial-mouse-down-pos user-is-drawing]} db]
+  (let [{:keys [tool initial-mouse-down-pos user-is-drawing]} db]
     (case (-> tool :state :mode)
       :select
       (cond
@@ -57,7 +57,9 @@
             (and (= (:type event) :mouse-move) user-is-drawing))
         {:db (assoc-in db [:tool :state :user-is-making-selection] true)
          :fx [[:clear-preview]
-              [:highlight-selection (get-rectangle-selection-image initial-mouse-down-pos (:pos event) source-frame)]]}
+              [:highlight-selection (get-rectangle-selection-image initial-mouse-down-pos
+                                                                   (:pos event)
+                                                                   (get-current-frame db))]]}
 
         (and (= (:type event) :mouse-move) (not user-is-drawing))
         {:db db
@@ -65,7 +67,9 @@
               [:highlight-pixels [(:pos event)]]]}
 
         (and (= :mouse-up (:type event)) (-> tool :state :user-is-making-selection))
-        (let [selection-image (get-rectangle-selection-image initial-mouse-down-pos (:pos event) source-frame)
+        (let [selection-image (get-rectangle-selection-image initial-mouse-down-pos
+                                                             (:pos event)
+                                                             (get-current-frame db))
               tool (assoc tool :state {:mode :move-selection
                                        :initial-selection-image selection-image
                                        :selection-image selection-image

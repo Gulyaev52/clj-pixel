@@ -3,7 +3,7 @@
             [pixel-art.tool.rectangle-select :as rectangle-select :refer [copy-selection
                                                                           move-selection
                                                                           remove-transparent-colors]]
-            [pixel-art.tool.utils :refer [commit-changes]]
+            [pixel-art.tool.utils :refer [commit-changes get-current-frame]]
             [re-frame.core :as re-frame]
             [re-pressed.core :as rp]))
 
@@ -49,17 +49,18 @@
         (commit-changes changes))))
 
 (defn handle-mouse-event [event db]
-  (let [{:keys [tool source-frame initial-mouse-down-pos user-is-drawing]} db]
+  (let [{:keys [tool initial-mouse-down-pos user-is-drawing]} db]
     (case (-> tool :state :mode)
       :select
       (cond
         (= (:type event) :mouse-down)
-        (let [color-under-mouse (frame/get-pixel (:pos event) source-frame)
+        (let [current-frame (get-current-frame db)
+              color-under-mouse (frame/get-pixel (:pos event) current-frame)
               selection-points (flood-fill (:pos event)
-                                           (frame/get-size source-frame)
-                                           #(= (frame/get-pixel % source-frame) color-under-mouse))
+                                           (frame/get-size current-frame)
+                                           #(= (frame/get-pixel % current-frame) color-under-mouse))
               selection-image (->> selection-points
-                                   (map (fn [p] [p (frame/get-pixel p source-frame)]))
+                                   (map (fn [p] [p (frame/get-pixel p current-frame)]))
                                    (into {}))
               tool (assoc tool :state {:mode :move-selection
                                        :initial-selection-image selection-image

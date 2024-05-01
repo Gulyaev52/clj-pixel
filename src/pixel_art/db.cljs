@@ -1,5 +1,6 @@
 (ns pixel-art.db
   (:require [pixel-art.model.frame :as frame]
+            [pixel-art.model.sprite :as sprite]
             [pixel-art.tool.core :as tool]))
 
 (defn get-initial-options [m]
@@ -20,7 +21,8 @@
                      {:pos {:x 0 :y 1} :color frame/transparent-color}
                      {:pos {:x 1 :y 1} :color "black"}]))]
     {:size size
-     :source-frame frame
+     :sprite (->> (sprite/create {:width 8 :height 8})
+                  (sprite/add-frame frame))
      :tool (tool/init :rectangle-select)
      :tools-options (get-initial-options tool/options-specs) ;; todo: добавить type в модуль; иметь какой-то массив со всеми опц
      :color "black"
