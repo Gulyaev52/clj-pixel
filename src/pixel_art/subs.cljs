@@ -8,6 +8,11 @@
    (:tool db)))
 
 (re-frame/reg-sub
+ ::sprite
+ (fn [db]
+   (:sprite db)))
+
+(re-frame/reg-sub
  ::pixels-grid-enabled
  (fn [db]
    (:pixels-grid-enabled db)))

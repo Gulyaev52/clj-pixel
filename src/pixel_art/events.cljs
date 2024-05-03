@@ -6,7 +6,8 @@
             [pixel-art.tool.core :as tool]
             [pixel-art.tool.utils :refer [get-current-frame]]
             [re-frame.core :as re-frame]
-            [re-frame.db]))
+            [re-frame.db]
+            [pixel-art.model.sprite :as sprite]))
 
 (re-frame/reg-event-fx
  ::initialize-db
@@ -39,6 +40,28 @@
     :fx [(if enabled
            [:draw-pixels-grid]
            [:hide-pixels-grid])]}))
+
+(re-frame/reg-event-db
+ ::add-frame
+ (fn [db _]
+   (let [sprite (:sprite db)
+         new-frame (frame/create (:size sprite))]
+     (update db :sprite #(sprite/add-frame new-frame %)))))
+
+(re-frame/reg-event-db
+ ::remove-frame
+ (fn [db [_ idx]]
+   (update db :sprite #(sprite/remove-frame idx %))))
+
+(re-frame/reg-event-db
+ ::duplicate-frame
+ (fn [db [_ idx]]
+   (update db :sprite #(sprite/duplicate-frame idx %))))
+
+(re-frame/reg-event-db
+ ::select-frame
+ (fn [db [_ idx]]
+   (update db :sprite #(sprite/select-frame idx %))))
 
 (re-frame/reg-event-fx
  ::handle-mouse-event
