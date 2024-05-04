@@ -4,8 +4,7 @@
                                                                           move-selection
                                                                           remove-transparent-colors]]
             [pixel-art.tool.utils :refer [commit-changes get-current-frame]]
-            [re-frame.core :as re-frame]
-            [re-pressed.core :as rp]))
+            [re-frame.core :as re-frame]))
 
 ;; подумать как работать с preview и canvas
 
@@ -13,6 +12,29 @@
 
 (def options-spec
   [])
+
+(def hotkeys
+  [[[::cancel-selection]
+    [{:keyCode 27 ;; esc
+      }]]
+
+   [[::copy-selection]
+    [{:keyCode 67 ;; c
+      :ctrlKey true}]]
+
+   [[::past-selection]
+    [{:keyCode 86 ;; v
+      :ctrlKey true}]]
+
+   [[::delete-selection]
+    [{:keyCode 46 ;; delete
+      }]
+    [{:keyCode 8 ;; backspace
+      }]]
+
+   [[::cut-selection]
+    [{:keyCode 88 ;; x
+      }]]])
 
 (defn- valid-pos? [{:keys [x y]} {:keys [width height]}]
   (and (and (>= x 0) (< x width))
@@ -68,29 +90,7 @@
                                        :changes []})]
           {:db (assoc db :tool tool)
            :fx [[:clear-preview]
-                [:highlight-selection selection-image]
-                [:dispatch [::rp/set-keydown-rules
-                            {:event-keys [[[::cancel-selection]
-                                           [{:keyCode 27 ;; esc
-                                             }]]
-
-                                          [[::copy-selection]
-                                           [{:keyCode 67 ;; c
-                                             :ctrlKey true}]]
-
-                                          [[::past-selection]
-                                           [{:keyCode 86 ;; v
-                                             :ctrlKey true}]]
-
-                                          [[::delete-selection]
-                                           [{:keyCode 46 ;; delete
-                                             }]
-                                           [{:keyCode 8 ;; backspace
-                                             }]]
-
-                                          [[::cut-selection]
-                                           [{:keyCode 88 ;; x
-                                             }]]]}]]]})
+                [:highlight-selection selection-image]]})
 
         (= (:type event) :mouse-move)
         {:db db

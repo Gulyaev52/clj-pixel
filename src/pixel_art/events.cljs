@@ -2,21 +2,26 @@
   (:require ["tinycolor2" :as tinycolor]
             [day8.re-frame.tracing :refer [fn-traced]]
             [pixel-art.db :as db]
+            [pixel-art.history :as history]
             [pixel-art.model.frame :as frame]
+            [pixel-art.model.sprite :as sprite]
             [pixel-art.tool.core :as tool]
             [pixel-art.tool.utils :refer [get-current-frame]]
-            [pixel-art.history :as history]
+            [pixel-art.utils.interceptor :refer [run-fx-on-changes]]
             [re-frame.core :as re-frame]
             [re-frame.db]
-            [pixel-art.model.sprite :as sprite]
-            [re-pressed.core :as rp]))
+            [re-pressed.core :as rp]
+            [pixel-art.tool.shape-select :as shape-select]
+            [pixel-art.tool.rectangle-select :as rectangle-select]))
 
 (re-frame/reg-event-fx
  ::initialize-db
  (fn [_ _]
    {:db db/default-db
     :fx [[:dispatch [::rp/set-keydown-rules
-                     {:event-keys history/hotkeys}]]]}))
+                     {:event-keys (concat history/hotkeys
+                                          rectangle-select/hotkeys
+                                          shape-select/hotkeys)}]]]}))
 
 (re-frame/reg-event-fx
  ::initialize-canvas
@@ -24,6 +29,13 @@
    {:fx [[:init-canvases]
          [:draw-frame (get-current-frame db)]
          [:draw-pixels-grid]]}))
+
+(re-frame/reg-global-interceptor
+ (run-fx-on-changes
+  get-current-frame
+  (fn [updated-current-frame]
+    [[:clear-preview]
+     [:draw-frame updated-current-frame]])))
 
 (re-frame/reg-event-db
  ::select-tool
@@ -91,11 +103,6 @@
                            :last-mouse-pos (:pos event))
                     (#(tool/handle-mouse-event event %)) ;; todo: оменять порядок арг
                     (assoc-in [:db :initial-mouse-down-pos] nil))))))
-
-#_(api/last-ep-id)
-#_(defsc [709 -83])
-#_(pixel-art.events.event-collector/repeat-last-event)
-#_(re-frame/dispatch (second @pixel-art.events.event-collector/event-store))
 
 (defn get-highlight-color [color]
   (let [dark-color "rgba(0, 0, 0, 0.2)"

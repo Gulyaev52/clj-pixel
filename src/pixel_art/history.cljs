@@ -67,15 +67,9 @@
 (re-frame/reg-event-fx
  ::undo
  (fn [{:keys [db]} _]
-   (let [updated-db (undo db)
-         current-frame (sprite/get-current-frame (:sprite updated-db))]
-     {:db updated-db
-      :fx [[:draw-frame current-frame]]})))
+   {:db (undo db)}))
 
 (re-frame/reg-event-fx
  ::redo
  (fn [{:keys [db]} _]
-   (let [updated-db (redo db)
-         current-frame (sprite/get-current-frame (:sprite updated-db))]
-     {:db updated-db
-      :fx [[:draw-frame current-frame]]})))
+   {:db (redo db)}))

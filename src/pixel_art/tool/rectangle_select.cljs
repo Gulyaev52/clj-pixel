@@ -6,8 +6,7 @@
             [pixel-art.tool.utils :refer [commit-changes get-current-frame]]
             [pixel-art.utils.geometry :as geometry]
             [re-frame.core :as re-frame]
-            [re-frame.db :as db]
-            [re-pressed.core :as rp]))
+            [re-frame.db :as db]))
 
 ;; удалять хоткеи; нужно помнить о состояния превью; init
 ;; todo: используем так как из selection-image удаляются прозр точки(не работает днд) и если проверять вхож
@@ -15,6 +14,29 @@
 ;; ресайз
 
 (defn init [] {:type :rectangle-select :state {:mode :select}})
+
+(def hotkeys
+  [[[::cancel-selection]
+    [{:keyCode 27 ;; esc
+      }]]
+
+   [[::copy-selection]
+    [{:keyCode 67 ;; c
+      :ctrlKey true}]]
+
+   [[::past-selection]
+    [{:keyCode 86 ;; v
+      :ctrlKey true}]]
+
+   [[::delete-selection]
+    [{:keyCode 46 ;; delete
+      }]
+    [{:keyCode 8 ;; backspace
+      }]]
+
+   [[::cut-selection]
+    [{:keyCode 88 ;; x
+      }]]])
 
 (def options-spec
   [])
@@ -76,29 +98,7 @@
                                        :changes []})]
           {:db (assoc db :tool tool)
            :fx [[:clear-preview]
-                [:highlight-selection selection-image]
-                [:dispatch [::rp/set-keydown-rules
-                            {:event-keys [[[::cancel-selection]
-                                           [{:keyCode 27 ;; esc
-                                             }]]
-
-                                          [[::copy-selection]
-                                           [{:keyCode 67 ;; c
-                                             :ctrlKey true}]]
-
-                                          [[::past-selection]
-                                           [{:keyCode 86 ;; v
-                                             :ctrlKey true}]]
-
-                                          [[::delete-selection]
-                                           [{:keyCode 46 ;; delete
-                                             }]
-                                           [{:keyCode 8 ;; backspace
-                                             }]]
-
-                                          [[::cut-selection]
-                                           [{:keyCode 88 ;; x
-                                             }]]]}]]]})
+                [:highlight-selection selection-image]]})
 
         :else {:db db})
 

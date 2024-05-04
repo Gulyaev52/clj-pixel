@@ -15,9 +15,7 @@
              (update :sprite
                      (fn [s]
                        (sprite/update-current-frame (fn [_] current-frame) s)))
-             (history/save-frame pixels-m current-frame))
-     :fx [[:clear-preview]
-          [:draw-frame current-frame]]}))
+             (history/save-frame pixels-m current-frame))}))
 
 ;; Resize the pixel at {col, row} for the provided size. Will return the array of pixels centered
 ;; * around the original pixel, forming a pixel square of side=size
