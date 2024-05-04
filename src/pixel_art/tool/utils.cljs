@@ -1,6 +1,7 @@
 (ns pixel-art.tool.utils
   (:require [pixel-art.model.frame :as frame]
-            [pixel-art.model.sprite :as sprite]))
+            [pixel-art.model.sprite :as sprite]
+            [pixel-art.history :as history]))
 
 (defn get-tool-options [db]
   (get (db :tools-options) (-> db :tool :type)))
@@ -9,10 +10,12 @@
   (-> db :sprite sprite/get-current-frame))
 
 (defn commit-changes [db pixels-m]
-  (let [current-frame (frame/set-pixels-map pixels-m (get-current-frame db))]
-    {:db (update db :sprite
-                 (fn [s]
-                   (sprite/update-current-frame (fn [_] current-frame) s)))
+  (let [current-frame (frame/set-pixels pixels-m (get-current-frame db))]
+    {:db (-> db
+             (update :sprite
+                     (fn [s]
+                       (sprite/update-current-frame (fn [_] current-frame) s)))
+             (history/save-frame pixels-m current-frame))
      :fx [[:clear-preview]
           [:draw-frame current-frame]]}))
 

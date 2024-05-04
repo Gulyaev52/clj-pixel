@@ -1,7 +1,9 @@
 (ns pixel-art.db
-  (:require [pixel-art.model.frame :as frame]
-            [pixel-art.model.sprite :as sprite]
-            [pixel-art.tool.core :as tool]))
+  (:require
+   [pixel-art.model.frame :as frame]
+   [pixel-art.model.sprite :as sprite]
+   [pixel-art.tool.core :as tool]
+   [pixel-art.history :as history]))
 
 (defn get-initial-options [m]
   (-> m
@@ -12,20 +14,22 @@
 (def default-db
   (let [size {:width 8 :height 8}
         frame (->> (frame/create size)
-                   (frame/set-pixels (flatten
-                                      (for [x (range 0 8)
-                                            y (range 0 8)]
-                                        {:pos {:x x :y y} :color "green"})))
+                   (frame/set-pixels (->> (for [x (range 0 8)
+                                                y (range 0 8)]
+                                            [{:x x :y y} "green"])
+                                          (into {})))
                    (frame/set-pixels
-                    [{:pos {:x 0 :y 0} :color "black"}
-                     {:pos {:x 0 :y 1} :color frame/transparent-color}
-                     {:pos {:x 1 :y 1} :color "black"}]))]
+                    {{:x 0 :y 0} "black"
+                     {:x 0 :y 1} frame/transparent-color
+                     {:x 1 :y 1} "black"}))
+        sprite (->> (sprite/create {:width 8 :height 8})
+                    (sprite/add-frame frame))]
     {:size size
-     :sprite (->> (sprite/create {:width 8 :height 8})
-                  (sprite/add-frame frame))
-     :tool (tool/init :rectangle-select)
+     :sprite sprite
+     :tool (tool/init :pen)
      :tools-options (get-initial-options tool/options-specs) ;; todo: добавить type в модуль; иметь какой-то массив со всеми опц
      :color "black"
      :selection-manager {}
      :scale 40
+     :history (history/init {:sprite sprite})
      :pixels-grid-enabled true}))

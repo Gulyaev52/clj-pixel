@@ -5,14 +5,18 @@
             [pixel-art.model.frame :as frame]
             [pixel-art.tool.core :as tool]
             [pixel-art.tool.utils :refer [get-current-frame]]
+            [pixel-art.history :as history]
             [re-frame.core :as re-frame]
             [re-frame.db]
-            [pixel-art.model.sprite :as sprite]))
+            [pixel-art.model.sprite :as sprite]
+            [re-pressed.core :as rp]))
 
 (re-frame/reg-event-fx
  ::initialize-db
  (fn [_ _]
-   {:db db/default-db}))
+   {:db db/default-db
+    :fx [[:dispatch [::rp/set-keydown-rules
+                     {:event-keys history/hotkeys}]]]}))
 
 (re-frame/reg-event-fx
  ::initialize-canvas
