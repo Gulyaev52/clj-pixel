@@ -10,12 +10,11 @@
   (-> db :sprite sprite/get-current-frame))
 
 (defn commit-changes [db pixels-m]
-  (let [current-frame (frame/set-pixels pixels-m (get-current-frame db))]
-    {:db (-> db
-             (update :sprite
-                     (fn [s]
-                       (sprite/update-current-frame (fn [_] current-frame) s)))
-             (history/save-frame pixels-m current-frame))}))
+  {:db (-> db
+           (update :sprite
+                   (fn [s]
+                     (sprite/update-current-frame #(frame/set-pixels pixels-m %) s)))
+           (history/save-current-frame pixels-m))})
 
 ;; Resize the pixel at {col, row} for the provided size. Will return the array of pixels centered
 ;; * around the original pixel, forming a pixel square of side=size

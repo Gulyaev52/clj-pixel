@@ -62,17 +62,23 @@
  (fn [db _]
    (let [sprite (:sprite db)
          new-frame (frame/create (:size sprite))]
-     (update db :sprite #(sprite/add-frame new-frame %)))))
+     (-> db
+         (update :sprite #(sprite/add-frame new-frame %))
+         history/save-sprite))))
 
 (re-frame/reg-event-db
  ::remove-frame
  (fn [db [_ idx]]
-   (update db :sprite #(sprite/remove-frame idx %))))
+   (-> db
+       (update :sprite #(sprite/remove-frame idx %))
+       history/save-sprite)))
 
 (re-frame/reg-event-db
  ::duplicate-frame
  (fn [db [_ idx]]
-   (update db :sprite #(sprite/duplicate-frame idx %))))
+   (-> db
+       (update :sprite #(sprite/duplicate-frame idx %))
+       history/save-sprite)))
 
 (re-frame/reg-event-db
  ::select-frame

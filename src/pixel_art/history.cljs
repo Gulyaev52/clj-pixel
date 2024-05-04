@@ -16,20 +16,28 @@
                [{:keyCode 89 ;; y
                  :ctrlKey true}]]])
 
-(defn save-frame [db changes updated-frame]
+(defn- save-state [db history-item]
+  (let [{:keys [history]} db]
+    (-> history
+        (update :stack #(if (= (count %) stack-max-size)
+                          (take-last stack-max-size %)
+                          %))
+        (update :stack #(if (not= (:current-idx history) (- (count %) 1))
+                          (subvec % 0 (inc (:current-idx history)))
+                          %))
+        (update :stack #(conj % history-item))
+        (update :current-idx inc)
+        (#(assoc db :history %)))))
+
+(defn save-current-frame [db changes]
   (if (seq changes)
-    (let [{:keys [history]} db]
-      (-> history
-          (update :stack #(if (= (count %) stack-max-size)
-                            (take-last stack-max-size %)
-                            %))
-          (update :stack #(if (not= (:current-idx history) (- (count %) 1))
-                            (subvec % 0 (inc (:current-idx history)))
-                            %))
-          (update :stack #(conj % {:frame updated-frame}))
-          (update :current-idx inc)
-          (#(assoc db :history %))))
+    (let [sprite (:sprite db)]
+      (save-state db {:frame (sprite/get-current-frame sprite)
+                      :current-frame-idx (:current-frame-idx sprite)}))
     db))
+
+(defn save-sprite [db]
+  (save-state db {:sprite (:sprite db)}))
 
 (defn- restore [db idx]
   (let [{:keys [history]} db
@@ -40,8 +48,9 @@
       (assoc db :sprite (:sprite changes))
 
       (:frame changes)
-      (update db :sprite (fn [s]
-                           (sprite/update-current-frame (fn [_] (:frame changes)) s))))))
+      (update db :sprite #(->> %
+                               (sprite/select-frame (:current-frame-idx changes))
+                               (sprite/update-current-frame (fn [_] (:frame changes))))))))
 
 (defn check-undo-available? [db]
   (> (get-in db [:history :current-idx]) 0))
