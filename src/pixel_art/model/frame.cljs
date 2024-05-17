@@ -32,11 +32,6 @@
   (let [{:keys [pixels size]} frame]
     (nth pixels (pos->idx pos size) transparent-color)))
 
-(defn get-pixels-map [poses frame]
-  (->> poses
-       (map (fn [p] [p (get-pixel p frame)]))
-       (into {})))
-
 (defn display-frame [frame]
   (let [{:keys [width]} (:size frame)]
     (->> (:pixels frame)

@@ -9,7 +9,7 @@
             [pixel-art.tool.core :as tool]
             [pixel-art.tool.rectangle-select :as rectangle-select]
             [pixel-art.tool.shape-select :as shape-select]
-            [pixel-art.tool.utils :refer [commit-changes get-current-frame]]
+            [pixel-art.tool.utils :refer [commit-changes-and-init-tool get-current-frame]]
             [pixel-art.utils.interceptor :refer [run-fx-on-changes]]
             [re-frame.core :as re-frame]
             [re-frame.db]
@@ -43,7 +43,9 @@
  ::select-tool
  (fn [{:keys [db]} [_ tool-type]]
    (let [tool (tool/init tool-type)]
-     (commit-changes db (get-in db [:tool :state :changes]) tool))))
+     (commit-changes-and-init-tool db
+                                   (get-in db [:tool :state :changes])
+                                   tool))))
 
 (re-frame/reg-event-fx
  ::change-tool-option
@@ -65,7 +67,8 @@
    (let [sprite (:sprite db)
          new-frame (frame/create (:size sprite))]
      (-> db
-         (commit-changes (get-in db [:tool :state :changes]) (tool/init (-> db :tool :type)))
+         (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                       (tool/init (-> db :tool :type)))
          (update-in [:db :sprite] #(sprite/add-frame new-frame %))
          (update-in [:db] history/save-sprite)))))
 
@@ -75,7 +78,8 @@
    (let [sprite (:sprite db)
          new-sprite (sprite/remove-frame idx sprite)]
      (-> db
-         (commit-changes (get-in db [:tool :state :changes]) (tool/init (-> db :tool :type)))
+         (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                       (tool/init (-> db :tool :type)))
          (assoc-in [:db :sprite] new-sprite)
          (update-in [:db] history/save-sprite)))))
 
@@ -83,7 +87,8 @@
  ::duplicate-frame
  (fn [{:keys [db]} [_ idx]]
    (-> db
-       (commit-changes (get-in db [:tool :state :changes]) (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/duplicate-frame idx %))
        (update-in [:db] history/save-sprite))))
 
@@ -91,7 +96,8 @@
  ::select-frame
  (fn [{:keys [db]} [_ idx]]
    (-> db
-       (commit-changes (get-in db [:tool :state :changes]) (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/select-frame idx %)))))
 
 (re-frame/reg-event-fx

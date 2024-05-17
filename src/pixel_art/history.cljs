@@ -1,6 +1,5 @@
 (ns pixel-art.history
-  (:require [pixel-art.model.sprite :as sprite]
-            [re-frame.core :as re-frame]))
+  (:require [pixel-art.model.sprite :as sprite]))
 
 (def stack-max-size 200)
 

@@ -130,9 +130,8 @@
                                                                    scale
                                                                    (. js/document (getElementById "tutorial")))]
                               (when (not= mouse-pos @!last-mouse-pos)
-                                (do
-                                  (reset! !last-mouse-pos mouse-pos)
-                                  (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos])))))}
+                                (reset! !last-mouse-pos mouse-pos)
+                                (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos]))))}
        [:canvas {:id "tutorial"}]
        [:canvas {:id "preview"
                  :style {:position :absolute

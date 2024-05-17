@@ -3,7 +3,7 @@
             [pixel-art.tool.rectangle-select :as rectangle-select :refer [copy-selection
                                                                           move-selection
                                                                           remove-transparent-colors]]
-            [pixel-art.tool.utils :refer [commit-changes get-current-frame]]
+            [pixel-art.tool.utils :refer [commit-changes-and-init-tool get-current-frame]]
             [re-frame.core :as re-frame]))
 
 ;; подумать как работать с preview и canvas
@@ -66,7 +66,7 @@
 
 (defn commit-moved-selection [db]
   (let [changes (-> db :tool :state :changes)]
-    (commit-changes db changes (init))))
+    (commit-changes-and-init-tool db changes (init))))
 
 (defn handle-mouse-event [event db]
   (let [{:keys [tool initial-mouse-down-pos user-is-drawing]} db]
@@ -129,7 +129,7 @@
         deleted-initial-selection (if pasted?
                                     {}
                                     (update-vals initial-selection-image (fn [_] frame/transparent-color)))]
-    (commit-changes db deleted-initial-selection (init))))
+    (commit-changes-and-init-tool db deleted-initial-selection (init))))
 
 (re-frame/reg-event-fx
  ::delete-selection

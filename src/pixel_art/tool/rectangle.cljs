@@ -1,5 +1,5 @@
 (ns pixel-art.tool.rectangle
-  (:require [pixel-art.tool.utils :refer [commit-changes get-tool-options
+  (:require [pixel-art.tool.utils :refer [commit-changes-and-init-tool get-tool-options
                                           resize-pixel]]
             [pixel-art.utils.geometry :as geometry]))
 
@@ -61,4 +61,4 @@
 
       (= :mouse-up (:type event))
       (let [rectangle-image (get-rectangle-image db event)]
-        (commit-changes db rectangle-image (init))))))
+        (commit-changes-and-init-tool db rectangle-image (init))))))

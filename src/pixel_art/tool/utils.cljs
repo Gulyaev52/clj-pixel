@@ -10,8 +10,7 @@
 (defn get-current-frame [db]
   (-> db :sprite sprite/get-current-frame))
 
-;; todo: rename to commit-changes and init-tool
-(defn commit-changes [db changes tool-init]
+(defn commit-changes-and-init-tool [db changes tool-init]
   (-> (if (seq changes)
         {:db (-> db
                  (update :sprite

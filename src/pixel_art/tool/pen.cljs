@@ -1,5 +1,5 @@
 (ns pixel-art.tool.pen
-  (:require [pixel-art.tool.utils :refer [commit-changes get-tool-options
+  (:require [pixel-art.tool.utils :refer [commit-changes-and-init-tool get-tool-options
                                           resize-pixel]]))
 
 (defn init [] {:type :pen :state {:changes {}}})
@@ -41,4 +41,4 @@
 
       (= :mouse-up (:type event))
       (let [changes (-> db :tool :state :changes)]
-        (commit-changes db changes (init))))))
+        (commit-changes-and-init-tool db changes (init))))))
