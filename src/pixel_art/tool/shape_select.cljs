@@ -3,7 +3,9 @@
             [pixel-art.tool.rectangle-select :as rectangle-select :refer [copy-selection
                                                                           move-selection
                                                                           remove-transparent-colors]]
-            [pixel-art.tool.utils :refer [commit-changes-and-init-tool get-current-frame]]
+            [pixel-art.tool.utils :refer [commit-changes-and-init-tool
+                                          get-current-frame]]
+            [pixel-art.utils.geometry :as geometry]
             [re-frame.core :as re-frame]))
 
 ;; подумать как работать с preview и canvas
@@ -36,17 +38,13 @@
     [{:keyCode 88 ;; x
       }]]])
 
-(defn- valid-pos? [{:keys [x y]} {:keys [width height]}]
-  (and (and (>= x 0) (< x width))
-       (and (>= y 0) (< y height))))
-
 (defn- flood-fill [start-point size pred]
   (let [!fill-stack (atom [start-point])
         !visited-points (atom #{})]
     (while (> (count @!fill-stack) 0)
       (let [point (first @!fill-stack)]
         (swap! !fill-stack #(drop 1 %))
-        (when (and (valid-pos? point size)
+        (when (and (geometry/valid-point? point size)
                    (not (@!visited-points point))
                    (pred point))
           (swap! !visited-points conj point)

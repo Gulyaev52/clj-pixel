@@ -1,14 +1,11 @@
 (ns pixel-art.model.frame
-  (:require [clojure.string :as string]))
+  (:require [clojure.string :as string]
+            [pixel-art.utils.geometry :as geometry]))
 
 (def transparent-color nil)
 
 (defn- pos->idx [{:keys [x y]} {:keys [width]}]
   (+ x (* width y)))
-
-(defn- valid-pos? [{:keys [x y]} {:keys [width height]}]
-  (and (and (>= x 0) (< x width))
-       (and (>= y 0) (< y height))))
 
 (defn create [size]
   {:pixels (vec (repeat (* (:width size) (:height size)) transparent-color))
@@ -19,7 +16,7 @@
 (defn set-pixels [pixels-map frame]
   (let [{:keys [pixels size]} frame]
     {:pixels (reduce (fn [res-pixels [pos color]]
-                       (if (valid-pos? pos size)
+                       (if (geometry/valid-point? pos size)
                          (assoc res-pixels (pos->idx pos size) color)
                          res-pixels))
                      pixels

@@ -42,3 +42,7 @@
                              (string/join " "))))
          (string/join "\n")
          println)))
+
+(defn valid-point? [{:keys [x y]} {:keys [width height]}]
+  (and (and (>= x 0) (< x width))
+       (and (>= y 0) (< y height))))

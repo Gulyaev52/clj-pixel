@@ -5,14 +5,15 @@
             [re-frame.core :as re-frame]
             [reagent.dom :as rdom]))
 
+(def !last-mouse-pos (atom nil))
+(def !mouse-down (atom false))
+
 (defn canvas-pos->frame-pos [event scale canvas]
   (let [rect (. canvas getBoundingClientRect)]
     {:x (. js/Math (floor (/ (- (. event -clientX) (. rect -left))
                              scale)))
      :y (. js/Math (floor (/ (- (. event -clientY) (. rect -top))
                              scale)))}))
-
-(def !last-mouse-pos (atom nil))
 
 (defn slider [{:keys [value label min max onChange]}]
   ;; todo: labels
@@ -115,23 +116,37 @@
       [:div {:style {:position "relative"
                      :border "1px solid black"}
              :onMouseDown (fn [event]
-                            (let [mouse-pos (canvas-pos->frame-pos event
-                                                                   scale
-                                                                   (. js/document (getElementById "tutorial")))]
-                              (re-frame/dispatch [::events/handle-mouse-event :mouse-down mouse-pos])))
-             :onMouseUp (fn [event]
-                          (let [mouse-pos (canvas-pos->frame-pos event
-                                                                 scale
-                                                                 (. js/document (getElementById "tutorial")))]
-                            (reset! !last-mouse-pos mouse-pos)
-                            (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos])))
+                            (let [elem (. js/document (getElementById "tutorial"))
+
+                                  mouse-pos (canvas-pos->frame-pos event scale elem)
+
+                                  mouse-move (fn [event]
+                                               (let [mouse-pos (canvas-pos->frame-pos event scale elem)]
+                                                 (when (not= mouse-pos @!last-mouse-pos)
+                                                   (reset! !last-mouse-pos mouse-pos)
+                                                   (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos]))))
+
+                                  mouse-up (fn mouse-up [event]
+                                             (let [mouse-pos (canvas-pos->frame-pos event scale elem)]
+                                               (reset! !last-mouse-pos mouse-pos)
+                                               (reset! !mouse-down false)
+                                               (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos])
+                                               (.. js/document (removeEventListener "mousemove" mouse-move))
+                                               (.. js/document (removeEventListener "mouseup" mouse-up))))]
+                              (re-frame/dispatch [::events/handle-mouse-event :mouse-down mouse-pos])
+                              (reset! !mouse-down true)
+                              (.. js/document (addEventListener "mousemove" mouse-move))
+                              (.. js/document (addEventListener "mouseup" mouse-up))))
+             :onMouseLeave (fn [event]
+                             (when-not @!mouse-down
+                               (let [mouse-pos (canvas-pos->frame-pos event scale (. js/document (getElementById "tutorial")))]
+                                 (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos]))))
              :onMouseMove (fn [event]
-                            (let [mouse-pos (canvas-pos->frame-pos event
-                                                                   scale
-                                                                   (. js/document (getElementById "tutorial")))]
-                              (when (not= mouse-pos @!last-mouse-pos)
-                                (reset! !last-mouse-pos mouse-pos)
-                                (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos]))))}
+                            (when-not @!mouse-down
+                              (let [mouse-pos (canvas-pos->frame-pos event scale (. js/document (getElementById "tutorial")))]
+                                (when (not= mouse-pos @!last-mouse-pos)
+                                  (reset! !last-mouse-pos mouse-pos)
+                                  (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos])))))}
        [:canvas {:id "tutorial"}]
        [:canvas {:id "preview"
                  :style {:position :absolute

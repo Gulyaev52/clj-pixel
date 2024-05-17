@@ -9,7 +9,9 @@
             [pixel-art.tool.core :as tool]
             [pixel-art.tool.rectangle-select :as rectangle-select]
             [pixel-art.tool.shape-select :as shape-select]
-            [pixel-art.tool.utils :refer [commit-changes-and-init-tool get-current-frame]]
+            [pixel-art.tool.utils :refer [commit-changes-and-init-tool
+                                          get-current-frame]]
+            [pixel-art.utils.geometry :as geometry]
             [pixel-art.utils.interceptor :refer [run-fx-on-changes]]
             [re-frame.core :as re-frame]
             [re-frame.db]
@@ -174,9 +176,10 @@
          current-frame (get-current-frame db)
          scale (:scale db)]
      (doseq [pos poses]
-       (set! (. ctx -fillStyle) (->> (frame/get-pixel pos current-frame)
-                                     get-highlight-color))
-       (. ctx (fillRect (* (:x pos) scale) (* (:y pos) scale) scale scale))))))
+       (when (geometry/valid-point? pos (:size current-frame))
+         (set! (. ctx -fillStyle) (->> (frame/get-pixel pos current-frame)
+                                       get-highlight-color))
+         (. ctx (fillRect (* (:x pos) scale) (* (:y pos) scale) scale scale)))))))
 
 (re-frame/reg-fx
  :draw-preview
