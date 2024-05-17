@@ -1,7 +1,8 @@
 (ns pixel-art.tool.utils
   (:require [pixel-art.model.frame :as frame]
             [pixel-art.model.sprite :as sprite]
-            [pixel-art.history :as history]))
+            [pixel-art.history :as history]
+            [sc.api]))
 
 (defn get-tool-options [db]
   (get (db :tools-options) (-> db :tool :type)))
@@ -9,12 +10,17 @@
 (defn get-current-frame [db]
   (-> db :sprite sprite/get-current-frame))
 
-(defn commit-changes [db pixels-m]
-  {:db (-> db
-           (update :sprite
-                   (fn [s]
-                     (sprite/update-current-frame #(frame/set-pixels pixels-m %) s)))
-           (history/save-current-frame pixels-m))})
+;; todo: rename to commit-changes and init-tool
+(defn commit-changes [db changes tool-init]
+  (-> (if (seq changes)
+        {:db (-> db
+                 (update :sprite
+                         (fn [s]
+                           (sprite/update-current-frame #(frame/set-pixels changes %) s)))
+                 (history/save-sprite))}
+        {:db db})
+      (assoc-in [:db :tool] tool-init)
+      (assoc :fx [[:clear-preview]])))
 
 ;; Resize the pixel at {col, row} for the provided size. Will return the array of pixels centered
 ;; * around the original pixel, forming a pixel square of side=size

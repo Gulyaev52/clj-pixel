@@ -1,4 +1,5 @@
-(ns pixel-art.model.sprite)
+(ns pixel-art.model.sprite
+  (:require [sc.api]))
 
 (defn create [size]
   {:size size
@@ -40,7 +41,7 @@
         duplicated-frame-pos (inc idx)]
     (-> sprite
         (update :frames #(insertv duplicated-frame-pos current-frame %))
-        (assoc :current-frame-idx duplicated-frame-pos))))
+        (assoc :current-frame-idx duplicated-frame-pos)))) ;;todo: wrong pos
 
 (defn move-frame [from to sprite]
   (-> sprite

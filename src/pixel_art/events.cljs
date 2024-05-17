@@ -3,23 +3,25 @@
             [day8.re-frame.tracing :refer [fn-traced]]
             [pixel-art.db :as db]
             [pixel-art.history :as history]
+            [pixel-art.history.events :as history.events]
             [pixel-art.model.frame :as frame]
             [pixel-art.model.sprite :as sprite]
             [pixel-art.tool.core :as tool]
-            [pixel-art.tool.utils :refer [get-current-frame]]
+            [pixel-art.tool.rectangle-select :as rectangle-select]
+            [pixel-art.tool.shape-select :as shape-select]
+            [pixel-art.tool.utils :refer [commit-changes get-current-frame]]
             [pixel-art.utils.interceptor :refer [run-fx-on-changes]]
             [re-frame.core :as re-frame]
             [re-frame.db]
             [re-pressed.core :as rp]
-            [pixel-art.tool.shape-select :as shape-select]
-            [pixel-art.tool.rectangle-select :as rectangle-select]))
+            [sc.api]))
 
 (re-frame/reg-event-fx
  ::initialize-db
  (fn [_ _]
    {:db db/default-db
     :fx [[:dispatch [::rp/set-keydown-rules
-                     {:event-keys (concat history/hotkeys
+                     {:event-keys (concat history.events/hotkeys
                                           rectangle-select/hotkeys
                                           shape-select/hotkeys)}]]]}))
 
@@ -37,17 +39,17 @@
     [[:clear-preview]
      [:draw-frame updated-current-frame]])))
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
  ::select-tool
- (fn [db [_ tool-type]]
+ (fn [{:keys [db]} [_ tool-type]]
    (let [tool (tool/init tool-type)]
-     (assoc db :tool tool))))
+     (commit-changes db (get-in db [:tool :state :changes]) tool))))
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
  ::change-tool-option
- (fn [db [_ field value]]
+ (fn [{:keys [db]} [_ field value]]
    (let [tool-type (-> db :tool :type)]
-     (assoc-in db [:tools-options tool-type field] value))))
+     {:db (assoc-in db [:tools-options tool-type field] value)})))
 
 (re-frame/reg-event-fx
  ::enable-pixels-grid
@@ -57,33 +59,40 @@
            [:draw-pixels-grid]
            [:hide-pixels-grid])]}))
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
  ::add-frame
- (fn [db _]
+ (fn [{:keys [db]} _]
    (let [sprite (:sprite db)
          new-frame (frame/create (:size sprite))]
      (-> db
-         (update :sprite #(sprite/add-frame new-frame %))
-         history/save-sprite))))
+         (commit-changes (get-in db [:tool :state :changes]) (tool/init (-> db :tool :type)))
+         (update-in [:db :sprite] #(sprite/add-frame new-frame %))
+         (update-in [:db] history/save-sprite)))))
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
  ::remove-frame
- (fn [db [_ idx]]
-   (-> db
-       (update :sprite #(sprite/remove-frame idx %))
-       history/save-sprite)))
+ (fn [{:keys [db]} [_ idx]]
+   (let [sprite (:sprite db)
+         new-sprite (sprite/remove-frame idx sprite)]
+     (-> db
+         (commit-changes (get-in db [:tool :state :changes]) (tool/init (-> db :tool :type)))
+         (assoc-in [:db :sprite] new-sprite)
+         (update-in [:db] history/save-sprite)))))
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
  ::duplicate-frame
- (fn [db [_ idx]]
+ (fn [{:keys [db]} [_ idx]]
    (-> db
-       (update :sprite #(sprite/duplicate-frame idx %))
-       history/save-sprite)))
+       (commit-changes (get-in db [:tool :state :changes]) (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] #(sprite/duplicate-frame idx %))
+       (update-in [:db] history/save-sprite))))
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
  ::select-frame
- (fn [db [_ idx]]
-   (update db :sprite #(sprite/select-frame idx %))))
+ (fn [{:keys [db]} [_ idx]]
+   (-> db
+       (commit-changes (get-in db [:tool :state :changes]) (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] #(sprite/select-frame idx %)))))
 
 (re-frame/reg-event-fx
  ::handle-mouse-event

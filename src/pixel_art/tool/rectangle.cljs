@@ -61,6 +61,4 @@
 
       (= :mouse-up (:type event))
       (let [rectangle-image (get-rectangle-image db event)]
-        (-> db
-            (assoc :tool (init))
-            (commit-changes rectangle-image))))))
+        (commit-changes db rectangle-image (init))))))

@@ -2,7 +2,7 @@
   (:require [pixel-art.tool.utils :refer [commit-changes get-tool-options
                                           resize-pixel]]))
 
-(defn init [] {:type :pen :state {:visited-pixels {}}})
+(defn init [] {:type :pen :state {:changes {}}})
 
 (def options-spec
   [{:type :slider
@@ -29,7 +29,7 @@
             {:keys [pixel-size]} (get-tool-options db)
             new-pixels (->> (resize-pixel (:pos event) pixel-size)
                             (map (fn [p] [p color])))]
-        {:db (update-in db [:tool :state :visited-pixels] #(merge % new-pixels))
+        {:db (update-in db [:tool :state :changes] #(merge % new-pixels))
          :fx [[:draw-preview new-pixels]]})
 
       (and (= (:type event) :mouse-move) (not user-is-drawing))
@@ -40,7 +40,5 @@
               [:highlight-pixels points]]})
 
       (= :mouse-up (:type event))
-      (let [visited-pixels (-> db :tool :state :visited-pixels)]
-        (-> db
-            (assoc :tool (init))
-            (commit-changes visited-pixels))))))
+      (let [changes (-> db :tool :state :changes)]
+        (commit-changes db changes (init))))))

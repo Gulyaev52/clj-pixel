@@ -8,14 +8,6 @@
   {:current-idx 0
    :stack [{:sprite sprite}]})
 
-(def hotkeys [[[::undo]
-               [{:keyCode 90 ;; z
-                 :ctrlKey true}]]
-
-              [[::redo]
-               [{:keyCode 89 ;; y
-                 :ctrlKey true}]]])
-
 (defn- save-state [db history-item]
   (let [{:keys [history]} db]
     (-> history
@@ -28,13 +20,6 @@
         (update :stack #(conj % history-item))
         (update :current-idx inc)
         (#(assoc db :history %)))))
-
-(defn save-current-frame [db changes]
-  (if (seq changes)
-    (let [sprite (:sprite db)]
-      (save-state db {:frame (sprite/get-current-frame sprite)
-                      :current-frame-idx (:current-frame-idx sprite)}))
-    db))
 
 (defn save-sprite [db]
   (save-state db {:sprite (:sprite db)}))
@@ -72,13 +57,3 @@
         (restore (inc (get-in db [:history :current-idx])))
         (update-in [:history :current-idx] inc))
     db))
-
-(re-frame/reg-event-fx
- ::undo
- (fn [{:keys [db]} _]
-   {:db (undo db)}))
-
-(re-frame/reg-event-fx
- ::redo
- (fn [{:keys [db]} _]
-   {:db (redo db)}))

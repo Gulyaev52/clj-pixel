@@ -66,9 +66,7 @@
 
 (defn commit-moved-selection [db]
   (let [changes (-> db :tool :state :changes)]
-    (-> db
-        (assoc :tool (init))
-        (commit-changes changes))))
+    (commit-changes db changes (init))))
 
 (defn handle-mouse-event [event db]
   (let [{:keys [tool initial-mouse-down-pos user-is-drawing]} db]
@@ -138,9 +136,7 @@
         deleted-initial-selection (if pasted?
                                     {}
                                     (update-vals initial-selection-image (fn [_] frame/transparent-color)))]
-    (-> db
-        (assoc :tool (init))
-        (commit-changes deleted-initial-selection))))
+    (commit-changes db deleted-initial-selection (init))))
 
 (re-frame/reg-event-fx
  ::delete-selection
