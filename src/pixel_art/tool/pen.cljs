@@ -20,7 +20,7 @@
     :initial-value false
     :label "Mirror-x"}])
 
-(defn handle-mouse-event [event db]
+(defn handle-mouse-event [db event]
   (let [{:keys [user-is-drawing]} db]
     (cond
       (or (= (:type event) :mouse-down)

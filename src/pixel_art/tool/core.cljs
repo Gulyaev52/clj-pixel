@@ -22,9 +22,9 @@
    :rectangle-select rectangle-select/options-spec
    :shape-select shape-select/options-spec})
 
-(defn handle-mouse-event [event db]
+(defn handle-mouse-event [db event]
   (case (-> db :tool :type)
-    :pen (pen/handle-mouse-event event db)
-    :rectangle (rectangle/handle-mouse-event event db)
-    :rectangle-select (rectangle-select/handle-mouse-event event db)
-    :shape-select (shape-select/handle-mouse-event event db)))
+    :pen (pen/handle-mouse-event db event)
+    :rectangle (rectangle/handle-mouse-event db event)
+    :rectangle-select (rectangle-select/handle-mouse-event db event)
+    :shape-select (shape-select/handle-mouse-event db event)))

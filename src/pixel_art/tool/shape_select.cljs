@@ -66,7 +66,7 @@
   (let [changes (-> db :tool :state :changes)]
     (commit-changes-and-init-tool db changes (init))))
 
-(defn handle-mouse-event [event db]
+(defn handle-mouse-event [db event]
   (let [{:keys [tool initial-mouse-down-pos user-is-drawing]} db]
     (case (-> tool :state :mode)
       :select

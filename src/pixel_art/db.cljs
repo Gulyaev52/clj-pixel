@@ -27,7 +27,7 @@
     {:size size
      :sprite sprite
      :tool (tool/init :pen)
-     :tools-options (get-initial-options tool/options-specs) ;; todo: добавить type в модуль; иметь какой-то массив со всеми опц
+     :tools-options (get-initial-options tool/options-specs)
      :color "black"
      :selection-manager {}
      :scale 40
