@@ -1,15 +1,26 @@
 (ns pixel-art.utils.interceptor
-  (:require [re-frame.core :as re-frame]))
+  (:require [re-frame.core :as re-frame]
+            [sc.api]))
+
+(def !first-run (atom true))
 
 ;; todo: refactor
-(defn run-fx-on-changes
-  [get-db-elem f]
+(defn on-changes
+  [k get-db-elem f]
   (re-frame/->interceptor
-   :id    :run-fx-on-changes
+   :id    k
    :after (fn on-change-after
             [context]
-            (if (and (seq (re-frame/get-coeffect context :db))
-                     (re-frame/get-effect context :db))
+            (cond
+              @!first-run
+              (do
+                (reset! !first-run false)
+                (let [new-db   (re-frame/get-effect context :db)
+                      res (f {:db new-db :old nil :new (get-db-elem new-db)})]
+                  (update context :effects #(merge % res))))
+
+              (and (seq (re-frame/get-coeffect context :db))
+                   (re-frame/get-effect context :db))
               (let [new-db   (re-frame/get-effect context :db)
                     old-db   (re-frame/get-coeffect context :db)
 
@@ -22,7 +33,9 @@
 
                              ;; if one of the inputs has changed, then run 'f'
                 (if changed-ins?
-                  (let [effects (f new-ins new-db)]
-                    (update-in context [:effects :fx] #(concat % effects)))
+                  (let [res (f {:db new-db :old old-ins :new new-ins})]
+                    (update context :effects #(merge % res)))
                   context))
+
+              :else
               context))))

@@ -12,11 +12,21 @@
             [pixel-art.tool.utils :refer [commit-changes-and-init-tool
                                           get-current-frame]]
             [pixel-art.utils.geometry :as geometry]
-            [pixel-art.utils.interceptor :refer [run-fx-on-changes]]
+            [pixel-art.utils.interceptor :refer [on-changes]]
             [re-frame.core :as re-frame]
             [re-frame.db]
             [re-pressed.core :as rp]
             [sc.api]))
+
+(defn- draw-frame [frame scale canvas]
+  (let [ctx (. canvas (getContext "2d"))
+
+        frame-size (frame/get-size frame)]
+    (doseq [x (range 0 (:width frame-size))
+            y (range 0 (:height frame-size))]
+      (set! (. ctx -fillStyle) (or (frame/get-pixel {:x x :y y} frame)
+                                   "white"))
+      (. ctx (fillRect (* x scale) (* y scale) scale scale)))))
 
 (re-frame/reg-event-fx
  ::initialize-db
@@ -31,15 +41,39 @@
  ::initialize-canvas
  (fn [{:keys [db]} _]
    {:fx [[:init-canvases]
-         [:draw-frame (get-current-frame db)]
+         [:draw-frame (get-current-frame db)] ;; клэш с run-fx-on-changes
          [:draw-pixels-grid]]}))
 
 (re-frame/reg-global-interceptor
- (run-fx-on-changes
+ (on-changes
+  :redraw-current-frame
   get-current-frame
-  (fn [updated-current-frame]
-    [[:clear-preview]
-     [:draw-frame updated-current-frame]])))
+  (fn [{:keys [db new]}]
+    {:db db
+     :fx [[:clear-preview]
+          [:draw-frame new]]})))
+
+(defn- generate-frame-img [frame]
+  (let [canvas-size (:size frame)
+        canvas-elem (.. js/document (createElement "canvas"))]
+    (set! (. canvas-elem -width) (:width canvas-size))
+    (set! (. canvas-elem -height) (:height canvas-size))
+    (draw-frame frame 1 canvas-elem)
+    (. canvas-elem (toDataURL "image/png"))))
+
+(re-frame/reg-global-interceptor
+ (on-changes
+  :generate-frame-imgs ;; todo: явно менять или же если будут id у фреймов то будет ок?
+  #(-> % :sprite)
+  (fn [{:keys [db old new]}]
+    (let [new-frame-imgs (->> (:frames new)
+                              (map-indexed vector)
+                              (filter (fn [[idx frame]]
+                                        (not (identical? frame (nth (:frames old) idx nil)))))
+                              (map (fn [[idx frame]]
+                                     [idx (generate-frame-img frame)]))
+                              (into {}))]
+      {:db (update db :frame-imgs #(merge % new-frame-imgs))}))))
 
 (re-frame/reg-event-fx
  ::select-tool
@@ -188,7 +222,6 @@
          canvas (. js/document (getElementById "preview"))
          ctx (. canvas (getContext "2d"))
          scale (:scale db)]
-
      (doseq [[pos color] preview]
        (set! (. ctx -fillStyle) (or color "white"))
        (. ctx (fillRect (* (:x pos) scale) (* (:y pos) scale) scale scale))))))
@@ -203,7 +236,6 @@
 (re-frame/reg-fx
  :draw-pixels-grid
  (fn [_]
-   (println "bla")
    (let [db @re-frame.db/app-db
 
          canvas (. js/document (getElementById "grid"))
@@ -227,18 +259,10 @@
          (.lineTo (* x scale) (:height canvas-size))
          (.stroke))))))
 
+;; todo: rename to current-frame
 (re-frame/reg-fx
  :draw-frame
  (fn [frame]
-   (let [db @re-frame.db/app-db
-
-         canvas (. js/document (getElementById "tutorial"))
-         ctx (. canvas (getContext "2d"))
-
-         frame-size (frame/get-size frame)
-         scale (:scale db)]
-     (doseq [x (range 0 (:width frame-size))
-             y (range 0 (:height frame-size))]
-       (set! (. ctx -fillStyle) (or (frame/get-pixel {:x x :y y} frame)
-                                    "white"))
-       (. ctx (fillRect (* x scale) (* y scale) scale scale))))))
+   (let [canvas (. js/document (getElementById "tutorial"))
+         scale (:scale @re-frame.db/app-db)]
+     (draw-frame frame scale canvas))))

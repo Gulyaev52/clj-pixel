@@ -3,11 +3,6 @@
             [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub
- ::tool
- (fn [db]
-   (:tool db)))
-
-(re-frame/reg-sub
  ::sprite
  (fn [db]
    (:sprite db)))
@@ -36,3 +31,8 @@
  ::selection-manager
  (fn [db]
    (:tool db)))
+
+(re-frame/reg-sub
+ ::frame-imgs
+ (fn [db]
+   (:frame-imgs db)))

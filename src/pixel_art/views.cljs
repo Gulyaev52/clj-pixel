@@ -63,37 +63,42 @@
                                  style)}
              children])]
     (let [sprite @(re-frame/subscribe [::subs/sprite])
+          frame-imgs @(re-frame/subscribe [::subs/frame-imgs])
           {:keys [frames current-frame-idx]} sprite]
       [:div {:style {:display :flex :gap "10px"}}
        (for [[idx frame] (map-indexed vector frames)]
-         [:div {:onClick (fn [_] (re-frame/dispatch [::events/select-frame idx]))
-                :style {:position "relative"
-                        :width 96
-                        :height 96
-                        :border "3px solid"
-                        :border-color (if (= idx current-frame-idx)
-                                        "gold" "#444")
-                        :border-radius "3px"}}
-          [box {:left 0
-                :top 0
-                :background-color "gold"}
-           (fn [_])
-           (inc idx)]
-          [box {:right 0
-                :top 0
-                :background-color "rgba(100, 100, 100, 0.6)"}
-           (fn [_] (re-frame/dispatch [::events/remove-frame idx]))
-           "DE"]
-          [box {:right 0
-                :bottom 0
-                :background-color "rgba(100, 100, 100, 0.6)"}
-           (fn [_] (re-frame/dispatch [::events/duplicate-frame idx]))
-           "DU"]
-          [box {:left 0
-                :bottom 0
-                :background-color "rgba(100, 100, 100, 0.6)"}
-           (fn [_])
-           "M"]])
+         (let [frame-img (get frame-imgs idx)]
+           [:div {:onClick (fn [_] (re-frame/dispatch [::events/select-frame idx]))
+                  :style {:position "relative"
+                          :width 96
+                          :height 96
+                          :border "3px solid"
+                          :border-color (if (= idx current-frame-idx)
+                                          "gold" "#444")
+                          :border-radius "3px"
+                          :imageRendering "pixelated"
+                          :backgroundImage (str "url(" frame-img ")")
+                          :backgroundSize "contain"}}
+            [box {:left 0
+                  :top 0
+                  :background-color "gold"}
+             (fn [_])
+             (inc idx)]
+            [box {:right 0
+                  :top 0
+                  :background-color "rgba(100, 100, 100, 0.6)"}
+             (fn [_] (re-frame/dispatch [::events/remove-frame idx]))
+             "DE"]
+            [box {:right 0
+                  :bottom 0
+                  :background-color "rgba(100, 100, 100, 0.6)"}
+             (fn [_] (re-frame/dispatch [::events/duplicate-frame idx]))
+             "DU"]
+            [box {:left 0
+                  :bottom 0
+                  :background-color "rgba(100, 100, 100, 0.6)"}
+             (fn [_])
+             "M"]]))
        [:button {:onClick (fn [_] (re-frame/dispatch [::events/add-frame]))} "new frame"]])))
 
 (defn main-panel []
