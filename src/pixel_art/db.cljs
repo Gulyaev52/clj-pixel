@@ -3,7 +3,8 @@
    [pixel-art.model.frame :as frame]
    [pixel-art.model.sprite :as sprite]
    [pixel-art.tool.core :as tool]
-   [pixel-art.history :as history]))
+   [pixel-art.history :as history]
+   [pixel-art.preview :as preview]))
 
 (defn get-initial-options [m]
   (-> m
@@ -32,4 +33,5 @@
      :selection-manager {}
      :scale 40
      :history (history/init {:sprite sprite})
+     :preview-settings (preview/init)
      :pixels-grid-enabled true}))

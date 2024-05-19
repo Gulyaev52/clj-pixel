@@ -1,9 +1,12 @@
 (ns pixel-art.views
-  (:require [pixel-art.events :as events]
+  (:require [react :as react]
+            [pixel-art.events :as events]
             [pixel-art.subs :as subs]
             [pixel-art.tool.core :as tool]
+            [pixel-art.preview :as preview]
             [re-frame.core :as re-frame]
-            [reagent.dom :as rdom]))
+            [reagent.dom :as rdom]
+            [sc.api]))
 
 (def !last-mouse-pos (atom nil))
 (def !mouse-down (atom false))
@@ -101,22 +104,82 @@
              "M"]]))
        [:button {:onClick (fn [_] (re-frame/dispatch [::events/add-frame]))} "new frame"]])))
 
+(defn select [{:keys [value onChange options]}]
+  (sc.api/spy)
+  (let [selected-option-idx (ffirst (filter #(= (:value (second %)) value) (map-indexed vector options)))]
+    [:select {:value selected-option-idx
+              :onChange (fn [event]
+                          (let [selected-option (nth options (parse-double (.. event -target -value)) nil)]
+                            (when selected-option
+                              (onChange (:value selected-option)))))}
+     (map-indexed (fn [idx opt] [:option {:value idx} (:label opt)])
+                  options)]))
+
+(defn preview-modal-component []
+  (let [{:keys [size displayed-frame-idx]} @(re-frame/subscribe [::subs/preview-settings])
+        frames-size @(re-frame/subscribe [::subs/frames-size])
+        frame-imgs @(re-frame/subscribe [::subs/frame-imgs])
+        frame-img (or (get frame-imgs displayed-frame-idx nil) (get frame-imgs 0))
+        image-size (case size
+                     :1x frames-size
+                     :2x (update-vals frames-size #(* % 2))
+                     :4x (update-vals frames-size #(* % 4))
+                     :default {:width 512 :height 512})
+        _ (react/useEffect (fn []
+                             (.. js/document (addEventListener "keydown" (fn [e]
+                                                                           (when (= (.. e -code) "Escape")
+                                                                             (re-frame/dispatch [::preview/close]))))))
+                           (array))]
+    [:div {:style {:position "fixed"
+                   :display "flex"
+                   :zIndex 1
+                   :alignItems "center"
+                   :justifyContent "center"
+                   :left 0
+                   :right 0
+                   :bottom 0
+                   :top 0
+                   :backgroundColor "rgba(37,37,37,.9)"}}
+     [:div {:style {:backgroundImage (str "url(" frame-img ")")
+                    :imageRendering "pixelated"
+                    :backgroundSize "contain"
+                    :width (:width image-size)
+                    :height (:height image-size)}}]]))
+
+(defn preview-modal []
+  [:f> preview-modal-component])
+
 (defn main-panel []
   (let [tool @(re-frame/subscribe [::subs/tool])
         scale @(re-frame/subscribe [::subs/scale])
-        pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])]
+        pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])
+        preview-settings @(re-frame/subscribe [::subs/preview-settings])]
     [:div {:style {:display :flex :flex-direction :column :gap "10px"}}
      [options-toolbar (:type tool)]
      [:div {:style {:display :flex :gap "8px"}}
-      [:select {:value (:type tool)
-                :onChange (fn [event]
-                            (re-frame/dispatch [::events/select-tool (keyword (.. event -target -value))]))}
-       (map (fn [t] [:option {:value t} (name t)]) tool/types)]
+      (select {:value (:type tool)
+               :onChange (fn [tool]
+                           (re-frame/dispatch [::events/select-tool tool]))
+               :options (map (fn [t] {:value t :label (name t)}) tool/types)})
       [checkbox {:value pixels-grid-enabled
                  :label "grid"
                  :onChange (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]]
+     [:div [frames]]
      [:div
-      [frames]]
+      (when (:opened preview-settings)
+        [preview-modal])
+      [:div {:style {:display :flex :gap "4px"}}
+       "preview size"
+       [select {:value (:size preview-settings)
+                :options (map (fn [s] {:value s :label (name s)}) [:1x :2x :4x :custom])
+                :onChange (fn [s] (re-frame/dispatch [::preview/change-size s]))}]]
+      [:div {:style {:display :flex :gap "4px"}}
+       "frame speed"
+       [select {:value (:frame-speed preview-settings)
+                :options (map (fn [s] {:value s :label (str s " ms")})
+                              [25 50 75 100 125 150 200 250 300 350 400 450 500 1000 2500 5000])
+                :onChange (fn [s] (re-frame/dispatch [::preview/change-frame-speed s]))}]]
+      [:button {:onClick (fn [] (re-frame/dispatch [::preview/open]))} "show preview"]]
      [:div {:style {:display :flex :justify-content :center}}
       [:div {:style {:position "relative"
                      :border "1px solid black"}

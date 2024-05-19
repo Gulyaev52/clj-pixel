@@ -3,6 +3,11 @@
             [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub
+ ::frames-size
+ (fn [db]
+   (-> db :sprite :size)))
+
+(re-frame/reg-sub
  ::sprite
  (fn [db]
    (:sprite db)))
@@ -36,3 +41,8 @@
  ::frame-imgs
  (fn [db]
    (:frame-imgs db)))
+
+(re-frame/reg-sub
+ ::preview-settings
+ (fn [db]
+   (:preview-settings db)))
