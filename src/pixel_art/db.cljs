@@ -1,10 +1,10 @@
 (ns pixel-art.db
-  (:require
-   [pixel-art.model.frame :as frame]
-   [pixel-art.model.sprite :as sprite]
-   [pixel-art.tool.core :as tool]
-   [pixel-art.history :as history]
-   [pixel-art.sprite-preview :as preview]))
+  (:require [pixel-art.history :as history]
+            [pixel-art.model.frame :as frame]
+            [pixel-art.model.sprite :as sprite]
+            [pixel-art.onion-skin :as onion-skin]
+            [pixel-art.sprite-preview :as preview]
+            [pixel-art.tool.core :as tool]))
 
 (defn get-initial-options [m]
   (-> m
@@ -32,6 +32,7 @@
      :color "black"
      :selection-manager {}
      :scale 40
+     :onion-skin (onion-skin/init)
      :history (history/init {:sprite sprite})
      :sprite-preview (preview/init)
      :pixels-grid-enabled true}))

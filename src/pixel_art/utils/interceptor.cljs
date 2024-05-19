@@ -34,7 +34,7 @@
                              ;; if one of the inputs has changed, then run 'f'
                 (if changed-ins?
                   (let [res (f {:db new-db :old old-ins :new new-ins})]
-                    (update context :effects #(merge % res)))
+                    (update context :effects #(merge % res {:fx (concat (:fx %) (:fx res))})))
                   context))
 
               :else

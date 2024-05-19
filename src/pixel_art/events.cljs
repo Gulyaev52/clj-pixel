@@ -182,6 +182,7 @@
          preview-canvas (. js/document (getElementById "preview"))
          main-canvas (. js/document (getElementById "tutorial"))
          grid-canvas (. js/document (getElementById "grid"))
+         onion-skin-canvas (. js/document (getElementById "onion-skin"))
 
          frame-size (-> db get-current-frame frame/get-size)
          scale (:scale db)
@@ -193,7 +194,9 @@
      (set! (. main-canvas -width) (:width canvas-size))
      (set! (. main-canvas -height) (:height canvas-size))
      (set! (. grid-canvas -width) (:width canvas-size))
-     (set! (. grid-canvas -height) (:height canvas-size)))))
+     (set! (. grid-canvas -height) (:height canvas-size))
+     (set! (. onion-skin-canvas -width) (:width canvas-size))
+     (set! (. onion-skin-canvas -height) (:height canvas-size)))))
 
 (re-frame/reg-fx
  :clear-preview

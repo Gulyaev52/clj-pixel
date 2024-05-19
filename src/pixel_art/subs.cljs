@@ -46,3 +46,8 @@
  ::sprite-preview
  (fn [db]
    (:sprite-preview db)))
+
+(re-frame/reg-sub
+ ::onion-skin
+ (fn [db]
+   (:onion-skin db)))

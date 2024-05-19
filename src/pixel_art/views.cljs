@@ -3,7 +3,8 @@
             [pixel-art.events :as events]
             [pixel-art.subs :as subs]
             [pixel-art.tool.core :as tool]
-            [pixel-art.sprite-preview :as preview]
+            [pixel-art.sprite-preview :as sprite-preview]
+            [pixel-art.onion-skin :as onion-skin]
             [re-frame.core :as re-frame]
             [reagent.dom :as rdom]
             [sc.api]))
@@ -105,7 +106,6 @@
        [:button {:onClick (fn [_] (re-frame/dispatch [::events/add-frame]))} "new frame"]])))
 
 (defn select [{:keys [value onChange options]}]
-  (sc.api/spy)
   (let [selected-option-idx (ffirst (filter #(= (:value (second %)) value) (map-indexed vector options)))]
     [:select {:value selected-option-idx
               :onChange (fn [event]
@@ -128,7 +128,7 @@
         _ (react/useEffect (fn []
                              (.. js/document (addEventListener "keydown" (fn [e]
                                                                            (when (= (.. e -code) "Escape")
-                                                                             (re-frame/dispatch [::preview/close]))))))
+                                                                             (re-frame/dispatch [::sprite-preview/close]))))))
                            (array))]
     [:div {:style {:position "fixed"
                    :display "flex"
@@ -153,7 +153,8 @@
   (let [tool @(re-frame/subscribe [::subs/tool])
         scale @(re-frame/subscribe [::subs/scale])
         pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])
-        sprite-preview @(re-frame/subscribe [::subs/sprite-preview])]
+        sprite-preview @(re-frame/subscribe [::subs/sprite-preview])
+        onion-skin @(re-frame/subscribe [::subs/onion-skin])]
     [:div {:style {:display :flex :flex-direction :column :gap "10px"}}
      [options-toolbar (:type tool)]
      [:div {:style {:display :flex :gap "8px"}}
@@ -172,14 +173,19 @@
        "preview size"
        [select {:value (:size sprite-preview)
                 :options (map (fn [s] {:value s :label (name s)}) [:1x :2x :4x :custom])
-                :onChange (fn [s] (re-frame/dispatch [::preview/change-size s]))}]]
+                :onChange (fn [s] (re-frame/dispatch [::sprite-preview/change-size s]))}]]
       [:div {:style {:display :flex :gap "4px"}}
        "frame speed"
        [select {:value (:frame-speed sprite-preview)
                 :options (map (fn [s] {:value s :label (str s " ms")})
                               [25 50 75 100 125 150 200 250 300 350 400 450 500 1000 2500 5000])
-                :onChange (fn [s] (re-frame/dispatch [::preview/change-frame-speed s]))}]]
-      [:button {:onClick (fn [] (re-frame/dispatch [::preview/open]))} "show preview"]]
+                :onChange (fn [s] (re-frame/dispatch [::sprite-preview/change-frame-speed s]))}]]
+      [:button {:onClick (fn [] (re-frame/dispatch [::sprite-preview/open]))} "show preview"]]
+     [:div
+      [:button {:onClick (fn [] (re-frame/dispatch [::onion-skin/set-enabled (not (:enabled onion-skin))]))}
+       (if (:enabled onion-skin)
+         "disable onion skin"
+         "enable onion skin")]]
      [:div {:style {:display :flex :justify-content :center}}
       [:div {:style {:position "relative"
                      :border "1px solid black"}
@@ -217,6 +223,10 @@
                                   (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos])))))}
        [:canvas {:id "tutorial"}]
        [:canvas {:id "preview"
+                 :style {:position :absolute
+                         :left 0
+                         :top 0}}]
+       [:canvas {:id "onion-skin"
                  :style {:position :absolute
                          :left 0
                          :top 0}}]
