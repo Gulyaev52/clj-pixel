@@ -1,4 +1,4 @@
-(ns pixel-art.preview
+(ns pixel-art.sprite-preview
   (:require [re-frame.core :as re-frame]))
 
 (defn init []
@@ -10,33 +10,33 @@
 (re-frame/reg-event-fx
  ::change-size
  (fn [{:keys [db]} [_ size]]
-   {:db (assoc-in db [:preview-settings :size] size)}))
+   {:db (assoc-in db [:sprite-preview :size] size)}))
 
 (re-frame/reg-event-fx
  ::change-frame-speed
  (fn [{:keys [db]} [_ frame-speed]]
-   {:db (assoc-in db [:preview-settings :frame-speed] frame-speed)}))
+   {:db (assoc-in db [:sprite-preview :frame-speed] frame-speed)}))
 
 (re-frame/reg-event-fx
  ::open
  (fn [{:keys [db]} _]
-   {:db (assoc-in db [:preview-settings :opened] true)
-    :fx [[:dispatch-later {:ms (-> db :preview-settings :frame-speed)
+   {:db (assoc-in db [:sprite-preview :opened] true)
+    :fx [[:dispatch-later {:ms (-> db :sprite-preview :frame-speed)
                            :dispatch [::display-next-frame]}]]}))
 
 (re-frame/reg-event-fx
  ::display-next-frame
  (fn [{:keys [db]} _]
-   (let [{:keys [opened displayed-frame-idx]} (:preview-settings db)]
+   (let [{:keys [opened displayed-frame-idx]} (:sprite-preview db)]
      (if opened
        (let [next-idx (let [next-idx (inc displayed-frame-idx)]
                         (if (contains? (:frame-imgs db) next-idx) next-idx 0))]
-         {:db (assoc-in db [:preview-settings :displayed-frame-idx] next-idx)
-          :fx [[:dispatch-later {:ms (-> db :preview-settings :frame-speed)
+         {:db (assoc-in db [:sprite-preview :displayed-frame-idx] next-idx)
+          :fx [[:dispatch-later {:ms (-> db :sprite-preview :frame-speed)
                                  :dispatch [::display-next-frame]}]]})
-       {:db (assoc-in db [:preview-settings :displayed-frame-idx] 0)}))))
+       {:db (assoc-in db [:sprite-preview :displayed-frame-idx] 0)}))))
 
 (re-frame/reg-event-fx
  ::close
  (fn [{:keys [db]} _]
-   {:db (assoc-in db [:preview-settings :opened] false)}))
+   {:db (assoc-in db [:sprite-preview :opened] false)}))

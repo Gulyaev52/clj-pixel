@@ -3,7 +3,7 @@
             [pixel-art.events :as events]
             [pixel-art.subs :as subs]
             [pixel-art.tool.core :as tool]
-            [pixel-art.preview :as preview]
+            [pixel-art.sprite-preview :as preview]
             [re-frame.core :as re-frame]
             [reagent.dom :as rdom]
             [sc.api]))
@@ -69,7 +69,7 @@
           frame-imgs @(re-frame/subscribe [::subs/frame-imgs])
           {:keys [frames current-frame-idx]} sprite]
       [:div {:style {:display :flex :gap "10px"}}
-       (for [[idx frame] (map-indexed vector frames)]
+       (for [[idx] (map-indexed vector frames)]
          (let [frame-img (get frame-imgs idx)]
            [:div {:onClick (fn [_] (re-frame/dispatch [::events/select-frame idx]))
                   :style {:position "relative"
@@ -115,8 +115,8 @@
      (map-indexed (fn [idx opt] [:option {:value idx} (:label opt)])
                   options)]))
 
-(defn preview-modal-component []
-  (let [{:keys [size displayed-frame-idx]} @(re-frame/subscribe [::subs/preview-settings])
+(defn sprite-preview-modal-component []
+  (let [{:keys [size displayed-frame-idx]} @(re-frame/subscribe [::subs/sprite-preview])
         frames-size @(re-frame/subscribe [::subs/frames-size])
         frame-imgs @(re-frame/subscribe [::subs/frame-imgs])
         frame-img (or (get frame-imgs displayed-frame-idx nil) (get frame-imgs 0))
@@ -146,14 +146,14 @@
                     :width (:width image-size)
                     :height (:height image-size)}}]]))
 
-(defn preview-modal []
-  [:f> preview-modal-component])
+(defn sprite-preview-modal []
+  [:f> sprite-preview-modal-component])
 
 (defn main-panel []
   (let [tool @(re-frame/subscribe [::subs/tool])
         scale @(re-frame/subscribe [::subs/scale])
         pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])
-        preview-settings @(re-frame/subscribe [::subs/preview-settings])]
+        sprite-preview @(re-frame/subscribe [::subs/sprite-preview])]
     [:div {:style {:display :flex :flex-direction :column :gap "10px"}}
      [options-toolbar (:type tool)]
      [:div {:style {:display :flex :gap "8px"}}
@@ -166,16 +166,16 @@
                  :onChange (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]]
      [:div [frames]]
      [:div
-      (when (:opened preview-settings)
-        [preview-modal])
+      (when (:opened sprite-preview)
+        [sprite-preview-modal])
       [:div {:style {:display :flex :gap "4px"}}
        "preview size"
-       [select {:value (:size preview-settings)
+       [select {:value (:size sprite-preview)
                 :options (map (fn [s] {:value s :label (name s)}) [:1x :2x :4x :custom])
                 :onChange (fn [s] (re-frame/dispatch [::preview/change-size s]))}]]
       [:div {:style {:display :flex :gap "4px"}}
        "frame speed"
-       [select {:value (:frame-speed preview-settings)
+       [select {:value (:frame-speed sprite-preview)
                 :options (map (fn [s] {:value s :label (str s " ms")})
                               [25 50 75 100 125 150 200 250 300 350 400 450 500 1000 2500 5000])
                 :onChange (fn [s] (re-frame/dispatch [::preview/change-frame-speed s]))}]]

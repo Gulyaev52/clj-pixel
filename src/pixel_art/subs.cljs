@@ -43,6 +43,6 @@
    (:frame-imgs db)))
 
 (re-frame/reg-sub
- ::preview-settings
+ ::sprite-preview
  (fn [db]
-   (:preview-settings db)))
+   (:sprite-preview db)))
