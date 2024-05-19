@@ -67,16 +67,24 @@
                                  style)}
              children])]
     (let [sprite @(re-frame/subscribe [::subs/sprite])
+          onion-skin @(re-frame/subscribe [::subs/onion-skin])
+          onion-skin-frames-idx (if (:enabled onion-skin)
+                                  (onion-skin/get-onion-skin-frames-idx sprite)
+                                  nil)
           frame-imgs @(re-frame/subscribe [::subs/frame-imgs])
           {:keys [frames current-frame-idx]} sprite]
       [:div {:style {:display :flex :gap "10px"}}
        (for [[idx] (map-indexed vector frames)]
          (let [frame-img (get frame-imgs idx)]
+           (sc.api/spy)
            [:div {:onClick (fn [_] (re-frame/dispatch [::events/select-frame idx]))
                   :style {:position "relative"
                           :width 96
                           :height 96
-                          :border "3px solid"
+                          :border-width "3px"
+                          :border-style (if (contains? onion-skin-frames-idx idx)
+                                          "dashed"
+                                          "solid")
                           :border-color (if (= idx current-frame-idx)
                                           "gold" "#444")
                           :border-radius "3px"

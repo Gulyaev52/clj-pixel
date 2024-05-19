@@ -4,18 +4,20 @@
             [re-frame.core :as re-frame]
             [re-frame.db :as db]))
 
-(defn init []
-  {:opacity 65 ;; 255
-   :position :front
-   :enabled false}) ;; front|behind
+;; изменение opacity
+;; спереди или сзади
+;; кол-во
 
-(defn- get-onion-skin-frames-idx [sprite]
+(defn init []
+  {:enabled false})
+
+(defn get-onion-skin-frames-idx [sprite]
   (let [{:keys [current-frame-idx frames]} sprite
         prev-idx (let [idx (dec current-frame-idx)]
                    (when (>= idx 0) idx))
         next-idx (let [idx (inc current-frame-idx)]
                    (when (<= idx (dec (count frames))) idx))]
-    (keep identity [prev-idx next-idx])))
+    (set (keep identity [prev-idx next-idx]))))
 
 (re-frame/reg-event-fx
  ::set-enabled
