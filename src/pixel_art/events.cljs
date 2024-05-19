@@ -66,14 +66,17 @@
   :generate-frame-imgs ;; todo: явно менять или же если будут id у фреймов то будет ок?
   #(-> % :sprite)
   (fn [{:keys [db old new]}]
-    (let [new-frame-imgs (->> (:frames new)
-                              (map-indexed vector)
-                              (filter (fn [[idx frame]]
-                                        (not (identical? frame (nth (:frames old) idx nil)))))
-                              (map (fn [[idx frame]]
-                                     [idx (generate-frame-img frame)]))
+    (let [new-frame-imgs (->> (range 0 (count (:frames (or old new))))
+                              (filter (fn [idx]
+                                        (not (identical? (nth (:frames new) idx nil)
+                                                         (nth (:frames old) idx nil)))))
+                              (map (fn [idx]
+                                     [idx (when-let [frame (nth (:frames new) idx nil)]
+                                            (generate-frame-img frame))]))
                               (into {}))]
-      {:db (update db :frame-imgs #(merge % new-frame-imgs))}))))
+      {:db (update db :frame-imgs #(->> (merge % new-frame-imgs)
+                                        (remove (fn [[_ v]] (nil? v)))
+                                        (into {})))}))))
 
 (re-frame/reg-event-fx
  ::select-tool

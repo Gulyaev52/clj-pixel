@@ -21,8 +21,9 @@
  ::open
  (fn [{:keys [db]} _]
    {:db (assoc-in db [:sprite-preview :opened] true)
-    :fx [[:dispatch-later {:ms (-> db :sprite-preview :frame-speed)
-                           :dispatch [::display-next-frame]}]]}))
+    :fx (when (> (count (:frame-imgs db)) 1)
+          [[:dispatch-later {:ms (-> db :sprite-preview :frame-speed)
+                             :dispatch [::display-next-frame]}]])}))
 
 (re-frame/reg-event-fx
  ::display-next-frame
