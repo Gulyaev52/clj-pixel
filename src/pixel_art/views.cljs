@@ -19,7 +19,7 @@
      :y (. js/Math (floor (/ (- (. event -clientY) (. rect -top))
                              scale)))}))
 
-(defn slider [{:keys [value label min max onChange]}]
+(defn slider [{:keys [value label min max step onChange]}]
   ;; todo: labels
   [:div {:style {:display :flex :align-items :center}}
    [:span (str label " (" value ")")]
@@ -27,6 +27,7 @@
             :value value
             :min min
             :max max
+            :step step
             :onChange (fn [e]
                         (let [value (parse-double (.. e -target -value))]
                           (onChange value)))}]])
@@ -76,7 +77,6 @@
       [:div {:style {:display :flex :gap "10px"}}
        (for [[idx] (map-indexed vector frames)]
          (let [frame-img (get frame-imgs idx)]
-           (sc.api/spy)
            [:div {:onClick (fn [_] (re-frame/dispatch [::events/select-frame idx]))
                   :style {:position "relative"
                           :width 96
@@ -193,7 +193,10 @@
       [:button {:onClick (fn [] (re-frame/dispatch [::onion-skin/set-enabled (not (:enabled onion-skin))]))}
        (if (:enabled onion-skin)
          "disable onion skin"
-         "enable onion skin")]]
+         "enable onion skin")]
+      [slider {:min 0 :max 1 :step 0.1
+               :value (:opacity onion-skin)
+               :onChange (fn [v] (re-frame/dispatch [::onion-skin/set-opacity v]))}]]
      [:div {:style {:display :flex :justify-content :center}}
       [:div {:style {:position "relative"
                      :border "1px solid black"}

@@ -4,12 +4,12 @@
             [re-frame.core :as re-frame]
             [re-frame.db :as db]))
 
-;; изменение opacity
 ;; спереди или сзади
 ;; кол-во
 
 (defn init []
-  {:enabled false})
+  {:enabled false
+   :opacity 0.3})
 
 (defn get-onion-skin-frames-idx [sprite]
   (let [{:keys [current-frame-idx frames]} sprite
@@ -23,7 +23,16 @@
  ::set-enabled
  (fn [{:keys [db]} [_ enabled]]
    {:db (assoc-in db [:onion-skin :enabled] enabled)
-    :fx (if enabled [[:draw-onion-skin (:sprite db)]] [[:hide-onion-skin]])}))
+    :fx (if enabled
+          [[:draw-onion-skin {:sprite (:sprite db) :opacity (-> db :onion-skin :opacity)}]]
+          [[:hide-onion-skin]])}))
+
+(re-frame/reg-event-fx
+ ::set-opacity
+ (fn [{:keys [db]} [_ opacity]]
+   {:db (assoc-in db [:onion-skin :opacity] opacity)
+    :fx (when (-> db :onion-skin :enabled)
+          [[:draw-onion-skin {:sprite (:sprite db) :opacity opacity}]])}))
 
 (re-frame/reg-global-interceptor
  (on-changes
@@ -43,12 +52,12 @@
                                                             (nth (:frames new) idx)))))))))]
         {:db db
          :fx (when need-redraw
-               [[:draw-onion-skin (:sprite db)]])})
+               [[:draw-onion-skin {:sprite new :opacity (-> db :onion-skin :opacity)}]])})
       {:db db}))))
 
 (re-frame/reg-fx
  :draw-onion-skin
- (fn [sprite]
+ (fn [{:keys [sprite opacity]}]
    (let [onion-frames-idx (get-onion-skin-frames-idx sprite)
          frames (map (fn [idx] (nth (:frames sprite) idx)) onion-frames-idx)
 
@@ -59,7 +68,7 @@
          scale (:scale db)]
      (. ctx (clearRect 0 0 (. canvas -width) (. canvas -height)))
      (.save ctx)
-     (set! (.-globalAlpha ctx) 0.3)
+     (set! (.-globalAlpha ctx) opacity)
      (doseq [frame frames]
        (doseq [x (range 0 (:width size))
                y (range 0 (:height size))]
