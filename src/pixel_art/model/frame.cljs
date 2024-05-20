@@ -2,6 +2,7 @@
   (:require [clojure.string :as string]
             [pixel-art.utils.geometry :as geometry]))
 
+;; todo: rename
 (def transparent-color nil)
 
 (defn- pos->idx [{:keys [x y]} {:keys [width]}]

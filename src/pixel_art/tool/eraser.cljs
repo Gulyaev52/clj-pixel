@@ -1,0 +1,45 @@
+(ns pixel-art.tool.eraser
+  (:require [pixel-art.tool.utils :refer [commit-changes-and-init-tool
+                                          get-tool-options
+                                          resize-pixel]]
+            [pixel-art.model.frame :as frame]))
+
+(defn init [] {:type :eraser :state {:changes {}}})
+
+(def options-spec
+  [{:type :slider
+    :field :pixel-size
+    :label "Pixel size"
+    :initial-value 1
+    :min 1
+    :max 64}
+   {:type :checkbox
+    :field :pixel-perfect
+    :initial-value false
+    :label "Pixel perfect"}
+   {:type :checkbox
+    :field :mirror-x
+    :initial-value false
+    :label "Mirror-x"}])
+
+(defn handle-mouse-event [db event]
+  (let [{:keys [user-is-drawing]} db]
+    (cond
+      (or (= (:type event) :mouse-down)
+          (and (= (:type event) :mouse-move) user-is-drawing))
+      (let [{:keys [pixel-size]} (get-tool-options db)
+            new-pixels (->> (resize-pixel (:pos event) pixel-size)
+                            (map (fn [p] [p frame/transparent-color])))]
+        {:db (update-in db [:tool :state :changes] #(merge % new-pixels))
+         :fx [[:draw-preview new-pixels]]})
+
+      (and (= (:type event) :mouse-move) (not user-is-drawing))
+      (let [{:keys [pixel-size]} (get-tool-options db)
+            points (resize-pixel (:pos event) pixel-size)]
+        {:db db
+         :fx [[:clear-preview]
+              [:highlight-pixels points]]})
+
+      (= :mouse-up (:type event))
+      (let [changes (-> db :tool :state :changes)]
+        (commit-changes-and-init-tool db changes (init))))))
