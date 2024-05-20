@@ -4,21 +4,29 @@
             [re-frame.db :as db]
             [pixel-art.canvas :as canvas]))
 
-;; спереди или сзади
-;; кол-во
+;; пересечение
 
 (defn init []
   {:enabled false
    :position :front ;; front|behind
-   :opacity 0.3})
+   :opacity 0.3
+   :frames-count {:prev 1 :next 1}})
 
-(defn get-onion-skin-frames-idx [sprite]
+(defn get-onion-skin-frames-idx [sprite frames-count]
   (let [{:keys [current-frame-idx frames]} sprite
-        prev-idx (let [idx (dec current-frame-idx)]
-                   (when (>= idx 0) idx))
-        next-idx (let [idx (inc current-frame-idx)]
-                   (when (<= idx (dec (count frames))) idx))]
-    (set (keep identity [prev-idx next-idx]))))
+        prev-idxs (range (max (- current-frame-idx (:prev frames-count)) 0) current-frame-idx)
+        next-idxs (range (inc current-frame-idx)
+                         (inc (min (+ current-frame-idx (:next frames-count))
+                                   (dec (count frames)))))]
+    (set (concat prev-idxs next-idxs))))
+
+(re-frame/reg-event-fx
+ ::set-frames-count
+ (fn [{:keys [db]} [_ frames-count]]
+   (let [onion-skin (:onion-skin db)]
+     {:db (assoc-in db [:onion-skin :frames-count] frames-count)
+      :fx (when (:enabled onion-skin)
+            [[:draw-onion-skin {:sprite (:sprite db) :opacity (:opacity onion-skin)}]])})))
 
 (re-frame/reg-event-fx
  ::set-enabled
@@ -47,29 +55,30 @@
   :redraw-onion-skin-on-sprite-change
   #(-> % :sprite)
   (fn [{:keys [db old new]}]
-    (if (-> db :onion-skin :enabled)
-      (let [need-redraw (if (not= (:current-frame-idx old) (:current-frame-idx new))
-                          true
-                          (let [old-frames-idx (get-onion-skin-frames-idx old)
-                                new-frames-idx (get-onion-skin-frames-idx new)]
-                            (if (not= old-frames-idx new-frames-idx)
-                              true
-                              (->> (range 0 (max (count old-frames-idx) (count new-frames-idx))) ;; например, move или delete
-                                   (some (fn [idx]
-                                           (not (identical? (nth (:frames old) idx)
-                                                            (nth (:frames new) idx)))))))))]
-        {:db db
-         :fx (when need-redraw
-               [[:draw-onion-skin {:sprite new :opacity (-> db :onion-skin :opacity)}]])})
-      {:db db}))))
+    (let [onion-skin (:onion-skin db)]
+      (if (:enabled onion-skin)
+        (let [need-redraw (if (not= (:current-frame-idx old) (:current-frame-idx new))
+                            true
+                            (let [old-frames-idx (get-onion-skin-frames-idx old (:frames-count onion-skin))
+                                  new-frames-idx (get-onion-skin-frames-idx new (:frames-count onion-skin))]
+                              (if (not= old-frames-idx new-frames-idx)
+                                true
+                                (->> (range 0 (max (count old-frames-idx) (count new-frames-idx))) ;; например, move или delete
+                                     (some (fn [idx]
+                                             (not (identical? (nth (:frames old) idx)
+                                                              (nth (:frames new) idx)))))))))]
+          {:db db
+           :fx (when need-redraw
+                 [[:draw-onion-skin {:sprite new :opacity (:opacity onion-skin)}]])})
+        {:db db})))))
 
 (re-frame/reg-fx
  :draw-onion-skin
  (fn [{:keys [sprite opacity]}]
-   (let [onion-frames-idx (get-onion-skin-frames-idx sprite)
+   (let [db @db/app-db
+         onion-frames-idx (get-onion-skin-frames-idx sprite (-> db :onion-skin :frames-count))
          frames (map (fn [idx] (nth (:frames sprite) idx)) onion-frames-idx)
 
-         db @db/app-db
          canvas (. js/document (getElementById "onion-skin"))
          ctx (. canvas (getContext "2d"))
          scale (:scale db)]

@@ -70,7 +70,7 @@
     (let [sprite @(re-frame/subscribe [::subs/sprite])
           onion-skin @(re-frame/subscribe [::subs/onion-skin])
           onion-skin-frames-idx (if (:enabled onion-skin)
-                                  (onion-skin/get-onion-skin-frames-idx sprite)
+                                  (onion-skin/get-onion-skin-frames-idx sprite (:frames-count onion-skin))
                                   nil)
           frame-imgs @(re-frame/subscribe [::subs/frame-imgs])
           {:keys [frames current-frame-idx]} sprite]
@@ -194,8 +194,30 @@
        (if (:enabled onion-skin)
          "disable onion skin"
          "enable onion skin")]
+      [:div
+       [:div "frames count"]
+       [:div {:style {:display :flex :gap "8px"}}
+        [:div
+         [:span {:style {:margin-right "4px"}} "prev"]
+         [:input {:style {:width "50px"}
+                  :type "number"
+                  :min 0
+                  :value (:prev (:frames-count onion-skin))
+                  :onChange (fn [e]
+                              (re-frame/dispatch [::onion-skin/set-frames-count {:prev (parse-double (.. e -target -value))
+                                                                                 :next (:next (:frames-count onion-skin))}]))}]]
+        [:div
+         [:span {:style {:margin-right "4px"}} "next"]
+         [:input {:style {:width "50px"}
+                  :type "number"
+                  :min 0
+                  :value (:next (:frames-count onion-skin))
+                  :onChange (fn [e]
+                              (re-frame/dispatch [::onion-skin/set-frames-count {:prev (:prev (:frames-count onion-skin))
+                                                                                 :next (parse-double (.. e -target -value))}]))}]]]]
       [slider {:min 0 :max 1 :step 0.1
                :value (:opacity onion-skin)
+               :label "Opacity"
                :onChange (fn [v] (re-frame/dispatch [::onion-skin/set-opacity v]))}]
       [select {:value (:position onion-skin)
                :options [{:value :front :label "in front of sprite"}
