@@ -1,6 +1,7 @@
 (ns pixel-art.events
   (:require ["tinycolor2" :as tinycolor]
             [day8.re-frame.tracing :refer [fn-traced]]
+            [pixel-art.canvas :as canvas]
             [pixel-art.db :as db]
             [pixel-art.history :as history]
             [pixel-art.history.events :as history.events]
@@ -17,16 +18,6 @@
             [re-frame.db]
             [re-pressed.core :as rp]
             [sc.api]))
-
-(defn- draw-frame [frame scale canvas]
-  (let [ctx (. canvas (getContext "2d"))
-
-        frame-size (frame/get-size frame)]
-    (doseq [x (range 0 (:width frame-size))
-            y (range 0 (:height frame-size))]
-      (set! (. ctx -fillStyle) (or (frame/get-pixel {:x x :y y} frame)
-                                   "white"))
-      (. ctx (fillRect (* x scale) (* y scale) scale scale)))))
 
 (re-frame/reg-event-fx
  ::initialize-db
@@ -51,6 +42,7 @@
   (fn [{:keys [db new]}]
     {:db db
      :fx [[:clear-preview]
+          [:clear-frame]
           [:draw-frame new]]})))
 
 (defn- generate-frame-img [frame]
@@ -58,7 +50,7 @@
         canvas-elem (.. js/document (createElement "canvas"))]
     (set! (. canvas-elem -width) (:width canvas-size))
     (set! (. canvas-elem -height) (:height canvas-size))
-    (draw-frame frame 1 canvas-elem)
+    (canvas/draw-frame frame 1 canvas-elem)
     (. canvas-elem (toDataURL "image/png"))))
 
 (re-frame/reg-global-interceptor
@@ -188,7 +180,6 @@
          scale (:scale db)
          canvas-size {:width (* scale (:width frame-size))
                       :height (* scale (:height frame-size))}]
-
      (set! (. preview-canvas -width) (:width canvas-size))
      (set! (. preview-canvas -height) (:height canvas-size))
      (set! (. main-canvas -width) (:width canvas-size))
@@ -197,13 +188,6 @@
      (set! (. grid-canvas -height) (:height canvas-size))
      (set! (. onion-skin-canvas -width) (:width canvas-size))
      (set! (. onion-skin-canvas -height) (:height canvas-size)))))
-
-(re-frame/reg-fx
- :clear-preview
- (fn []
-   (let [canvas (. js/document (getElementById "preview"))
-         ctx (. canvas (getContext "2d"))]
-     (. ctx (clearRect 0 0 (. canvas -width) (. canvas -height))))))
 
 (re-frame/reg-fx
  :highlight-pixels
@@ -222,22 +206,25 @@
          (. ctx (fillRect (* (:x pos) scale) (* (:y pos) scale) scale scale)))))))
 
 (re-frame/reg-fx
+ :clear-preview
+ (fn []
+   (canvas/clear-canvas (. js/document (getElementById "preview")))))
+
+(re-frame/reg-fx
  :draw-preview
- (fn [preview]
+ (fn [changes]
    (let [db @re-frame.db/app-db
          canvas (. js/document (getElementById "preview"))
          ctx (. canvas (getContext "2d"))
          scale (:scale db)]
-     (doseq [[pos color] preview]
+     (doseq [[pos color] changes]
        (set! (. ctx -fillStyle) (or color "white"))
        (. ctx (fillRect (* (:x pos) scale) (* (:y pos) scale) scale scale))))))
 
 (re-frame/reg-fx
  :hide-pixels-grid
  (fn [_]
-   (let [canvas (. js/document (getElementById "grid"))
-         ctx (. canvas (getContext "2d"))]
-     (. ctx (clearRect 0 0 (. canvas -width) (. canvas -height))))))
+   (canvas/clear-canvas (. js/document (getElementById "grid")))))
 
 (re-frame/reg-fx
  :draw-pixels-grid
@@ -265,10 +252,16 @@
          (.lineTo (* x scale) (:height canvas-size))
          (.stroke))))))
 
+;; todo: rename
+(re-frame/reg-fx
+ :clear-frame
+ (fn []
+   (canvas/clear-canvas (. js/document (getElementById "tutorial")))))
+
 ;; todo: rename to current-frame
 (re-frame/reg-fx
  :draw-frame
  (fn [frame]
    (let [canvas (. js/document (getElementById "tutorial"))
          scale (:scale @re-frame.db/app-db)]
-     (draw-frame frame scale canvas))))
+     (canvas/draw-frame frame scale canvas))))

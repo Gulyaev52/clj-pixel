@@ -1,14 +1,15 @@
 (ns pixel-art.onion-skin
-  (:require [pixel-art.model.frame :as frame]
-            [pixel-art.utils.interceptor :refer [on-changes]]
+  (:require [pixel-art.utils.interceptor :refer [on-changes]]
             [re-frame.core :as re-frame]
-            [re-frame.db :as db]))
+            [re-frame.db :as db]
+            [pixel-art.canvas :as canvas]))
 
 ;; спереди или сзади
 ;; кол-во
 
 (defn init []
   {:enabled false
+   :position :front ;; front|behind
    :opacity 0.3})
 
 (defn get-onion-skin-frames-idx [sprite]
@@ -33,6 +34,13 @@
    {:db (assoc-in db [:onion-skin :opacity] opacity)
     :fx (when (-> db :onion-skin :enabled)
           [[:draw-onion-skin {:sprite (:sprite db) :opacity opacity}]])}))
+
+(re-frame/reg-event-fx
+ ::set-position
+ (fn [{:keys [db]} [_ position]]
+   {:db (assoc-in db [:onion-skin :position] position)
+    :fx (when (-> db :onion-skin :enabled)
+          [[:draw-onion-skin {:sprite (:sprite db) :opacity (-> db :onion-skin :opacity)}]])}))
 
 (re-frame/reg-global-interceptor
  (on-changes
@@ -63,23 +71,16 @@
 
          db @db/app-db
          canvas (. js/document (getElementById "onion-skin"))
-         size (:size sprite)
          ctx (. canvas (getContext "2d"))
          scale (:scale db)]
      (. ctx (clearRect 0 0 (. canvas -width) (. canvas -height)))
      (.save ctx)
      (set! (.-globalAlpha ctx) opacity)
      (doseq [frame frames]
-       (doseq [x (range 0 (:width size))
-               y (range 0 (:height size))]
-         (when-let [color (frame/get-pixel {:x x :y y} frame)]
-           (set! (. ctx -fillStyle) color)
-           (. ctx (fillRect (* x scale) (* y scale) scale scale)))))
+       (canvas/draw-frame frame scale canvas))
      (.restore ctx))))
 
 (re-frame/reg-fx
  :hide-onion-skin
  (fn []
-   (let [canvas (. js/document (getElementById "onion-skin"))
-         ctx (. canvas (getContext "2d"))]
-     (. ctx (clearRect 0 0 (. canvas -width) (. canvas -height))))))
+   (canvas/clear-canvas (. js/document (getElementById "onion-skin")))))

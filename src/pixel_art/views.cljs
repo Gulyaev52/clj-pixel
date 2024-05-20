@@ -140,7 +140,7 @@
                            (array))]
     [:div {:style {:position "fixed"
                    :display "flex"
-                   :zIndex 1
+                   :zIndex 1000
                    :alignItems "center"
                    :justifyContent "center"
                    :left 0
@@ -196,7 +196,11 @@
          "enable onion skin")]
       [slider {:min 0 :max 1 :step 0.1
                :value (:opacity onion-skin)
-               :onChange (fn [v] (re-frame/dispatch [::onion-skin/set-opacity v]))}]]
+               :onChange (fn [v] (re-frame/dispatch [::onion-skin/set-opacity v]))}]
+      [select {:value (:position onion-skin)
+               :options [{:value :front :label "in front of sprite"}
+                         {:value :behind :label "behind sprite"}]
+               :onChange (fn [v] (re-frame/dispatch [::onion-skin/set-position v]))}]]
      [:div {:style {:display :flex :justify-content :center}}
       [:div {:style {:position "relative"
                      :border "1px solid black"}
@@ -232,19 +236,25 @@
                                 (when (not= mouse-pos @!last-mouse-pos)
                                   (reset! !last-mouse-pos mouse-pos)
                                   (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos])))))}
-       [:canvas {:id "tutorial"}]
-       [:canvas {:id "preview"
-                 :style {:position :absolute
-                         :left 0
-                         :top 0}}]
+       [:canvas {:id "tutorial"
+                 :style {:position "relative"
+                         :zIndex 1}}]
        [:canvas {:id "onion-skin"
                  :style {:position :absolute
                          :left 0
-                         :top 0}}]
+                         :top 0
+                         :zIndex (if (= (:position onion-skin) :front)
+                                   2 0)}}]
+       [:canvas {:id "preview"
+                 :style {:position :absolute
+                         :left 0
+                         :top 0
+                         :zIndex 3}}]
        [:canvas {:id "grid"
                  :style {:position :absolute
                          :left 0
-                         :top 0}}]]]]))
+                         :top 0
+                         :zIndex 4}}]]]]))
 
 (defn mount-root []
   (let [root-el (.getElementById js/document "app")]
