@@ -51,3 +51,8 @@
  ::onion-skin
  (fn [db]
    (:onion-skin db)))
+
+(re-frame/reg-sub
+ ::color
+ (fn [db]
+   (:color db)))

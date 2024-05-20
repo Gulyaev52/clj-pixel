@@ -162,7 +162,8 @@
         scale @(re-frame/subscribe [::subs/scale])
         pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])
         sprite-preview @(re-frame/subscribe [::subs/sprite-preview])
-        onion-skin @(re-frame/subscribe [::subs/onion-skin])]
+        onion-skin @(re-frame/subscribe [::subs/onion-skin])
+        color @(re-frame/subscribe [::subs/color])]
     [:div {:style {:display :flex :flex-direction :column :gap "10px"}}
      [options-toolbar (:type tool)]
      [:div {:style {:display :flex :gap "8px"}}
@@ -172,7 +173,8 @@
                :options (map (fn [t] {:value t :label (name t)}) tool/types)})
       [checkbox {:value pixels-grid-enabled
                  :label "grid"
-                 :onChange (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]]
+                 :onChange (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]
+      (str "color=" color)]
      [:div [frames]]
      [:div
       (when (:opened sprite-preview)
@@ -266,7 +268,7 @@
                          :left 0
                          :top 0
                          :zIndex (if (= (:position onion-skin) :front)
-                                   2 0)}}]
+                                   4 0)}}] ;; todo: подумать тут
        [:canvas {:id "preview"
                  :style {:position :absolute
                          :left 0
@@ -276,7 +278,7 @@
                  :style {:position :absolute
                          :left 0
                          :top 0
-                         :zIndex 4}}]]]]))
+                         :zIndex 10}}]]]]))
 
 (defn mount-root []
   (let [root-el (.getElementById js/document "app")]
