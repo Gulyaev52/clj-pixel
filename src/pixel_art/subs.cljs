@@ -58,6 +58,11 @@
    (:primary-color db)))
 
 (re-frame/reg-sub
+ ::secondary-color
+ (fn [db]
+   (:secondary-color db)))
+
+(re-frame/reg-sub
  ::selected-palette-idx
  (fn [db]
    (:selected-palette-idx db)))

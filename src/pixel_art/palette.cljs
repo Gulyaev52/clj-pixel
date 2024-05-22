@@ -1,12 +1,15 @@
 (ns pixel-art.palette
   (:require [pixel-art.palette.gimp-file :as gimp-file]
+            [pixel-art.tool.utils :refer [get-active-color-type]]
             [pixel-art.utils.coll :as coll]
             [pixel-art.utils.interceptor :refer [on-changes]]
-            [re-frame.core :as re-frame]))
+            [re-frame.core :as re-frame]
+            [sc.api :as api]))
 
 ;; todo
 ;; сохранять в localstorage
-;; primary/secondary colors. правое или левое нажатие мыши. color-picker. palette. eraser
+;; primary/secondary colors. правое или левое нажатие мыши. palette. eraser; swap-colors
+;;     color-picker-with-button. primary-color
 ;; color picker
 ;; добавлять в историю?
 ;; move color
@@ -38,11 +41,11 @@
 
 (re-frame/reg-event-fx
  ::select-color
- (fn [{:keys [db]} [_ idx]]
+ (fn [{:keys [db]} [_ idx right-mouse-button]]
    (let [new-selected-color (-> (get-current-palette db)
                                 :colors
                                 (nth idx))]
-     {:db (assoc db :primary-color new-selected-color)})))
+     {:db (assoc db (get-active-color-type right-mouse-button) new-selected-color)})))
 
 (re-frame/reg-event-fx
  ::remove-selected-palette

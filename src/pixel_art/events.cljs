@@ -133,8 +133,8 @@
 
 (re-frame/reg-event-fx
  ::handle-mouse-event
- (fn-traced [{:keys [db]} [_ event-type mouse-pos]]
-            (let [event {:type event-type :pos mouse-pos}]
+ (fn-traced [{:keys [db]} [_ event-type mouse-pos right-button]]
+            (let [event {:type event-type :pos mouse-pos :right-button right-button}]
               (case event-type
                 :mouse-down
                 (-> (assoc db

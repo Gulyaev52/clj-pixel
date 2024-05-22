@@ -16,6 +16,9 @@
 (def !last-mouse-pos (atom nil))
 (def !mouse-down (atom false))
 
+(defn is-right-button? [e]
+  (or (= (. e -button) 2) (= (. e -which) 3)))
+
 (defn canvas-pos->frame-pos [event scale canvas]
   (let [rect (. canvas getBoundingClientRect)]
     {:x (. js/Math (floor (/ (- (. event -clientX) (. rect -left))
@@ -226,7 +229,8 @@
   (let [palettes @(re-frame/subscribe [::subs/palettes])
         selected-palette-idx @(re-frame/subscribe [::subs/selected-palette-idx])
         selected-palette (nth palettes selected-palette-idx)
-        primary-color @(re-frame/subscribe [::subs/primary-color])]
+        primary-color @(re-frame/subscribe [::subs/primary-color])
+        secondary-color @(re-frame/subscribe [::subs/secondary-color])]
     [:div
      [:div {:style {:display :flex}}
       [select {:value selected-palette-idx
@@ -250,7 +254,11 @@
                     :grid-gap "2px"
                     :width "200px"}}
       (for [[idx color] (map-indexed vector (:colors selected-palette))]
-        [:div {:onClick (fn [] (re-frame/dispatch [::palette/select-color idx]))
+        [:div {:onClick (fn []
+                          (re-frame/dispatch [::palette/select-color idx false]))
+               :onContextMenu (fn [e]
+                                (. e preventDefault)
+                                (re-frame/dispatch [::palette/select-color idx true]))
                :style {:width "33px"
                        :height "33px"
                        :background-color color
@@ -259,6 +267,7 @@
                        :color (if (.. (tinycolor color) isDark)
                                 "white" "black")}}
          (when (= color primary-color) "L")
+         (when (= color secondary-color) "R")
          [:div {:onClick (fn [e]
                            (.. e (stopPropagation))
                            (re-frame/dispatch [::palette/remove-color idx]))
@@ -271,8 +280,7 @@
      [file-uploader {:onUpload (fn [file-desc]
                                  (re-frame/dispatch [::palette/load-palette file-desc]))}
       "load"]
-     (println "selected-color" primary-color)
-     [color-picker-with-button {:value primary-color
+     [color-picker-with-button {:value primary-color ;; todo: ?
                                 :onChange (fn [color]
                                             (re-frame/dispatch [::palette/add-color color]))
                                 :onCancel (fn [])}
@@ -339,8 +347,13 @@
     [:div {:style {:display :flex :justify-content :center :align-items "center"}}
      [:div {:style {:position "relative"
                     :border "1px solid black"}
+            :onContextMenu (fn [event]
+                             (. event preventDefault))
             :onMouseDown (fn [event]
+                           (. event preventDefault)
+                           (. event stopPropagation)
                            (let [elem (. js/document (getElementById "tutorial"))
+                                 right-button (is-right-button? event)
 
                                  mouse-pos (canvas-pos->frame-pos event scale elem)
 
@@ -348,29 +361,29 @@
                                               (let [mouse-pos (canvas-pos->frame-pos event scale elem)]
                                                 (when (not= mouse-pos @!last-mouse-pos)
                                                   (reset! !last-mouse-pos mouse-pos)
-                                                  (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos]))))
+                                                  (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos right-button]))))
 
                                  mouse-up (fn mouse-up [event]
                                             (let [mouse-pos (canvas-pos->frame-pos event scale elem)]
                                               (reset! !last-mouse-pos mouse-pos)
                                               (reset! !mouse-down false)
-                                              (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos])
+                                              (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos right-button])
                                               (.. js/document (removeEventListener "mousemove" mouse-move))
                                               (.. js/document (removeEventListener "mouseup" mouse-up))))]
-                             (re-frame/dispatch [::events/handle-mouse-event :mouse-down mouse-pos])
+                             (re-frame/dispatch [::events/handle-mouse-event :mouse-down mouse-pos right-button])
                              (reset! !mouse-down true)
                              (.. js/document (addEventListener "mousemove" mouse-move))
                              (.. js/document (addEventListener "mouseup" mouse-up))))
             :onMouseLeave (fn [event]
                             (when-not @!mouse-down
                               (let [mouse-pos (canvas-pos->frame-pos event scale (. js/document (getElementById "tutorial")))]
-                                (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos]))))
+                                (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)]))))
             :onMouseMove (fn [event]
                            (when-not @!mouse-down
                              (let [mouse-pos (canvas-pos->frame-pos event scale (. js/document (getElementById "tutorial")))]
                                (when (not= mouse-pos @!last-mouse-pos)
                                  (reset! !last-mouse-pos mouse-pos)
-                                 (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos])))))}
+                                 (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)])))))}
       [:canvas {:id "tutorial"
                 :style {:position "relative"
                         :zIndex 1}}]
@@ -394,8 +407,9 @@
 (defn main-panel []
   (let [tool @(re-frame/subscribe [::subs/tool])
         pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])
-        primary-color @(re-frame/subscribe [::subs/primary-color])]
-    [:div {:style {:display :grid :grid-template-columns "450px 1fr"}}
+        primary-color @(re-frame/subscribe [::subs/primary-color])
+        secondary-color @(re-frame/subscribe [::subs/secondary-color])]
+    [:div {:style {:display :grid :grid-template-columns "490px 1fr"}}
      [:div {:style {:display :flex :flex-direction :column :gap "10px"}}
       [options-toolbar (:type tool)]
       [:div {:style {:display :flex :gap "8px"}}
@@ -406,7 +420,8 @@
        [checkbox {:value pixels-grid-enabled
                   :label "grid"
                   :onChange (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]
-       (str "primary-color=" primary-color)]
+       [:div (str "primary-color=" primary-color)]
+       [:div (str "secondary-color=" secondary-color)]]
       [:div [frames]]
       [sprite-preview-section]
       [onion-skin-section]

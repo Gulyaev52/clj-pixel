@@ -10,11 +10,11 @@
 (defn get-current-frame [db]
   (-> db :sprite sprite/get-current-frame))
 
+(defn get-active-color-type [right-button]
+  (if right-button :secondary-color :primary-color))
+
 (defn get-active-color [db event]
-  ((if (:right-mouse-button event)
-     :secondary-color
-     :primary-color)
-   db))
+  ((get-active-color-type (:right-button event)) db))
 
 (defn commit-changes-and-init-tool [db changes tool-init]
   (-> (if (seq changes)
