@@ -1,5 +1,6 @@
 (ns pixel-art.tool.rectangle
-  (:require [pixel-art.tool.utils :refer [commit-changes-and-init-tool get-tool-options
+  (:require [pixel-art.tool.utils :refer [commit-changes-and-init-tool
+                                          get-active-color get-tool-options
                                           resize-pixel]]
             [pixel-art.utils.geometry :as geometry]))
 
@@ -34,13 +35,14 @@
        dedupe))
 
 (defn- get-rectangle-image [db event]
-  (let [{:keys [color initial-mouse-down-pos]} db
+  (let [{:keys [initial-mouse-down-pos]} db
+        active-color (get-active-color db event)
         {:keys [pixel-size fill]} (get-tool-options db)
         rectangle-points (if fill
                            (get-filled-rectangle-points initial-mouse-down-pos (:pos event) pixel-size)
                            (get-outline-rectangle-points initial-mouse-down-pos (:pos event) pixel-size))]
     (->> rectangle-points
-         (map (fn [p] [p color]))
+         (map (fn [p] [p active-color]))
          (into {}))))
 
 (defn handle-mouse-event [db event]

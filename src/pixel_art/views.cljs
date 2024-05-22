@@ -226,7 +226,7 @@
   (let [palettes @(re-frame/subscribe [::subs/palettes])
         selected-palette-idx @(re-frame/subscribe [::subs/selected-palette-idx])
         selected-palette (nth palettes selected-palette-idx)
-        selected-color @(re-frame/subscribe [::subs/color])]
+        primary-color @(re-frame/subscribe [::subs/primary-color])]
     [:div
      [:div {:style {:display :flex}}
       [select {:value selected-palette-idx
@@ -258,7 +258,7 @@
                        :cursor "pointer"
                        :color (if (.. (tinycolor color) isDark)
                                 "white" "black")}}
-         (when (= color selected-color) "L")
+         (when (= color primary-color) "L")
          [:div {:onClick (fn [e]
                            (.. e (stopPropagation))
                            (re-frame/dispatch [::palette/remove-color idx]))
@@ -271,8 +271,8 @@
      [file-uploader {:onUpload (fn [file-desc]
                                  (re-frame/dispatch [::palette/load-palette file-desc]))}
       "load"]
-     (println "selected-color" selected-color)
-     [color-picker-with-button {:value selected-color
+     (println "selected-color" primary-color)
+     [color-picker-with-button {:value primary-color
                                 :onChange (fn [color]
                                             (re-frame/dispatch [::palette/add-color color]))
                                 :onCancel (fn [])}
@@ -394,7 +394,7 @@
 (defn main-panel []
   (let [tool @(re-frame/subscribe [::subs/tool])
         pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])
-        color @(re-frame/subscribe [::subs/color])]
+        primary-color @(re-frame/subscribe [::subs/primary-color])]
     [:div {:style {:display :grid :grid-template-columns "450px 1fr"}}
      [:div {:style {:display :flex :flex-direction :column :gap "10px"}}
       [options-toolbar (:type tool)]
@@ -406,7 +406,7 @@
        [checkbox {:value pixels-grid-enabled
                   :label "grid"
                   :onChange (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]
-       (str "color=" color)]
+       (str "primary-color=" primary-color)]
       [:div [frames]]
       [sprite-preview-section]
       [onion-skin-section]

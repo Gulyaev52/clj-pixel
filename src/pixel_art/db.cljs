@@ -30,7 +30,8 @@
          :sprite sprite
          :tool (tool/init :pen)
          :tools-options (get-initial-options tool/options-specs)
-         :color "black"
+         :primary-color "black"
+         :secondary-color "red"
          :selection-manager {}
          :scale 40
          :onion-skin (onion-skin/init)

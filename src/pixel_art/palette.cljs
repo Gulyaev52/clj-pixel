@@ -6,7 +6,8 @@
 
 ;; todo
 ;; сохранять в localstorage
-;; primary/secondary colors
+;; primary/secondary colors. правое или левое нажатие мыши. color-picker. palette. eraser
+;; color picker
 ;; добавлять в историю?
 ;; move color
 ;; удаление палетки. 1 осталась
@@ -41,7 +42,7 @@
    (let [new-selected-color (-> (get-current-palette db)
                                 :colors
                                 (nth idx))]
-     {:db (assoc db :color new-selected-color)})))
+     {:db (assoc db :primary-color new-selected-color)})))
 
 (re-frame/reg-event-fx
  ::remove-selected-palette
@@ -77,7 +78,7 @@
                                                                            (conj color)
                                                                            distinct
                                                                            vec))
-            (assoc :color color))}))
+            (assoc :primary-color color))}))
 
 (re-frame/reg-event-fx
  ::load-palette

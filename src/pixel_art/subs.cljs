@@ -53,9 +53,9 @@
    (:onion-skin db)))
 
 (re-frame/reg-sub
- ::color
+ ::primary-color
  (fn [db]
-   (:color db)))
+   (:primary-color db)))
 
 (re-frame/reg-sub
  ::selected-palette-idx

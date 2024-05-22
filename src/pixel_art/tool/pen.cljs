@@ -1,5 +1,6 @@
 (ns pixel-art.tool.pen
-  (:require [pixel-art.tool.utils :refer [commit-changes-and-init-tool get-tool-options
+  (:require [pixel-art.tool.utils :refer [commit-changes-and-init-tool
+                                          get-active-color get-tool-options
                                           resize-pixel]]))
 
 (defn init [] {:type :pen :state {:changes {}}})
@@ -25,10 +26,10 @@
     (cond
       (or (= (:type event) :mouse-down)
           (and (= (:type event) :mouse-move) user-is-drawing))
-      (let [{:keys [color]} db
+      (let [active-color (get-active-color db event)
             {:keys [pixel-size]} (get-tool-options db)
             new-pixels (->> (resize-pixel (:pos event) pixel-size)
-                            (map (fn [p] [p color])))]
+                            (map (fn [p] [p active-color])))]
         {:db (update-in db [:tool :state :changes] #(merge % new-pixels))
          :fx [[:draw-preview new-pixels]]})
 

@@ -11,7 +11,7 @@
   (cond
     (= (:type event) :mouse-down)
     (let [color (frame/get-pixel (:pos event) (get-current-frame db))]
-      {:db (assoc db :color color)})
+      {:db (assoc db :primary-color color)})
 
     (and (= (:type event) :mouse-move) (not (:user-is-drawing db)))
     {:db db
