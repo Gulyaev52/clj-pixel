@@ -3,7 +3,7 @@
             ["tinycolor2" :as tinycolor]
             [pixel-art.events :as events]
             [pixel-art.onion-skin :as onion-skin]
-            [pixel-art.palette :as palette]
+            [pixel-art.palette :as palette :refer [deletable-palette?]]
             [pixel-art.sprite-preview :as sprite-preview]
             [pixel-art.subs :as subs]
             [pixel-art.tool.core :as tool]
@@ -243,7 +243,8 @@
        "add palette"]
       [:button {:onClick (fn []
                            (when (js/confirm "are you sure?")
-                             (re-frame/dispatch [::palette/remove-selected-palette])))}
+                             (re-frame/dispatch [::palette/remove-selected-palette])))
+                :disabled (not (deletable-palette? palettes))}
        "remove palette"]
       [:button {:onClick (fn []
                            (when-let [name (js/prompt)]

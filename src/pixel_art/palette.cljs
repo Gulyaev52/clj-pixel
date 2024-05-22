@@ -8,13 +8,14 @@
             [sc.api]))
 
 ;; todo
-;; сохранять в localstorage
 ;; primary/secondary colors
 ;;     color-picker-with-button. primary-color
 ;; добавлять в историю?
 ;; move color
-;; удаление палетки. 1 осталась
 ;; default палетка должна быть особенной?
+
+(defn deletable-palette? [palettes]
+  (> (count palettes) 1))
 
 (defn get-current-palette [db]
   (let [{:keys [selected-palette-idx palettes]} db]
@@ -62,9 +63,11 @@
 (re-frame/reg-event-fx
  ::remove-selected-palette
  (fn [{:keys [db]} [_]]
-   {:db (-> db
-            (update :palettes #(coll/removev (:selected-palette-idx db) %))
-            (assoc :selected-palette-idx 0))}))
+   (if (deletable-palette? (:palettes db))
+     {:db (-> db
+              (update :palettes #(coll/removev (:selected-palette-idx db) %))
+              (assoc :selected-palette-idx 0))}
+     {:db db})))
 
 (re-frame/reg-event-fx
  ::rename-selected-palette
