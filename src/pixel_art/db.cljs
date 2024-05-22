@@ -13,7 +13,7 @@
                          (map (fn [{:keys [field initial-value]}] [field initial-value]))
                          (into {})))))
 
-(def default-db
+(defn get-default-db [palette-local-storage-item]
   (let [size {:width 8 :height 8}
         frame (->> (frame/create size)
                    (frame/set-pixels (->> (for [x (range 0 8)
@@ -38,4 +38,4 @@
          :history (history/init {:sprite sprite})
          :sprite-preview (preview/init)
          :pixels-grid-enabled true}
-        palette/init)))
+        (palette/init palette-local-storage-item))))

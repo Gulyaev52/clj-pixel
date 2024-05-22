@@ -1,16 +1,16 @@
 (ns pixel-art.palette
-  (:require [pixel-art.palette.gimp-file :as gimp-file]
+  (:require [pixel-art.local-storage :as local-storage]
+            [pixel-art.palette.gimp-file :as gimp-file]
             [pixel-art.tool.utils :refer [get-active-color-type]]
             [pixel-art.utils.coll :as coll]
             [pixel-art.utils.interceptor :refer [on-changes]]
             [re-frame.core :as re-frame]
-            [sc.api :as api]))
+            [sc.api]))
 
 ;; todo
 ;; сохранять в localstorage
-;; primary/secondary colors. правое или левое нажатие мыши. palette. eraser; swap-colors
+;; primary/secondary colors
 ;;     color-picker-with-button. primary-color
-;; color picker
 ;; добавлять в историю?
 ;; move color
 ;; удаление палетки. 1 осталась
@@ -20,19 +20,31 @@
   (let [{:keys [selected-palette-idx palettes]} db]
     (nth palettes selected-palette-idx)))
 
-(defn init [db]
-  (merge db {:selected-palette-idx 0
-             :palettes [{:name "default"
-                         :colors ["black" "red" "green" "blue" "yellow" "gray" "purple"]} ;; todo: use set?
-                        ]}))
+(def local-storage-key :palettes)
+(defn init [db local-storage-item]
+  (merge db (or local-storage-item
+                {:selected-palette-idx 0
+                 :palettes [{:name "default"
+                             :colors ["black" "red" "green" "blue" "yellow" "gray" "purple"]} ;; todo: use set?
+                            ]})))
 
 (re-frame/reg-global-interceptor
  (on-changes
-  :save-palettes-in-local-storage
-  #(-> % :sprite)
-  (fn [{:keys [db old new]}]
+  :save-palettes-in-local-storage-on-palettes-change
+  #(:palettes %)
+  (fn [{:keys [db]}]
     {:db db
-     :fx []})))
+     :fx [[::local-storage/set-item {:key local-storage-key
+                                     :value (select-keys db [:selected-palette-idx :palettes])}]]})))
+
+(re-frame/reg-global-interceptor ;; todo: find a way to avoid this
+ (on-changes
+  :save-palettes-in-local-storage-on-selected-palette-change
+  #(:selected-palette-idx %)
+  (fn [{:keys [db]}]
+    {:db db
+     :fx [[::local-storage/set-item {:key local-storage-key
+                                     :value (select-keys db [:selected-palette-idx :palettes])}]]})))
 
 (re-frame/reg-event-fx
  ::select-palette

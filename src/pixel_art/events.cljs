@@ -17,12 +17,15 @@
             [re-frame.core :as re-frame]
             [re-frame.db]
             [re-pressed.core :as rp]
-            [sc.api]))
+            [pixel-art.local-storage :as local-storage]
+            [sc.api]
+            [pixel-art.palette :as palette]))
 
 (re-frame/reg-event-fx
  ::initialize-db
- (fn [_ _]
-   {:db db/default-db
+ [(re-frame/inject-cofx ::local-storage/get-item palette/local-storage-key)]
+ (fn [coeffects _]
+   {:db (db/get-default-db (get coeffects palette/local-storage-key))
     :fx [[:dispatch [::rp/set-keydown-rules
                      {:event-keys (concat history.events/hotkeys
                                           rectangle-select/hotkeys
