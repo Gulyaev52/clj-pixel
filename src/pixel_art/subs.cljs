@@ -56,3 +56,13 @@
  ::color
  (fn [db]
    (:color db)))
+
+(re-frame/reg-sub
+ ::selected-palette-idx
+ (fn [db]
+   (:selected-palette-idx db)))
+
+(re-frame/reg-sub
+ ::palettes
+ (fn [db]
+   (:palettes db)))

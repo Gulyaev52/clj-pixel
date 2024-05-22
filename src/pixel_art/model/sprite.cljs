@@ -1,20 +1,11 @@
 (ns pixel-art.model.sprite
-  (:require [sc.api]))
+  (:require [pixel-art.utils.coll :as coll]
+            [sc.api]))
 
 (defn create [size]
   {:size size
    :current-frame-idx 0
    :frames []})
-
-(defn- removev
-  "remove elem in coll"
-  [pos coll]
-  (into (subvec coll 0 pos) (subvec coll (inc pos))))
-
-(defn- insertv [index elem coll]
-  (let [[l r] (split-at index coll)]
-    (->> (concat l [elem] r)
-         vec)))
 
 (defn- swapv
   [i j v]
@@ -30,7 +21,7 @@
 ;; todo: cannot be empty
 (defn remove-frame [idx sprite]
   (-> sprite
-      (update :frames #(removev idx %))
+      (update :frames #(coll/removev idx %))
       (update :current-frame-idx (fn [v]
                                    (if (<= idx v)
                                      (max (dec v) 0)
@@ -40,7 +31,7 @@
   (let [current-frame (nth (:frames sprite) idx)
         duplicated-frame-pos (inc idx)]
     (-> sprite
-        (update :frames #(insertv duplicated-frame-pos current-frame %))
+        (update :frames #(coll/insertv duplicated-frame-pos current-frame %))
         (assoc :current-frame-idx duplicated-frame-pos)))) ;;todo: wrong pos
 
 (defn move-frame [from to sprite]

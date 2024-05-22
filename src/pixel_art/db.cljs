@@ -3,6 +3,7 @@
             [pixel-art.model.frame :as frame]
             [pixel-art.model.sprite :as sprite]
             [pixel-art.onion-skin :as onion-skin]
+            [pixel-art.palette :as palette]
             [pixel-art.sprite-preview :as preview]
             [pixel-art.tool.core :as tool]))
 
@@ -25,14 +26,15 @@
                      {:x 1 :y 1} "black"}))
         sprite (->> (sprite/create {:width 8 :height 8})
                     (sprite/add-frame frame))]
-    {:size size
-     :sprite sprite
-     :tool (tool/init :pen)
-     :tools-options (get-initial-options tool/options-specs)
-     :color "black"
-     :selection-manager {}
-     :scale 40
-     :onion-skin (onion-skin/init)
-     :history (history/init {:sprite sprite})
-     :sprite-preview (preview/init)
-     :pixels-grid-enabled true}))
+    (-> {:size size
+         :sprite sprite
+         :tool (tool/init :pen)
+         :tools-options (get-initial-options tool/options-specs)
+         :color "black"
+         :selection-manager {}
+         :scale 40
+         :onion-skin (onion-skin/init)
+         :history (history/init {:sprite sprite})
+         :sprite-preview (preview/init)
+         :pixels-grid-enabled true}
+        palette/init)))

@@ -4,8 +4,6 @@
             [re-frame.db :as db]
             [pixel-art.canvas :as canvas]))
 
-;; пересечение
-
 (defn init []
   {:enabled false
    :position :front ;; front|behind
