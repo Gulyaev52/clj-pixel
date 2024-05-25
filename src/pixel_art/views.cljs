@@ -15,7 +15,7 @@
 
 (def !last-mouse-pos (atom nil))
 
-(defn get-offset-pos [e]
+(defn get-mouse-offset-pos [e]
   (if (. e -nativeEvent)
     {:x (.. e -nativeEvent -offsetX)
      :y (.. e -nativeEvent -offsetY)}
@@ -28,10 +28,10 @@
 (defn is-middle-button? [e]
   (= (. e -button) 1))
 
-(defn canvas-pos->frame-pos [event scale panning-pos]
-  (let [offset-pos (get-offset-pos event)]
-    {:x (. js/Math (floor (/ (- (:x offset-pos) (:x panning-pos)) scale)))
-     :y (. js/Math (floor (/ (- (:y offset-pos) (:y panning-pos)) scale)))}))
+(defn canvas-pos->frame-pos [event scale canvas-offset]
+  (let [mouse-offset-pos (get-mouse-offset-pos event)]
+    {:x (. js/Math (floor (/ (- (:x mouse-offset-pos) (:x canvas-offset)) scale)))
+     :y (. js/Math (floor (/ (- (:y mouse-offset-pos) (:y canvas-offset)) scale)))}))
 
 (defn slider [{:keys [value label min max step onChange]}]
   ;; todo: labels
@@ -357,14 +357,14 @@
                                              (. e stopPropagation)
                                              (re-frame/dispatch [::events/zoom
                                                                  (if (< (. e -deltaY) 0) 2 (/ 1 2))
-                                                                 (get-offset-pos e)]))]
+                                                                 (get-mouse-offset-pos e)]))]
                                (.. ref -current (addEventListener "wheel" handler))
                                (fn []
                                  (.. ref -current (removeEventListener "wheel" handler)))))
                            (array ref scale))
         onion-skin @(re-frame/subscribe [::subs/onion-skin])
         panning @(re-frame/subscribe [::subs/panning])
-        panning-pos @(re-frame/subscribe [::subs/panning-pos])
+        canvas-offset @(re-frame/subscribe [::subs/canvas-offset])
         user-is-drawing @(re-frame/subscribe [::subs/user-is-drawing])]
     [:div {:style {:display :flex :justify-content :center :align-items "center"}}
      [:div {:style {:position "relative"
@@ -377,9 +377,9 @@
                            (. event stopPropagation)
                            (if (is-middle-button? event)
                              (do
-                               (re-frame/dispatch [::events/start-panning (get-offset-pos event)])
+                               (re-frame/dispatch [::events/start-panning (get-mouse-offset-pos event)])
                                (let [mouse-move (fn [event]
-                                                  (re-frame/dispatch [::events/pan (get-offset-pos event)]))]
+                                                  (re-frame/dispatch [::events/pan (get-mouse-offset-pos event)]))]
                                  (.. js/document (addEventListener "mousemove" mouse-move))
                                  (.. js/document (addEventListener "mouseup"
                                                                    (fn []
@@ -388,16 +388,16 @@
                                                                    #js {"once" true}))))
                              (let [right-button (is-right-button? event)
 
-                                   mouse-pos (canvas-pos->frame-pos event scale panning-pos)
+                                   mouse-pos (canvas-pos->frame-pos event scale canvas-offset)
 
                                    mouse-move (fn [event]
-                                                (let [mouse-pos (canvas-pos->frame-pos event scale panning-pos)]
+                                                (let [mouse-pos (canvas-pos->frame-pos event scale canvas-offset)]
                                                   (when (not= mouse-pos @!last-mouse-pos)
                                                     (reset! !last-mouse-pos mouse-pos)
                                                     (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos right-button]))))
 
                                    mouse-up (fn mouse-up [event]
-                                              (let [mouse-pos (canvas-pos->frame-pos event scale panning-pos)]
+                                              (let [mouse-pos (canvas-pos->frame-pos event scale canvas-offset)]
                                                 (reset! !last-mouse-pos mouse-pos)
                                                 (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos right-button])
                                                 (.. js/document (removeEventListener "mousemove" mouse-move))
@@ -407,11 +407,11 @@
                                (.. js/document (addEventListener "mouseup" mouse-up)))))
             :onMouseLeave (fn [event]
                             (when-not (or user-is-drawing panning)
-                              (let [mouse-pos (canvas-pos->frame-pos event scale panning-pos)]
+                              (let [mouse-pos (canvas-pos->frame-pos event scale canvas-offset)]
                                 (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)]))))
             :onMouseMove (fn [event]
                            (when-not (or user-is-drawing panning)
-                             (let [mouse-pos (canvas-pos->frame-pos event scale panning-pos)]
+                             (let [mouse-pos (canvas-pos->frame-pos event scale canvas-offset)]
                                (when (not= mouse-pos @!last-mouse-pos)
                                  (reset! !last-mouse-pos mouse-pos)
                                  (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)])))))}

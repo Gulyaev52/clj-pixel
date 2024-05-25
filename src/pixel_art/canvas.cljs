@@ -13,9 +13,9 @@
 (defn draw-on-zoomed-canvas [canvas db draw]
   (let [ctx (. canvas (getContext "2d"))
         scale (:scale db)
-        panning-pos (:panning-pos db)]
+        canvas-offset (:canvas-offset db)]
     (. ctx save)
-    (.. ctx (translate (:x panning-pos) (:y panning-pos)))
+    (.. ctx (translate (:x canvas-offset) (:y canvas-offset)))
     (.. ctx (scale scale scale))
     (draw {:canvas canvas :ctx ctx})
     (. ctx restore)))

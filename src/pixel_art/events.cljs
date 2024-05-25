@@ -137,14 +137,14 @@
 (re-frame/reg-event-fx
  ::zoom
  (fn [{:keys [db]} [_ delta center-pos]]
-   (let [prev-panning-pos (:panning-pos db)
-         new-panning-pos {:x (- (:x center-pos)
-                                (* (- (:x center-pos) (:x prev-panning-pos)) delta))
-                          :y (- (:y center-pos)
-                                (* (- (:y center-pos) (:y prev-panning-pos)) delta))}]
+   (let [prev-canvas-offset (:canvas-offset db)
+         new-canvas-offset {:x (- (:x center-pos)
+                                  (* (- (:x center-pos) (:x prev-canvas-offset)) delta))
+                            :y (- (:y center-pos)
+                                  (* (- (:y center-pos) (:y prev-canvas-offset)) delta))}]
      {:db (-> db
               (update :scale #(* % delta))
-              (assoc :panning-pos new-panning-pos))
+              (assoc :canvas-offset new-canvas-offset))
       :fx [[:clear-frame]
            [:draw-frame (get-current-frame db)]
            [:hide-pixels-grid]
@@ -156,15 +156,15 @@
  ::start-panning
  (fn [{:keys [db]} [_ pos]]
    {:db (assoc db
-               :start-panning-pos pos
-               :initial-panning-pos (:panning-pos db))}))
+               :start-canvas-offset pos
+               :initial-canvas-offset (:canvas-offset db))}))
 
 (re-frame/reg-event-fx
  ::pan
  (fn [{:keys [db]} [_ mouse-pos]]
-   (let [delta-pos (merge-with - mouse-pos (:start-panning-pos db))
-         new-panning-pos (merge-with + (:initial-panning-pos db) delta-pos)]
-     {:db (assoc db :panning-pos new-panning-pos)
+   (let [delta-pos (merge-with - mouse-pos (:start-canvas-offset db))
+         new-canvas-offset (merge-with + (:initial-canvas-offset db) delta-pos)]
+     {:db (assoc db :canvas-offset new-canvas-offset)
       :fx [[:clear-frame]
            [:draw-frame (get-current-frame db)]
            [:hide-pixels-grid]
@@ -176,8 +176,8 @@
  ::stop-panning
  (fn [{:keys [db]} [_]]
    {:db (assoc db
-               :start-panning-pos nil
-               :initial-panning-pos nil)}))
+               :start-canvas-offset nil
+               :initial-canvas-offset nil)}))
 
 (re-frame/reg-event-fx
  ::handle-mouse-event
@@ -275,14 +275,14 @@
          canvas (. js/document (getElementById "grid"))
          ctx (. canvas (getContext "2d"))
 
-         panning-pos (:panning-pos db)
+         canvas-offset (:canvas-offset db)
          frame-size (-> db get-current-frame frame/get-size)
          scale (:scale db)
          canvas-size {:width (* scale (:width frame-size))
                       :height (* scale (:height frame-size))}]
      (.. ctx save)
      (set! (. ctx -strokeStyle) "blue") ;;todo: не видно на голубом
-     (.. ctx (translate (:x panning-pos) (:y panning-pos)))
+     (.. ctx (translate (:x canvas-offset) (:y canvas-offset)))
      (dotimes [y (:height frame-size)]
        (doto ctx
          (.beginPath)

@@ -42,8 +42,8 @@
          :secondary-color "red"
          :selection-manager {}
          :scale scale
-         :panning-pos {:x (- canvas-center (/ (* (:width frame-size) scale) 2))
-                       :y (- canvas-center (/ (* (:height frame-size) scale) 2))}
+         :canvas-offset {:x (- canvas-center (/ (* (:width frame-size) scale) 2))
+                         :y (- canvas-center (/ (* (:height frame-size) scale) 2))}
          :canvas-size canvas-size
          :onion-skin (onion-skin/init)
          :history (history/init {:sprite sprite})
