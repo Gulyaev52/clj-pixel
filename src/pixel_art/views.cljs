@@ -417,22 +417,26 @@
                                  (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)])))))}
       [:canvas {:id "tutorial"
                 :style {:position "relative"
-                        :zIndex 1}}]
+                        :zIndex 1
+                        :imageRendering "pixelated"}}]
       [:canvas {:id "onion-skin"
                 :style {:position :absolute
                         :left 0
                         :top 0
+                        :imageRendering "pixelated"
                         :zIndex (if (= (:position onion-skin) :front)
                                   4 0)}}] ;; todo: подумать тут
       [:canvas {:id "preview"
                 :style {:position :absolute
                         :left 0
                         :top 0
+                        :imageRendering "pixelated"
                         :zIndex 3}}]
       [:canvas {:id "grid"
                 :style {:position :absolute
                         :left 0
                         :top 0
+                        :imageRendering "pixelated"
                         :zIndex 10}}]]]))
 
 (defn canvases-section []

@@ -258,9 +258,11 @@
     (. js/document (getElementById "preview"))
     @re-frame.db/app-db
     (fn [{:keys [ctx]}]
-      (doseq [[pos color] changes]
-        (set! (. ctx -fillStyle) (or color "white"))
-        (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))
+      (let [current-frame (get-current-frame @re-frame.db/app-db)]
+        (doseq [[pos color] changes]
+          (when (geometry/valid-point? pos (:size current-frame))
+            (set! (. ctx -fillStyle) (or color "white"))
+            (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))))
 
 (re-frame/reg-fx
  :hide-pixels-grid
