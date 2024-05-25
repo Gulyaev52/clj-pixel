@@ -23,9 +23,17 @@
                    (frame/set-pixels
                     {{:x 0 :y 0} "black"
                      {:x 0 :y 1} frame/transparent-color
-                     {:x 1 :y 1} "black"}))
+                     {:x 1 :y 1} "black"
+                     {:x 3 :y 3} "black"
+                     {:x 3 :y 4} "black"
+                     {:x 4 :y 3} "black"
+                     {:x 4 :y 4} "black"}))
         sprite (->> (sprite/create {:width 8 :height 8})
-                    (sprite/add-frame frame))]
+                    (sprite/add-frame frame))
+        canvas-size {:width 700 :height 700}
+        canvas-center (/ (:width canvas-size) 2)
+        scale 40
+        frame-size (frame/get-size frame)]
     (-> {:size size
          :sprite sprite
          :tool (tool/init :pen)
@@ -33,7 +41,10 @@
          :primary-color "black"
          :secondary-color "red"
          :selection-manager {}
-         :scale 40
+         :scale scale
+         :panning-pos {:x (- canvas-center (/ (* (:width frame-size) scale) 2))
+                       :y (- canvas-center (/ (* (:height frame-size) scale) 2))}
+         :canvas-size canvas-size
          :onion-skin (onion-skin/init)
          :history (history/init {:sprite sprite})
          :sprite-preview (preview/init)

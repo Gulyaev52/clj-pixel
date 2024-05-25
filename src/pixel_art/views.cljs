@@ -14,17 +14,24 @@
             [sc.api]))
 
 (def !last-mouse-pos (atom nil))
-(def !mouse-down (atom false))
 
-(defn is-right-button? [e]
+(defn get-offset-pos [e]
+  (if (. e -nativeEvent)
+    {:x (.. e -nativeEvent -offsetX)
+     :y (.. e -nativeEvent -offsetY)}
+    {:x (.. e -offsetX)
+     :y (.. e -offsetY)}))
+
+(defn is-right-button? [e] ;; todo: -which уже не поддерживается
   (or (= (. e -button) 2) (= (. e -which) 3)))
 
-(defn canvas-pos->frame-pos [event scale canvas]
-  (let [rect (. canvas getBoundingClientRect)]
-    {:x (. js/Math (floor (/ (- (. event -clientX) (. rect -left))
-                             scale)))
-     :y (. js/Math (floor (/ (- (. event -clientY) (. rect -top))
-                             scale)))}))
+(defn is-middle-button? [e]
+  (= (. e -button) 1))
+
+(defn canvas-pos->frame-pos [event scale panning-pos]
+  (let [offset-pos (get-offset-pos event)]
+    {:x (. js/Math (floor (/ (- (:x offset-pos) (:x panning-pos)) scale)))
+     :y (. js/Math (floor (/ (- (:y offset-pos) (:y panning-pos)) scale)))}))
 
 (defn slider [{:keys [value label min max step onChange]}]
   ;; todo: labels
@@ -194,7 +201,6 @@
                             ((:onCancel color-picker-props))
                             (reset! !opened false))}]
           [:div {:style {:position "absolute" :zIndex 1 :bottom "calc(100% + 5px)"}}
-           (println (:value color-picker-props))
            [color-picker (-> color-picker-props
                              (assoc :onCancel (fn []
                                                 ((:onCancel color-picker-props))
@@ -342,46 +348,70 @@
                         {:value :behind :label "behind sprite"}]
               :onChange (fn [v] (re-frame/dispatch [::onion-skin/set-position v]))}]]))
 
-(defn canvases-section []
-  (let [scale @(re-frame/subscribe [::subs/scale])
-        onion-skin @(re-frame/subscribe [::subs/onion-skin])]
+(defn canvases-section-component []
+  (let [ref (react/useRef)
+        scale @(re-frame/subscribe [::subs/scale])
+        _ (react/useEffect (fn []
+                             (let [handler (fn [e]
+                                             (. e preventDefault) ;; preventDefault doesn't work when bind onWheel event on tag
+                                             (. e stopPropagation)
+                                             (re-frame/dispatch [::events/zoom
+                                                                 (if (< (. e -deltaY) 0) 2 (/ 1 2))
+                                                                 (get-offset-pos e)]))]
+                               (.. ref -current (addEventListener "wheel" handler))
+                               (fn []
+                                 (.. ref -current (removeEventListener "wheel" handler)))))
+                           (array ref scale))
+        onion-skin @(re-frame/subscribe [::subs/onion-skin])
+        panning @(re-frame/subscribe [::subs/panning])
+        panning-pos @(re-frame/subscribe [::subs/panning-pos])
+        user-is-drawing @(re-frame/subscribe [::subs/user-is-drawing])]
     [:div {:style {:display :flex :justify-content :center :align-items "center"}}
      [:div {:style {:position "relative"
                     :border "1px solid black"}
+            :ref ref
             :onContextMenu (fn [event]
                              (. event preventDefault))
             :onMouseDown (fn [event]
                            (. event preventDefault)
                            (. event stopPropagation)
-                           (let [elem (. js/document (getElementById "tutorial"))
-                                 right-button (is-right-button? event)
+                           (if (is-middle-button? event)
+                             (do
+                               (re-frame/dispatch [::events/start-panning (get-offset-pos event)])
+                               (let [mouse-move (fn [event]
+                                                  (re-frame/dispatch [::events/pan (get-offset-pos event)]))]
+                                 (.. js/document (addEventListener "mousemove" mouse-move))
+                                 (.. js/document (addEventListener "mouseup"
+                                                                   (fn []
+                                                                     (re-frame/dispatch [::events/stop-panning])
+                                                                     (.. js/document (removeEventListener "mousemove" mouse-move)))
+                                                                   #js {"once" true}))))
+                             (let [right-button (is-right-button? event)
 
-                                 mouse-pos (canvas-pos->frame-pos event scale elem)
+                                   mouse-pos (canvas-pos->frame-pos event scale panning-pos)
 
-                                 mouse-move (fn [event]
-                                              (let [mouse-pos (canvas-pos->frame-pos event scale elem)]
-                                                (when (not= mouse-pos @!last-mouse-pos)
-                                                  (reset! !last-mouse-pos mouse-pos)
-                                                  (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos right-button]))))
+                                   mouse-move (fn [event]
+                                                (let [mouse-pos (canvas-pos->frame-pos event scale panning-pos)]
+                                                  (when (not= mouse-pos @!last-mouse-pos)
+                                                    (reset! !last-mouse-pos mouse-pos)
+                                                    (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos right-button]))))
 
-                                 mouse-up (fn mouse-up [event]
-                                            (let [mouse-pos (canvas-pos->frame-pos event scale elem)]
-                                              (reset! !last-mouse-pos mouse-pos)
-                                              (reset! !mouse-down false)
-                                              (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos right-button])
-                                              (.. js/document (removeEventListener "mousemove" mouse-move))
-                                              (.. js/document (removeEventListener "mouseup" mouse-up))))]
-                             (re-frame/dispatch [::events/handle-mouse-event :mouse-down mouse-pos right-button])
-                             (reset! !mouse-down true)
-                             (.. js/document (addEventListener "mousemove" mouse-move))
-                             (.. js/document (addEventListener "mouseup" mouse-up))))
+                                   mouse-up (fn mouse-up [event]
+                                              (let [mouse-pos (canvas-pos->frame-pos event scale panning-pos)]
+                                                (reset! !last-mouse-pos mouse-pos)
+                                                (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos right-button])
+                                                (.. js/document (removeEventListener "mousemove" mouse-move))
+                                                (.. js/document (removeEventListener "mouseup" mouse-up))))]
+                               (re-frame/dispatch [::events/handle-mouse-event :mouse-down mouse-pos right-button])
+                               (.. js/document (addEventListener "mousemove" mouse-move))
+                               (.. js/document (addEventListener "mouseup" mouse-up)))))
             :onMouseLeave (fn [event]
-                            (when-not @!mouse-down
-                              (let [mouse-pos (canvas-pos->frame-pos event scale (. js/document (getElementById "tutorial")))]
+                            (when-not (or user-is-drawing panning)
+                              (let [mouse-pos (canvas-pos->frame-pos event scale panning-pos)]
                                 (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)]))))
             :onMouseMove (fn [event]
-                           (when-not @!mouse-down
-                             (let [mouse-pos (canvas-pos->frame-pos event scale (. js/document (getElementById "tutorial")))]
+                           (when-not (or user-is-drawing panning)
+                             (let [mouse-pos (canvas-pos->frame-pos event scale panning-pos)]
                                (when (not= mouse-pos @!last-mouse-pos)
                                  (reset! !last-mouse-pos mouse-pos)
                                  (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)])))))}
@@ -405,13 +435,18 @@
                         :top 0
                         :zIndex 10}}]]]))
 
+(defn canvases-section []
+  [:f> canvases-section-component])
+
 (defn main-panel []
   (let [tool @(re-frame/subscribe [::subs/tool])
         pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])
         primary-color @(re-frame/subscribe [::subs/primary-color])
-        secondary-color @(re-frame/subscribe [::subs/secondary-color])]
+        secondary-color @(re-frame/subscribe [::subs/secondary-color])
+        scale @(re-frame/subscribe [::subs/scale])]
     [:div {:style {:display :grid :grid-template-columns "490px 1fr"}}
      [:div {:style {:display :flex :flex-direction :column :gap "10px"}}
+      [:div (str "scale=" scale)]
       [options-toolbar (:type tool)]
       [:div {:style {:display :flex :gap "8px"}}
        (select {:value (:type tool)

@@ -71,3 +71,17 @@
  ::palettes
  (fn [db]
    (:palettes db)))
+
+(re-frame/reg-sub
+ ::panning
+ (fn [db]
+   (some? (:start-panning-pos db))))
+
+(re-frame/reg-sub
+ ::panning-pos
+ (fn [db]
+   (:panning-pos db)))
+
+(re-frame/reg-sub
+ ::user-is-drawing
+ (fn [db] (:user-is-drawing db)))

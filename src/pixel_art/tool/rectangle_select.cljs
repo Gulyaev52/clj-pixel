@@ -6,7 +6,8 @@
             [pixel-art.tool.utils :refer [commit-changes-and-init-tool get-current-frame]]
             [pixel-art.utils.geometry :as geometry]
             [re-frame.core :as re-frame]
-            [re-frame.db :as db]))
+            [re-frame.db :as db]
+            [pixel-art.canvas :as canvas]))
 
 ;; удалять хоткеи; нужно помнить о состояния превью; init
 ;; todo: используем так как из selection-image удаляются прозр точки(не работает днд) и если проверять вхож
@@ -193,10 +194,10 @@
 (re-frame/reg-fx
  :highlight-selection
  (fn [selection]
-   (let [db @re-frame.db/app-db
-         canvas (. js/document (getElementById "preview"))
-         ctx (. canvas (getContext "2d"))
-         scale (:scale db)]
-     (doseq [[pos color] selection]
-       (set! (. ctx -fillStyle) (get-highlight-color color))
-       (. ctx (fillRect (* (:x pos) scale) (* (:y pos) scale) scale scale))))))
+   (canvas/draw-on-zoomed-canvas
+    (. js/document (getElementById "preview"))
+    @re-frame.db/app-db
+    (fn [{:keys [ctx]}]
+      (doseq [[pos color] selection]
+        (set! (. ctx -fillStyle) (get-highlight-color color))
+        (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))

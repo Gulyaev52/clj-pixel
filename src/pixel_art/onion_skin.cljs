@@ -73,19 +73,19 @@
 (re-frame/reg-fx
  :draw-onion-skin
  (fn [{:keys [sprite opacity]}]
-   (let [db @db/app-db
-         onion-frames-idx (get-onion-skin-frames-idx sprite (-> db :onion-skin :frames-count))
-         frames (map (fn [idx] (nth (:frames sprite) idx)) onion-frames-idx)
-
-         canvas (. js/document (getElementById "onion-skin"))
-         ctx (. canvas (getContext "2d"))
-         scale (:scale db)]
-     (. ctx (clearRect 0 0 (. canvas -width) (. canvas -height)))
-     (.save ctx)
-     (set! (.-globalAlpha ctx) opacity)
-     (doseq [frame frames]
-       (canvas/draw-frame frame scale canvas))
-     (.restore ctx))))
+   (canvas/draw-on-zoomed-canvas
+    (. js/document (getElementById "onion-skin"))
+    @db/app-db
+    (fn [{:keys [ctx canvas]}]
+      (let [db @db/app-db
+            onion-frames-idx (get-onion-skin-frames-idx sprite (-> db :onion-skin :frames-count))
+            frames (map (fn [idx] (nth (:frames sprite) idx)) onion-frames-idx)]
+        (. ctx (clearRect 0 0 (. canvas -width) (. canvas -height)))
+        (.save ctx)
+        (set! (.-globalAlpha ctx) opacity)
+        (doseq [frame frames]
+          (canvas/draw-frame frame 1 canvas))
+        (.restore ctx))))))
 
 (re-frame/reg-fx
  :hide-onion-skin
