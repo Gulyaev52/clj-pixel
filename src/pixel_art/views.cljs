@@ -22,6 +22,10 @@
     {:x (.. e -offsetX)
      :y (.. e -offsetY)}))
 
+(defn get-mouse-client-pos [e]
+  {:x (. e -clientX)
+   :y (. e -clientY)})
+
 (defn is-right-button? [e] ;; todo: -which уже не поддерживается
   (or (= (. e -button) 2) (= (. e -which) 3)))
 
@@ -29,9 +33,14 @@
   (= (. e -button) 1))
 
 (defn canvas-pos->frame-pos [event scale canvas-offset]
-  (let [mouse-offset-pos (get-mouse-offset-pos event)]
-    {:x (. js/Math (floor (/ (- (:x mouse-offset-pos) (:x canvas-offset)) scale)))
-     :y (. js/Math (floor (/ (- (:y mouse-offset-pos) (:y canvas-offset)) scale)))}))
+  (let [mouse-pos (get-mouse-client-pos event)
+        canvas-layers-rect (.. js/document
+                               (getElementById "canvas-layers")
+                               (getBoundingClientRect))]
+    {:x (. js/Math (floor (/ (- (:x mouse-pos)
+                                (. canvas-layers-rect -left)) scale)))
+     :y (. js/Math (floor (/ (- (:y mouse-pos)
+                                (. canvas-layers-rect -top)) scale)))}))
 
 (defn slider [{:keys [value label min max step onChange]}]
   ;; todo: labels
@@ -350,18 +359,31 @@
 
 (defn canvases-section-component []
   (let [ref (react/useRef)
+        viewport-ref (react/useRef)
         scale @(re-frame/subscribe [::subs/scale])
         _ (react/useEffect (fn []
                              (let [handler (fn [e]
+                                             (def e e)
+                                             (def viewport-ref viewport-ref)
                                              (. e preventDefault) ;; preventDefault doesn't work when bind onWheel event on tag
                                              (. e stopPropagation)
-                                             (re-frame/dispatch [::events/zoom
-                                                                 (if (< (. e -deltaY) 0) 2 (/ 1 2))
-                                                                 (get-mouse-offset-pos e)]))]
+                                             (let [viewport-rect (.. viewport-ref -current getBoundingClientRect)
+                                                   center-pos {:x (- (.. e -clientX) (.. viewport-rect -left))
+                                                               :y (- (.. e -clientY) (.. viewport-rect -top))}
+                                                   mouse-offset-pos {:x (+ (- (.. e -clientX) (.. viewport-rect -left))
+                                                                           (.. viewport-ref -current -scrollLeft))
+                                                                     :y (+ (- (.. e -clientY) (.. viewport-rect -top))
+                                                                           (.. viewport-ref -current -scrollTop))}]
+                                               (println "center-pos" center-pos)
+                                               (println "mouse-offset-pos" mouse-offset-pos)
+                                               (re-frame/dispatch [::events/zoom
+                                                                   (if (< (. e -deltaY) 0) 1.4 (/ 1 1.4))
+                                                                   center-pos
+                                                                   mouse-offset-pos])))]
                                (.. ref -current (addEventListener "wheel" handler))
                                (fn []
                                  (.. ref -current (removeEventListener "wheel" handler)))))
-                           (array ref scale))
+                           (array ref viewport-ref scale))
         onion-skin @(re-frame/subscribe [::subs/onion-skin])
         panning @(re-frame/subscribe [::subs/panning])
         canvas-offset @(re-frame/subscribe [::subs/canvas-offset])
@@ -370,6 +392,16 @@
      [:div {:style {:position "relative"
                     :border "1px solid black"}
             :ref ref
+            :onClick (fn [e]
+                       (let [viewport-rect (.. viewport-ref -current getBoundingClientRect)
+                             center-pos {:x (- (.. e -clientX) (.. viewport-rect -left))
+                                         :y (- (.. e -clientY) (.. viewport-rect -top))}
+                             mouse-offset-pos {:x (+ (- (.. e -clientX) (.. viewport-rect -left))
+                                                     (.. viewport-ref -current -scrollLeft))
+                                               :y (+ (- (.. e -clientY) (.. viewport-rect -top))
+                                                     (.. viewport-ref -current -scrollTop))}]
+                         (println "center-pos" center-pos)
+                         (println "mouse-offset-pos" mouse-offset-pos)))
             :onContextMenu (fn [event]
                              (. event preventDefault))
             :onMouseDown (fn [event]
@@ -377,9 +409,9 @@
                            (. event stopPropagation)
                            (if (is-middle-button? event)
                              (do
-                               (re-frame/dispatch [::events/start-panning (get-mouse-offset-pos event)])
+                               (re-frame/dispatch [::events/start-panning (get-mouse-client-pos event)])
                                (let [mouse-move (fn [event]
-                                                  (re-frame/dispatch [::events/pan (get-mouse-offset-pos event)]))]
+                                                  (re-frame/dispatch [::events/pan (get-mouse-client-pos event)]))]
                                  (.. js/document (addEventListener "mousemove" mouse-move))
                                  (.. js/document (addEventListener "mouseup"
                                                                    (fn []
@@ -391,13 +423,15 @@
                                    mouse-pos (canvas-pos->frame-pos event scale canvas-offset)
 
                                    mouse-move (fn [event]
-                                                (let [mouse-pos (canvas-pos->frame-pos event scale canvas-offset)]
+                                                (let [scale @(re-frame/subscribe [::subs/scale])
+                                                      mouse-pos (canvas-pos->frame-pos event scale canvas-offset)]
                                                   (when (not= mouse-pos @!last-mouse-pos)
                                                     (reset! !last-mouse-pos mouse-pos)
                                                     (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos right-button]))))
 
                                    mouse-up (fn mouse-up [event]
-                                              (let [mouse-pos (canvas-pos->frame-pos event scale canvas-offset)]
+                                              (let [scale @(re-frame/subscribe [::subs/scale])
+                                                    mouse-pos (canvas-pos->frame-pos event scale canvas-offset)]
                                                 (reset! !last-mouse-pos mouse-pos)
                                                 (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos right-button])
                                                 (.. js/document (removeEventListener "mousemove" mouse-move))
@@ -415,29 +449,39 @@
                                (when (not= mouse-pos @!last-mouse-pos)
                                  (reset! !last-mouse-pos mouse-pos)
                                  (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)])))))}
-      [:canvas {:id "tutorial"
-                :style {:position "relative"
-                        :zIndex 1
-                        :imageRendering "pixelated"}}]
-      [:canvas {:id "onion-skin"
-                :style {:position :absolute
-                        :left 0
-                        :top 0
-                        :imageRendering "pixelated"
-                        :zIndex (if (= (:position onion-skin) :front)
-                                  4 0)}}] ;; todo: подумать тут
-      [:canvas {:id "preview"
-                :style {:position :absolute
-                        :left 0
-                        :top 0
-                        :imageRendering "pixelated"
-                        :zIndex 3}}]
-      [:canvas {:id "grid"
-                :style {:position :absolute
-                        :left 0
-                        :top 0
-                        :imageRendering "pixelated"
-                        :zIndex 10}}]]]))
+      [:div {:id "viewport" :ref viewport-ref :style {:overflow "auto" :width "900px" :height "700px"}}
+       [:div {:id "drawing-canvas-container" :style {:position "relative"}}
+        [:div {:id "canvas-layers" :style {:position "relative" :left "50%" :top "50%" :transform "translate(-50%, -50%)"}}
+         [:canvas {:id "tutorial"
+                   :style {:position "relative"
+                           :zIndex 1
+                           :imageRendering "pixelated"
+                           :width "100%"
+                           :height "100%"}}]
+         [:canvas {:id "onion-skin"
+                   :style {:position :absolute
+                           :left 0
+                           :top 0
+                           :imageRendering "pixelated"
+                           :zIndex (if (= (:position onion-skin) :front)
+                                     4 0);; todo: подумать тут
+                           :width "100%"
+                           :height "100%"}}]
+         [:canvas {:id "preview"
+                   :style {:position :absolute
+                           :left 0
+                           :top 0
+                           :imageRendering "pixelated"
+                           :zIndex 3
+                           :width "100%"
+                           :height "100%"}}]
+         [:canvas {:id "grid"
+                   :style {:position :absolute
+                           :left 0
+                           :top 0
+                           :zIndex 10
+                           :width "100%"
+                           :height "100%"}}]]]]]]))
 
 (defn canvases-section []
   [:f> canvases-section-component])

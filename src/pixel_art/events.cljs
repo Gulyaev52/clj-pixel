@@ -21,6 +21,32 @@
             [sc.api]
             [pixel-art.palette :as palette]))
 
+(defn draw-pixels-grid []
+  (let [db @re-frame.db/app-db
+
+        canvas (. js/document (getElementById "grid"))
+        ctx (. canvas (getContext "2d"))
+
+        frame-size (-> db get-current-frame frame/get-size)
+        scale (:scale db)
+        canvas-size {:width (* scale (:width frame-size))
+                     :height (* scale (:height frame-size))}]
+    (.. ctx save)
+    (set! (. ctx -strokeStyle) "blue") ;;todo: не видно на голубом
+    (dotimes [y (:height frame-size)]
+      (doto ctx
+        (.beginPath)
+        (.moveTo 0 (* y scale))
+        (.lineTo (:width canvas-size) (* y scale))
+        (.stroke)))
+    (dotimes [x (:width frame-size)]
+      (doto ctx
+        (.beginPath)
+        (.moveTo (* x scale) 0)
+        (.lineTo (* x scale) (:height canvas-size))
+        (.stroke)))
+    (.. ctx restore)))
+
 (re-frame/reg-event-fx
  ::initialize-db
  [(re-frame/inject-cofx ::local-storage/get-item palette/local-storage-key)]
@@ -36,7 +62,8 @@
  (fn [{:keys [db]} _]
    {:fx [[:init-canvases]
          [:draw-frame (get-current-frame db)] ;; клэш с run-fx-on-changes
-         [:draw-pixels-grid]]}))
+         [:draw-pixels-grid]
+         [:zoom]]}))
 
 (re-frame/reg-global-interceptor
  (on-changes
@@ -136,24 +163,33 @@
 
 (re-frame/reg-event-fx
  ::zoom
- (fn [{:keys [db]} [_ delta center-pos]]
-   (let [prev-canvas-offset (:canvas-offset db)
-         new-canvas-offset {:x (- (:x center-pos)
-                                  (* (- (:x center-pos) (:x prev-canvas-offset)) delta))
-                            :y (- (:y center-pos)
-                                  (* (- (:y center-pos) (:y prev-canvas-offset)) delta))}]
+ (fn [{:keys [db]} [_ delta center-pos mouse-offset-pos]]
+   (let [new-scale (-> db :scale (* delta))
+         old-canvas-size (-> db (get-current-frame) frame/get-size (update-vals #(* % (:scale db))))
+         new-canvas-size (-> db (get-current-frame) frame/get-size (update-vals #(* % new-scale)))
+         canvas-size-diff (merge-with - new-canvas-size old-canvas-size)
+         drawing-container-size (:drawing-container-size db)
+         new-drawing-container-size (merge-with + drawing-container-size canvas-size-diff)
+         old-canvas-pos {:x (- (/ (:width drawing-container-size) 2)
+                               (/ (:width old-canvas-size) 2))
+                         :y (- (/ (:height drawing-container-size) 2)
+                               (/ (:height old-canvas-size) 2))}
+         new-canvas-pos {:x (- (/ (:width new-drawing-container-size) 2)
+                               (/ (:width new-canvas-size) 2))
+                         :y (- (/ (:height new-drawing-container-size) 2)
+                               (/ (:height new-canvas-size) 2))}
+         new-canvas-offset {:x (- (+ (* (- (:x mouse-offset-pos) (:x old-canvas-pos)) delta) (:x new-canvas-pos))
+                                  (:x center-pos))
+                            :y (- (+ (* (- (:y mouse-offset-pos) (:y old-canvas-pos)) delta) (:y new-canvas-pos))
+                                  (:y center-pos))}]
      {:db (-> db
               (update :scale #(* % delta))
-              (assoc :canvas-offset new-canvas-offset))
-      :fx [[:clear-frame]
-           [:draw-frame (get-current-frame db)]
-           [:hide-pixels-grid]
-           [:draw-pixels-grid]
-           [:hide-onion-skin]
-           [:draw-onion-skin {:sprite (:sprite db) :opacity (-> db :onion-skin :opacity)}]]})))
+              (assoc :canvas-offset new-canvas-offset)
+              (assoc :drawing-container-size new-drawing-container-size))
+      :fx [[:zoom]]})))
 
 (re-frame/reg-event-fx
- ::start-panning
+ ::start-panning ;; todo: реализовать
  (fn [{:keys [db]} [_ pos]]
    {:db (assoc db
                :start-canvas-offset pos
@@ -162,15 +198,10 @@
 (re-frame/reg-event-fx
  ::pan
  (fn [{:keys [db]} [_ mouse-pos]]
-   (let [delta-pos (merge-with - mouse-pos (:start-canvas-offset db))
+   (let [delta-pos (merge-with - (:start-canvas-offset db) mouse-pos)
          new-canvas-offset (merge-with + (:initial-canvas-offset db) delta-pos)]
      {:db (assoc db :canvas-offset new-canvas-offset)
-      :fx [[:clear-frame]
-           [:draw-frame (get-current-frame db)]
-           [:hide-pixels-grid]
-           [:draw-pixels-grid]
-           [:hide-onion-skin]
-           [:draw-onion-skin {:sprite (:sprite db) :opacity (-> db :onion-skin :opacity)}]]})))
+      :fx [[:zoom]]})))
 
 (re-frame/reg-event-fx
  ::stop-panning
@@ -219,32 +250,63 @@
  (fn []
    (let [preview-canvas (. js/document (getElementById "preview"))
          main-canvas (. js/document (getElementById "tutorial"))
-         grid-canvas (. js/document (getElementById "grid"))
          onion-skin-canvas (. js/document (getElementById "onion-skin"))
 
-         canvas-size (:canvas-size @re-frame.db/app-db)]
-     (set! (. preview-canvas -width) (:width canvas-size))
-     (set! (. preview-canvas -height) (:height canvas-size))
-     (set! (. main-canvas -width) (:width canvas-size))
-     (set! (. main-canvas -height) (:height canvas-size))
-     (set! (. grid-canvas -width) (:width canvas-size))
-     (set! (. grid-canvas -height) (:height canvas-size))
-     (set! (. onion-skin-canvas -width) (:width canvas-size))
-     (set! (. onion-skin-canvas -height) (:height canvas-size)))))
+         drawing-container-size (:drawing-container-size @re-frame.db/app-db)
+         frame-size (-> @re-frame.db/app-db get-current-frame frame/get-size)
+         scale (-> @re-frame.db/app-db :scale)
+         drawing-canvas-container (.. js/document (getElementById "drawing-canvas-container"))
+         canvas-layers (.. js/document (getElementById "canvas-layers"))]
+     (doseq [canvas [preview-canvas main-canvas onion-skin-canvas]]
+       (set! (. canvas -width) (:width frame-size))
+       (set! (. canvas -height) (:height frame-size)))
+     (set! (.. canvas-layers -style -width) (str (* (:width frame-size) scale) "px"))
+     (set! (.. canvas-layers -style -height) (str (* (:height frame-size) scale) "px"))
+
+     (let [grid-canvas (.. js/document (getElementById "grid"))]
+       (set! (.. grid-canvas -width) (* (:width frame-size) scale))
+       (set! (.. grid-canvas -height) (* (:height frame-size) scale)))
+
+     (set! (.. drawing-canvas-container -style -width) (str (:width drawing-container-size) "px"))
+     (set! (.. drawing-canvas-container -style -height) (str (:height drawing-container-size) "px")))))
+
+(re-frame/reg-fx
+ :zoom
+ (fn []
+   (let [canvas-layers (.. js/document (getElementById "canvas-layers"))
+         frame-size (-> @re-frame.db/app-db get-current-frame frame/get-size)
+         scale (-> @re-frame.db/app-db :scale)
+         new-frame-size {:width (* (:width frame-size) scale)
+                         :height (* (:height frame-size) scale)}]
+     (set! (.. canvas-layers -style -width) (str (:width new-frame-size) "px"))
+     (set! (.. canvas-layers -style -height) (str (:height new-frame-size) "px"))
+
+     (when (:pixels-grid-enabled @re-frame.db/app-db)
+       (let [grid-canvas (.. js/document (getElementById "grid"))]
+         (set! (.. grid-canvas -width) (:width new-frame-size))
+         (set! (.. grid-canvas -height) (:height new-frame-size))
+         (draw-pixels-grid)))
+
+     (let [drawing-canvas-container (.. js/document (getElementById "drawing-canvas-container"))
+           drawing-container-size (:drawing-container-size @re-frame.db/app-db)]
+       (set! (.. drawing-canvas-container -style -width) (str (:width drawing-container-size) "px"))
+       (set! (.. drawing-canvas-container -style -height) (str (:height drawing-container-size) "px")))
+
+     (let [viewport (.. js/document (getElementById "viewport"))
+           canvas-offset (:canvas-offset @re-frame.db/app-db)]
+       (set! (.. viewport -scrollTop) (:y canvas-offset))
+       (set! (.. viewport -scrollLeft) (:x canvas-offset))))))
 
 (re-frame/reg-fx
  :highlight-pixels
  (fn [poses]
-   (canvas/draw-on-zoomed-canvas
-    (. js/document (getElementById "preview"))
-    @re-frame.db/app-db
-    (fn [{:keys [ctx]}]
-      (let [current-frame (get-current-frame @re-frame.db/app-db)]
-        (doseq [pos poses]
-          (when (geometry/valid-point? pos (:size current-frame))
-            (set! (. ctx -fillStyle) (->> (frame/get-pixel pos current-frame)
-                                          get-highlight-color))
-            (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))))
+   (let [ctx (canvas/get-canvas-context "preview")
+         current-frame (get-current-frame @re-frame.db/app-db)]
+     (doseq [pos poses]
+       (when (geometry/valid-point? pos (:size current-frame))
+         (set! (. ctx -fillStyle) (->> (frame/get-pixel pos current-frame)
+                                       get-highlight-color))
+         (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))
 
 (re-frame/reg-fx
  :clear-preview
@@ -254,15 +316,12 @@
 (re-frame/reg-fx
  :draw-preview
  (fn [changes]
-   (canvas/draw-on-zoomed-canvas
-    (. js/document (getElementById "preview"))
-    @re-frame.db/app-db
-    (fn [{:keys [ctx]}]
-      (let [current-frame (get-current-frame @re-frame.db/app-db)]
-        (doseq [[pos color] changes]
-          (when (geometry/valid-point? pos (:size current-frame))
-            (set! (. ctx -fillStyle) (or color "white"))
-            (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))))
+   (let [ctx (canvas/get-canvas-context "preview")
+         current-frame (get-current-frame @re-frame.db/app-db)]
+     (doseq [[pos color] changes]
+       (when (geometry/valid-point? pos (:size current-frame))
+         (set! (. ctx -fillStyle) (or color "white"))
+         (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))
 
 (re-frame/reg-fx
  :hide-pixels-grid
@@ -271,33 +330,7 @@
 
 (re-frame/reg-fx
  :draw-pixels-grid
- (fn [_]
-   (let [db @re-frame.db/app-db
-
-         canvas (. js/document (getElementById "grid"))
-         ctx (. canvas (getContext "2d"))
-
-         canvas-offset (:canvas-offset db)
-         frame-size (-> db get-current-frame frame/get-size)
-         scale (:scale db)
-         canvas-size {:width (* scale (:width frame-size))
-                      :height (* scale (:height frame-size))}]
-     (.. ctx save)
-     (set! (. ctx -strokeStyle) "blue") ;;todo: не видно на голубом
-     (.. ctx (translate (:x canvas-offset) (:y canvas-offset)))
-     (dotimes [y (:height frame-size)]
-       (doto ctx
-         (.beginPath)
-         (.moveTo 0 (* y scale))
-         (.lineTo (:width canvas-size) (* y scale))
-         (.stroke)))
-     (dotimes [x (:width frame-size)]
-       (doto ctx
-         (.beginPath)
-         (.moveTo (* x scale) 0)
-         (.lineTo (* x scale) (:height canvas-size))
-         (.stroke)))
-     (.. ctx restore))))
+ draw-pixels-grid)
 
 ;; todo: rename
 (re-frame/reg-fx
@@ -309,26 +342,4 @@
 (re-frame/reg-fx
  :draw-frame
  (fn [frame]
-   (canvas/draw-on-zoomed-canvas
-    (. js/document (getElementById "tutorial"))
-    @re-frame.db/app-db
-    (fn [{:keys [canvas]}] (canvas/draw-frame frame 1 canvas)))))
-
-(comment
-  (defn scale-canvas [canvas scale]
-    (let [imageData (.. canvas
-                        (getContext "2d")
-                        (getImageData 0 0 (.. canvas -width) (.. canvas -height)))
-          new-canvas (.. js/document (createElement "canvas"))]
-      (set! (.. new-canvas -width) (.. imageData -width))
-      (set! (.. new-canvas -height) (.. imageData -height))
-      (.. new-canvas (getContext "2d") (putImageData imageData 0 0))
-
-      (.. canvas (getContext "2d") save)
-      (canvas/clear-canvas canvas)
-      (.. canvas (getContext "2d") (drawImage new-canvas
-                                              0
-                                              0
-                                              (* (.. canvas -width) scale)
-                                              (* (.. canvas -height) scale)))
-      (.. canvas (getContext "2d") restore))))
+   (canvas/draw-frame frame 1 (. js/document (getElementById "tutorial")))))

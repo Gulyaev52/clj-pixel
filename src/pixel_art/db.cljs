@@ -5,7 +5,8 @@
             [pixel-art.onion-skin :as onion-skin]
             [pixel-art.palette :as palette]
             [pixel-art.sprite-preview :as preview]
-            [pixel-art.tool.core :as tool]))
+            [pixel-art.tool.core :as tool]
+            [sc.api :as api]))
 
 (defn get-initial-options [m]
   (-> m
@@ -16,8 +17,8 @@
 (defn get-default-db [palette-local-storage-item]
   (let [size {:width 8 :height 8}
         frame (->> (frame/create size)
-                   (frame/set-pixels (->> (for [x (range 0 8)
-                                                y (range 0 8)]
+                   (frame/set-pixels (->> (for [x (range 0 (:width size))
+                                                y (range 0 (:height size))]
                                             [{:x x :y y} "green"])
                                           (into {})))
                    (frame/set-pixels
@@ -28,12 +29,12 @@
                      {:x 3 :y 4} "black"
                      {:x 4 :y 3} "black"
                      {:x 4 :y 4} "black"}))
-        sprite (->> (sprite/create {:width 8 :height 8})
+        sprite (->> (sprite/create size)
                     (sprite/add-frame frame))
-        canvas-size {:width 700 :height 700}
-        canvas-center (/ (:width canvas-size) 2)
-        scale 40
-        frame-size (frame/get-size frame)]
+        drawing-container-size {:width 1500 :height 1500}
+        viewport-size {:width 900 :height 700}
+        scale 80
+        canvas-size (update-vals size #(* % scale))]
     (-> {:size size
          :sprite sprite
          :tool (tool/init :pen)
@@ -42,9 +43,10 @@
          :secondary-color "red"
          :selection-manager {}
          :scale scale
-         :canvas-offset {:x (- canvas-center (/ (* (:width frame-size) scale) 2))
-                         :y (- canvas-center (/ (* (:height frame-size) scale) 2))}
-         :canvas-size canvas-size
+         :canvas-size drawing-container-size
+         :canvas-offset {:x 0
+                         :y 0}
+         :drawing-container-size drawing-container-size
          :onion-skin (onion-skin/init)
          :history (history/init {:sprite sprite})
          :sprite-preview (preview/init)

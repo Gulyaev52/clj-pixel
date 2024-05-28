@@ -6,7 +6,6 @@
             [pixel-art.tool.utils :refer [commit-changes-and-init-tool get-current-frame]]
             [pixel-art.utils.geometry :as geometry]
             [re-frame.core :as re-frame]
-            [re-frame.db :as db]
             [pixel-art.canvas :as canvas]))
 
 ;; удалять хоткеи; нужно помнить о состояния превью; init
@@ -194,10 +193,7 @@
 (re-frame/reg-fx
  :highlight-selection
  (fn [selection]
-   (canvas/draw-on-zoomed-canvas
-    (. js/document (getElementById "preview"))
-    @re-frame.db/app-db
-    (fn [{:keys [ctx]}]
-      (doseq [[pos color] selection]
-        (set! (. ctx -fillStyle) (get-highlight-color color))
-        (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))
+   (let [ctx (canvas/get-canvas-context "preview")]
+     (doseq [[pos color] selection]
+       (set! (. ctx -fillStyle) (get-highlight-color color))
+       (. ctx (fillRect (:x pos) (:y pos) 1 1))))))

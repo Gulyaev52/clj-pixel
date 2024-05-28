@@ -185,3 +185,5 @@ nil
 cljs꞉pixel-art.model.frame꞉> 
 #'pixel-art.model.frame/pos->idx
 cljs꞉pixel-art.model.frame꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (763 files, 2 compiled, 0 warnings, 0,65s)
