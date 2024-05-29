@@ -2,11 +2,13 @@
   (:require ["tinycolor2" :as tinycolor]
             [day8.re-frame.tracing :refer [fn-traced]]
             [pixel-art.canvas :as canvas]
-            [pixel-art.db :as db]
+            [pixel-art.db :as db :refer [max-scale]]
             [pixel-art.history :as history]
             [pixel-art.history.events :as history.events]
+            [pixel-art.local-storage :as local-storage]
             [pixel-art.model.frame :as frame]
             [pixel-art.model.sprite :as sprite]
+            [pixel-art.palette :as palette]
             [pixel-art.tool.core :as tool]
             [pixel-art.tool.rectangle-select :as rectangle-select]
             [pixel-art.tool.shape-select :as shape-select]
@@ -17,9 +19,7 @@
             [re-frame.core :as re-frame]
             [re-frame.db]
             [re-pressed.core :as rp]
-            [pixel-art.local-storage :as local-storage]
-            [sc.api]
-            [pixel-art.palette :as palette]))
+            [sc.api]))
 
 (defn draw-pixels-grid []
   (let [db @re-frame.db/app-db
@@ -32,7 +32,7 @@
         canvas-size {:width (* scale (:width frame-size))
                      :height (* scale (:height frame-size))}]
     (.. ctx save)
-    (set! (. ctx -strokeStyle) "blue") ;;todo: не видно на голубом
+    (set! (. ctx -strokeStyle) (str "rgba(0, 0, 255, " (min (/ scale max-scale) 1) "")) ;;todo: не видно на голубом
     (dotimes [y (:height frame-size)]
       (doto ctx
         (.beginPath)
