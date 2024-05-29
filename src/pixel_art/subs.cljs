@@ -85,3 +85,7 @@
 (re-frame/reg-sub
  ::user-is-drawing
  (fn [db] (:user-is-drawing db)))
+
+(re-frame/reg-sub
+ ::viewport-size
+ (fn [db] (:viewport-size db)))

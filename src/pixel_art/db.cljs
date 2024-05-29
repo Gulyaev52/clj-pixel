@@ -15,7 +15,7 @@
                          (into {})))))
 
 (defn get-default-db [palette-local-storage-item]
-  (let [size {:width 8 :height 8}
+  (let [size {:width 64 :height 64}
         frame (->> (frame/create size)
                    (frame/set-pixels (->> (for [x (range 0 (:width size))
                                                 y (range 0 (:height size))]
@@ -31,10 +31,10 @@
                      {:x 4 :y 4} "black"}))
         sprite (->> (sprite/create size)
                     (sprite/add-frame frame))
-        drawing-container-size {:width 1500 :height 1500}
         viewport-size {:width 900 :height 700}
         scale 80
-        canvas-size (update-vals size #(* % scale))]
+        canvas-size (update-vals size #(* % scale))
+        drawing-container-size (update-vals canvas-size #(+ % 1500))]
     (-> {:size size
          :sprite sprite
          :tool (tool/init :pen)
@@ -43,7 +43,8 @@
          :secondary-color "red"
          :selection-manager {}
          :scale scale
-         :canvas-size drawing-container-size
+         :canvas-size canvas-size
+         :viewport-size viewport-size
          :canvas-offset {:x 0
                          :y 0}
          :drawing-container-size drawing-container-size

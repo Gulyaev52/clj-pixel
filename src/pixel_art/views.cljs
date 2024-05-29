@@ -384,6 +384,7 @@
                                (fn []
                                  (.. ref -current (removeEventListener "wheel" handler)))))
                            (array ref viewport-ref scale))
+        viewport-size @(re-frame/subscribe [::subs/viewport-size])
         onion-skin @(re-frame/subscribe [::subs/onion-skin])
         panning @(re-frame/subscribe [::subs/panning])
         canvas-offset @(re-frame/subscribe [::subs/canvas-offset])
@@ -449,7 +450,7 @@
                                (when (not= mouse-pos @!last-mouse-pos)
                                  (reset! !last-mouse-pos mouse-pos)
                                  (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)])))))}
-      [:div {:id "viewport" :ref viewport-ref :style {:overflow "auto" :width "900px" :height "700px"}}
+      [:div {:id "viewport" :ref viewport-ref :style {:overflow "auto" :width (:width viewport-size) :height (:height viewport-size)}}
        [:div {:id "drawing-canvas-container" :style {:position "relative"}}
         [:div {:id "canvas-layers" :style {:position "relative" :left "50%" :top "50%" :transform "translate(-50%, -50%)"}}
          [:canvas {:id "tutorial"
