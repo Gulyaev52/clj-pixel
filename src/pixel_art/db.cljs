@@ -45,8 +45,8 @@
          :scale scale
          :canvas-size canvas-size
          :viewport-size viewport-size
-         :canvas-offset {:x 0
-                         :y 0}
+         :viewport-scroll {:x 0
+                           :y 0}
          :drawing-container-size drawing-container-size
          :onion-skin (onion-skin/init)
          :history (history/init {:sprite sprite})

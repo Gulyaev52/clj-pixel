@@ -178,37 +178,37 @@
                                (/ (:width new-canvas-size) 2))
                          :y (- (/ (:height new-drawing-container-size) 2)
                                (/ (:height new-canvas-size) 2))}
-         new-canvas-offset {:x (- (+ (* (- (:x mouse-offset-pos) (:x old-canvas-pos)) delta) (:x new-canvas-pos))
-                                  (:x center-pos))
-                            :y (- (+ (* (- (:y mouse-offset-pos) (:y old-canvas-pos)) delta) (:y new-canvas-pos))
-                                  (:y center-pos))}]
+         new-viewport-scroll {:x (- (+ (* (- (:x mouse-offset-pos) (:x old-canvas-pos)) delta) (:x new-canvas-pos))
+                                    (:x center-pos))
+                              :y (- (+ (* (- (:y mouse-offset-pos) (:y old-canvas-pos)) delta) (:y new-canvas-pos))
+                                    (:y center-pos))}]
      {:db (-> db
               (update :scale #(* % delta))
-              (assoc :canvas-offset new-canvas-offset)
+              (assoc :viewport-scroll new-viewport-scroll)
               (assoc :drawing-container-size new-drawing-container-size))
       :fx [[:zoom]]})))
 
 (re-frame/reg-event-fx
- ::start-panning ;; todo: реализовать
+ ::start-panning
  (fn [{:keys [db]} [_ pos]]
    {:db (assoc db
-               :start-canvas-offset pos
-               :initial-canvas-offset (:canvas-offset db))}))
+               :start-viewport-scroll pos
+               :initial-viewport-scroll (:viewport-scroll db))}))
 
 (re-frame/reg-event-fx
  ::pan
  (fn [{:keys [db]} [_ mouse-pos]]
-   (let [delta-pos (merge-with - (:start-canvas-offset db) mouse-pos)
-         new-canvas-offset (merge-with + (:initial-canvas-offset db) delta-pos)]
-     {:db (assoc db :canvas-offset new-canvas-offset)
+   (let [delta-pos (merge-with - (:start-viewport-scroll db) mouse-pos)
+         new-viewport-scroll (merge-with + (:initial-viewport-scroll db) delta-pos)]
+     {:db (assoc db :viewport-scroll new-viewport-scroll)
       :fx [[:zoom]]})))
 
 (re-frame/reg-event-fx
  ::stop-panning
  (fn [{:keys [db]} [_]]
    {:db (assoc db
-               :start-canvas-offset nil
-               :initial-canvas-offset nil)}))
+               :start-viewport-scroll nil
+               :initial-viewport-scroll nil)}))
 
 (re-frame/reg-event-fx
  ::handle-mouse-event
@@ -293,9 +293,9 @@
        (set! (.. drawing-canvas-container -style -height) (str (:height drawing-container-size) "px")))
 
      (let [viewport (.. js/document (getElementById "viewport"))
-           canvas-offset (:canvas-offset @re-frame.db/app-db)]
-       (set! (.. viewport -scrollTop) (:y canvas-offset))
-       (set! (.. viewport -scrollLeft) (:x canvas-offset))))))
+           viewport-scroll (:viewport-scroll @re-frame.db/app-db)]
+       (set! (.. viewport -scrollTop) (:y viewport-scroll))
+       (set! (.. viewport -scrollLeft) (:x viewport-scroll))))))
 
 (re-frame/reg-fx
  :highlight-pixels

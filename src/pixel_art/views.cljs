@@ -32,7 +32,7 @@
 (defn is-middle-button? [e]
   (= (. e -button) 1))
 
-(defn canvas-pos->frame-pos [event scale canvas-offset]
+(defn canvas-pos->frame-pos [event scale]
   (let [mouse-pos (get-mouse-client-pos event)
         canvas-layers-rect (.. js/document
                                (getElementById "canvas-layers")
@@ -363,8 +363,6 @@
         scale @(re-frame/subscribe [::subs/scale])
         _ (react/useEffect (fn []
                              (let [handler (fn [e]
-                                             (def e e)
-                                             (def viewport-ref viewport-ref)
                                              (. e preventDefault) ;; preventDefault doesn't work when bind onWheel event on tag
                                              (. e stopPropagation)
                                              (let [viewport-rect (.. viewport-ref -current getBoundingClientRect)
@@ -387,7 +385,6 @@
         viewport-size @(re-frame/subscribe [::subs/viewport-size])
         onion-skin @(re-frame/subscribe [::subs/onion-skin])
         panning @(re-frame/subscribe [::subs/panning])
-        canvas-offset @(re-frame/subscribe [::subs/canvas-offset])
         user-is-drawing @(re-frame/subscribe [::subs/user-is-drawing])]
     [:div {:style {:display :flex :justify-content :center :align-items "center"}}
      [:div {:style {:position "relative"
@@ -421,18 +418,18 @@
                                                                    #js {"once" true}))))
                              (let [right-button (is-right-button? event)
 
-                                   mouse-pos (canvas-pos->frame-pos event scale canvas-offset)
+                                   mouse-pos (canvas-pos->frame-pos event scale)
 
                                    mouse-move (fn [event]
                                                 (let [scale @(re-frame/subscribe [::subs/scale])
-                                                      mouse-pos (canvas-pos->frame-pos event scale canvas-offset)]
+                                                      mouse-pos (canvas-pos->frame-pos event scale)]
                                                   (when (not= mouse-pos @!last-mouse-pos)
                                                     (reset! !last-mouse-pos mouse-pos)
                                                     (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos right-button]))))
 
                                    mouse-up (fn mouse-up [event]
                                               (let [scale @(re-frame/subscribe [::subs/scale])
-                                                    mouse-pos (canvas-pos->frame-pos event scale canvas-offset)]
+                                                    mouse-pos (canvas-pos->frame-pos event scale)]
                                                 (reset! !last-mouse-pos mouse-pos)
                                                 (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos right-button])
                                                 (.. js/document (removeEventListener "mousemove" mouse-move))
@@ -442,11 +439,11 @@
                                (.. js/document (addEventListener "mouseup" mouse-up)))))
             :onMouseLeave (fn [event]
                             (when-not (or user-is-drawing panning)
-                              (let [mouse-pos (canvas-pos->frame-pos event scale canvas-offset)]
+                              (let [mouse-pos (canvas-pos->frame-pos event scale)]
                                 (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)]))))
             :onMouseMove (fn [event]
                            (when-not (or user-is-drawing panning)
-                             (let [mouse-pos (canvas-pos->frame-pos event scale canvas-offset)]
+                             (let [mouse-pos (canvas-pos->frame-pos event scale)]
                                (when (not= mouse-pos @!last-mouse-pos)
                                  (reset! !last-mouse-pos mouse-pos)
                                  (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)])))))}

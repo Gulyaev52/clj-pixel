@@ -75,12 +75,12 @@
 (re-frame/reg-sub
  ::panning
  (fn [db]
-   (some? (:start-canvas-offset db))))
+   (some? (:start-viewport-scroll db))))
 
 (re-frame/reg-sub
- ::canvas-offset
+ ::viewport-scroll
  (fn [db]
-   (:canvas-offset db)))
+   (:viewport-scroll db)))
 
 (re-frame/reg-sub
  ::user-is-drawing
