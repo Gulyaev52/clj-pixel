@@ -193,19 +193,19 @@
                 (-> (assoc db
                            :user-is-drawing true ;;todo: нужен ли если ли есть initial-mouse-down-pos 
                            :initial-mouse-down-pos (:pos event)
-                           :last-mouse-pos (:pos event)) ;; todo: удалить? пока нужно только в select'ах
+                           :mouse-pos (:pos event)) ;; todo: удалить? пока нужно только в select'ах
                     (tool/handle-mouse-event event))
 
                 :mouse-move
                 (-> (assoc db
                            :user-is-drawing (:user-is-drawing db)
-                           :last-mouse-pos (:pos event))
+                           :mouse-pos (:pos event))
                     (tool/handle-mouse-event event))
 
                 :mouse-up
                 (-> (assoc db
                            :user-is-drawing false
-                           :last-mouse-pos (:pos event))
+                           :mouse-pos (:pos event))
                     (tool/handle-mouse-event event)
                     (assoc-in [:db :initial-mouse-down-pos] nil))))))
 

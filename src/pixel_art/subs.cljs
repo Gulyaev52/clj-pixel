@@ -3,7 +3,7 @@
             [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub
- ::frames-size
+ ::sprite-size
  (fn [db]
    (-> db :sprite :size)))
 
@@ -78,14 +78,13 @@
    (some? (:start-viewport-scroll db))))
 
 (re-frame/reg-sub
- ::viewport-scroll
- (fn [db]
-   (:viewport-scroll db)))
-
-(re-frame/reg-sub
  ::user-is-drawing
  (fn [db] (:user-is-drawing db)))
 
 (re-frame/reg-sub
  ::viewport-size
  (fn [db] (:viewport-size db)))
+
+(re-frame/reg-sub
+ ::mouse-pos
+ (fn [db] (:mouse-pos db)))

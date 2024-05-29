@@ -5,8 +5,7 @@
             [pixel-art.onion-skin :as onion-skin]
             [pixel-art.palette :as palette]
             [pixel-art.sprite-preview :as preview]
-            [pixel-art.tool.core :as tool]
-            [sc.api :as api]))
+            [pixel-art.tool.core :as tool]))
 
 (def max-scale 80)
 
