@@ -21,32 +21,6 @@
             [re-pressed.core :as rp]
             [sc.api]))
 
-(defn draw-pixels-grid []
-  (let [db @re-frame.db/app-db
-
-        canvas (. js/document (getElementById "grid"))
-        ctx (. canvas (getContext "2d"))
-
-        frame-size (-> db get-current-frame frame/get-size)
-        scale (:scale db)
-        canvas-size {:width (* scale (:width frame-size))
-                     :height (* scale (:height frame-size))}]
-    (.. ctx save)
-    (set! (. ctx -strokeStyle) (str "rgba(0, 0, 255, " (min (/ scale max-scale) 1) "")) ;;todo: не видно на голубом
-    (dotimes [y (:height frame-size)]
-      (doto ctx
-        (.beginPath)
-        (.moveTo 0 (* y scale))
-        (.lineTo (:width canvas-size) (* y scale))
-        (.stroke)))
-    (dotimes [x (:width frame-size)]
-      (doto ctx
-        (.beginPath)
-        (.moveTo (* x scale) 0)
-        (.lineTo (* x scale) (:height canvas-size))
-        (.stroke)))
-    (.. ctx restore)))
-
 (re-frame/reg-event-fx
  ::initialize-db
  [(re-frame/inject-cofx ::local-storage/get-item palette/local-storage-key)]
@@ -183,7 +157,7 @@
                               :y (- (+ (* (- (:y mouse-offset-pos) (:y old-canvas-pos)) delta) (:y new-canvas-pos))
                                     (:y center-pos))}]
      {:db (-> db
-              (update :scale #(* % delta))
+              (assoc :scale new-scale)
               (assoc :viewport-scroll new-viewport-scroll)
               (assoc :drawing-container-size new-drawing-container-size))
       :fx [[:zoom]]})))
@@ -192,22 +166,22 @@
  ::start-panning
  (fn [{:keys [db]} [_ pos]]
    {:db (assoc db
-               :start-viewport-scroll pos
+               :start-panning-pos pos
                :initial-viewport-scroll (:viewport-scroll db))}))
 
 (re-frame/reg-event-fx
  ::pan
  (fn [{:keys [db]} [_ mouse-pos]]
-   (let [delta-pos (merge-with - (:start-viewport-scroll db) mouse-pos)
+   (let [delta-pos (merge-with - (:start-panning-pos db) mouse-pos)
          new-viewport-scroll (merge-with + (:initial-viewport-scroll db) delta-pos)]
      {:db (assoc db :viewport-scroll new-viewport-scroll)
-      :fx [[:zoom]]})))
+      :fx [[:pan]]})))
 
 (re-frame/reg-event-fx
  ::stop-panning
  (fn [{:keys [db]} [_]]
    {:db (assoc db
-               :start-viewport-scroll nil
+               :start-panning-pos nil
                :initial-viewport-scroll nil)}))
 
 (re-frame/reg-event-fx
@@ -270,6 +244,38 @@
      (set! (.. drawing-canvas-container -style -width) (str (:width drawing-container-size) "px"))
      (set! (.. drawing-canvas-container -style -height) (str (:height drawing-container-size) "px")))))
 
+(defn- update-viewport-scroll []
+  (let [viewport (.. js/document (getElementById "viewport"))
+        viewport-scroll (:viewport-scroll @re-frame.db/app-db)]
+    (set! (.. viewport -scrollTop) (:y viewport-scroll))
+    (set! (.. viewport -scrollLeft) (:x viewport-scroll))))
+
+(defn- draw-pixels-grid []
+  (let [db @re-frame.db/app-db
+
+        canvas (. js/document (getElementById "grid"))
+        ctx (. canvas (getContext "2d"))
+
+        frame-size (-> db get-current-frame frame/get-size)
+        scale (:scale db)
+        canvas-size {:width (* scale (:width frame-size))
+                     :height (* scale (:height frame-size))}]
+    (.. ctx save)
+    (set! (. ctx -strokeStyle) (str "rgba(0, 0, 255, " (min (/ scale max-scale) 1) "")) ;;todo: не видно на голубом
+    (dotimes [y (:height frame-size)]
+      (doto ctx
+        (.beginPath)
+        (.moveTo 0 (* y scale))
+        (.lineTo (:width canvas-size) (* y scale))
+        (.stroke)))
+    (dotimes [x (:width frame-size)]
+      (doto ctx
+        (.beginPath)
+        (.moveTo (* x scale) 0)
+        (.lineTo (* x scale) (:height canvas-size))
+        (.stroke)))
+    (.. ctx restore)))
+
 (re-frame/reg-fx
  :zoom
  (fn []
@@ -292,10 +298,12 @@
        (set! (.. drawing-canvas-container -style -width) (str (:width drawing-container-size) "px"))
        (set! (.. drawing-canvas-container -style -height) (str (:height drawing-container-size) "px")))
 
-     (let [viewport (.. js/document (getElementById "viewport"))
-           viewport-scroll (:viewport-scroll @re-frame.db/app-db)]
-       (set! (.. viewport -scrollTop) (:y viewport-scroll))
-       (set! (.. viewport -scrollLeft) (:x viewport-scroll))))))
+     (update-viewport-scroll))))
+
+(re-frame/reg-fx
+ :pan
+ (fn []
+   (update-viewport-scroll)))
 
 (re-frame/reg-fx
  :highlight-pixels
