@@ -139,8 +139,8 @@
  ::zoom
  (fn [{:keys [db]} [_ delta center-pos mouse-offset-pos]]
    (let [new-scale (-> db :scale (* delta))
-         old-canvas-size (-> db (get-current-frame) frame/get-size (update-vals #(* % (:scale db))))
-         new-canvas-size (-> db (get-current-frame) frame/get-size (update-vals #(* % new-scale)))
+         old-canvas-size (-> db :sprite sprite/get-size (update-vals #(* % (:scale db))))
+         new-canvas-size (-> db :sprite sprite/get-size (update-vals #(* % new-scale)))
          canvas-size-diff (merge-with - new-canvas-size old-canvas-size)
          drawing-container-size (:drawing-container-size db)
          new-drawing-container-size (merge-with + drawing-container-size canvas-size-diff)
@@ -227,19 +227,19 @@
          onion-skin-canvas (. js/document (getElementById "onion-skin"))
 
          drawing-container-size (:drawing-container-size @re-frame.db/app-db)
-         frame-size (-> @re-frame.db/app-db get-current-frame frame/get-size)
+         sprite-size (-> @re-frame.db/app-db :sprite sprite/get-size)
          scale (-> @re-frame.db/app-db :scale)
          drawing-canvas-container (.. js/document (getElementById "drawing-canvas-container"))
          canvas-layers (.. js/document (getElementById "canvas-layers"))]
      (doseq [canvas [preview-canvas main-canvas onion-skin-canvas]]
-       (set! (. canvas -width) (:width frame-size))
-       (set! (. canvas -height) (:height frame-size)))
-     (set! (.. canvas-layers -style -width) (str (* (:width frame-size) scale) "px"))
-     (set! (.. canvas-layers -style -height) (str (* (:height frame-size) scale) "px"))
+       (set! (. canvas -width) (:width sprite-size))
+       (set! (. canvas -height) (:height sprite-size)))
+     (set! (.. canvas-layers -style -width) (str (* (:width sprite-size) scale) "px"))
+     (set! (.. canvas-layers -style -height) (str (* (:height sprite-size) scale) "px"))
 
      (let [grid-canvas (.. js/document (getElementById "grid"))]
-       (set! (.. grid-canvas -width) (* (:width frame-size) scale))
-       (set! (.. grid-canvas -height) (* (:height frame-size) scale)))
+       (set! (.. grid-canvas -width) (* (:width sprite-size) scale))
+       (set! (.. grid-canvas -height) (* (:height sprite-size) scale)))
 
      (set! (.. drawing-canvas-container -style -width) (str (:width drawing-container-size) "px"))
      (set! (.. drawing-canvas-container -style -height) (str (:height drawing-container-size) "px")))))
@@ -256,19 +256,19 @@
         canvas (. js/document (getElementById "grid"))
         ctx (. canvas (getContext "2d"))
 
-        frame-size (-> db get-current-frame frame/get-size)
+        sprite-size (-> db :sprite sprite/get-size)
         scale (:scale db)
-        canvas-size {:width (* scale (:width frame-size))
-                     :height (* scale (:height frame-size))}]
+        canvas-size {:width (* scale (:width sprite-size))
+                     :height (* scale (:height sprite-size))}]
     (.. ctx save)
     (set! (. ctx -strokeStyle) (str "rgba(0, 0, 255, " (min (/ scale max-scale) 1) "")) ;;todo: не видно на голубом
-    (dotimes [y (:height frame-size)]
+    (dotimes [y (:height sprite-size)]
       (doto ctx
         (.beginPath)
         (.moveTo 0 (* y scale))
         (.lineTo (:width canvas-size) (* y scale))
         (.stroke)))
-    (dotimes [x (:width frame-size)]
+    (dotimes [x (:width sprite-size)]
       (doto ctx
         (.beginPath)
         (.moveTo (* x scale) 0)
@@ -280,17 +280,17 @@
  :zoom
  (fn []
    (let [canvas-layers (.. js/document (getElementById "canvas-layers"))
-         frame-size (-> @re-frame.db/app-db get-current-frame frame/get-size)
+         sprite-size (-> @re-frame.db/app-db :sprite sprite/get-size)
          scale (-> @re-frame.db/app-db :scale)
-         new-frame-size {:width (* (:width frame-size) scale)
-                         :height (* (:height frame-size) scale)}]
-     (set! (.. canvas-layers -style -width) (str (:width new-frame-size) "px"))
-     (set! (.. canvas-layers -style -height) (str (:height new-frame-size) "px"))
+         new-sprite-size {:width (* (:width sprite-size) scale)
+                          :height (* (:height sprite-size) scale)}]
+     (set! (.. canvas-layers -style -width) (str (:width new-sprite-size) "px"))
+     (set! (.. canvas-layers -style -height) (str (:height new-sprite-size) "px"))
 
      (when (:pixels-grid-enabled @re-frame.db/app-db)
        (let [grid-canvas (.. js/document (getElementById "grid"))]
-         (set! (.. grid-canvas -width) (:width new-frame-size))
-         (set! (.. grid-canvas -height) (:height new-frame-size))
+         (set! (.. grid-canvas -width) (:width new-sprite-size))
+         (set! (.. grid-canvas -height) (:height new-sprite-size))
          (draw-pixels-grid)))
 
      (let [drawing-canvas-container (.. js/document (getElementById "drawing-canvas-container"))

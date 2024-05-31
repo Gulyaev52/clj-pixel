@@ -13,6 +13,8 @@
 
 (defn resize [sprite])
 
+(defn get-size [sprite] (:size sprite))
+
 (defn add-frame [frame sprite]
   (-> sprite
       (update :frames #(conj % frame))
