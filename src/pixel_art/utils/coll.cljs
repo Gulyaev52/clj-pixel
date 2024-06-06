@@ -9,3 +9,7 @@
   (let [[l r] (split-at index coll)]
     (->> (concat l [elem] r)
          vec)))
+
+(defn swapv
+  [i j v]
+  (assoc v i (nth v j) j (nth v i)))

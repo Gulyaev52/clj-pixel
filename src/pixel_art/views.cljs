@@ -312,12 +312,6 @@
       [select {:value (:size sprite-preview)
                :options (map (fn [s] {:value s :label (name s)}) [:1x :2x :4x :custom])
                :onChange (fn [s] (re-frame/dispatch [::sprite-preview/change-size s]))}]]
-     [:div {:style {:display :flex :gap "4px"}}
-      "frame speed"
-      [select {:value (:frame-speed sprite-preview)
-               :options (map (fn [s] {:value s :label (str s " ms")})
-                             [25 50 75 100 125 150 200 250 300 350 400 450 500 1000 2500 5000])
-               :onChange (fn [s] (re-frame/dispatch [::sprite-preview/change-frame-speed s]))}]]
      [:button {:onClick (fn [] (re-frame/dispatch [::sprite-preview/open]))} "show preview"]]))
 
 (defn onion-skin-section []

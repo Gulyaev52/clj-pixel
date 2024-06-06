@@ -76,13 +76,12 @@
    (let [canvas (. js/document (getElementById "onion-skin"))
          ctx (. canvas (getContext "2d"))
          db @db/app-db
-         onion-frames-idx (get-onion-skin-frames-idx sprite (-> db :onion-skin :frames-count))
-         frames (map (fn [idx] (nth (:frames sprite) idx)) onion-frames-idx)]
+         onion-frames-idx (get-onion-skin-frames-idx sprite (-> db :onion-skin :frames-count))]
      (. ctx (clearRect 0 0 (. canvas -width) (. canvas -height)))
      (.save ctx)
      (set! (.-globalAlpha ctx) opacity)
-     (doseq [frame frames]
-       (canvas/draw-frame frame 1 canvas))
+     (doseq [frame-idx onion-frames-idx]
+       (canvas/draw-frame frame-idx sprite canvas))
      (.restore ctx))))
 
 (re-frame/reg-fx

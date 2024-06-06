@@ -6,14 +6,15 @@
             [pixel-art.history :as history]
             [pixel-art.history.events :as history.events]
             [pixel-art.local-storage :as local-storage]
-            [pixel-art.model.frame :as frame]
+            [pixel-art.model.cel :as cel]
+            [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.model.sprite :as sprite]
             [pixel-art.palette :as palette]
             [pixel-art.tool.core :as tool]
             [pixel-art.tool.rectangle-select :as rectangle-select]
             [pixel-art.tool.shape-select :as shape-select]
             [pixel-art.tool.utils :refer [commit-changes-and-init-tool
-                                          get-current-frame]]
+                                          get-current-cel]]
             [pixel-art.utils.geometry :as geometry]
             [pixel-art.utils.interceptor :refer [on-changes]]
             [re-frame.core :as re-frame]
@@ -33,46 +34,39 @@
 
 (re-frame/reg-event-fx
  ::initialize-canvas
- (fn [{:keys [db]} _]
+ (fn []
    {:fx [[:init-canvases]
-         [:draw-frame (get-current-frame db)] ;; клэш с run-fx-on-changes
+         [:draw-current-frame]
          [:draw-pixels-grid]
          [:zoom]]}))
 
 (re-frame/reg-global-interceptor
  (on-changes
-  :redraw-current-frame
-  get-current-frame
-  (fn [{:keys [db new]}]
+  :redraw-current-cel
+  get-current-cel
+  (fn [{:keys [db]}]
     {:db db
      :fx [[:clear-preview]
           [:clear-frame]
-          [:draw-frame new]]})))
+          [:draw-current-frame]]})))
 
-(defn- generate-frame-img [frame]
-  (let [canvas-size (:size frame)
+(defn- generate-frame-img [frame-idx sprite]
+  (let [canvas-size (sprite/get-size sprite)
         canvas-elem (.. js/document (createElement "canvas"))]
     (set! (. canvas-elem -width) (:width canvas-size))
     (set! (. canvas-elem -height) (:height canvas-size))
-    (canvas/draw-frame frame 1 canvas-elem)
+    (canvas/draw-frame frame-idx sprite canvas-elem)
     (. canvas-elem (toDataURL "image/png"))))
 
 (re-frame/reg-global-interceptor
  (on-changes
   :generate-frame-imgs ;; todo: явно менять или же если будут id у фреймов то будет ок?
   #(-> % :sprite)
-  (fn [{:keys [db old new]}]
-    (let [new-frame-imgs (->> (range 0 (count (:frames (or old new))))
-                              (filter (fn [idx]
-                                        (not (identical? (nth (:frames new) idx nil)
-                                                         (nth (:frames old) idx nil)))))
-                              (map (fn [idx]
-                                     [idx (when-let [frame (nth (:frames new) idx nil)]
-                                            (generate-frame-img frame))]))
-                              (into {}))]
-      {:db (update db :frame-imgs #(->> (merge % new-frame-imgs)
-                                        (remove (fn [[_ v]] (nil? v)))
-                                        (into {})))}))))
+  (fn [{:keys [db]}]
+    (let [frame-imgs (->> (-> db :sprite :frames)
+                          (map-indexed (fn [frame-idx _] [frame-idx (generate-frame-img frame-idx (:sprite db))]))
+                          (into {}))]
+      {:db (assoc db :frame-imgs frame-imgs)}))))
 
 (re-frame/reg-event-fx
  ::select-tool
@@ -99,33 +93,19 @@
 (re-frame/reg-event-fx
  ::add-frame
  (fn [{:keys [db]} _]
-   (let [sprite (:sprite db)
-         new-frame (frame/create (:size sprite))]
-     (-> db
-         (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                       (tool/init (-> db :tool :type)))
-         (update-in [:db :sprite] #(sprite/add-frame new-frame %))
-         (update-in [:db] history/save-sprite)))))
-
-(re-frame/reg-event-fx
- ::remove-frame
- (fn [{:keys [db]} [_ idx]]
-   (let [sprite (:sprite db)
-         new-sprite (sprite/remove-frame idx sprite)]
-     (-> db
-         (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                       (tool/init (-> db :tool :type)))
-         (assoc-in [:db :sprite] new-sprite)
-         (update-in [:db] history/save-sprite)))))
-
-(re-frame/reg-event-fx
- ::duplicate-frame
- (fn [{:keys [db]} [_ idx]]
    (-> db
        (commit-changes-and-init-tool (get-in db [:tool :state :changes])
                                      (tool/init (-> db :tool :type)))
-       (update-in [:db :sprite] #(sprite/duplicate-frame idx %))
+       (update-in [:db :sprite] sprite/add-frame)
        (update-in [:db] history/save-sprite))))
+
+(re-frame/reg-event-fx
+ ::remove-frame
+ (fn [{:keys [db]} [_ idx]]))
+
+(re-frame/reg-event-fx
+ ::duplicate-frame
+ (fn [{:keys [db]} [_ idx]]))
 
 (re-frame/reg-event-fx
  ::select-frame
@@ -208,16 +188,6 @@
                            :mouse-pos (:pos event))
                     (tool/handle-mouse-event event)
                     (assoc-in [:db :initial-mouse-down-pos] nil))))))
-
-(defn get-highlight-color [color]
-  (let [dark-color "rgba(0, 0, 0, 0.2)"
-        light-color "rgba(255, 255, 255, 0.2)"]
-    (if (= color frame/transparent-color)
-      dark-color
-      (let [luminance (.. (tinycolor color) toHsl -l)]
-        (if (> luminance 0.5)
-          dark-color
-          light-color)))))
 
 (re-frame/reg-fx
  :init-canvases
@@ -305,14 +275,25 @@
  (fn []
    (update-viewport-scroll)))
 
+(defn get-highlight-color [color]
+  (let [dark-color "rgba(0, 0, 0, 0.2)"
+        light-color "rgba(255, 255, 255, 0.2)"]
+    (if (= color transparent-color)
+      dark-color
+      (let [luminance (.. (tinycolor color) toHsl -l)]
+        (if (> luminance 0.5)
+          dark-color
+          light-color)))))
+
 (re-frame/reg-fx
  :highlight-pixels
  (fn [poses]
    (let [ctx (canvas/get-canvas-context "preview")
-         current-frame (get-current-frame @re-frame.db/app-db)]
+         size (sprite/get-size (:sprite @re-frame.db/app-db))
+         current-cel (get-current-cel @re-frame.db/app-db)]
      (doseq [pos poses]
-       (when (geometry/valid-point? pos (:size current-frame))
-         (set! (. ctx -fillStyle) (->> (frame/get-pixel pos current-frame)
+       (when (geometry/valid-point? pos size)
+         (set! (. ctx -fillStyle) (->> (cel/get-pixel pos current-cel)
                                        get-highlight-color))
          (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))
 
@@ -325,9 +306,9 @@
  :draw-preview
  (fn [changes]
    (let [ctx (canvas/get-canvas-context "preview")
-         current-frame (get-current-frame @re-frame.db/app-db)]
+         size (-> @re-frame.db/app-db :sprite sprite/get-size)]
      (doseq [[pos color] changes]
-       (when (geometry/valid-point? pos (:size current-frame))
+       (when (geometry/valid-point? pos size)
          (set! (. ctx -fillStyle) (or color "white"))
          (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))
 
@@ -348,6 +329,9 @@
 
 ;; todo: rename to current-frame
 (re-frame/reg-fx
- :draw-frame
- (fn [frame]
-   (canvas/draw-frame frame 1 (. js/document (getElementById "tutorial")))))
+ :draw-current-frame
+ (fn []
+   (let [{:keys [sprite]} @re-frame.db/app-db]
+     (canvas/draw-frame (:current-frame-idx sprite)
+                        sprite
+                        (. js/document (getElementById "tutorial"))))))

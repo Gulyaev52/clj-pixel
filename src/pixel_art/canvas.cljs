@@ -1,14 +1,20 @@
 (ns pixel-art.canvas
-  (:require [pixel-art.model.frame :as frame]))
+  (:require ["tinycolor2" :as tinycolor]
+            [pixel-art.model.cel :as cel]
+            [pixel-art.model.sprite :as sprite]))
 
-(defn draw-frame [frame scale canvas]
+(defn draw-frame [frame-idx sprite canvas]
   (let [ctx (. canvas (getContext "2d"))
-        frame-size (frame/get-size frame)]
-    (doseq [x (range 0 (:width frame-size))
-            y (range 0 (:height frame-size))]
-      (when-let [color (frame/get-pixel {:x x :y y} frame)]
-        (set! (. ctx -fillStyle) color)
-        (. ctx (fillRect (* x scale) (* y scale) scale scale))))))
+        size (sprite/get-size sprite)
+        cels (sprite/get-frame-cels frame-idx sprite)]
+    (doseq [cel (reverse cels)]
+      (doseq [x (range 0 (:width size))
+              y (range 0 (:height size))]
+        (when-let [color (cel/get-pixel {:x x :y y} cel)]
+          (set! (. ctx -fillStyle) (.. (tinycolor color)
+                                       (setAlpha (:opacity cel))
+                                       (toRgbString)))
+          (. ctx (fillRect x y 1 1)))))))
 
 (defn clear-canvas [canvas]
   (let [ctx (. canvas (getContext "2d"))]

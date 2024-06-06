@@ -1,14 +1,14 @@
 (ns pixel-art.tool.utils
-  (:require [pixel-art.model.frame :as frame]
-            [pixel-art.model.sprite :as sprite]
+  (:require [pixel-art.model.sprite :as sprite]
             [pixel-art.history :as history]
+            [pixel-art.model.cel :as cel]
             [sc.api]))
 
 (defn get-tool-options [db]
   (get (db :tools-options) (-> db :tool :type)))
 
-(defn get-current-frame [db]
-  (-> db :sprite sprite/get-current-frame))
+(defn get-current-cel [db]
+  (-> db :sprite sprite/get-current-cel))
 
 (defn get-active-color-type [right-button]
   (if right-button :secondary-color :primary-color))
@@ -21,7 +21,7 @@
         {:db (-> db
                  (update :sprite
                          (fn [s]
-                           (sprite/update-current-frame #(frame/set-pixels changes %) s)))
+                           (sprite/update-current-cel #(cel/set-pixels changes %) s)))
                  (history/save-sprite))}
         {:db db})
       (assoc-in [:db :tool] tool-init)

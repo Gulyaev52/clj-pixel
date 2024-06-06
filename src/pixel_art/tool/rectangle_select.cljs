@@ -1,12 +1,14 @@
 (ns pixel-art.tool.rectangle-select
   (:require ["tinycolor2" :as tinycolor]
             [clojure.set]
+            [pixel-art.canvas :as canvas]
             [pixel-art.events.event-collector]
-            [pixel-art.model.frame :as frame]
-            [pixel-art.tool.utils :refer [commit-changes-and-init-tool get-current-frame]]
+            [pixel-art.model.cel :as cel]
+            [pixel-art.model.color :refer [transparent-color]]
+            [pixel-art.tool.utils :refer [commit-changes-and-init-tool
+                                          get-current-cel]]
             [pixel-art.utils.geometry :as geometry]
-            [re-frame.core :as re-frame]
-            [pixel-art.canvas :as canvas]))
+            [re-frame.core :as re-frame]))
 
 ;; удалять хоткеи; нужно помнить о состояния превью; init
 ;; todo: используем так как из selection-image удаляются прозр точки(не работает днд) и если проверять вхож
@@ -43,7 +45,7 @@
 
 (defn remove-transparent-colors [selection-image]
   (->> selection-image
-       (filter (fn [[_ color]] (not= color frame/transparent-color)))
+       (filter (fn [[_ color]] (not= color transparent-color)))
        (into {})))
 
 (defn move-selection [tool initial-mouse-down-pos event]
@@ -51,7 +53,7 @@
         {:keys [initial-selection-image selection-image pasted?]} (:state tool)
 
         deleted-initial-selection (when (not pasted?)
-                                    (update-vals initial-selection-image (fn [_] frame/transparent-color)))
+                                    (update-vals initial-selection-image (fn [_] transparent-color)))
         moved-selection-image (-> selection-image
                                   (update-keys #(merge-with + % offset-pos)))
         changes (merge deleted-initial-selection
@@ -59,9 +61,9 @@
     {:changes changes ;; todo: а это точно нужно?
      :moved-selection-image moved-selection-image}))
 
-(defn- get-rectangle-selection-image [p1 p2 current-frame]
+(defn- get-rectangle-selection-image [p1 p2 current-cel]
   (->> (geometry/get-rectange-points p1 p2)
-       (map (fn [p] [p (frame/get-pixel p current-frame)]))
+       (map (fn [p] [p (cel/get-pixel p current-cel)]))
        (into {})))
 
 (defn commit-moved-selection [db]
@@ -79,7 +81,7 @@
          :fx [[:clear-preview]
               [:highlight-selection (get-rectangle-selection-image initial-mouse-down-pos
                                                                    (:pos event)
-                                                                   (get-current-frame db))]]}
+                                                                   (get-current-cel db))]]}
 
         (and (= (:type event) :mouse-move) (not user-is-drawing))
         {:db db
@@ -89,7 +91,7 @@
         (and (= :mouse-up (:type event)) (-> tool :state :user-is-making-selection))
         (let [selection-image (get-rectangle-selection-image initial-mouse-down-pos
                                                              (:pos event)
-                                                             (get-current-frame db))
+                                                             (get-current-cel db))
               tool (assoc tool :state {:mode :move-selection
                                        :initial-selection-image selection-image
                                        :selection-image selection-image
@@ -135,7 +137,7 @@
   (let [{:keys [initial-selection-image pasted?]} (-> db :tool :state)
         deleted-initial-selection (if pasted?
                                     {}
-                                    (update-vals initial-selection-image (fn [_] frame/transparent-color)))]
+                                    (update-vals initial-selection-image (fn [_] transparent-color)))]
     (commit-changes-and-init-tool db deleted-initial-selection (init))))
 
 (re-frame/reg-event-fx
@@ -183,7 +185,7 @@
 (defn- get-highlight-color [color]
   (let [dark-color "rgba(0, 0, 0, 0.2)"
         light-color "rgba(255, 255, 255, 0.2)"]
-    (if (= color frame/transparent-color)
+    (if (= color transparent-color)
       dark-color
       (let [luminance (.. (tinycolor color) toHsl -l)]
         (if (> luminance 0.5)

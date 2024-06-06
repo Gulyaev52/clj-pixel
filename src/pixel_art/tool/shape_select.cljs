@@ -1,10 +1,11 @@
 (ns pixel-art.tool.shape-select
-  (:require [pixel-art.model.frame :as frame]
+  (:require [pixel-art.model.cel :as cel]
+            [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.tool.rectangle-select :as rectangle-select :refer [copy-selection
                                                                           move-selection
                                                                           remove-transparent-colors]]
             [pixel-art.tool.utils :refer [commit-changes-and-init-tool
-                                          get-current-frame]]
+                                          get-current-cel]]
             [pixel-art.utils.geometry :as geometry]
             [re-frame.core :as re-frame]))
 
@@ -72,13 +73,13 @@
       :select
       (cond
         (= (:type event) :mouse-down)
-        (let [current-frame (get-current-frame db)
-              color-under-mouse (frame/get-pixel (:pos event) current-frame)
+        (let [current-cel (get-current-cel db)
+              color-under-mouse (cel/get-pixel (:pos event) current-cel)
               selection-points (flood-fill (:pos event)
-                                           (frame/get-size current-frame)
-                                           #(= (frame/get-pixel % current-frame) color-under-mouse))
+                                           (cel/get-size current-cel)
+                                           #(= (cel/get-pixel % current-cel) color-under-mouse))
               selection-image (->> selection-points
-                                   (map (fn [p] [p (frame/get-pixel p current-frame)]))
+                                   (map (fn [p] [p (cel/get-pixel p current-cel)]))
                                    (into {}))
               tool (assoc tool :state {:mode :move-selection
                                        :initial-selection-image selection-image
@@ -126,7 +127,7 @@
   (let [{:keys [initial-selection-image pasted?]} (-> db :tool :state)
         deleted-initial-selection (if pasted?
                                     {}
-                                    (update-vals initial-selection-image (fn [_] frame/transparent-color)))]
+                                    (update-vals initial-selection-image (fn [_] transparent-color)))]
     (commit-changes-and-init-tool db deleted-initial-selection (init))))
 
 (re-frame/reg-event-fx

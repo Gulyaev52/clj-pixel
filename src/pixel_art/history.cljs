@@ -1,5 +1,4 @@
-(ns pixel-art.history
-  (:require [pixel-art.model.sprite :as sprite]))
+(ns pixel-art.history)
 
 (def stack-max-size 200)
 
@@ -27,14 +26,7 @@
   (let [{:keys [history]} db
         {:keys [stack]} history
         changes (nth stack idx)]
-    (cond
-      (:sprite changes)
-      (assoc db :sprite (:sprite changes))
-
-      (:frame changes)
-      (update db :sprite #(->> %
-                               (sprite/select-frame (:current-frame-idx changes))
-                               (sprite/update-current-frame (fn [_] (:frame changes))))))))
+    (assoc db :sprite (:sprite changes))))
 
 (defn check-undo-available? [db]
   (> (get-in db [:history :current-idx]) 0))

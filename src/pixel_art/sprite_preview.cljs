@@ -3,7 +3,6 @@
 
 (defn init []
   {:size :default
-   :frame-speed 500
    :opened false
    :displayed-frame-idx 0})
 
@@ -12,18 +11,17 @@
  (fn [{:keys [db]} [_ size]]
    {:db (assoc-in db [:sprite-preview :size] size)}))
 
-(re-frame/reg-event-fx
- ::change-frame-speed
- (fn [{:keys [db]} [_ frame-speed]]
-   {:db (assoc-in db [:sprite-preview :frame-speed] frame-speed)}))
+(defn- dispatch-display-next-frame [idx db]
+  (let [duration (-> db :sprite :frames (nth idx) :duration)]
+    [:dispatch-later {:ms duration
+                      :dispatch [::display-next-frame]}]))
 
 (re-frame/reg-event-fx
  ::open
  (fn [{:keys [db]} _]
    {:db (assoc-in db [:sprite-preview :opened] true)
     :fx (when (> (count (:frame-imgs db)) 1)
-          [[:dispatch-later {:ms (-> db :sprite-preview :frame-speed)
-                             :dispatch [::display-next-frame]}]])}))
+          [(dispatch-display-next-frame 0 db)])}))
 
 (re-frame/reg-event-fx
  ::display-next-frame
@@ -33,8 +31,7 @@
        (let [next-idx (let [next-idx (inc displayed-frame-idx)]
                         (if (contains? (:frame-imgs db) next-idx) next-idx 0))]
          {:db (assoc-in db [:sprite-preview :displayed-frame-idx] next-idx)
-          :fx [[:dispatch-later {:ms (-> db :sprite-preview :frame-speed)
-                                 :dispatch [::display-next-frame]}]]})
+          :fx [(dispatch-display-next-frame next-idx db)]})
        {:db (assoc-in db [:sprite-preview :displayed-frame-idx] 0)}))))
 
 (re-frame/reg-event-fx
