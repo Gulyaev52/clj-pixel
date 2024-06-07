@@ -1,13 +1,13 @@
 (ns pixel-art.events
   (:require ["tinycolor2" :as tinycolor]
-            [day8.re-frame.tracing :refer [fn-traced]]
             [pixel-art.canvas :as canvas]
-            [pixel-art.db :as db :refer [max-scale]]
+            [pixel-art.db :as db :refer [initial-frame-duration max-scale]]
             [pixel-art.history :as history]
             [pixel-art.history.events :as history.events]
             [pixel-art.local-storage :as local-storage]
             [pixel-art.model.cel :as cel]
             [pixel-art.model.color :refer [transparent-color]]
+            [pixel-art.model.frame :as frame]
             [pixel-art.model.sprite :as sprite]
             [pixel-art.palette :as palette]
             [pixel-art.tool.core :as tool]
@@ -92,20 +92,31 @@
 
 (re-frame/reg-event-fx
  ::add-frame
- (fn [{:keys [db]} _]
-   (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
-       (update-in [:db :sprite] sprite/add-frame)
-       (update-in [:db] history/save-sprite))))
+ (fn [{:keys [db]}]
+   (let [new-frame (frame/create initial-frame-duration)]
+     (-> db
+         (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                       (tool/init (-> db :tool :type)))
+         (update-in [:db :sprite] #(sprite/add-frame new-frame %))
+         (update-in [:db] history/save-sprite)))))
 
 (re-frame/reg-event-fx
  ::remove-frame
- (fn [{:keys [db]} [_ idx]]))
+ (fn [{:keys [db]}]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] sprite/remove-frame)
+       (update-in [:db] history/save-sprite))))
 
 (re-frame/reg-event-fx
  ::duplicate-frame
- (fn [{:keys [db]} [_ idx]]))
+ (fn [{:keys [db]}]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] sprite/duplicate-frame)
+       (update-in [:db] history/save-sprite))))
 
 (re-frame/reg-event-fx
  ::select-frame
@@ -166,28 +177,28 @@
 
 (re-frame/reg-event-fx
  ::handle-mouse-event
- (fn-traced [{:keys [db]} [_ event-type mouse-pos right-button]]
-            (let [event {:type event-type :pos mouse-pos :right-button right-button}]
-              (case event-type
-                :mouse-down
-                (-> (assoc db
-                           :user-is-drawing true ;;todo: нужен ли если ли есть initial-mouse-down-pos 
-                           :initial-mouse-down-pos (:pos event)
-                           :mouse-pos (:pos event)) ;; todo: удалить? пока нужно только в select'ах
-                    (tool/handle-mouse-event event))
+ (fn [{:keys [db]} [_ event-type mouse-pos right-button]]
+   (let [event {:type event-type :pos mouse-pos :right-button right-button}]
+     (case event-type
+       :mouse-down
+       (-> (assoc db
+                  :user-is-drawing true ;;todo: нужен ли если ли есть initial-mouse-down-pos 
+                  :initial-mouse-down-pos (:pos event)
+                  :mouse-pos (:pos event)) ;; todo: удалить? пока нужно только в select'ах
+           (tool/handle-mouse-event event))
 
-                :mouse-move
-                (-> (assoc db
-                           :user-is-drawing (:user-is-drawing db)
-                           :mouse-pos (:pos event))
-                    (tool/handle-mouse-event event))
+       :mouse-move
+       (-> (assoc db
+                  :user-is-drawing (:user-is-drawing db)
+                  :mouse-pos (:pos event))
+           (tool/handle-mouse-event event))
 
-                :mouse-up
-                (-> (assoc db
-                           :user-is-drawing false
-                           :mouse-pos (:pos event))
-                    (tool/handle-mouse-event event)
-                    (assoc-in [:db :initial-mouse-down-pos] nil))))))
+       :mouse-up
+       (-> (assoc db
+                  :user-is-drawing false
+                  :mouse-pos (:pos event))
+           (tool/handle-mouse-event event)
+           (assoc-in [:db :initial-mouse-down-pos] nil))))))
 
 (re-frame/reg-fx
  :init-canvases

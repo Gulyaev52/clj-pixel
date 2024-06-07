@@ -6,7 +6,9 @@
             [pixel-art.onion-skin :as onion-skin]
             [pixel-art.palette :as palette]
             [pixel-art.sprite-preview :as preview]
-            [pixel-art.tool.core :as tool]))
+            [pixel-art.tool.core :as tool]
+            [pixel-art.model.layer :as layer]
+            [pixel-art.model.frame :as frame]))
 
 (def max-scale 80)
 
@@ -16,22 +18,29 @@
                          (map (fn [{:keys [field initial-value]}] [field initial-value]))
                          (into {})))))
 
+(defn get-layer-name [type layers-count]
+  (str (if (= type :group) "Group " "Layer ") (inc layers-count)))
+
+(def initial-frame-duration 100)
+
 (defn get-default-db [palette-local-storage-item]
   (let [sprite-size {:width 8 :height 8}
-        sprite (->> (sprite/create {:size sprite-size})
-                    (sprite/update-current-cel #(->> %
-                                                     (cel/set-pixels (->> (for [x (range 0 (:width sprite-size))
-                                                                                y (range 0 (:height sprite-size))]
-                                                                            [{:x x :y y} "green"])
-                                                                          (into {})))
-                                                     (cel/set-pixels
-                                                      {{:x 0 :y 0} "black"
-                                                       {:x 0 :y 1} transparent-color
-                                                       {:x 1 :y 1} "black"
-                                                       {:x 3 :y 3} "black"
-                                                       {:x 3 :y 4} "black"
-                                                       {:x 4 :y 3} "black"
-                                                       {:x 4 :y 4} "black"}))))
+        sprite (sprite/create {:size sprite-size
+                               :layer (layer/create (get-layer-name :single 0) nil)
+                               :frame (frame/create initial-frame-duration)
+                               :cel (->> (cel/create sprite-size)
+                                         (cel/set-pixels (->> (for [x (range 0 (:width sprite-size))
+                                                                    y (range 0 (:height sprite-size))]
+                                                                [{:x x :y y} "green"])
+                                                              (into {})))
+                                         (cel/set-pixels
+                                          {{:x 0 :y 0} "black"
+                                           {:x 0 :y 1} transparent-color
+                                           {:x 1 :y 1} "black"
+                                           {:x 3 :y 3} "black"
+                                           {:x 3 :y 4} "black"
+                                           {:x 4 :y 3} "black"
+                                           {:x 4 :y 4} "black"}))})
         viewport-size {:width 900 :height 700}
         scale max-scale
         canvas-size (update-vals sprite-size #(* % scale))

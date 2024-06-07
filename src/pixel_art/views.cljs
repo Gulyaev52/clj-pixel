@@ -100,7 +100,8 @@
       [:div {:style {:display :flex :gap "10px"}}
        (for [[idx] (map-indexed vector frames)]
          (let [frame-img (get frame-imgs idx)]
-           [:div {:onClick (fn [_] (re-frame/dispatch [::events/select-frame idx]))
+           [:div {:onClick (fn [e]
+                             (re-frame/dispatch [::events/select-frame idx]))
                   :style {:position "relative"
                           :width 96
                           :height 96
@@ -117,22 +118,28 @@
             [box {:left 0
                   :top 0
                   :background-color "gold"}
-             (fn [_])
+             (fn [e]
+               (. e stopPropagation))
              (inc idx)]
             [box {:right 0
                   :top 0
                   :background-color "rgba(100, 100, 100, 0.6)"}
-             (fn [_] (re-frame/dispatch [::events/remove-frame idx]))
+             (fn [e]
+               (. e stopPropagation)
+               (re-frame/dispatch [::events/remove-frame idx]))
              "DE"]
             [box {:right 0
                   :bottom 0
                   :background-color "rgba(100, 100, 100, 0.6)"}
-             (fn [_] (re-frame/dispatch [::events/duplicate-frame idx]))
+             (fn [e]
+               (. e stopPropagation)
+               (re-frame/dispatch [::events/duplicate-frame idx]))
              "DU"]
             [box {:left 0
                   :bottom 0
                   :background-color "rgba(100, 100, 100, 0.6)"}
-             (fn [_])
+             (fn [e]
+               (. e stopPropagation))
              "M"]]))
        [:button {:onClick (fn [_] (re-frame/dispatch [::events/add-frame]))} "new frame"]])))
 
@@ -375,8 +382,6 @@
                                                                            (.. viewport-ref -current -scrollLeft))
                                                                      :y (+ (- (.. e -clientY) (.. viewport-rect -top))
                                                                            (.. viewport-ref -current -scrollTop))}]
-                                               (println "center-pos" center-pos)
-                                               (println "mouse-offset-pos" mouse-offset-pos)
                                                (re-frame/dispatch [::events/zoom
                                                                    (if (< (. e -deltaY) 0) 1.4 (/ 1 1.4))
                                                                    center-pos
@@ -401,9 +406,7 @@
                               mouse-offset-pos {:x (+ (- (.. e -clientX) (.. viewport-rect -left))
                                                       (.. viewport-ref -current -scrollLeft))
                                                 :y (+ (- (.. e -clientY) (.. viewport-rect -top))
-                                                      (.. viewport-ref -current -scrollTop))}]
-                          (println "center-pos" center-pos)
-                          (println "mouse-offset-pos" mouse-offset-pos)))
+                                                      (.. viewport-ref -current -scrollTop))}]))
              :onContextMenu (fn [event]
                               (. event preventDefault))
              :onMouseDown (fn [event]
