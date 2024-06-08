@@ -13,7 +13,8 @@
             [reagent.dom :as rdom]
             [sc.api]
             [clojure.string :as string]
-            [pixel-art.model.cel :as cel]))
+            [pixel-art.model.cel :as cel]
+            [pixel-art.model.sprite :as sprite]))
 
 (def !last-mouse-pos (atom nil))
 
@@ -84,9 +85,10 @@
 
 (defn timeline-panel []
   (let [sprite @(re-frame/subscribe [::subs/sprite])
+        current-cel (sprite/get-current-cel sprite)
         {:keys [current-frame-idx current-layer-idx frames layers cels]} sprite
         cel-imgs @(re-frame/subscribe [::subs/cel-imgs])
-        cels-by-layers (transpose cels) ;; todo: мб так и хранить в спрайте
+        cels-by-layers (transpose cels) ;; todo: мб так и хранить в спрайте. плоский?
         ]
     [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
      [:div
@@ -97,7 +99,17 @@
       [:div {:style {:display :flex}} "layers:"
        [:button {:onClick (fn [] (re-frame/dispatch [::events/add-layer]))} "add"]
        [:button {:onClick (fn [] (re-frame/dispatch [::events/remove-layer]))} "remove"]
-       [:button {:onClick (fn [] (re-frame/dispatch [::events/duplicate-layer]))} "duplicate"]]]
+       [:button {:onClick (fn [] (re-frame/dispatch [::events/duplicate-layer]))} "duplicate"]
+       [:button {:onClick (fn [] (re-frame/dispatch [::events/merge-layer-with-below]))} "merge"]
+       [:button {:onClick (fn [] (re-frame/dispatch [::events/move-layer-up]))} "move up"]
+       [:button {:onClick (fn [] (re-frame/dispatch [::events/move-layer-down]))} "move down"]]]
+     [:div
+      [slider {:label "Cell opacity"
+               :min 0
+               :max 1
+               :value (:opacity current-cel)
+               :step 0.1
+               :onChange (fn [v] (re-frame/dispatch [::events/set-cel-opacity v]))}]]
      [:div {:style {:display :grid
                     :grid-template-rows "15px"
                     :grid-auto-rows "80px"
@@ -127,7 +139,13 @@
                                         "2px"
                                         "1px")
                         :align-items "center"
-                        :cursor "pointer"}} (:name layer)]
+                        :cursor "pointer"}}
+          [:div
+           [:button {:onClick (fn [e]
+                                (. e stopPropagation)
+                                (re-frame/dispatch [::events/toggle-layer-visibility layer-idx]))}
+            (if (:visibile? layer) "v0" "v-")]
+           [:div (:name layer)]]]
          (for [[frame-idx cel] (map-indexed vector (nth cels-by-layers layer-idx))]
            (let [pos {:frame-idx frame-idx
                       :layer-idx layer-idx}

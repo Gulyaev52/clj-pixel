@@ -31,7 +31,7 @@
                                :cel (->> (cel/create sprite-size)
                                          (cel/set-pixels (->> (for [x (range 0 (:width sprite-size))
                                                                     y (range 0 (:height sprite-size))]
-                                                                [{:x x :y y} "green"])
+                                                                [{:x x :y y} nil])
                                                               (into {})))
                                          (cel/set-pixels
                                           {{:x 0 :y 0} "black"

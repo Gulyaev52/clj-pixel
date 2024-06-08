@@ -49,8 +49,8 @@
 
 (re-frame/reg-global-interceptor
  (on-changes
-  :redraw-current-cel
-  get-current-cel
+  :redraw-current-cel ;; это также нужно и на изменения слоя. например прозрачности или видимости
+  #(-> % :sprite)
   (fn [{:keys [db]}]
     {:db db
      :fx [[:clear-preview]
@@ -175,6 +175,51 @@
        (update-in [:db :sprite] #(sprite/remove-layer (-> db :sprite :current-layer-idx)
                                                       %))
        (update-in [:db] history/save-sprite))))
+
+(re-frame/reg-event-fx
+ ::merge-layer-with-below
+ (fn [{:keys [db]}]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] sprite/merge-layer-with-below)
+       (update-in [:db] history/save-sprite))))
+
+(re-frame/reg-event-fx
+ ::move-layer-up
+ (fn [{:keys [db]}]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] #(sprite/move-layer-up (:current-layer-idx %) %))
+       (update-in [:db] history/save-sprite))))
+
+(re-frame/reg-event-fx
+ ::move-layer-down
+ (fn [{:keys [db]}]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] #(sprite/move-layer-down (:current-layer-idx %) %))
+       (update-in [:db] history/save-sprite))))
+
+(re-frame/reg-event-fx
+ ::toggle-layer-visibility
+ (fn [{:keys [db]} [_ idx]]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type))) ;; todo: нужно ли?
+       (update-in [:db :sprite] (fn [sprite]
+                                  (sprite/update-layer idx #(update % :visibile? not) sprite))))))
+
+(re-frame/reg-event-fx
+ ::set-cel-opacity
+ (fn [{:keys [db]} [_ opacity]]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type))) ;; todo: нужно ли?
+       (update-in [:db :sprite] (fn [sprite]
+                                  (sprite/update-current-cel #(assoc % :opacity opacity) sprite))))))
 
 (re-frame/reg-event-fx
  ::select-layer

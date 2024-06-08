@@ -16,6 +16,12 @@
 (defn get-frame-cels [frame-idx sprite]
   (nth (:cels sprite) frame-idx))
 
+(defn get-frame-cels-with-layers [frame-idx sprite]
+  (let [{:keys [layers]} sprite]
+    (->> (get-frame-cels frame-idx sprite)
+         (map-indexed (fn [idx cel]
+                        (assoc cel :layer (nth layers idx)))))))
+
 (defn get-size [sprite] (:size sprite))
 
 (defn get-current-cel [sprite]
@@ -52,7 +58,7 @@
       (update :cels (fn [cels] (map #(coll/removev idx %) cels)))
       (#(if (= idx (:current-layer-idx sprite))
           (assoc % :current-layer-idx (min idx (dec (count (:layers %)))))
-          sprite))))
+          %))))
 
 (defn duplicate-layer [sprite]
   (let [{:keys [current-layer-idx layers cels]} sprite
@@ -61,17 +67,17 @@
                (fn [frame-idx] (get-in [frame-idx current-layer-idx] cels))
                sprite)))
 
-(defn move-layer [from-idx to-idx sprite]
+(defn- move-layer [from-idx to-idx sprite]
   (-> sprite
       (update :layers #(coll/swapv from-idx to-idx %))
-      (update :cels (fn [cels] (map #(coll/swapv from-idx to-idx %) cels)))
+      (update :cels (fn [cels] (mapv #(coll/swapv from-idx to-idx %) cels)))
       (assoc :current-layer-idx to-idx)))
 
 (defn move-layer-up [idx sprite]
-  (move-layer idx (inc idx) sprite))
+  (move-layer idx (dec idx) sprite))
 
 (defn move-layer-down [idx sprite]
-  (move-layer idx (dec idx) sprite))
+  (move-layer idx (inc idx) sprite))
 
 (defn merge-layer-with-below [sprite]
   (if (and (< (:current-layer-idx sprite) (count (:layers sprite)))
@@ -79,11 +85,18 @@
     (let [{:keys [current-layer-idx]} sprite
           below-layer-idx (inc current-layer-idx)]
       (-> sprite
-          (update :cels #(for [cel-row %]
-                           (cel/merge-cels (nth cel-row below-layer-idx)
-                                           (nth cel-row current-layer-idx))))
+          (update :cels
+                  (fn [cels]
+                    (map (fn [cel-row]
+                           (update cel-row
+                                   current-layer-idx
+                                   #(cel/merge-cels (nth cel-row below-layer-idx) %)))
+                         cels)))
           (#(remove-layer below-layer-idx %))))
     sprite))
+
+(defn update-layer [idx f sprite]
+  (update-in sprite [:layers idx] f))
 
 (defn select-layer [idx sprite]
   (assoc sprite :current-layer-idx idx))

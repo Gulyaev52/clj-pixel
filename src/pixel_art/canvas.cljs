@@ -13,15 +13,16 @@
 (defn draw-frame [frame-idx sprite canvas]
   (let [ctx (. canvas (getContext "2d"))
         size (sprite/get-size sprite)
-        cels (sprite/get-frame-cels frame-idx sprite)]
+        cels (sprite/get-frame-cels-with-layers frame-idx sprite)]
     (doseq [cel (reverse cels)]
-      (doseq [x (range 0 (:width size))
-              y (range 0 (:height size))]
-        (when-let [color (cel/get-pixel {:x x :y y} cel)]
-          (set! (. ctx -fillStyle) (.. (tinycolor color)
-                                       (setAlpha (:opacity cel))
-                                       (toRgbString)))
-          (. ctx (fillRect x y 1 1)))))))
+      (when (-> cel :layer :visibile?)
+        (doseq [x (range 0 (:width size))
+                y (range 0 (:height size))]
+          (when-let [color (cel/get-pixel {:x x :y y} cel)]
+            (set! (. ctx -fillStyle) (.. (tinycolor color)
+                                         (setAlpha (:opacity cel))
+                                         (toRgbString)))
+            (. ctx (fillRect x y 1 1))))))))
 
 (defn draw-cel [cel canvas]
   (let [ctx (. canvas (getContext "2d"))
