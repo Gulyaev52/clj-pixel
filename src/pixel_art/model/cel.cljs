@@ -50,7 +50,7 @@
   (merge-cels above-cel below-cel))
 
 (defn emptyy? [cel]
-  (every? #{transparent-color} (:pixels cel)))
+  (every? #(= % transparent-color) (:pixels cel)))
 
 (def get-size :size)
 

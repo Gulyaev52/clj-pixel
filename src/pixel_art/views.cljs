@@ -11,7 +11,9 @@
             [react :as react]
             [reagent.core :as r]
             [reagent.dom :as rdom]
-            [sc.api]))
+            [sc.api]
+            [clojure.string :as string]
+            [pixel-art.model.cel :as cel]))
 
 (def !last-mouse-pos (atom nil))
 
@@ -76,6 +78,76 @@
                 :slider (slider props)
                 :checkbox (checkbox props))))
           options-spec)]))
+
+(defn- transpose [coll]
+  (apply map vector coll))
+
+(defn timeline-panel []
+  (let [sprite @(re-frame/subscribe [::subs/sprite])
+        {:keys [current-frame-idx current-layer-idx frames layers cels]} sprite
+        cel-imgs @(re-frame/subscribe [::subs/cel-imgs])
+        cels-by-layers (transpose cels) ;; todo: мб так и хранить в спрайте
+        ]
+    [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
+     [:div
+      [:div {:style {:display :flex}} "frames:"
+       [:button {:onClick (fn [] (re-frame/dispatch [::events/add-frame]))} "add"]
+       [:button {:onClick (fn [] (re-frame/dispatch [::events/remove-frame]))} "remove"]
+       [:button {:onClick (fn [] (re-frame/dispatch [::events/duplicate-frame]))} "duplicate"]]
+      [:div {:style {:display :flex}} "layers:"
+       [:button {:onClick (fn [] (re-frame/dispatch [::events/add-layer]))} "add"]
+       [:button {:onClick (fn [] (re-frame/dispatch [::events/remove-layer]))} "remove"]
+       [:button {:onClick (fn [] (re-frame/dispatch [::events/duplicate-layer]))} "duplicate"]]]
+     [:div {:style {:display :grid
+                    :grid-template-rows "15px"
+                    :grid-auto-rows "80px"
+                    :grid-template-columns (str "100px " (->> (repeat (count frames) "100px") (string/join " ")))
+                    :grid-column-gap "4px"
+                    :grid-row-gap "4px"}}
+      [:div "Layers"] (for [[idx frame] (map-indexed vector frames)]
+                        [:div {:onClick (fn [] (re-frame/dispatch [::events/select-frame idx]))
+                               :style {:border-style "solid"
+                                       :border-color (if (= idx current-frame-idx)
+                                                       "green"
+                                                       "black")
+                                       :border-width (if (= idx current-frame-idx)
+                                                       "2px"
+                                                       "1px")
+                                       :text-align "center"
+                                       :cursor "pointer"}} (inc idx)])
+      (for [[layer-idx layer] (map-indexed vector layers)]
+        [:<>
+         [:div {:onClick (fn [] (re-frame/dispatch [::events/select-layer layer-idx]))
+                :style {:display "flex"
+                        :border-style "solid"
+                        :border-color (if (= layer-idx current-layer-idx)
+                                        "green"
+                                        "black")
+                        :border-width (if (= layer-idx current-layer-idx)
+                                        "2px"
+                                        "1px")
+                        :align-items "center"
+                        :cursor "pointer"}} (:name layer)]
+         (for [[frame-idx cel] (map-indexed vector (nth cels-by-layers layer-idx))]
+           (let [pos {:frame-idx frame-idx
+                      :layer-idx layer-idx}
+                 cel-img (cel-imgs pos)]
+             [:div {:onClick (fn [] (re-frame/dispatch [::events/select-cel pos]))
+                    :style {:border-style "solid"
+                            :border-color (if (and (= layer-idx current-layer-idx)
+                                                   (= frame-idx current-frame-idx))
+                                            "green"
+                                            "black")
+                            :border-width (if (and (= layer-idx current-layer-idx)
+                                                   (= frame-idx current-frame-idx))
+                                            "2px"
+                                            "1px")
+                            :background-color (when (cel/emptyy? cel)
+                                                "rgba(0, 0, 0, 0.2)")
+                            :image-rendering "pixelated"
+                            :background-image (str "url(" cel-img ")")
+                            :background-size "100% 100%"
+                            :cursor "pointer"}}]))])]]))
 
 (defn frames []
   (letfn [(box [style onClick children]
@@ -510,7 +582,7 @@
                   :onChange (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]
        [:div (str "primary-color=" primary-color)]
        [:div (str "secondary-color=" secondary-color)]]
-      [:div [frames]]
+      [:div [timeline-panel]]
       [sprite-preview-section]
       [onion-skin-section]
       [palettes-section]]

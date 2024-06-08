@@ -18,8 +18,11 @@
 
 (defn get-size [sprite] (:size sprite))
 
-(defn get-current-cel [{:keys [current-frame-idx current-layer-idx cels]}]
-  (get-in cels [current-frame-idx current-layer-idx]))
+(defn get-current-cel [sprite]
+  (let [{:keys [current-frame-idx current-layer-idx cels]} sprite]
+    (-> cels
+        (nth current-frame-idx)
+        (nth current-layer-idx))))
 
 (defn update-current-cel [f {:keys [current-frame-idx current-layer-idx] :as sprite}]
   (update-in sprite [:cels current-frame-idx current-layer-idx] f))
@@ -36,11 +39,12 @@
      (-> sprite
          (update :layers #(coll/insertv new-current-layer-idx layer %))
          (assoc :current-layer-idx new-current-layer-idx)
-         (update :cels (fn [cels] (map-indexed (fn [frame-idx cels]
-                                                 (coll/insertv new-current-layer-idx
-                                                               (create-new-cel frame-idx)
-                                                               cels))
-                                               cels)))))))
+         (update :cels (fn [cels] (->> (map-indexed (fn [frame-idx cels]
+                                                      (coll/insertv new-current-layer-idx
+                                                                    (create-new-cel frame-idx)
+                                                                    cels))
+                                                    cels)
+                                       vec)))))))
 
 (defn remove-layer [idx sprite]
   (-> sprite
@@ -86,7 +90,7 @@
 
 (defn add-frame
   ([frame sprite]
-   (let [new-cels (vec (repeat (count (:frames sprite)) (cel/create (:size sprite))))]
+   (let [new-cels (vec (repeat (count (:layers sprite)) (cel/create (:size sprite))))]
      (add-frame frame new-cels sprite)))
   ([frame new-cels sprite]
    (let [{:keys [current-frame-idx]} sprite
@@ -120,6 +124,11 @@
 
 (defn get-current-frame [{:keys [current-frame-idx frames]}]
   (nth frames current-frame-idx))
+
+(defn select-cel [{:keys [frame-idx layer-idx]} sprite]
+  (assoc sprite
+         :current-frame-idx frame-idx
+         :current-layer-idx layer-idx))
 
 (defn remove-cel [sprite]
   (update-current-cel cel/remove-all-pixels sprite))

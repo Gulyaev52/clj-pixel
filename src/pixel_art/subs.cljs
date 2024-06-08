@@ -33,14 +33,14 @@
    (get-tool-options db)))
 
 (re-frame/reg-sub
- ::selection-manager
- (fn [db]
-   (:tool db)))
-
-(re-frame/reg-sub
  ::frame-imgs
  (fn [db]
    (:frame-imgs db)))
+
+(re-frame/reg-sub
+ ::cel-imgs
+ (fn [db]
+   (:cel-imgs db)))
 
 (re-frame/reg-sub
  ::sprite-preview

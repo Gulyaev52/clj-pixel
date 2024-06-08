@@ -1,13 +1,15 @@
 (ns pixel-art.events
   (:require ["tinycolor2" :as tinycolor]
             [pixel-art.canvas :as canvas]
-            [pixel-art.db :as db :refer [initial-frame-duration max-scale]]
+            [pixel-art.db :as db :refer [get-layer-name initial-frame-duration
+                                         max-scale]]
             [pixel-art.history :as history]
             [pixel-art.history.events :as history.events]
             [pixel-art.local-storage :as local-storage]
             [pixel-art.model.cel :as cel]
             [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.model.frame :as frame]
+            [pixel-art.model.layer :as layer]
             [pixel-art.model.sprite :as sprite]
             [pixel-art.palette :as palette]
             [pixel-art.tool.core :as tool]
@@ -21,6 +23,11 @@
             [re-frame.db]
             [re-pressed.core :as rp]
             [sc.api]))
+
+;; todo: remove
+(add-watch re-frame.db/app-db :def
+           (fn [_ _ _ new]
+             (def db new)))
 
 (re-frame/reg-event-fx
  ::initialize-db
@@ -50,23 +57,36 @@
           [:clear-frame]
           [:draw-current-frame]]})))
 
-(defn- generate-frame-img [frame-idx sprite]
-  (let [canvas-size (sprite/get-size sprite)
-        canvas-elem (.. js/document (createElement "canvas"))]
-    (set! (. canvas-elem -width) (:width canvas-size))
-    (set! (. canvas-elem -height) (:height canvas-size))
-    (canvas/draw-frame frame-idx sprite canvas-elem)
-    (. canvas-elem (toDataURL "image/png"))))
-
+;; todo: fix performance
 (re-frame/reg-global-interceptor
  (on-changes
   :generate-frame-imgs ;; todo: явно менять или же если будут id у фреймов то будет ок?
   #(-> % :sprite)
   (fn [{:keys [db]}]
-    (let [frame-imgs (->> (-> db :sprite :frames)
-                          (map-indexed (fn [frame-idx _] [frame-idx (generate-frame-img frame-idx (:sprite db))]))
+    (let [{:keys [sprite]} db
+          frame-imgs (->> (-> db :sprite :frames)
+                          (map-indexed (fn [frame-idx _]
+                                         [frame-idx (canvas/generate-img #(canvas/draw-frame frame-idx sprite %)
+                                                                         (sprite/get-size sprite))]))
                           (into {}))]
       {:db (assoc db :frame-imgs frame-imgs)}))))
+
+;; todo: fix performance
+(re-frame/reg-global-interceptor
+ (on-changes
+  :generate-cel-imgs
+  #(-> % :sprite :cels)
+  (fn [{:keys [db]}]
+    (let [cel-imgs (->> (-> db :sprite :cels)
+                        (map-indexed (fn [frame-idx cel-row]
+                                       (map-indexed (fn [layer-idx cel] [{:frame-idx frame-idx
+                                                                          :layer-idx layer-idx}
+                                                                         (canvas/generate-img #(canvas/draw-cel cel %)
+                                                                                              (cel/get-size cel))])
+                                                    cel-row)))
+                        (mapcat identity)
+                        (into {}))]
+      {:db (assoc db :cel-imgs cel-imgs)}))))
 
 (re-frame/reg-event-fx
  ::select-tool
@@ -125,6 +145,52 @@
        (commit-changes-and-init-tool (get-in db [:tool :state :changes])
                                      (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/select-frame idx %)))))
+
+(re-frame/reg-event-fx
+ ::add-layer
+ (fn [{:keys [db]}]
+   (let [layer-name (get-layer-name :single (-> db :sprite :layers count))
+         layer (layer/create layer-name nil)]
+     (-> db
+         (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                       (tool/init (-> db :tool :type)))
+         (update-in [:db :sprite] #(sprite/add-layer layer %))
+         (update-in [:db] history/save-sprite)))))
+
+(re-frame/reg-event-fx
+ ::duplicate-layer
+ (fn [{:keys [db]}]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] sprite/duplicate-layer)
+       (update-in [:db] history/save-sprite))))
+
+(re-frame/reg-event-fx
+ ::remove-layer
+ (fn [{:keys [db]}]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] #(sprite/remove-layer (-> db :sprite :current-layer-idx)
+                                                      %))
+       (update-in [:db] history/save-sprite))))
+
+(re-frame/reg-event-fx
+ ::select-layer
+ (fn [{:keys [db]} [_ idx]]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] #(sprite/select-layer idx %)))))
+
+(re-frame/reg-event-fx
+ ::select-cel
+ (fn [{:keys [db]} [_ pos]]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] #(sprite/select-cel pos %)))))
 
 (re-frame/reg-event-fx
  ::zoom
