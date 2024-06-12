@@ -13,3 +13,6 @@
 (defn swapv
   [i j v]
   (assoc v i (nth v j) j (nth v i)))
+
+(defn find-first [pred coll]
+  (first (filter pred coll)))

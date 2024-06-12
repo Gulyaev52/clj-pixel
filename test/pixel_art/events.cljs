@@ -1,0 +1,218 @@
+(ns pixel-art.events
+  (:require
+   [pixel-art.events :as events]
+   [day8.re-frame.test :as rf-test]
+   [cljs.test :refer-macros [deftest testing is run-tests]]
+   [re-frame.core :as rf]
+   [pixel-art.model.frame :as frame]
+   [pixel-art.model.sprite :as sprite]
+   [pixel-art.model.cel :as cel]
+   [pixel-art.model.layer :as layer]
+   [pixel-art.events.event-collector :as event-collector]))
+
+(rf/reg-sub
+ :db
+ (fn [db]
+   db))
+
+#_(deftest test-init
+    (rf-test/run-test-sync
+     (rf/dispatch-sync [::events/initialize-db])
+     #_(def db @(rf/subscribe [:db]))
+     (is (= 1 2))))
+
+(defn apply-current-tool [poses]
+  (let [mouse-down-pos (first poses)
+        mouse-move-poses (when (> (count poses) 1)
+                           (subvec poses 1 (dec (count poses))))
+        mouse-up-pos (last poses)]
+    (rf/dispatch-sync [::events/handle-mouse-event :mouse-down mouse-down-pos false])
+    (when (seq mouse-move-poses)
+      (doseq [pos mouse-move-poses]
+        (rf/dispatch-sync [::events/handle-mouse-event :mouse-move pos false])))
+    (rf/dispatch-sync [::events/handle-mouse-event :mouse-up mouse-up-pos false])))
+
+(deftest test-add-frame
+  (rf-test/run-test-sync
+   (testing "add 2 frame"
+     (def !db (rf/subscribe [:db]))
+     (rf/dispatch-sync [::events/initialize-db])
+     (def initial-db @(rf/subscribe [:db]))
+     (def initial-sprite (-> initial-db :sprite))
+     (rf/dispatch-sync [::events/add-frame])
+     (def sprite (-> @!db :sprite))
+     (is (= (:layers sprite) (:layers initial-sprite)) "layers should not be changed")
+     (is (= [(frame/create 100) (frame/create 100)] (:frames sprite)) "new frame created")
+     (is (= (frame/create 100) (sprite/get-current-frame sprite)) "get-current-frame -> new frame selected")
+     (is (= {:frame-idx 1 :layer-idx 0} (sprite/get-current-cel-pos sprite)) "cel of new layer should be current")
+     (is (= (cel/create (sprite/get-size sprite)) (sprite/get-current-cel sprite)) "new cel should be created")
+     (is (= (sprite/get-cel {:frame-idx 0 :layer-idx 0} initial-sprite)
+            (sprite/get-cel {:frame-idx 0 :layer-idx 0} sprite)) "cel from first frame should not be changed")
+
+     (apply-current-tool [{:x 0 :y 0}])
+     (def updated-sprite (-> @!db :sprite))
+     (is (= (->> (cel/create (sprite/get-size sprite))
+                 (cel/set-pixels {{:x 0 :y 0} "black"}))
+            (sprite/get-current-cel updated-sprite))
+         "current cel should be updated"))
+
+   (testing "add 3 frame"
+     (def !db (rf/subscribe [:db]))
+     (rf/dispatch-sync [::events/initialize-db])
+     (def initial-db @(rf/subscribe [:db]))
+     (def initial-sprite (-> initial-db :sprite))
+     (rf/dispatch-sync [::events/add-frame])
+     (rf/dispatch-sync [::events/add-frame])
+     (def sprite (-> @!db :sprite))
+     (is (= [(frame/create 100) (frame/create 100) (frame/create 100)] (:frames sprite)) "new frame created")
+     (is (= (frame/create 100) (sprite/get-current-frame sprite)) "get-current-frame -> new frame selected")
+     (is (= {:frame-idx 2 :layer-idx 0} (sprite/get-current-cel-pos sprite)) "cel of new layer should be current")
+     (is (= (cel/create (sprite/get-size sprite)) (sprite/get-current-cel sprite)) "new cel should be created")
+     (is (= (sprite/get-cel {:frame-idx 0 :layer-idx 0} initial-sprite)
+            (sprite/get-cel {:frame-idx 0 :layer-idx 0} sprite)) "cel from 1 frame should not be changed")
+     (is (= (cel/create (sprite/get-size sprite))
+            (sprite/get-cel {:frame-idx 1 :layer-idx 0} sprite)) "cel from 2 frame should not be changed")
+
+     (apply-current-tool [{:x 0 :y 0}])
+     (def updated-sprite (-> @!db :sprite))
+     (is (= (->> (cel/create (sprite/get-size sprite))
+                 (cel/set-pixels {{:x 0 :y 0} "black"}))
+            (sprite/get-current-cel updated-sprite))
+         "current cel should be updated"))))
+
+(deftest test-add-layer
+  (rf-test/run-test-sync
+   (testing "add 2 layer"
+     (rf/dispatch-sync [::events/initialize-db])
+     (def !db (rf/subscribe [:db]))
+     (def initial-db @(rf/subscribe [:db]))
+     (def initial-sprite (-> initial-db :sprite))
+
+     (rf/dispatch-sync [::events/add-layer])
+     (def sprite (-> @!db :sprite))
+     (def new-layer (layer/create "Layer 2" nil))
+     (is (= (:frames sprite) (:frames initial-sprite)) "frames should not be changes")
+     (is (= [(layer/create "Layer 1" nil) (layer/create "Layer 2" nil)] (:layers sprite)) "new layer created")
+     (is (= {:frame-idx 0 :layer-idx 1} (sprite/get-current-cel-pos sprite)) "cel of new layer should be current")
+     (is (= new-layer (sprite/get-current-layer sprite)) "get-current-layer -> new layer selected")
+     (is (= (cel/create (sprite/get-size sprite)) (sprite/get-current-cel sprite)) "new cel should be created")
+     (is (= (sprite/get-cel {:frame-idx 0 :layer-idx 0} initial-sprite)
+            (sprite/get-cel {:frame-idx 0 :layer-idx 0} sprite)) "cel from previous layer should not be changed")
+
+     (apply-current-tool [{:x 0 :y 0}])
+     (def updated-sprite (-> @!db :sprite))
+     (is (= (->> (cel/create (sprite/get-size sprite))
+                 (cel/set-pixels {{:x 0 :y 0} "black"}))
+            (sprite/get-current-cel updated-sprite))
+         "current cel should be updated"))
+
+   (testing "add 3 layer"
+     (rf/dispatch-sync [::events/initialize-db])
+     (def !db (rf/subscribe [:db]))
+     (def initial-db @(rf/subscribe [:db]))
+     (def initial-sprite (-> initial-db :sprite))
+
+     (rf/dispatch-sync [::events/add-layer])
+     (rf/dispatch-sync [::events/add-layer])
+     (def sprite (-> @!db :sprite))
+     (def new-layer (layer/create "Layer 3" nil))
+     (is (= (:frames sprite) (:frames initial-sprite)) "frames should not be changes")
+     (is (= [(layer/create "Layer 1" nil) (layer/create "Layer 2" nil) new-layer] (:layers sprite)) "new layer created")
+     (is (= {:frame-idx 0 :layer-idx 2} (sprite/get-current-cel-pos sprite)) "cel of new layer should be current")
+     (is (= new-layer (sprite/get-current-layer sprite)) "get-current-layer -> new layer selected")
+     (is (= (cel/create (sprite/get-size sprite)) (sprite/get-current-cel sprite)) "new cel should be created")
+     (is (= (sprite/get-cel {:frame-idx 0 :layer-idx 0} initial-sprite)
+            (sprite/get-cel {:frame-idx 0 :layer-idx 0} sprite)) "cel from 1 layer should not be changed")
+     (is (= (cel/create (sprite/get-size sprite))
+            (sprite/get-cel {:frame-idx 0 :layer-idx 1} sprite)) "cel from 2 layer should not be changed")
+
+     (apply-current-tool [{:x 0 :y 0}])
+     (def updated-sprite (-> @!db :sprite))
+     (is (= (->> (cel/create (sprite/get-size sprite))
+                 (cel/set-pixels {{:x 0 :y 0} "black"}))
+            (sprite/get-current-cel updated-sprite))
+         "current cel should be updated"))))
+
+(deftest test-duplicate-frame
+  (rf-test/run-test-sync
+   (rf/dispatch-sync [::events/initialize-db])
+   (def !db (rf/subscribe [:db]))
+   (def initial-db @(rf/subscribe [:db]))
+
+   (rf/dispatch-sync [::events/add-layer])
+   (rf/dispatch-sync [::events/duplicate-frame])
+
+   (def sprite (-> @!db :sprite))
+   (is (= [(frame/create 100) (frame/create 100)] (:frames sprite)))
+   (is (= [(layer/create "Layer 1" nil) (layer/create "Layer 2" nil)] (:layers sprite)))
+   (is (= (sprite/get-cel {:layer-idx 0 :frame-idx 0} sprite)
+          (sprite/get-cel {:layer-idx 0 :frame-idx 1} sprite)))
+   (is (= (sprite/get-cel {:layer-idx 1 :frame-idx 0} sprite)
+          (sprite/get-cel {:frame-idx 1 :layer-idx 1} sprite)))))
+
+(deftest test-remove-frame
+  (testing "remove frame"
+    (rf-test/run-test-sync
+     (rf/dispatch-sync [::events/initialize-db])
+     (def !db (rf/subscribe [:db]))
+     (def initial-db @(rf/subscribe [:db]))
+
+     (rf/dispatch-sync [::events/add-frame])
+     (rf/dispatch-sync [::events/remove-frame])
+
+     (is (= (-> initial-db :sprite) (-> @!db :sprite))))))
+
+(deftest test-remove-layer
+  (testing "remove layer"
+    (rf-test/run-test-sync
+     (rf/dispatch-sync [::events/initialize-db])
+     (def !db (rf/subscribe [:db]))
+     (def initial-db @(rf/subscribe [:db]))
+
+     (rf/dispatch-sync [::events/add-layer])
+     (rf/dispatch-sync [::events/remove-layer 1])
+
+     (is (= (-> initial-db :sprite) (-> @!db :sprite))))))
+
+(deftest test-select-cel
+  (testing "select cel"
+    (rf-test/run-test-sync
+     (rf/dispatch-sync [::events/initialize-db])
+     (def !db (rf/subscribe [:db]))
+
+     (rf/dispatch-sync [::events/add-layer])
+     (rf/dispatch-sync [::events/add-frame])
+
+     (rf/dispatch [::events/select-cel {:frame-idx 0 :layer-idx 0}])
+     (is (= (-> @!db :sprite sprite/get-current-cel-pos) {:frame-idx 0 :layer-idx 0}))
+
+     (rf/dispatch [::events/select-cel {:frame-idx 1 :layer-idx 1}])
+     (is (= (-> @!db :sprite sprite/get-current-cel-pos) {:frame-idx 1 :layer-idx 1})))))
+
+(deftest test-select
+  (rf-test/run-test-sync
+   (rf/dispatch-sync [::events/initialize-db])
+   (def !initial-db (rf/subscribe [:db]))
+   (def sprite-size (-> @!initial-db :sprite sprite/get-size))
+
+   (rf/dispatch-sync [::events/add-frame])
+   (rf/dispatch-sync [::events/add-frame])
+   (rf/dispatch-sync [::events/add-layer])
+   (rf/dispatch-sync [::events/add-layer])
+
+   (rf/dispatch-sync [::events/select-cel {:frame-idx 0 :layer-idx 0}])
+   (is (= {:frame-idx 0 :layer-idx 0} (-> @!db :sprite sprite/get-current-cel-pos)))
+   (is (= (-> @!initial-db :sprite (sprite/get-current-cel)) (-> @!db :sprite sprite/get-current-cel)))
+
+   (rf/dispatch-sync [::events/select-cel {:frame-idx 1 :layer-idx 1}])
+   (is (= {:frame-idx 1 :layer-idx 1} (-> @!db :sprite sprite/get-current-cel-pos)))
+   (is (= (cel/create sprite-size) (-> @!db :sprite sprite/get-current-cel)))
+
+   (rf/dispatch-sync [::events/select-frame 2])
+   (is (= {:frame-idx 2 :layer-idx 1} (-> @!db :sprite sprite/get-current-cel-pos)))
+
+   (rf/dispatch-sync [::events/select-layer 2])
+   (is (= {:frame-idx 2 :layer-idx 2} (-> @!db :sprite sprite/get-current-cel-pos)))))
+
+#_(enable-console-print!)
+#_(run-tests)

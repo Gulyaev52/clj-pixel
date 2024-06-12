@@ -19,9 +19,7 @@
 (defn commit-changes-and-init-tool [db changes tool-init]
   (-> (if (seq changes)
         {:db (-> db
-                 (update :sprite
-                         (fn [s]
-                           (sprite/update-current-cel #(cel/set-pixels changes %) s)))
+                 (update :sprite #(sprite/set-current-cel-pixels changes %))
                  (history/save-sprite))}
         {:db db})
       (assoc-in [:db :tool] tool-init)

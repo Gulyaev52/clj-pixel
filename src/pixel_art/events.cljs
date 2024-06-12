@@ -218,8 +218,7 @@
    (-> db
        (commit-changes-and-init-tool (get-in db [:tool :state :changes])
                                      (tool/init (-> db :tool :type))) ;; todo: нужно ли?
-       (update-in [:db :sprite] (fn [sprite]
-                                  (sprite/update-current-cel #(assoc % :opacity opacity) sprite))))))
+       (update-in [:db :sprite] #(sprite/set-current-cel-opacity opacity %)))))
 
 (re-frame/reg-event-fx
  ::select-layer
