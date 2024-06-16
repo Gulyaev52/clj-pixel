@@ -2,7 +2,8 @@
   (:require [pixel-art.utils.interceptor :refer [on-changes]]
             [re-frame.core :as re-frame]
             [re-frame.db :as db]
-            [pixel-art.canvas :as canvas]))
+            [pixel-art.canvas :as canvas]
+            [pixel-art.model.sprite :as sprite]))
 
 (defn init []
   {:enabled false
@@ -55,7 +56,7 @@
   (fn [{:keys [db old new]}]
     (let [onion-skin (:onion-skin db)]
       (if (:enabled onion-skin)
-        (let [need-redraw (if (not= (:current-frame-idx old) (:current-frame-idx new))
+        (let [need-redraw (if (not= (sprite/get-current-frame old) (sprite/get-current-frame new))
                             true
                             (let [old-frames-idx (get-onion-skin-frames-idx old (:frames-count onion-skin))
                                   new-frames-idx (get-onion-skin-frames-idx new (:frames-count onion-skin))]

@@ -172,7 +172,7 @@
    (-> db
        (commit-changes-and-init-tool (get-in db [:tool :state :changes])
                                      (tool/init (-> db :tool :type)))
-       (update-in [:db :sprite] #(sprite/remove-layer (-> db :sprite :current-layer-idx)
+       (update-in [:db :sprite] #(sprite/remove-layer (-> db :sprite sprite/get-current-layer-idx)
                                                       %))
        (update-in [:db] history/save-sprite))))
 
@@ -191,7 +191,7 @@
    (-> db
        (commit-changes-and-init-tool (get-in db [:tool :state :changes])
                                      (tool/init (-> db :tool :type)))
-       (update-in [:db :sprite] #(sprite/move-layer-up (:current-layer-idx %) %))
+       (update-in [:db :sprite] #(sprite/move-layer-up (sprite/get-current-layer-idx %) %))
        (update-in [:db] history/save-sprite))))
 
 (re-frame/reg-event-fx
@@ -200,7 +200,7 @@
    (-> db
        (commit-changes-and-init-tool (get-in db [:tool :state :changes])
                                      (tool/init (-> db :tool :type)))
-       (update-in [:db :sprite] #(sprite/move-layer-down (:current-layer-idx %) %))
+       (update-in [:db :sprite] #(sprite/move-layer-down (sprite/get-current-layer-idx %) %))
        (update-in [:db] history/save-sprite))))
 
 (re-frame/reg-event-fx
@@ -235,6 +235,22 @@
        (commit-changes-and-init-tool (get-in db [:tool :state :changes])
                                      (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/select-cel pos %)))))
+
+(re-frame/reg-event-fx
+ ::toggle-cel-to-selection
+ (fn [{:keys [db]} [_ pos]]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] #(sprite/toggle-cel-to-selection pos %)))))
+
+(re-frame/reg-event-fx
+ ::add-cels-range-to-selection
+ (fn [{:keys [db]} [_ pos]]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] #(sprite/add-cels-range-to-selection pos %)))))
 
 (re-frame/reg-event-fx
  ::zoom
@@ -453,6 +469,6 @@
  :draw-current-frame
  (fn []
    (let [{:keys [sprite]} @re-frame.db/app-db]
-     (canvas/draw-frame (:current-frame-idx sprite)
+     (canvas/draw-frame (sprite/get-current-frame-idx sprite)
                         sprite
                         (. js/document (getElementById "tutorial"))))))

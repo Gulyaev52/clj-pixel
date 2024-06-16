@@ -1,4 +1,4 @@
-(ns pixel-art.events
+(ns pixel-art.events-test
   (:require
    [pixel-art.events :as events]
    [day8.re-frame.test :as rf-test]
@@ -7,8 +7,7 @@
    [pixel-art.model.frame :as frame]
    [pixel-art.model.sprite :as sprite]
    [pixel-art.model.cel :as cel]
-   [pixel-art.model.layer :as layer]
-   [pixel-art.events.event-collector :as event-collector]))
+   [pixel-art.model.layer :as layer]))
 
 (rf/reg-sub
  :db
@@ -132,6 +131,79 @@
                  (cel/set-pixels {{:x 0 :y 0} "black"}))
             (sprite/get-current-cel updated-sprite))
          "current cel should be updated"))))
+
+(deftest test-selection
+  (rf-test/run-test-async
+   (testing "select cel remove other selected cels")
+
+   (testing "toggle-cel-to-selection"
+     (rf/dispatch-sync [::events/initialize-db])
+     (def !db (rf/subscribe [:db]))
+     (rf/dispatch-sync [::events/add-frame])
+     (rf/dispatch-sync [::events/add-layer])
+
+     (rf/dispatch-sync [::events/select-cel {:frame-idx 0 :layer-idx 0}])
+     (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
+     (def sprite (-> @!db :sprite))
+     (is (= [{:frame-idx 0 :layer-idx 0} {:frame-idx 1 :layer-idx 1}]
+            (:selected-cels-pos sprite))
+         "should add cel to selection if it wasn't there")
+     (is (= {:frame-idx 1 :layer-idx 1} (sprite/get-current-cel-pos sprite))
+         "added cel should be selected")
+
+     (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
+     (def sprite (-> @!db :sprite))
+     (is (= [{:frame-idx 0 :layer-idx 0}]
+            (:selected-cels-pos sprite))
+         "should remove cel that there is in selection")
+     (is (= {:frame-idx 0 :layer-idx 0} (sprite/get-current-cel-pos sprite))
+         "previous cel should be current after removing"))
+
+   (testing "add-cels-range-to-selection"
+     (defn create-fixture []
+       (rf/dispatch-sync [::events/initialize-db])
+       (def !db (rf/subscribe [:db]))
+       (rf/dispatch-sync [::events/add-frame])
+       (rf/dispatch-sync [::events/add-frame])
+       (rf/dispatch-sync [::events/add-layer])
+       (rf/dispatch-sync [::events/add-layer]))
+
+     (testing "add range from left to the right"
+       (create-fixture)
+       (rf/dispatch-sync [::events/select-cel {:frame-idx 0 :layer-idx 0}])
+       (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
+       (def sprite (-> @!db :sprite))
+       (is (= [{:frame-idx 0 :layer-idx 0}
+               {:frame-idx 0 :layer-idx 1}
+               {:frame-idx 1 :layer-idx 0}
+               {:frame-idx 1 :layer-idx 1}]
+              (:selected-cels-pos sprite)))
+       (is (= {:frame-idx 1 :layer-idx 1} (sprite/get-current-cel-pos sprite))))
+
+     (testing "add range from right to the left"
+       (create-fixture)
+       (rf/dispatch-sync [::events/select-cel {:frame-idx 1 :layer-idx 1}])
+       (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 0 :layer-idx 0}])
+       (def sprite (-> @!db :sprite))
+       (is (= [{:frame-idx 0 :layer-idx 1}
+               {:frame-idx 1 :layer-idx 0}
+               {:frame-idx 1 :layer-idx 1}
+               {:frame-idx 0 :layer-idx 0}]
+              (:selected-cels-pos sprite)))
+       (is (= {:frame-idx 0 :layer-idx 0} (sprite/get-current-cel-pos sprite))))
+
+     (testing "when create range for already added then should select it"
+       (create-fixture)
+       (rf/dispatch-sync [::events/select-cel {:frame-idx 0 :layer-idx 0}])
+       (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
+       (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 0 :layer-idx 0}])
+       (def sprite (-> @!db :sprite))
+       (is (= [{:frame-idx 0 :layer-idx 1}
+               {:frame-idx 1 :layer-idx 0}
+               {:frame-idx 1 :layer-idx 1}
+               {:frame-idx 0 :layer-idx 0}]
+              (:selected-cels-pos sprite)))
+       (is (= {:frame-idx 0 :layer-idx 0} (sprite/get-current-cel-pos sprite)))))))
 
 (deftest test-duplicate-frame
   (rf-test/run-test-sync

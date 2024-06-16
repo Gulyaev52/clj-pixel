@@ -14,7 +14,8 @@
   [pjstadig/humane-test-output "0.11.0"]
   [vvvvalvalval/scope-capture "0.3.3"]
   [re-pressed "0.3.2"]
-  [day8.re-frame/test "0.1.5"]]
+  [day8.re-frame/test "0.1.5"]
+  [com.github.flow-storm/flow-storm-inst "3.15.7"]]
 
  :dev-http
  {8280 "resources/public"
@@ -28,7 +29,7 @@
    :modules
    {:app {:init-fn pixel-art.core/init}}
    :devtools
-   {:preloads [day8.re-frame-10x.preload]}
+   {:preloads [flow-storm.preload]}
    :dev
    {:compiler-options
     {:closure-defines
