@@ -229,12 +229,12 @@
        (update-in [:db :sprite] #(sprite/select-layer idx %)))))
 
 (re-frame/reg-event-fx
- ::select-cel
+ ::select-only-1-cel
  (fn [{:keys [db]} [_ pos]]
    (-> db
        (commit-changes-and-init-tool (get-in db [:tool :state :changes])
                                      (tool/init (-> db :tool :type)))
-       (update-in [:db :sprite] #(sprite/select-cel pos %)))))
+       (update-in [:db :sprite] #(sprite/select-only-1-cel pos %)))))
 
 (re-frame/reg-event-fx
  ::toggle-cel-to-selection

@@ -133,14 +133,41 @@
          "current cel should be updated"))))
 
 (deftest test-selection
+  (defn create-fixture []
+    (rf/dispatch-sync [::events/initialize-db])
+    (def initial-db @(rf/subscribe [:db]))
+    (def !db (rf/subscribe [:db]))
+    (rf/dispatch-sync [::events/add-frame])
+    (rf/dispatch-sync [::events/add-frame])
+    (rf/dispatch-sync [::events/add-layer])
+    (rf/dispatch-sync [::events/add-layer]))
+
   (rf-test/run-test-async
-   (testing "select cel remove other selected cels")
+   (testing "select-only-1-cel"
+     (create-fixture)
+
+     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+     (is (= {:frame-idx 0 :layer-idx 0} (-> @!db :sprite sprite/get-current-cel-pos)))
+     (is (= (-> initial-db :sprite sprite/get-current-cel) (-> @!db :sprite sprite/get-current-cel)))
+
+     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 1 :layer-idx 1}])
+     (is (= {:frame-idx 1 :layer-idx 1} (-> @!db :sprite sprite/get-current-cel-pos)))
+     (is (= (cel/create (-> @!db :sprite sprite/get-size)) (-> @!db :sprite sprite/get-current-cel))))
+
+   (testing "select-frame"
+     (create-fixture)
+     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+     (rf/dispatch-sync [::events/select-frame 2])
+     (is (= {:frame-idx 2 :layer-idx 0} (-> @!db :sprite sprite/get-current-cel-pos))))
+
+   (testing "select-layer"
+     (create-fixture)
+     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+     (rf/dispatch-sync [::events/select-layer 2])
+     (is (= {:frame-idx 0 :layer-idx 2} (-> @!db :sprite sprite/get-current-cel-pos))))
 
    (testing "toggle-cel-to-selection"
-     (rf/dispatch-sync [::events/initialize-db])
-     (def !db (rf/subscribe [:db]))
-     (rf/dispatch-sync [::events/add-frame])
-     (rf/dispatch-sync [::events/add-layer])
+     (create-fixture)
 
      (rf/dispatch-sync [::events/select-cel {:frame-idx 0 :layer-idx 0}])
      (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
@@ -160,14 +187,6 @@
          "previous cel should be current after removing"))
 
    (testing "add-cels-range-to-selection"
-     (defn create-fixture []
-       (rf/dispatch-sync [::events/initialize-db])
-       (def !db (rf/subscribe [:db]))
-       (rf/dispatch-sync [::events/add-frame])
-       (rf/dispatch-sync [::events/add-frame])
-       (rf/dispatch-sync [::events/add-layer])
-       (rf/dispatch-sync [::events/add-layer]))
-
      (testing "add range from left to the right"
        (create-fixture)
        (rf/dispatch-sync [::events/select-cel {:frame-idx 0 :layer-idx 0}])
@@ -185,10 +204,10 @@
        (rf/dispatch-sync [::events/select-cel {:frame-idx 1 :layer-idx 1}])
        (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 0 :layer-idx 0}])
        (def sprite (-> @!db :sprite))
-       (is (= [{:frame-idx 0 :layer-idx 1}
-               {:frame-idx 1 :layer-idx 0}
-               {:frame-idx 1 :layer-idx 1}
-               {:frame-idx 0 :layer-idx 0}]
+       (is (= [{:frame-idx 1 :layer-idx 1}
+               {:frame-idx 0 :layer-idx 0}
+               {:frame-idx 0 :layer-idx 1}
+               {:frame-idx 1 :layer-idx 0}]
               (:selected-cels-pos sprite)))
        (is (= {:frame-idx 0 :layer-idx 0} (sprite/get-current-cel-pos sprite))))
 
@@ -198,12 +217,20 @@
        (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
        (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 0 :layer-idx 0}])
        (def sprite (-> @!db :sprite))
-       (is (= [{:frame-idx 0 :layer-idx 1}
+       (is (= [{:frame-idx 0 :layer-idx 0}
+               {:frame-idx 0 :layer-idx 1}
                {:frame-idx 1 :layer-idx 0}
-               {:frame-idx 1 :layer-idx 1}
-               {:frame-idx 0 :layer-idx 0}]
+               {:frame-idx 1 :layer-idx 1}]
               (:selected-cels-pos sprite)))
-       (is (= {:frame-idx 0 :layer-idx 0} (sprite/get-current-cel-pos sprite)))))))
+       (is (= {:frame-idx 0 :layer-idx 0} (sprite/get-current-cel-pos sprite)))))
+
+   (testing "selection after frame removing")
+
+   (testing "selection after layer removing")
+
+   (testing "selection after frame moving")
+
+   (testing "selection after layer moving")))
 
 (deftest test-duplicate-frame
   (rf-test/run-test-sync
@@ -220,7 +247,10 @@
    (is (= (sprite/get-cel {:layer-idx 0 :frame-idx 0} sprite)
           (sprite/get-cel {:layer-idx 0 :frame-idx 1} sprite)))
    (is (= (sprite/get-cel {:layer-idx 1 :frame-idx 0} sprite)
-          (sprite/get-cel {:frame-idx 1 :layer-idx 1} sprite)))))
+          (sprite/get-cel {:frame-idx 1 :layer-idx 1} sprite)))
+   (is (= [(sprite/get-cel {:layer-idx 0 :frame-idx 0} sprite)
+           (sprite/get-cel {:layer-idx 1 :frame-idx 0} sprite)]
+          (sprite/get-frame-cels 0 sprite)))))
 
 (deftest test-remove-frame
   (testing "remove frame"
@@ -245,46 +275,6 @@
      (rf/dispatch-sync [::events/remove-layer 1])
 
      (is (= (-> initial-db :sprite) (-> @!db :sprite))))))
-
-(deftest test-select-cel
-  (testing "select cel"
-    (rf-test/run-test-sync
-     (rf/dispatch-sync [::events/initialize-db])
-     (def !db (rf/subscribe [:db]))
-
-     (rf/dispatch-sync [::events/add-layer])
-     (rf/dispatch-sync [::events/add-frame])
-
-     (rf/dispatch [::events/select-cel {:frame-idx 0 :layer-idx 0}])
-     (is (= (-> @!db :sprite sprite/get-current-cel-pos) {:frame-idx 0 :layer-idx 0}))
-
-     (rf/dispatch [::events/select-cel {:frame-idx 1 :layer-idx 1}])
-     (is (= (-> @!db :sprite sprite/get-current-cel-pos) {:frame-idx 1 :layer-idx 1})))))
-
-(deftest test-select
-  (rf-test/run-test-sync
-   (rf/dispatch-sync [::events/initialize-db])
-   (def !initial-db (rf/subscribe [:db]))
-   (def sprite-size (-> @!initial-db :sprite sprite/get-size))
-
-   (rf/dispatch-sync [::events/add-frame])
-   (rf/dispatch-sync [::events/add-frame])
-   (rf/dispatch-sync [::events/add-layer])
-   (rf/dispatch-sync [::events/add-layer])
-
-   (rf/dispatch-sync [::events/select-cel {:frame-idx 0 :layer-idx 0}])
-   (is (= {:frame-idx 0 :layer-idx 0} (-> @!db :sprite sprite/get-current-cel-pos)))
-   (is (= (-> @!initial-db :sprite (sprite/get-current-cel)) (-> @!db :sprite sprite/get-current-cel)))
-
-   (rf/dispatch-sync [::events/select-cel {:frame-idx 1 :layer-idx 1}])
-   (is (= {:frame-idx 1 :layer-idx 1} (-> @!db :sprite sprite/get-current-cel-pos)))
-   (is (= (cel/create sprite-size) (-> @!db :sprite sprite/get-current-cel)))
-
-   (rf/dispatch-sync [::events/select-frame 2])
-   (is (= {:frame-idx 2 :layer-idx 1} (-> @!db :sprite sprite/get-current-cel-pos)))
-
-   (rf/dispatch-sync [::events/select-layer 2])
-   (is (= {:frame-idx 2 :layer-idx 2} (-> @!db :sprite sprite/get-current-cel-pos)))))
 
 #_(enable-console-print!)
 #_(run-tests)

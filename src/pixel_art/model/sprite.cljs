@@ -6,6 +6,7 @@
 (defn create [{:keys [size layer frame cel]}]
   {:size size
    :selected-cels-pos [{:frame-idx 0 :layer-idx 0}]
+   :current-cel-pos {:frame-idx 0 :layer-idx 0}
    :frames [frame]
    :cels [[cel]] ;; array = frame; array elem = layer
    :layers [layer]
@@ -25,31 +26,37 @@
 (defn resize [sprite])
 
 (defn get-current-cel-pos [sprite]
-  (-> sprite :selected-cels-pos last))
+  (:current-cel-pos sprite))
 
-;; todo: select-only-1-cel
-(defn select-cel [cel-pos sprite]
-  (assoc sprite :selected-cels-pos [cel-pos]))
+(defn select-only-1-cel [cel-pos sprite]
+  (-> sprite
+      (assoc :selected-cels-pos [cel-pos])
+      (assoc :current-cel-pos cel-pos)))
 
 ;; todo: rename
-(defn- select-cel-private [cel-pos sprite]
-  (let [new-selected-cels-pos (->> (:selected-cels-pos sprite)
-                                   (remove #{cel-pos})
-                                   vec
-                                   (#(conj % cel-pos)))]
-    (assoc sprite :selected-cels-pos new-selected-cels-pos)))
+(defn- select-cel [cel-pos sprite]
+  (assoc sprite :current-cel-pos cel-pos))
 
 ;; todo: rename
 (defn add-cel-to-selection [cel-pos sprite]
-  (let [new-selected-cels-pos (->> (:selected-cels-pos sprite)
-                                   (remove #{cel-pos})
-                                   vec
-                                   (#(conj % cel-pos)))]
-    (assoc sprite :selected-cels-pos new-selected-cels-pos)))
+  (let [new-selected-cels-pos (->> (conj (:selected-cels-pos sprite) cel-pos)
+                                   distinct
+                                   vec)]
+    (-> sprite
+        (assoc :selected-cels-pos new-selected-cels-pos)
+        (assoc :current-cel-pos cel-pos))))
 
 (defn toggle-cel-to-selection [cel-pos sprite]
   (if ((set (:selected-cels-pos sprite)) cel-pos)
-    (update sprite :selected-cels-pos #(vec (remove #{cel-pos} %)))
+    (let [selected-cel-pos (->> (:selected-cels-pos sprite)
+                                (remove #{cel-pos})
+                                vec)
+          current-cel-pos (if (= (:current-cel-pos sprite) cel-pos)
+                            (first selected-cel-pos)
+                            cel-pos)]
+      (-> sprite
+          (assoc :selected-cels-pos selected-cel-pos)
+          (assoc :current-cel-pos current-cel-pos)))
     (add-cel-to-selection cel-pos sprite)))
 
 (defn add-cels-range-to-selection [cel-pos sprite]
@@ -64,17 +71,17 @@
                                {:frame-idx frame-idx
                                 :layer-idx layer-idx})))]
     (->> (reduce #(add-cel-to-selection %2 %1) sprite new-selected-cels)
-         (select-cel-private cel-pos))))
+         (select-cel cel-pos))))
 
 ;; todo: ?
 (defn select-frame [idx sprite]
   (let [current-pos (get-current-cel-pos sprite)]
-    (select-cel (assoc current-pos :frame-idx idx) sprite)))
+    (select-only-1-cel (assoc current-pos :frame-idx idx) sprite)))
 
 ;; todo: ?
 (defn select-layer [idx sprite]
   (let [current-pos (get-current-cel-pos sprite)]
-    (select-cel (assoc current-pos :layer-idx idx) sprite)))
+    (select-only-1-cel (assoc current-pos :layer-idx idx) sprite)))
 
 (defn get-current-frame-idx [sprite]
   (:frame-idx (get-current-cel-pos sprite)))
