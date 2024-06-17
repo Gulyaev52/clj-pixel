@@ -16,3 +16,11 @@
 
 (defn find-first [pred coll]
   (first (filter pred coll)))
+
+(defn update-byv [pred f coll]
+  (map
+   (fn [item]
+     (if (pred item)
+       (f item)
+       item))
+   coll))

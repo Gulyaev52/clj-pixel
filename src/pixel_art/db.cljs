@@ -28,7 +28,8 @@
         sprite (sprite/create {:size sprite-size
                                :layer (layer/create (get-layer-name :single 0) nil)
                                :frame (frame/create initial-frame-duration)
-                               :cel (->> (cel/create sprite-size)
+                               :cel (->> (cel/create sprite-size {:frame-idx 0
+                                                                  :layer-idx 0})
                                          (cel/set-pixels (->> (for [x (range 0 (:width sprite-size))
                                                                     y (range 0 (:height sprite-size))]
                                                                 [{:x x :y y} nil])

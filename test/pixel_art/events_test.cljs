@@ -44,13 +44,15 @@
      (is (= [(frame/create 100) (frame/create 100)] (:frames sprite)) "new frame created")
      (is (= (frame/create 100) (sprite/get-current-frame sprite)) "get-current-frame -> new frame selected")
      (is (= {:frame-idx 1 :layer-idx 0} (sprite/get-current-cel-pos sprite)) "cel of new layer should be current")
-     (is (= (cel/create (sprite/get-size sprite)) (sprite/get-current-cel sprite)) "new cel should be created")
+     (is (= (cel/create (sprite/get-size sprite) {:frame-idx 1 :layer-idx 0})
+            (sprite/get-current-cel sprite)) "new cel should be created")
      (is (= (sprite/get-cel {:frame-idx 0 :layer-idx 0} initial-sprite)
             (sprite/get-cel {:frame-idx 0 :layer-idx 0} sprite)) "cel from first frame should not be changed")
 
      (apply-current-tool [{:x 0 :y 0}])
      (def updated-sprite (-> @!db :sprite))
-     (is (= (->> (cel/create (sprite/get-size sprite))
+     (is (= (->> (cel/create (sprite/get-size sprite)
+                             {:frame-idx 1 :layer-idx 0})
                  (cel/set-pixels {{:x 0 :y 0} "black"}))
             (sprite/get-current-cel updated-sprite))
          "current cel should be updated"))
@@ -66,15 +68,19 @@
      (is (= [(frame/create 100) (frame/create 100) (frame/create 100)] (:frames sprite)) "new frame created")
      (is (= (frame/create 100) (sprite/get-current-frame sprite)) "get-current-frame -> new frame selected")
      (is (= {:frame-idx 2 :layer-idx 0} (sprite/get-current-cel-pos sprite)) "cel of new layer should be current")
-     (is (= (cel/create (sprite/get-size sprite)) (sprite/get-current-cel sprite)) "new cel should be created")
+     (is (= (cel/create (sprite/get-size sprite)
+                        {:frame-idx 2 :layer-idx 0})
+            (sprite/get-current-cel sprite)) "new cel should be created")
      (is (= (sprite/get-cel {:frame-idx 0 :layer-idx 0} initial-sprite)
             (sprite/get-cel {:frame-idx 0 :layer-idx 0} sprite)) "cel from 1 frame should not be changed")
-     (is (= (cel/create (sprite/get-size sprite))
+     (is (= (cel/create (sprite/get-size sprite)
+                        {:frame-idx 1 :layer-idx 0})
             (sprite/get-cel {:frame-idx 1 :layer-idx 0} sprite)) "cel from 2 frame should not be changed")
 
      (apply-current-tool [{:x 0 :y 0}])
      (def updated-sprite (-> @!db :sprite))
-     (is (= (->> (cel/create (sprite/get-size sprite))
+     (is (= (->> (cel/create (sprite/get-size sprite)
+                             {:frame-idx 2 :layer-idx 0})
                  (cel/set-pixels {{:x 0 :y 0} "black"}))
             (sprite/get-current-cel updated-sprite))
          "current cel should be updated"))))
@@ -94,13 +100,13 @@
      (is (= [(layer/create "Layer 1" nil) (layer/create "Layer 2" nil)] (:layers sprite)) "new layer created")
      (is (= {:frame-idx 0 :layer-idx 1} (sprite/get-current-cel-pos sprite)) "cel of new layer should be current")
      (is (= new-layer (sprite/get-current-layer sprite)) "get-current-layer -> new layer selected")
-     (is (= (cel/create (sprite/get-size sprite)) (sprite/get-current-cel sprite)) "new cel should be created")
+     (is (= (cel/create (sprite/get-size sprite) {:frame-idx 0 :layer-idx 1}) (sprite/get-current-cel sprite)) "new cel should be created")
      (is (= (sprite/get-cel {:frame-idx 0 :layer-idx 0} initial-sprite)
             (sprite/get-cel {:frame-idx 0 :layer-idx 0} sprite)) "cel from previous layer should not be changed")
 
      (apply-current-tool [{:x 0 :y 0}])
      (def updated-sprite (-> @!db :sprite))
-     (is (= (->> (cel/create (sprite/get-size sprite))
+     (is (= (->> (cel/create (sprite/get-size sprite) {:frame-idx 0 :layer-idx 1})
                  (cel/set-pixels {{:x 0 :y 0} "black"}))
             (sprite/get-current-cel updated-sprite))
          "current cel should be updated"))
@@ -119,15 +125,15 @@
      (is (= [(layer/create "Layer 1" nil) (layer/create "Layer 2" nil) new-layer] (:layers sprite)) "new layer created")
      (is (= {:frame-idx 0 :layer-idx 2} (sprite/get-current-cel-pos sprite)) "cel of new layer should be current")
      (is (= new-layer (sprite/get-current-layer sprite)) "get-current-layer -> new layer selected")
-     (is (= (cel/create (sprite/get-size sprite)) (sprite/get-current-cel sprite)) "new cel should be created")
+     (is (= (cel/create (sprite/get-size sprite) {:frame-idx 0 :layer-idx 2}) (sprite/get-current-cel sprite)) "new cel should be created")
      (is (= (sprite/get-cel {:frame-idx 0 :layer-idx 0} initial-sprite)
             (sprite/get-cel {:frame-idx 0 :layer-idx 0} sprite)) "cel from 1 layer should not be changed")
-     (is (= (cel/create (sprite/get-size sprite))
+     (is (= (cel/create (sprite/get-size sprite) {:frame-idx 0 :layer-idx 1})
             (sprite/get-cel {:frame-idx 0 :layer-idx 1} sprite)) "cel from 2 layer should not be changed")
 
      (apply-current-tool [{:x 0 :y 0}])
      (def updated-sprite (-> @!db :sprite))
-     (is (= (->> (cel/create (sprite/get-size sprite))
+     (is (= (->> (cel/create (sprite/get-size sprite) {:frame-idx 0 :layer-idx 2})
                  (cel/set-pixels {{:x 0 :y 0} "black"}))
             (sprite/get-current-cel updated-sprite))
          "current cel should be updated"))))
@@ -152,7 +158,7 @@
 
      (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 1 :layer-idx 1}])
      (is (= {:frame-idx 1 :layer-idx 1} (-> @!db :sprite sprite/get-current-cel-pos)))
-     (is (= (cel/create (-> @!db :sprite sprite/get-size)) (-> @!db :sprite sprite/get-current-cel))))
+     (is (= (cel/create (-> @!db :sprite sprite/get-size) {:frame-idx 1 :layer-idx 1}) (-> @!db :sprite sprite/get-current-cel))))
 
    (testing "select-frame"
      (create-fixture)
@@ -169,7 +175,7 @@
    (testing "toggle-cel-to-selection"
      (create-fixture)
 
-     (rf/dispatch-sync [::events/select-cel {:frame-idx 0 :layer-idx 0}])
+     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
      (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
      (def sprite (-> @!db :sprite))
      (is (= [{:frame-idx 0 :layer-idx 0} {:frame-idx 1 :layer-idx 1}]
@@ -189,7 +195,7 @@
    (testing "add-cels-range-to-selection"
      (testing "add range from left to the right"
        (create-fixture)
-       (rf/dispatch-sync [::events/select-cel {:frame-idx 0 :layer-idx 0}])
+       (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
        (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
        (def sprite (-> @!db :sprite))
        (is (= [{:frame-idx 0 :layer-idx 0}
@@ -201,7 +207,7 @@
 
      (testing "add range from right to the left"
        (create-fixture)
-       (rf/dispatch-sync [::events/select-cel {:frame-idx 1 :layer-idx 1}])
+       (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 1 :layer-idx 1}])
        (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 0 :layer-idx 0}])
        (def sprite (-> @!db :sprite))
        (is (= [{:frame-idx 1 :layer-idx 1}
@@ -213,7 +219,7 @@
 
      (testing "when create range for already added then should select it"
        (create-fixture)
-       (rf/dispatch-sync [::events/select-cel {:frame-idx 0 :layer-idx 0}])
+       (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
        (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
        (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 0 :layer-idx 0}])
        (def sprite (-> @!db :sprite))
@@ -244,10 +250,14 @@
    (def sprite (-> @!db :sprite))
    (is (= [(frame/create 100) (frame/create 100)] (:frames sprite)))
    (is (= [(layer/create "Layer 1" nil) (layer/create "Layer 2" nil)] (:layers sprite)))
-   (is (= (sprite/get-cel {:layer-idx 0 :frame-idx 0} sprite)
-          (sprite/get-cel {:layer-idx 0 :frame-idx 1} sprite)))
-   (is (= (sprite/get-cel {:layer-idx 1 :frame-idx 0} sprite)
-          (sprite/get-cel {:frame-idx 1 :layer-idx 1} sprite)))
+   (is (= (dissoc (sprite/get-cel {:layer-idx 0 :frame-idx 0} sprite)
+                  :pos)
+          (dissoc (sprite/get-cel {:layer-idx 0 :frame-idx 1} sprite)
+                  :pos)))
+   (is (= (dissoc (sprite/get-cel {:layer-idx 1 :frame-idx 0} sprite)
+                  :pos)
+          (dissoc (sprite/get-cel {:frame-idx 1 :layer-idx 1} sprite)
+                  :pos)))
    (is (= [(sprite/get-cel {:layer-idx 0 :frame-idx 0} sprite)
            (sprite/get-cel {:layer-idx 1 :frame-idx 0} sprite)]
           (sprite/get-frame-cels 0 sprite)))))

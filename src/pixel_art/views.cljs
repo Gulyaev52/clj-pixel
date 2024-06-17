@@ -86,9 +86,10 @@
 (defn timeline-panel []
   (let [sprite @(re-frame/subscribe [::subs/sprite])
         current-cel (sprite/get-current-cel sprite)
-        {:keys [current-frame-idx current-layer-idx frames layers cels]} sprite
+        current-cel-pos (sprite/get-current-cel-pos sprite)
+        {:keys [frames layers cels]} sprite
         cel-imgs @(re-frame/subscribe [::subs/cel-imgs])
-        cels-by-layers (transpose cels) ;; todo: мб так и хранить в спрайте. плоский?
+        cels-by-layers (group-by #(-> % :pos :layer-idx) cels) ;; todo: мб так и хранить в спрайте. плоский?
         ]
     [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
      [:div
@@ -119,10 +120,10 @@
       [:div "Layers"] (for [[idx frame] (map-indexed vector frames)]
                         [:div {:onClick (fn [] (re-frame/dispatch [::events/select-frame idx]))
                                :style {:border-style "solid"
-                                       :border-color (if (= idx current-frame-idx)
+                                       :border-color (if (= idx (:frame-idx current-cel-pos))
                                                        "green"
                                                        "black")
-                                       :border-width (if (= idx current-frame-idx)
+                                       :border-width (if (= idx (:frame-idx current-cel-pos))
                                                        "2px"
                                                        "1px")
                                        :text-align "center"
@@ -132,10 +133,10 @@
          [:div {:onClick (fn [] (re-frame/dispatch [::events/select-layer layer-idx]))
                 :style {:display "flex"
                         :border-style "solid"
-                        :border-color (if (= layer-idx current-layer-idx)
+                        :border-color (if (= layer-idx (:layer-idx current-cel-pos))
                                         "green"
                                         "black")
-                        :border-width (if (= layer-idx current-layer-idx)
+                        :border-width (if (= layer-idx (:layer-idx current-cel-pos))
                                         "2px"
                                         "1px")
                         :align-items "center"
@@ -146,18 +147,15 @@
                                 (re-frame/dispatch [::events/toggle-layer-visibility layer-idx]))}
             (if (:visibile? layer) "v0" "v-")]
            [:div (:name layer)]]]
-         (for [[frame-idx cel] (map-indexed vector (nth cels-by-layers layer-idx))]
-           (let [pos {:frame-idx frame-idx
-                      :layer-idx layer-idx}
+         (for [cel (cels-by-layers layer-idx)]
+           (let [pos (:pos cel)
                  cel-img (cel-imgs pos)]
-             [:div {:onClick (fn [] (re-frame/dispatch [::events/select-cel pos]))
+             [:div {:onClick (fn [] (re-frame/dispatch [::events/select-only-1-cel pos]))
                     :style {:border-style "solid"
-                            :border-color (if (and (= layer-idx current-layer-idx)
-                                                   (= frame-idx current-frame-idx))
+                            :border-color (if (= pos current-cel-pos)
                                             "green"
                                             "black")
-                            :border-width (if (and (= layer-idx current-layer-idx)
-                                                   (= frame-idx current-frame-idx))
+                            :border-width (if (= pos current-cel-pos)
                                             "2px"
                                             "1px")
                             :background-color (when (cel/emptyy? cel)
@@ -166,72 +164,6 @@
                             :background-image (str "url(" cel-img ")")
                             :background-size "100% 100%"
                             :cursor "pointer"}}]))])]]))
-
-(defn frames []
-  (letfn [(box [style onClick children]
-            [:div {:onClick onClick
-                   :style (merge {:position "absolute"
-                                  :display "flex"
-                                  :align-items "center"
-                                  :justify-content "center"
-                                  :width "30px"
-                                  :height "30px"
-                                  :font-size "14px"
-                                  :font-weight "bold"}
-                                 style)}
-             children])]
-    (let [sprite @(re-frame/subscribe [::subs/sprite])
-          onion-skin @(re-frame/subscribe [::subs/onion-skin])
-          onion-skin-frames-idx (if (:enabled onion-skin)
-                                  (onion-skin/get-onion-skin-frames-idx sprite (:frames-count onion-skin))
-                                  nil)
-          frame-imgs @(re-frame/subscribe [::subs/frame-imgs])
-          {:keys [frames current-frame-idx]} sprite]
-      [:div {:style {:display :flex :gap "10px"}}
-       (for [[idx] (map-indexed vector frames)]
-         (let [frame-img (get frame-imgs idx)]
-           [:div {:onClick (fn [e]
-                             (re-frame/dispatch [::events/select-frame idx]))
-                  :style {:position "relative"
-                          :width 96
-                          :height 96
-                          :border-width "3px"
-                          :border-style (if (contains? onion-skin-frames-idx idx)
-                                          "dashed"
-                                          "solid")
-                          :border-color (if (= idx current-frame-idx)
-                                          "gold" "#444")
-                          :border-radius "3px"
-                          :imageRendering "pixelated"
-                          :backgroundImage (str "url(" frame-img ")")
-                          :backgroundSize "contain"}}
-            [box {:left 0
-                  :top 0
-                  :background-color "gold"}
-             (fn [e]
-               (. e stopPropagation))
-             (inc idx)]
-            [box {:right 0
-                  :top 0
-                  :background-color "rgba(100, 100, 100, 0.6)"}
-             (fn [e]
-               (. e stopPropagation)
-               (re-frame/dispatch [::events/remove-frame idx]))
-             "DE"]
-            [box {:right 0
-                  :bottom 0
-                  :background-color "rgba(100, 100, 100, 0.6)"}
-             (fn [e]
-               (. e stopPropagation)
-               (re-frame/dispatch [::events/duplicate-frame idx]))
-             "DU"]
-            [box {:left 0
-                  :bottom 0
-                  :background-color "rgba(100, 100, 100, 0.6)"}
-             (fn [e]
-               (. e stopPropagation))
-             "M"]]))
-       [:button {:onClick (fn [_] (re-frame/dispatch [::events/add-frame]))} "new frame"]])))
 
 (defn select [{:keys [value onChange options]}]
   (let [selected-option-idx (ffirst (filter #(= (:value (second %)) value) (map-indexed vector options)))]

@@ -60,31 +60,13 @@
 ;; todo: fix performance
 (re-frame/reg-global-interceptor
  (on-changes
-  :generate-frame-imgs ;; todo: явно менять или же если будут id у фреймов то будет ок?
-  #(-> % :sprite)
-  (fn [{:keys [db]}]
-    (let [{:keys [sprite]} db
-          frame-imgs (->> (-> db :sprite :frames)
-                          (map-indexed (fn [frame-idx _]
-                                         [frame-idx (canvas/generate-img #(canvas/draw-frame frame-idx sprite %)
-                                                                         (sprite/get-size sprite))]))
-                          (into {}))]
-      {:db (assoc db :frame-imgs frame-imgs)}))))
-
-;; todo: fix performance
-(re-frame/reg-global-interceptor
- (on-changes
   :generate-cel-imgs
   #(-> % :sprite :cels)
   (fn [{:keys [db]}]
     (let [cel-imgs (->> (-> db :sprite :cels)
-                        (map-indexed (fn [frame-idx cel-row]
-                                       (map-indexed (fn [layer-idx cel] [{:frame-idx frame-idx
-                                                                          :layer-idx layer-idx}
-                                                                         (canvas/generate-img #(canvas/draw-cel cel %)
-                                                                                              (cel/get-size cel))])
-                                                    cel-row)))
-                        (mapcat identity)
+                        (map (fn [cel] [(:pos cel)
+                                        (canvas/generate-img #(canvas/draw-cel cel %)
+                                                             (cel/get-size cel))]))
                         (into {}))]
       {:db (assoc db :cel-imgs cel-imgs)}))))
 
