@@ -18,7 +18,7 @@
   (first (filter pred coll)))
 
 (defn update-byv [pred f coll]
-  (map
+  (mapv
    (fn [item]
      (if (pred item)
        (f item)

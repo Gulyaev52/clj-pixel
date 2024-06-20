@@ -80,14 +80,11 @@
                 :checkbox (checkbox props))))
           options-spec)]))
 
-(defn- transpose [coll]
-  (apply map vector coll))
-
 (defn timeline-panel []
   (let [sprite @(re-frame/subscribe [::subs/sprite])
         current-cel (sprite/get-current-cel sprite)
         current-cel-pos (sprite/get-current-cel-pos sprite)
-        {:keys [frames layers cels]} sprite
+        {:keys [frames layers cels selected-cels-pos]} sprite
         cel-imgs @(re-frame/subscribe [::subs/cel-imgs])
         cels-by-layers (group-by #(-> % :pos :layer-idx) cels) ;; todo: мб так и хранить в спрайте. плоский?
         ]
@@ -149,13 +146,14 @@
            [:div (:name layer)]]]
          (for [cel (cels-by-layers layer-idx)]
            (let [pos (:pos cel)
-                 cel-img (cel-imgs pos)]
+                 cel-img (cel-imgs pos)
+                 selected ((set selected-cels-pos) pos)]
              [:div {:onClick (fn [] (re-frame/dispatch [::events/select-only-1-cel pos]))
                     :style {:border-style "solid"
-                            :border-color (if (= pos current-cel-pos)
+                            :border-color (if selected
                                             "green"
                                             "black")
-                            :border-width (if (= pos current-cel-pos)
+                            :border-width (if selected
                                             "2px"
                                             "1px")
                             :background-color (when (cel/emptyy? cel)

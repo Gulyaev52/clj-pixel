@@ -173,24 +173,55 @@
      (is (= {:frame-idx 0 :layer-idx 2} (-> @!db :sprite sprite/get-current-cel-pos))))
 
    (testing "toggle-cel-to-selection"
-     (create-fixture)
+     (testing "add to selection"
+       (create-fixture)
+       (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+       (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
+       (def sprite (-> @!db :sprite))
+       (is (= [{:frame-idx 0 :layer-idx 0} {:frame-idx 1 :layer-idx 1}]
+              (:selected-cels-pos sprite))
+           "should add cel to selection if it wasn't there")
+       (is (= {:frame-idx 1 :layer-idx 1} (sprite/get-current-cel-pos sprite))
+           "added cel should be selected"))
 
-     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
-     (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
-     (def sprite (-> @!db :sprite))
-     (is (= [{:frame-idx 0 :layer-idx 0} {:frame-idx 1 :layer-idx 1}]
-            (:selected-cels-pos sprite))
-         "should add cel to selection if it wasn't there")
-     (is (= {:frame-idx 1 :layer-idx 1} (sprite/get-current-cel-pos sprite))
-         "added cel should be selected")
+     (testing "remove from selection"
+       (create-fixture)
 
-     (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
-     (def sprite (-> @!db :sprite))
-     (is (= [{:frame-idx 0 :layer-idx 0}]
-            (:selected-cels-pos sprite))
-         "should remove cel that there is in selection")
-     (is (= {:frame-idx 0 :layer-idx 0} (sprite/get-current-cel-pos sprite))
-         "previous cel should be current after removing"))
+       (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+       (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
+       (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
+
+       (def sprite (-> @!db :sprite))
+       (is (= [{:frame-idx 0 :layer-idx 0}]
+              (:selected-cels-pos sprite))
+           "should remove cel that there is in selection")
+       (is (= {:frame-idx 0 :layer-idx 0} (sprite/get-current-cel-pos sprite))
+           "previous cel should be current after removing"))
+
+     (testing "when only 1 selected, it should not be removed"
+       (create-fixture)
+
+       (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+       (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 0 :layer-idx 0}])
+
+       (def sprite (-> @!db :sprite))
+       (is (= [{:frame-idx 0 :layer-idx 0}]
+              (:selected-cels-pos sprite))))
+
+     (testing "when remove not current then current should not be changed"
+       (create-fixture)
+
+       (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+       (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
+       (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 2 :layer-idx 2}]) ;; current
+       (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 0 :layer-idx 0}])
+
+       (def sprite (-> @!db :sprite))
+       (is (= [{:frame-idx 1 :layer-idx 1}
+               {:frame-idx 2 :layer-idx 2}]
+              (:selected-cels-pos sprite)))
+       (is (= {:frame-idx 2 :layer-idx 2}
+              (sprite/get-current-cel-pos sprite)))))
 
    (testing "add-cels-range-to-selection"
      (testing "add range from left to the right"
@@ -230,9 +261,31 @@
               (:selected-cels-pos sprite)))
        (is (= {:frame-idx 0 :layer-idx 0} (sprite/get-current-cel-pos sprite)))))
 
-   (testing "selection after frame removing")
+   (testing "selection after frame removing"
+     (create-fixture)
 
-   (testing "selection after layer removing")
+     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+     (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
+     (rf/dispatch-sync [::events/remove-frame 1])
+
+     (is (= [{:frame-idx 0 :layer-idx 0}
+             {:frame-idx 0 :layer-idx 1}]
+            (:selected-cels-pos (:sprite @!db))))
+     (is (= {:frame-idx 0 :layer-idx 1}
+            (:current-cel-pos (:sprite @!db)))))
+
+   (testing "selection after layer removing"
+     (create-fixture)
+
+     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+     (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
+     (rf/dispatch-sync [::events/remove-layer 1])
+
+     (is (= [{:frame-idx 0 :layer-idx 0}
+             {:frame-idx 1 :layer-idx 0}]
+            (:selected-cels-pos (:sprite @!db))))
+     (is (= {:frame-idx 1 :layer-idx 0}
+            (:current-cel-pos (:sprite @!db)))))
 
    (testing "selection after frame moving")
 

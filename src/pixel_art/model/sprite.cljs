@@ -5,22 +5,16 @@
 
 (defn create [{:keys [size layer frame cel]}]
   {:size size
-   :selected-cels-pos [{:frame-idx 0 :layer-idx 0}]
+   :selected-cels-pos [{:frame-idx 0 :layer-idx 0}] ;; todo: use set
    :current-cel-pos {:frame-idx 0 :layer-idx 0}
    :frames [frame]
    :cels [cel]
    :layers [layer]
-   :linked-cel-groups {}}) ;; когда происходит удаление ячейки/перенос, тогда же нужно удалять и отсюда. удаление фрейма, удаление слоя
+   :linked-cel-groups {}})
 
-;; из-за того что последний всегда активный это приводит к тому что
-
-;; выбор конкретного
-;; добавление одного через ctrl
-;; добавление многих через shift (уч разные слои и прочее)
-;; что будет при выборе фрейма, слоя?
-;; когда сбрасывать?
-;; clear на всех выбранных.
-
+;; todo: test merge-layer-with-below
+;; todo: bulk delete layers, bulk delete frames, buld remove cels and etc
+;; todo: current в selected-cels
 ;; todo: исп id?
 
 (defn resize [sprite])
@@ -47,17 +41,23 @@
         (assoc :current-cel-pos cel-pos))))
 
 (defn toggle-cel-to-selection [cel-pos sprite]
-  (if ((set (:selected-cels-pos sprite)) cel-pos)
+  (cond
+    (and (= (count (:selected-cels-pos sprite)) 1)
+         (= cel-pos (:current-cel-pos sprite)))
+    sprite
+
+    ((set (:selected-cels-pos sprite)) cel-pos)
     (let [selected-cel-pos (->> (:selected-cels-pos sprite)
                                 (remove #{cel-pos})
                                 vec)
           current-cel-pos (if (= (:current-cel-pos sprite) cel-pos)
                             (first selected-cel-pos)
-                            cel-pos)]
+                            (:current-cel-pos sprite))]
       (-> sprite
           (assoc :selected-cels-pos selected-cel-pos)
           (assoc :current-cel-pos current-cel-pos)))
-    (add-cel-to-selection cel-pos sprite)))
+
+    :else (add-cel-to-selection cel-pos sprite)))
 
 (defn add-cels-range-to-selection [cel-pos sprite]
   (let [current-cel-pos (get-current-cel-pos sprite)
@@ -73,7 +73,7 @@
     (->> (reduce #(add-cel-to-selection %2 %1) sprite new-selected-cels)
          (select-cel cel-pos))))
 
-;; todo: ?
+;; todo: rename потому что не понятно что остальные дропаются?
 (defn select-frame [idx sprite]
   (let [current-pos (get-current-cel-pos sprite)]
     (select-only-1-cel (assoc current-pos :frame-idx idx) sprite)))
@@ -194,15 +194,21 @@
 (defn remove-layer [idx sprite]
   (let [new-layers (coll/removev idx (:layers sprite))
         new-cels (vec (remove #(= (-> % :pos :layer-idx) idx) (:cels sprite)))
+        current-cel-pos (get-current-cel-pos sprite)
         removed-cels-pos (->> (range 0 (count (:frames sprite)))
                               (map (fn [frame-idx] {:frame-idx frame-idx :layer-idx idx})))
+        new-selected-cels-pos (vec (apply (partial disj (set (:selected-cels-pos sprite)))
+                                          removed-cels-pos))
         new-linked-cel-groups (apply (partial dissoc (:linked-cel-groups sprite)) removed-cels-pos)]
     (-> sprite
         (assoc :layers new-layers)
         (assoc :cels new-cels)
         (assoc :linked-cel-groups new-linked-cel-groups)
+        (assoc :selected-cels-pos new-selected-cels-pos)
         (#(if (= idx (get-current-layer-idx sprite))
-            (select-layer (min idx (dec (count (:layers %)))) %)
+            (select-cel {:frame-idx (:frame-idx current-cel-pos)
+                         :layer-idx (min (dec (:layer-idx current-cel-pos))
+                                         (dec (count (:layers %))))} %)
             %)))))
 
 (defn duplicate-layer [sprite]
@@ -216,12 +222,18 @@
 
 ;; todo: обновить linked-cel-groups
 (defn- move-layer [from-idx to-idx sprite]
-  (-> sprite
-      (update :layers #(coll/swapv from-idx to-idx %))
-      (update :cels (fn [cels] (coll/update-byv #(= (-> :pos :layer-idx) from-idx)
-                                                (fn [cel] (assoc-in cel [:pos :layer-idx] to-idx))
-                                                cels)))
-      (#(select-layer to-idx %))))
+  (let [new-layers (coll/swapv from-idx to-idx (:layers sprite))
+        new-cels (coll/update-byv #(= (-> :pos :layer-idx) from-idx)
+                                  (fn [cel] (assoc-in cel [:pos :layer-idx] to-idx))
+                                  (:cels sprite))
+        new-selected-cels-pos (coll/update-byv #(= (:layer-idx %) from-idx)
+                                               #(assoc % :layer-idx to-idx)
+                                               (:selected-cels-pos sprite))]
+    (-> sprite
+        (assoc :layers new-layers)
+        (assoc :cels new-cels)
+        (assoc :selected-cels-pos new-selected-cels-pos)
+        (#(select-layer to-idx %)))))
 
 (defn move-layer-up [idx sprite]
   (move-layer idx (dec idx) sprite))
@@ -272,16 +284,21 @@
 ;; todo: cannot be empty
 (defn remove-frame [sprite]
   (let [{:keys [layers linked-cel-groups]} sprite
-        current-frame-idx (get-current-frame-idx sprite)
+        current-cel-pos (get-current-cel-pos sprite)
         removed-cels-pos (->> (range 0 (count layers))
-                              (map (fn [layer-idx] {:frame-idx current-frame-idx
+                              (map (fn [layer-idx] {:frame-idx (:frame-idx current-cel-pos)
                                                     :layer-idx layer-idx})))
+        new-selected-cels-pos (vec (apply (partial disj (set (:selected-cels-pos sprite)))
+                                          removed-cels-pos))
         new-linked-cel-groups (apply (partial dissoc linked-cel-groups) removed-cels-pos)]
     (-> sprite
-        (update :frames #(coll/removev current-frame-idx %))
-        (update :cels (fn [cels] (vec (remove #(= (-> % :pos :frame-idx) current-frame-idx) cels))))
+        (update :frames #(coll/removev (:frame-idx current-cel-pos) %))
+        (update :cels (fn [cels] (vec (remove #(= (-> % :pos :frame-idx) (:frame-idx current-cel-pos)) cels))))
         (assoc :linked-cel-groups new-linked-cel-groups)
-        (#(select-frame (min current-frame-idx (dec (count (:frames %)))) %)))))
+        (assoc :selected-cels-pos new-selected-cels-pos)
+        (#(select-cel {:frame-idx (min (dec (:frame-idx current-cel-pos))
+                                       (dec (count (:frames %))))
+                       :layer-idx (:layer-idx current-cel-pos)} %)))))
 
 (defn duplicate-frame [sprite]
   (let [current-frame (nth (:frames sprite) (get-current-frame-idx sprite))
@@ -293,7 +310,7 @@
                              (assoc :pos pos)))
                sprite)))
 
-;; todo: обновить linked
+;; todo: обновить linked; обновить selected-cels
 (defn move-frame [from to sprite]
   (-> sprite
       (update :frames #(coll/swapv from to %))
