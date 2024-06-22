@@ -5,7 +5,7 @@
 
 (defn create [{:keys [size layer frame cel]}]
   {:size size
-   :selected-cels-pos [{:frame-idx 0 :layer-idx 0}] ;; todo: use set
+   :selected-cels-pos #{{:frame-idx 0 :layer-idx 0}} ;; todo: use set
    :current-cel-pos {:frame-idx 0 :layer-idx 0}
    :frames [frame]
    :cels [cel]
@@ -24,7 +24,7 @@
 
 (defn select-only-1-cel [cel-pos sprite]
   (-> sprite
-      (assoc :selected-cels-pos [cel-pos])
+      (assoc :selected-cels-pos #{cel-pos})
       (assoc :current-cel-pos cel-pos)))
 
 ;; todo: rename
@@ -33,9 +33,7 @@
 
 ;; todo: rename
 (defn add-cel-to-selection [cel-pos sprite]
-  (let [new-selected-cels-pos (->> (conj (:selected-cels-pos sprite) cel-pos)
-                                   distinct
-                                   vec)]
+  (let [new-selected-cels-pos (conj (:selected-cels-pos sprite) cel-pos)]
     (-> sprite
         (assoc :selected-cels-pos new-selected-cels-pos)
         (assoc :current-cel-pos cel-pos))))
@@ -46,15 +44,13 @@
          (= cel-pos (:current-cel-pos sprite)))
     sprite
 
-    ((set (:selected-cels-pos sprite)) cel-pos)
-    (let [selected-cel-pos (->> (:selected-cels-pos sprite)
-                                (remove #{cel-pos})
-                                vec)
+    ((:selected-cels-pos sprite) cel-pos)
+    (let [selected-cels-pos (disj (:selected-cels-pos sprite) cel-pos)
           current-cel-pos (if (= (:current-cel-pos sprite) cel-pos)
-                            (first selected-cel-pos)
+                            (first selected-cels-pos)
                             (:current-cel-pos sprite))]
       (-> sprite
-          (assoc :selected-cels-pos selected-cel-pos)
+          (assoc :selected-cels-pos selected-cels-pos)
           (assoc :current-cel-pos current-cel-pos)))
 
     :else (add-cel-to-selection cel-pos sprite)))
@@ -197,9 +193,8 @@
         current-cel-pos (get-current-cel-pos sprite)
         removed-cels-pos (->> (range 0 (count (:frames sprite)))
                               (map (fn [frame-idx] {:frame-idx frame-idx :layer-idx idx})))
-        new-selected-cels-pos (vec (apply (partial disj (set (:selected-cels-pos sprite)))
-                                          removed-cels-pos))
-        new-linked-cel-groups (apply (partial dissoc (:linked-cel-groups sprite)) removed-cels-pos)]
+        new-selected-cels-pos (apply disj (:selected-cels-pos sprite) removed-cels-pos)
+        new-linked-cel-groups (apply dissoc (:linked-cel-groups sprite) removed-cels-pos)]
     (-> sprite
         (assoc :layers new-layers)
         (assoc :cels new-cels)
@@ -226,9 +221,9 @@
         new-cels (coll/update-byv #(= (-> :pos :layer-idx) from-idx)
                                   (fn [cel] (assoc-in cel [:pos :layer-idx] to-idx))
                                   (:cels sprite))
-        new-selected-cels-pos (coll/update-byv #(= (:layer-idx %) from-idx)
-                                               #(assoc % :layer-idx to-idx)
-                                               (:selected-cels-pos sprite))]
+        new-selected-cels-pos (set (coll/update-byv #(= (:layer-idx %) from-idx)
+                                                    #(assoc % :layer-idx to-idx)
+                                                    (:selected-cels-pos sprite)))]
     (-> sprite
         (assoc :layers new-layers)
         (assoc :cels new-cels)
@@ -288,8 +283,8 @@
         removed-cels-pos (->> (range 0 (count layers))
                               (map (fn [layer-idx] {:frame-idx (:frame-idx current-cel-pos)
                                                     :layer-idx layer-idx})))
-        new-selected-cels-pos (vec (apply (partial disj (set (:selected-cels-pos sprite)))
-                                          removed-cels-pos))
+        new-selected-cels-pos (apply disj (:selected-cels-pos sprite)
+                                     removed-cels-pos)
         new-linked-cel-groups (apply (partial dissoc linked-cel-groups) removed-cels-pos)]
     (-> sprite
         (update :frames #(coll/removev (:frame-idx current-cel-pos) %))

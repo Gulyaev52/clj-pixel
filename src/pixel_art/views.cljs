@@ -147,7 +147,7 @@
          (for [cel (cels-by-layers layer-idx)]
            (let [pos (:pos cel)
                  cel-img (cel-imgs pos)
-                 selected ((set selected-cels-pos) pos)]
+                 selected (selected-cels-pos pos)]
              [:div {:onClick (fn [] (re-frame/dispatch [::events/select-only-1-cel pos]))
                     :style {:border-style "solid"
                             :border-color (if selected
