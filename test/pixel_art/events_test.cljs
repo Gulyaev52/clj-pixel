@@ -1,6 +1,7 @@
 (ns pixel-art.events-test
   (:require
    [pixel-art.events :as events]
+   [pixel-art.subs :as subs]
    [day8.re-frame.test :as rf-test]
    [cljs.test :refer-macros [deftest testing is run-tests]]
    [re-frame.core :as rf]
@@ -13,6 +14,9 @@
  :db
  (fn [db]
    db))
+
+(defn get-selected-cels-from-timeline [timeline]
+  (filter #(or (:selected %) (:current %)) (map #(select-keys % [:pos :current :selected]) (:cels timeline))))
 
 #_(deftest test-init
     (rf-test/run-test-sync
@@ -177,12 +181,9 @@
        (create-fixture)
        (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
        (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
-       (def sprite (-> @!db :sprite))
-       (is (= #{{:frame-idx 0 :layer-idx 0} {:frame-idx 1 :layer-idx 1}}
-              (:selected-cels-pos sprite))
-           "should add cel to selection if it wasn't there")
-       (is (= {:frame-idx 1 :layer-idx 1} (sprite/get-current-cel-pos sprite))
-           "added cel should be selected"))
+       (is (= [{:selected true :current false :pos {:frame-idx 0 :layer-idx 0}}
+               {:selected true :current true :pos {:frame-idx 1 :layer-idx 1}}]
+              (get-selected-cels-from-timeline @(rf/subscribe [::subs/timeline])))))
 
      (testing "remove from selection"
        (create-fixture)
@@ -191,12 +192,8 @@
        (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
        (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
 
-       (def sprite (-> @!db :sprite))
-       (is (= #{{:frame-idx 0 :layer-idx 0}}
-              (:selected-cels-pos sprite))
-           "should remove cel that there is in selection")
-       (is (= {:frame-idx 0 :layer-idx 0} (sprite/get-current-cel-pos sprite))
-           "previous cel should be current after removing"))
+       (is (= [{:selected true :current true :pos {:frame-idx 0 :layer-idx 0}}]
+              (get-selected-cels-from-timeline @(rf/subscribe [::subs/timeline])))))
 
      (testing "when only 1 selected, it should not be removed"
        (create-fixture)
@@ -204,9 +201,8 @@
        (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
        (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 0 :layer-idx 0}])
 
-       (def sprite (-> @!db :sprite))
-       (is (= #{{:frame-idx 0 :layer-idx 0}}
-              (:selected-cels-pos sprite))))
+       (is (= [{:selected true :current true :pos {:frame-idx 0 :layer-idx 0}}]
+              (get-selected-cels-from-timeline @(rf/subscribe [::subs/timeline])))))
 
      (testing "when remove not current then current should not be changed"
        (create-fixture)
@@ -216,50 +212,74 @@
        (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 2 :layer-idx 2}]) ;; current
        (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 0 :layer-idx 0}])
 
-       (def sprite (-> @!db :sprite))
-       (is (= #{{:frame-idx 1 :layer-idx 1}
-                {:frame-idx 2 :layer-idx 2}}
-              (:selected-cels-pos sprite)))
-       (is (= {:frame-idx 2 :layer-idx 2}
-              (sprite/get-current-cel-pos sprite)))))
+       (is (= [{:pos {:frame-idx 1, :layer-idx 1},
+                :current false,
+                :selected true}
+               {:pos {:frame-idx 2, :layer-idx 2},
+                :current true,
+                :selected true}]
+              (get-selected-cels-from-timeline @(rf/subscribe [::subs/timeline]))))))
 
    (testing "add-cels-range-to-selection"
      (testing "add range from left to the right"
        (create-fixture)
+
        (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
        (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
-       (def sprite (-> @!db :sprite))
-       (is (= #{{:frame-idx 0 :layer-idx 0}
-                {:frame-idx 0 :layer-idx 1}
-                {:frame-idx 1 :layer-idx 0}
-                {:frame-idx 1 :layer-idx 1}}
-              (:selected-cels-pos sprite)))
-       (is (= {:frame-idx 1 :layer-idx 1} (sprite/get-current-cel-pos sprite))))
+
+       (is (= [{:pos {:frame-idx 0, :layer-idx 0},
+                :current false,
+                :selected true}
+               {:pos {:frame-idx 1, :layer-idx 0},
+                :current false,
+                :selected true}
+               {:pos {:frame-idx 0, :layer-idx 1},
+                :current false,
+                :selected true}
+               {:pos {:frame-idx 1, :layer-idx 1},
+                :current true,
+                :selected true}]
+              (get-selected-cels-from-timeline @(rf/subscribe [::subs/timeline])))))
 
      (testing "add range from right to the left"
        (create-fixture)
+
        (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 1 :layer-idx 1}])
        (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 0 :layer-idx 0}])
-       (def sprite (-> @!db :sprite))
-       (is (= #{{:frame-idx 1 :layer-idx 1}
-                {:frame-idx 0 :layer-idx 0}
-                {:frame-idx 0 :layer-idx 1}
-                {:frame-idx 1 :layer-idx 0}}
-              (:selected-cels-pos sprite)))
-       (is (= {:frame-idx 0 :layer-idx 0} (sprite/get-current-cel-pos sprite))))
+
+       (is (= [{:pos {:frame-idx 0, :layer-idx 0},
+                :current true,
+                :selected true}
+               {:pos {:frame-idx 1, :layer-idx 0},
+                :current false,
+                :selected true}
+               {:pos {:frame-idx 0, :layer-idx 1},
+                :current false,
+                :selected true}
+               {:pos {:frame-idx 1, :layer-idx 1},
+                :current false,
+                :selected true}]
+              (get-selected-cels-from-timeline @(rf/subscribe [::subs/timeline])))))
 
      (testing "when create range for already added then should select it"
        (create-fixture)
        (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
        (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
        (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 0 :layer-idx 0}])
-       (def sprite (-> @!db :sprite))
-       (is (= #{{:frame-idx 0 :layer-idx 0}
-                {:frame-idx 0 :layer-idx 1}
-                {:frame-idx 1 :layer-idx 0}
-                {:frame-idx 1 :layer-idx 1}}
-              (:selected-cels-pos sprite)))
-       (is (= {:frame-idx 0 :layer-idx 0} (sprite/get-current-cel-pos sprite)))))
+
+       (is (= [{:pos {:frame-idx 0, :layer-idx 0},
+                :current true,
+                :selected true}
+               {:pos {:frame-idx 1, :layer-idx 0},
+                :current false,
+                :selected true}
+               {:pos {:frame-idx 0, :layer-idx 1},
+                :current false,
+                :selected true}
+               {:pos {:frame-idx 1, :layer-idx 1},
+                :current false,
+                :selected true}]
+              (get-selected-cels-from-timeline @(rf/subscribe [::subs/timeline]))))))
 
    (testing "selection after frame removing"
      (create-fixture)
@@ -268,11 +288,13 @@
      (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
      (rf/dispatch-sync [::events/remove-frame 1])
 
-     (is (= #{{:frame-idx 0 :layer-idx 0}
-              {:frame-idx 0 :layer-idx 1}}
-            (:selected-cels-pos (:sprite @!db))))
-     (is (= {:frame-idx 0 :layer-idx 1}
-            (sprite/get-current-cel-pos (:sprite @!db)))))
+     (is (= [{:pos {:frame-idx 0, :layer-idx 0},
+              :current false,
+              :selected true}
+             {:pos {:frame-idx 0, :layer-idx 1},
+              :current true,
+              :selected true}]
+            (get-selected-cels-from-timeline @(rf/subscribe [::subs/timeline])))))
 
    (testing "selection after layer removing"
      (create-fixture)
@@ -281,11 +303,13 @@
      (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
      (rf/dispatch-sync [::events/remove-layer 1])
 
-     (is (= #{{:frame-idx 0 :layer-idx 0}
-              {:frame-idx 1 :layer-idx 0}}
-            (:selected-cels-pos (:sprite @!db))))
-     (is (= {:frame-idx 1 :layer-idx 0}
-            (sprite/get-current-cel-pos (:sprite @!db)))))
+     (is (= [{:pos {:frame-idx 0, :layer-idx 0},
+              :current false,
+              :selected true}
+             {:pos {:frame-idx 1, :layer-idx 0},
+              :current true,
+              :selected true}]
+            (get-selected-cels-from-timeline @(rf/subscribe [::subs/timeline])))))
 
    (testing "selection after frame moving")
 
@@ -316,28 +340,28 @@
           (sprite/get-frame-cels 0 sprite)))))
 
 (deftest test-remove-frame
-  #_(testing "remove frame"
-      (rf-test/run-test-sync
-       (rf/dispatch-sync [::events/initialize-db])
-       (def !db (rf/subscribe [:db]))
-       (def initial-db @(rf/subscribe [:db]))
+  (testing "remove frame"
+    (rf-test/run-test-sync
+     (rf/dispatch-sync [::events/initialize-db])
+     (def !db (rf/subscribe [:db]))
+     (def initial-db @(rf/subscribe [:db]))
 
-       (rf/dispatch-sync [::events/add-frame])
-       (rf/dispatch-sync [::events/remove-frame])
+     (rf/dispatch-sync [::events/add-frame])
+     (rf/dispatch-sync [::events/remove-frame])
 
-       (is (= (-> initial-db :sprite) (-> @!db :sprite))))))
+     (is (= (-> initial-db :sprite) (-> @!db :sprite))))))
 
 (deftest test-remove-layer
-  #_(testing "remove layer"
-      (rf-test/run-test-sync
-       (rf/dispatch-sync [::events/initialize-db])
-       (def !db (rf/subscribe [:db]))
-       (def initial-db @(rf/subscribe [:db]))
+  (testing "remove layer"
+    (rf-test/run-test-sync
+     (rf/dispatch-sync [::events/initialize-db])
+     (def !db (rf/subscribe [:db]))
+     (def initial-db @(rf/subscribe [:db]))
 
-       (rf/dispatch-sync [::events/add-layer])
-       (rf/dispatch-sync [::events/remove-layer 1])
+     (rf/dispatch-sync [::events/add-layer])
+     (rf/dispatch-sync [::events/remove-layer 1])
 
-       (is (= (:selected-cels-pos (-> initial-db :sprite)) (:selected-cels-pos (-> @!db :sprite)))))))
+     (is (= (-> initial-db :sprite) (-> @!db :sprite))))))
 
 #_(enable-console-print!)
 #_(run-tests)

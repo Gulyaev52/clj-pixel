@@ -14,7 +14,7 @@
 
 ;; todo: test merge-layer-with-below
 ;; todo: bulk delete layers, bulk delete frames, buld remove cels and etc
-;; todo: current в selected-cels
+;; todo: selected-cels -> map с {:current true}
 ;; todo: исп id?
 
 (defn resize [sprite])
