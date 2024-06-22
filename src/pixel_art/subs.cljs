@@ -1,6 +1,8 @@
 (ns pixel-art.subs
-  (:require [pixel-art.tool.utils :refer [get-tool-options]]
-            [re-frame.core :as re-frame]))
+  (:require [pixel-art.model.sprite :as sprite]
+            [pixel-art.tool.utils :refer [get-tool-options]]
+            [re-frame.core :as re-frame]
+            [pixel-art.model.cel :as cel]))
 
 (re-frame/reg-sub
  ::sprite-size
@@ -88,3 +90,30 @@
 (re-frame/reg-sub
  ::mouse-pos
  (fn [db] (:mouse-pos db)))
+
+;; selected
+;; current
+;; cel-img
+;; pos
+;; empty
+(re-frame/reg-sub
+ ::timeline
+ (fn [db]
+   (let [{:keys [cel-imgs sprite]} db
+         {:keys [cels layers frames selected-cels-pos]} sprite
+         current-cel (sprite/get-current-cel sprite)
+         current-cel-pos (sprite/get-current-cel-pos sprite)]
+     {:cels (map (fn [cel] (merge cel {:current (= current-cel-pos (:pos cel))
+                                       :selected (some? (selected-cels-pos (:pos cel)))
+                                       :img (cel-imgs (:pos cel))
+                                       :empty (cel/emptyy? cel)}))
+                 cels)
+      :layers (map-indexed (fn [idx layer]
+                             (merge layer {:current (= idx (:layer-idx current-cel-pos))
+                                           :idx idx}))
+                           layers)
+      :frames (map-indexed (fn [idx frame]
+                             (merge frame {:current (= idx (:frame-idx current-cel-pos))
+                                           :idx idx}))
+                           frames)
+      :current-cel-opacity (:opacity current-cel)})))

@@ -272,7 +272,7 @@
               {:frame-idx 0 :layer-idx 1}}
             (:selected-cels-pos (:sprite @!db))))
      (is (= {:frame-idx 0 :layer-idx 1}
-            (:current-cel-pos (:sprite @!db)))))
+            (sprite/get-current-cel-pos (:sprite @!db)))))
 
    (testing "selection after layer removing"
      (create-fixture)
@@ -285,7 +285,7 @@
               {:frame-idx 1 :layer-idx 0}}
             (:selected-cels-pos (:sprite @!db))))
      (is (= {:frame-idx 1 :layer-idx 0}
-            (:current-cel-pos (:sprite @!db)))))
+            (sprite/get-current-cel-pos (:sprite @!db)))))
 
    (testing "selection after frame moving")
 

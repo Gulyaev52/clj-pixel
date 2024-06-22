@@ -81,13 +81,8 @@
           options-spec)]))
 
 (defn timeline-panel []
-  (let [sprite @(re-frame/subscribe [::subs/sprite])
-        current-cel (sprite/get-current-cel sprite)
-        current-cel-pos (sprite/get-current-cel-pos sprite)
-        {:keys [frames layers cels selected-cels-pos]} sprite
-        cel-imgs @(re-frame/subscribe [::subs/cel-imgs])
-        cels-by-layers (group-by #(-> % :pos :layer-idx) cels) ;; todo: мб так и хранить в спрайте. плоский?
-        ]
+  (let [{:keys [cels layers frames current-cel-opacity]} @(re-frame/subscribe [::subs/timeline])
+        cels-by-layers (group-by #(-> % :pos :layer-idx) cels)]
     [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
      [:div
       [:div {:style {:display :flex}} "frames:"
@@ -105,7 +100,7 @@
       [slider {:label "Cell opacity"
                :min 0
                :max 1
-               :value (:opacity current-cel)
+               :value current-cel-opacity
                :step 0.1
                :onChange (fn [v] (re-frame/dispatch [::events/set-cel-opacity v]))}]]
      [:div {:style {:display :grid
@@ -114,26 +109,26 @@
                     :grid-template-columns (str "100px " (->> (repeat (count frames) "100px") (string/join " ")))
                     :grid-column-gap "4px"
                     :grid-row-gap "4px"}}
-      [:div "Layers"] (for [[idx frame] (map-indexed vector frames)]
-                        [:div {:onClick (fn [] (re-frame/dispatch [::events/select-frame idx]))
+      [:div "Layers"] (for [frame frames]
+                        [:div {:onClick (fn [] (re-frame/dispatch [::events/select-frame (:idx frame)]))
                                :style {:border-style "solid"
-                                       :border-color (if (= idx (:frame-idx current-cel-pos))
+                                       :border-color (if (:current frame)
                                                        "green"
                                                        "black")
-                                       :border-width (if (= idx (:frame-idx current-cel-pos))
+                                       :border-width (if (:current frame)
                                                        "2px"
                                                        "1px")
                                        :text-align "center"
-                                       :cursor "pointer"}} (inc idx)])
-      (for [[layer-idx layer] (map-indexed vector layers)]
+                                       :cursor "pointer"}} (inc (:idx frame))])
+      (for [layer layers]
         [:<>
-         [:div {:onClick (fn [] (re-frame/dispatch [::events/select-layer layer-idx]))
+         [:div {:onClick (fn [] (re-frame/dispatch [::events/select-layer (:idx layer)]))
                 :style {:display "flex"
                         :border-style "solid"
-                        :border-color (if (= layer-idx (:layer-idx current-cel-pos))
+                        :border-color (if (:current layer)
                                         "green"
                                         "black")
-                        :border-width (if (= layer-idx (:layer-idx current-cel-pos))
+                        :border-width (if (:current layer)
                                         "2px"
                                         "1px")
                         :align-items "center"
@@ -141,27 +136,24 @@
           [:div
            [:button {:onClick (fn [e]
                                 (. e stopPropagation)
-                                (re-frame/dispatch [::events/toggle-layer-visibility layer-idx]))}
+                                (re-frame/dispatch [::events/toggle-layer-visibility (:idx layer)]))}
             (if (:visibile? layer) "v0" "v-")]
            [:div (:name layer)]]]
-         (for [cel (cels-by-layers layer-idx)]
-           (let [pos (:pos cel)
-                 cel-img (cel-imgs pos)
-                 selected (selected-cels-pos pos)]
-             [:div {:onClick (fn [] (re-frame/dispatch [::events/select-only-1-cel pos]))
-                    :style {:border-style "solid"
-                            :border-color (if selected
-                                            "green"
-                                            "black")
-                            :border-width (if selected
-                                            "2px"
-                                            "1px")
-                            :background-color (when (cel/emptyy? cel)
-                                                "rgba(0, 0, 0, 0.2)")
-                            :image-rendering "pixelated"
-                            :background-image (str "url(" cel-img ")")
-                            :background-size "100% 100%"
-                            :cursor "pointer"}}]))])]]))
+         (for [cel (cels-by-layers (:idx layer))]
+           [:div {:onClick (fn [] (re-frame/dispatch [::events/select-only-1-cel (:pos cel)]))
+                  :style {:border-style "solid"
+                          :border-color (if (:selected cel)
+                                          "green"
+                                          "black")
+                          :border-width (if (:selected cel)
+                                          "2px"
+                                          "1px")
+                          :background-color (when (cel/emptyy? cel)
+                                              "rgba(0, 0, 0, 0.2)")
+                          :image-rendering "pixelated"
+                          :background-image (str "url(" (:img cel) ")")
+                          :background-size "100% 100%"
+                          :cursor "pointer"}}])])]]))
 
 (defn select [{:keys [value onChange options]}]
   (let [selected-option-idx (ffirst (filter #(= (:value (second %)) value) (map-indexed vector options)))]
