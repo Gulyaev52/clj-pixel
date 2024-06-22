@@ -193,18 +193,21 @@
         current-cel-pos (get-current-cel-pos sprite)
         removed-cels-pos (->> (range 0 (count (:frames sprite)))
                               (map (fn [frame-idx] {:frame-idx frame-idx :layer-idx idx})))
-        new-selected-cels-pos (apply disj (:selected-cels-pos sprite) removed-cels-pos)
+        new-current-cel-pos (if (= idx (:layer-idx current-cel-pos))
+                              {:frame-idx (:frame-idx current-cel-pos)
+                               :layer-idx (min (dec (:layer-idx current-cel-pos))
+                                               (- (count (:layers sprite)) 2))}
+                              current-cel-pos)
+        new-selected-cels-pos (-> (apply disj (:selected-cels-pos sprite)
+                                         removed-cels-pos)
+                                  (conj new-current-cel-pos))
         new-linked-cel-groups (apply dissoc (:linked-cel-groups sprite) removed-cels-pos)]
     (-> sprite
         (assoc :layers new-layers)
         (assoc :cels new-cels)
         (assoc :linked-cel-groups new-linked-cel-groups)
         (assoc :selected-cels-pos new-selected-cels-pos)
-        (#(if (= idx (get-current-layer-idx sprite))
-            (select-cel {:frame-idx (:frame-idx current-cel-pos)
-                         :layer-idx (min (dec (:layer-idx current-cel-pos))
-                                         (dec (count (:layers %))))} %)
-            %)))))
+        (#(select-cel new-current-cel-pos %)))))
 
 (defn duplicate-layer [sprite]
   (let [{:keys [layers]} sprite
@@ -283,17 +286,19 @@
         removed-cels-pos (->> (range 0 (count layers))
                               (map (fn [layer-idx] {:frame-idx (:frame-idx current-cel-pos)
                                                     :layer-idx layer-idx})))
-        new-selected-cels-pos (apply disj (:selected-cels-pos sprite)
-                                     removed-cels-pos)
+        new-current-cel-pos {:frame-idx (min (dec (:frame-idx current-cel-pos))
+                                             (- (count (:frames sprite)) 2))
+                             :layer-idx (:layer-idx current-cel-pos)}
+        new-selected-cels-pos (-> (apply disj (:selected-cels-pos sprite)
+                                         removed-cels-pos)
+                                  (conj new-current-cel-pos))
         new-linked-cel-groups (apply (partial dissoc linked-cel-groups) removed-cels-pos)]
     (-> sprite
         (update :frames #(coll/removev (:frame-idx current-cel-pos) %))
         (update :cels (fn [cels] (vec (remove #(= (-> % :pos :frame-idx) (:frame-idx current-cel-pos)) cels))))
         (assoc :linked-cel-groups new-linked-cel-groups)
         (assoc :selected-cels-pos new-selected-cels-pos)
-        (#(select-cel {:frame-idx (min (dec (:frame-idx current-cel-pos))
-                                       (dec (count (:frames %))))
-                       :layer-idx (:layer-idx current-cel-pos)} %)))))
+        (#(select-cel new-current-cel-pos %)))))
 
 (defn duplicate-frame [sprite]
   (let [current-frame (nth (:frames sprite) (get-current-frame-idx sprite))
