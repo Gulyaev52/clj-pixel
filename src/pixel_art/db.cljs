@@ -23,7 +23,7 @@
 
 (def initial-frame-duration 100)
 
-(defn get-default-db [palette-local-storage-item]
+(defn get-default-db [palette-local-storage-item initial-pixels-map]
   (let [sprite-size {:width 8 :height 8}
         sprite (sprite/create {:size sprite-size
                                :layer (layer/create (get-layer-name :single 0) nil)
@@ -35,13 +35,14 @@
                                                                 [{:x x :y y} nil])
                                                               (into {})))
                                          (cel/set-pixels
-                                          {{:x 0 :y 0} "black"
-                                           {:x 0 :y 1} transparent-color
-                                           {:x 1 :y 1} "black"
-                                           {:x 3 :y 3} "black"
-                                           {:x 3 :y 4} "black"
-                                           {:x 4 :y 3} "black"
-                                           {:x 4 :y 4} "black"}))})
+                                          (or initial-pixels-map
+                                              {{:x 0 :y 0} "black"
+                                               {:x 0 :y 1} transparent-color
+                                               {:x 1 :y 1} "black"
+                                               {:x 3 :y 3} "black"
+                                               {:x 3 :y 4} "black"
+                                               {:x 4 :y 3} "black"
+                                               {:x 4 :y 4} "black"})))})
         viewport-size {:width 900 :height 700}
         scale max-scale
         canvas-size (update-vals sprite-size #(* % scale))

@@ -32,8 +32,9 @@
 (re-frame/reg-event-fx
  ::initialize-db
  [(re-frame/inject-cofx ::local-storage/get-item palette/local-storage-key)]
- (fn [coeffects _]
-   {:db (db/get-default-db (get coeffects palette/local-storage-key))
+ (fn [coeffects [_ initial-pixels-map]]
+   {:db (db/get-default-db (get coeffects palette/local-storage-key)
+                           initial-pixels-map)
     :fx [[:dispatch [::rp/set-keydown-rules
                      {:event-keys (concat history.events/hotkeys
                                           rectangle-select/hotkeys

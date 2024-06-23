@@ -3,7 +3,6 @@
             [day8.re-frame.test :as rf-test]
             [pixel-art.events :as events]
             [pixel-art.model.color :refer [transparent-color]]
-            [pixel-art.model.sprite :as sprite]
             [pixel-art.subs :as subs]
             [re-frame.core :as rf]
             [pixel-art.utils.coll :as coll]))
@@ -13,11 +12,33 @@
  (fn [db]
    db))
 
-#_(deftest test-init
-    (rf-test/run-test-sync
-     (rf/dispatch-sync [::events/initialize-db])
-     #_(def db @(rf/subscribe [:db]))
-     (is (= 1 2))))
+(def initial-size {:width 8 :height 8})
+
+(defn create-pixels [size]
+  (vec (repeat (* (:width size) (:height size)) transparent-color)))
+
+(def initial-cel-pixels-map {{:x 0 :y 0} "black"
+                             {:x 0 :y 1} transparent-color
+                             {:x 1 :y 1} "black"
+                             {:x 3 :y 3} "black"
+                             {:x 3 :y 4} "black"
+                             {:x 4 :y 3} "black"
+                             {:x 4 :y 4} "black"})
+
+(defn pos->idx [{:keys [x y]} {:keys [width]}]
+  (+ x (* width y)))
+
+(def initial-cel-pixels (-> (create-pixels initial-size)
+                            (#(reduce (fn [pixels [pos color]]
+                                        (assoc pixels (pos->idx pos initial-size) color))
+                                      %
+                                      initial-cel-pixels-map))))
+
+(defn initialize-db
+  ([]
+   (rf/dispatch-sync [::events/initialize-db initial-cel-pixels-map]))
+  ([pixels-map]
+   (rf/dispatch-sync [::events/initialize-db pixels-map])))
 
 (defn apply-current-tool [poses]
   (let [mouse-down-pos (first poses)
@@ -30,16 +51,11 @@
         (rf/dispatch-sync [::events/handle-mouse-event :mouse-move pos false])))
     (rf/dispatch-sync [::events/handle-mouse-event :mouse-up mouse-up-pos false])))
 
-(def initial-size {:width 8 :height 8})
-
-(defn create-pixels [size]
-  (vec (repeat (* (:width size) (:height size)) transparent-color)))
-
 (deftest test-add-frame
   (rf-test/run-test-sync
    (testing "add frames"
      (def !db (rf/subscribe [:db]))
-     (rf/dispatch-sync [::events/initialize-db])
+     (initialize-db)
      (def initial-timeline @(rf/subscribe [::subs/timeline]))
      (rf/dispatch-sync [::events/add-frame])
      (rf/dispatch-sync [::events/add-frame])
@@ -68,7 +84,7 @@
   (rf-test/run-test-sync
    (testing "add layers"
      (def !db (rf/subscribe [:db]))
-     (rf/dispatch-sync [::events/initialize-db])
+     (initialize-db)
      (def initial-timeline @(rf/subscribe [::subs/timeline]))
      (rf/dispatch-sync [::events/add-layer])
      (rf/dispatch-sync [::events/add-layer])
@@ -113,7 +129,7 @@
 
 (deftest test-selection
   (defn create-fixture []
-    (rf/dispatch-sync [::events/initialize-db])
+    (initialize-db)
     (def initial-db @(rf/subscribe [:db]))
     (def !db (rf/subscribe [:db]))
     (rf/dispatch-sync [::events/add-frame])
@@ -309,7 +325,7 @@
 
 (deftest test-duplicate-frame
   (rf-test/run-test-sync
-   (rf/dispatch-sync [::events/initialize-db])
+   (initialize-db)
    (def initial-db @(rf/subscribe [:db]))
    (def initial-timeline @(rf/subscribe [::subs/timeline]))
 
@@ -317,7 +333,6 @@
    (rf/dispatch-sync [::events/duplicate-frame])
 
    (def timeline @(rf/subscribe [::subs/timeline]))
-   (def initial-cel (->> initial-db :sprite (sprite/get-cel {:frame-idx 0 :layer-idx 0})))
    (is (= [{:duration 100,
             :current false,
             :idx 0}
@@ -341,7 +356,7 @@
    (is (= [{:pos {:frame-idx 0, :layer-idx 0},
             :current false,
             :selected false
-            :pixels (:pixels initial-cel)}
+            :pixels initial-cel-pixels}
            {:pos {:frame-idx 0, :layer-idx 1},
             :current false,
             :selected false
@@ -349,7 +364,7 @@
            {:pos {:frame-idx 1, :layer-idx 0},
             :current false,
             :selected false
-            :pixels (:pixels initial-cel)}
+            :pixels initial-cel-pixels}
            {:pos {:frame-idx 1, :layer-idx 1},
             :current true,
             :selected true
@@ -359,7 +374,7 @@
 (deftest test-remove-frame
   (testing "remove frame"
     (rf-test/run-test-sync
-     (rf/dispatch-sync [::events/initialize-db])
+     (initialize-db)
      (def !db (rf/subscribe [:db]))
      (def initial-db @(rf/subscribe [:db]))
 
@@ -371,7 +386,7 @@
 (deftest test-remove-layer
   (testing "remove layer"
     (rf-test/run-test-sync
-     (rf/dispatch-sync [::events/initialize-db])
+     (initialize-db)
      (def !db (rf/subscribe [:db]))
      (def initial-db @(rf/subscribe [:db]))
 
@@ -382,7 +397,7 @@
 
 (deftest test-links
   (defn create-fixture []
-    (rf/dispatch-sync [::events/initialize-db])
+    (initialize-db)
     (def initial-db @(rf/subscribe [:db]))
     (def !db (rf/subscribe [:db]))
     (rf/dispatch-sync [::events/add-frame])
@@ -397,9 +412,8 @@
     (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 0}])
     (rf/dispatch-sync [::events/link-selected-cels {:frame-idx 0 :layer-idx 0}])
 
-    (def initial-cel (->> initial-db :sprite (sprite/get-cel {:frame-idx 0 :layer-idx 0})))
-    (is (= [{:pixels (:pixels initial-cel) :pos {:frame-idx 0 :layer-idx 0} :current false :selected true :group-number 0}
-            {:pixels (:pixels initial-cel) :pos {:frame-idx 1 :layer-idx 0} :current true :selected true :group-number 0}]
+    (is (= [{:pixels initial-cel-pixels :pos {:frame-idx 0 :layer-idx 0} :current false :selected true :group-number 0}
+            {:pixels initial-cel-pixels :pos {:frame-idx 1 :layer-idx 0} :current true :selected true :group-number 0}]
            (->> @(rf/subscribe [::subs/timeline])
                 :cels
                 (filter :group-number)
@@ -501,9 +515,9 @@
     (rf/dispatch-sync [::events/link-selected-cels {:frame-idx 1 :layer-idx 0}])
     (apply-current-tool [{:x 0 :y 0}])
 
-    (is (= [{:pos {:frame-idx 0 :layer-idx 0} :pixels (-> (vec (repeat (* 8 8) transparent-color))
+    (is (= [{:pos {:frame-idx 0 :layer-idx 0} :pixels (-> (create-pixels initial-size)
                                                           (assoc 0 "black"))}
-            {:pos {:frame-idx 1 :layer-idx 0} :pixels (-> (vec (repeat (* 8 8) transparent-color))
+            {:pos {:frame-idx 1 :layer-idx 0} :pixels (-> (create-pixels initial-size)
                                                           (assoc 0 "black"))}]
            (->> (:cels @(rf/subscribe [::subs/timeline]))
                 (filter :group-number)
@@ -520,7 +534,6 @@
       (rf/dispatch-sync [::events/toggle-layer-automatic-linking 1])
       (rf/dispatch-sync [::events/add-frame])
 
-      (def initial-cel (->> initial-db :sprite (sprite/get-cel {:frame-idx 0 :layer-idx 0})))
       (is (= [{:pos {:frame-idx 0, :layer-idx 0},
                :group-number 0}
               {:pos {:frame-idx 0, :layer-idx 1},
