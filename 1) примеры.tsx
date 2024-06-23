@@ -1,3 +1,15 @@
+1) view для выбора
+2) view для групп
+3) переделать selected-cels-pos. cels обратно в массив массивов либо же id?
+    потому что нужно сдввигать
+;; todo: test merge-layer-with-below
+;; todo: bulk delete layers, bulk delete frames, buld remove cels and etc
+;; todo: selected-cels -> map с {:current true}
+;; todo: исп id?
+
+
+
+
 1) как оптимизировать обновление
 
 2) есть ли смысл от оверлея
