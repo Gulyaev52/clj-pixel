@@ -1,14 +1,14 @@
 (ns pixel-art.events-test
-  (:require
-   [pixel-art.events :as events]
-   [pixel-art.subs :as subs]
-   [day8.re-frame.test :as rf-test]
-   [cljs.test :refer-macros [deftest testing is run-tests]]
-   [re-frame.core :as rf]
-   [pixel-art.model.frame :as frame]
-   [pixel-art.model.sprite :as sprite]
-   [pixel-art.model.cel :as cel]
-   [pixel-art.model.layer :as layer]))
+  (:require [cljs.test :refer-macros [deftest testing is run-tests]]
+            [day8.re-frame.test :as rf-test]
+            [pixel-art.events :as events]
+            [pixel-art.model.cel :as cel]
+            [pixel-art.model.color :refer [transparent-color]]
+            [pixel-art.model.frame :as frame]
+            [pixel-art.model.layer :as layer]
+            [pixel-art.model.sprite :as sprite]
+            [pixel-art.subs :as subs]
+            [re-frame.core :as rf]))
 
 (rf/reg-sub
  :db
@@ -362,6 +362,159 @@
      (rf/dispatch-sync [::events/remove-layer 1])
 
      (is (= (-> initial-db :sprite) (-> @!db :sprite))))))
+
+(deftest test-links
+  (defn create-fixture []
+    (rf/dispatch-sync [::events/initialize-db])
+    (def initial-db @(rf/subscribe [:db]))
+    (def !db (rf/subscribe [:db]))
+    (rf/dispatch-sync [::events/add-frame])
+    (rf/dispatch-sync [::events/add-frame])
+    (rf/dispatch-sync [::events/add-layer])
+    (rf/dispatch-sync [::events/add-layer]))
+
+  (testing "create group when cels are not in groups and replace cels by main cel"
+    (create-fixture)
+
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+    (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 0}])
+    (rf/dispatch-sync [::events/link-selected-cels {:frame-idx 0 :layer-idx 0}])
+
+    (def initial-cel (->> initial-db :sprite (sprite/get-cel {:frame-idx 0 :layer-idx 0})))
+    (is (= [{:pixels (:pixels initial-cel) :pos {:frame-idx 0 :layer-idx 0} :current false :selected true :group-number 0}
+            {:pixels (:pixels initial-cel) :pos {:frame-idx 1 :layer-idx 0} :current true :selected true :group-number 0}]
+           (->> @(rf/subscribe [::subs/timeline])
+                :cels
+                (filter :group-number)
+                (map #(select-keys % [:pixels :pos :current :selected :group-number])))))
+
+    ;; different groups on the same layer
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 2 :layer-idx 0}])
+    (rf/dispatch-sync [::events/link-selected-cels {:frame-idx 2 :layer-idx 0}])
+    (is (= [{:pos {:frame-idx 0, :layer-idx 0},
+             :current false,
+             :selected false,
+             :group-number 0}
+            {:pos {:frame-idx 1, :layer-idx 0},
+             :current false,
+             :selected false,
+             :group-number 0}
+            {:pos {:frame-idx 2, :layer-idx 0},
+             :current true,
+             :selected true,
+             :group-number 1}]
+           (->> (:cels @(rf/subscribe [::subs/timeline]))
+                (filter :group-number)
+                (map #(select-keys % [:pos :current :selected :group-number])))))
+
+    ;; on each layer group is the same
+
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 1}])
+    (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
+    (rf/dispatch-sync [::events/link-selected-cels {:frame-idx 1 :layer-idx 1}])
+
+    (is (= [{:pos {:frame-idx 0 :layer-idx 1} :current false :selected true :group-number 0}
+            {:pos {:frame-idx 1 :layer-idx 1} :current true :selected true :group-number 0}]
+           (->> (:cels @(rf/subscribe [::subs/timeline]))
+                (filter #(and (:group-number %) (= (-> % :pos :layer-idx) 1)))
+                (map #(select-keys % [:pos :current :selected :group-number])))))
+
+    ;; add to existed group
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 2 :layer-idx 1}])
+    (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
+    (rf/dispatch-sync [::events/link-selected-cels {:frame-idx 1 :layer-idx 1}])
+    (is (= [{:pos {:frame-idx 0 :layer-idx 1} :current false :selected false :group-number 0}
+            {:pos {:frame-idx 1 :layer-idx 1} :current true :selected true :group-number 0}
+            {:pos {:frame-idx 2, :layer-idx 1},
+             :current false,
+             :selected true,
+             :group-number 0}]
+           (->> (:cels @(rf/subscribe [::subs/timeline]))
+                (filter #(and (:group-number %) (= (-> % :pos :layer-idx) 1)))
+                (map #(select-keys % [:pos :current :selected :group-number]))))))
+
+  (testing "ignore layers that doesn't belong to the layer of main cel"
+    (create-fixture)
+
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+    (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 0 :layer-idx 1}])
+    (rf/dispatch-sync [::events/link-selected-cels {:frame-idx 0 :layer-idx 1}])
+
+    (is (= [{:pos {:frame-idx 0 :layer-idx 1} :current true :selected true :group-number 0}]
+           (->> (:cels @(rf/subscribe [::subs/timeline]))
+                (filter :group-number)
+                (map #(select-keys % [:pos :current :selected :group-number]))))))
+
+  (testing "remove from one group and move to another"
+    (create-fixture)
+
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+    (rf/dispatch-sync [::events/link-selected-cels {:frame-idx 0 :layer-idx 0}])
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 1 :layer-idx 0}])
+    (rf/dispatch-sync [::events/link-selected-cels {:frame-idx 1 :layer-idx 0}])
+    (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 0 :layer-idx 0}])
+    (rf/dispatch-sync [::events/link-selected-cels {:frame-idx 1 :layer-idx 0}])
+
+    (is (= [{:pos {:frame-idx 0 :layer-idx 0} :current true :selected true :group-number 1}
+            {:pos {:frame-idx 1 :layer-idx 0} :current false :selected true :group-number 1}]
+           (->> (:cels @(rf/subscribe [::subs/timeline]))
+                (filter :group-number)
+                (map #(select-keys % [:pos :current :selected :group-number]))))))
+
+  (testing "unlink should work for different groups and layers"
+    (create-fixture)
+
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+    (rf/dispatch-sync [::events/link-selected-cels {:frame-idx 0 :layer-idx 0}])
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 1}])
+    (rf/dispatch-sync [::events/link-selected-cels {:frame-idx 0 :layer-idx 1}])
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+    (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 0 :layer-idx 1}])
+    (rf/dispatch-sync [::events/unlink-selected-cels])
+
+    (is (= []
+           (->> (:cels @(rf/subscribe [::subs/timeline]))
+                (filter :group-number)))))
+
+  (testing "update/remove linked cels"
+    (create-fixture)
+
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+    (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 0}])
+    (rf/dispatch-sync [::events/link-selected-cels {:frame-idx 1 :layer-idx 0}])
+    (apply-current-tool [{:x 0 :y 0}])
+
+    (is (= [{:pos {:frame-idx 0 :layer-idx 0} :pixels (-> (vec (repeat (* 8 8) transparent-color))
+                                                          (assoc 0 "black"))}
+            {:pos {:frame-idx 1 :layer-idx 0} :pixels (-> (vec (repeat (* 8 8) transparent-color))
+                                                          (assoc 0 "black"))}]
+           (->> (:cels @(rf/subscribe [::subs/timeline]))
+                (filter :group-number)
+                (map #(select-keys % [:pos :pixels]))))))
+
+  (testing "autolinking"
+    (testing "for cel without group should create a new group but for cel with group should add there"
+      (create-fixture)
+
+      (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+      (rf/dispatch-sync [::events/toggle-layer-automatic-linking 0])
+      (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 1}])
+      (rf/dispatch-sync [::events/link-selected-cels {:frame-idx 0 :layer-idx 1}])
+      (rf/dispatch-sync [::events/toggle-layer-automatic-linking 1])
+      (rf/dispatch-sync [::events/add-frame])
+
+      (def initial-cel (->> initial-db :sprite (sprite/get-cel {:frame-idx 0 :layer-idx 0})))
+      (is (= [{:pos {:frame-idx 0, :layer-idx 0},
+               :group-number 0}
+              {:pos {:frame-idx 0, :layer-idx 1},
+               :group-number 0}
+              {:pos {:frame-idx 1, :layer-idx 0},
+               :group-number 0}
+              {:pos {:frame-idx 1, :layer-idx 1},
+               :group-number 0}]
+             (->> (:cels @(rf/subscribe [::subs/timeline]))
+                  (filter :group-number)
+                  (map #(select-keys % [:pos :group-number]))))))))
 
 #_(enable-console-print!)
 #_(run-tests)

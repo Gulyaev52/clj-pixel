@@ -103,11 +103,11 @@
          {:keys [cels layers frames selected-cels-pos]} sprite
          current-cel (sprite/get-current-cel sprite)
          current-cel-pos (sprite/get-current-cel-pos sprite)]
-     {:cels (map (fn [cel] (merge cel {:current (= current-cel-pos (:pos cel))
-                                       :selected (some? (selected-cels-pos (:pos cel)))
-                                       :img (cel-imgs (:pos cel))
-                                       :empty (cel/emptyy? cel)}))
-                 cels)
+     {:cels (->> cels
+                 (map (fn [cel] (merge cel {:current (= current-cel-pos (:pos cel))
+                                            :selected (some? (selected-cels-pos (:pos cel)))
+                                            :img (cel-imgs (:pos cel))
+                                            :empty (cel/emptyy? cel)}))))
       :layers (map-indexed (fn [idx layer]
                              (merge layer {:current (= idx (:layer-idx current-cel-pos))
                                            :idx idx}))

@@ -80,9 +80,14 @@
                 :checkbox (checkbox props))))
           options-spec)]))
 
+(defn get-group-color [group-number]
+  (nth (cycle ["green" "pink" "yellow" "red" "blue" "purple"]) group-number))
+
 (defn timeline-panel []
   (let [{:keys [cels layers frames current-cel-opacity]} @(re-frame/subscribe [::subs/timeline])
-        cels-by-layers (group-by #(-> % :pos :layer-idx) cels)]
+        cels-by-layers (-> cels
+                           (#(group-by (fn [c] (-> c :pos :layer-idx)) %))
+                           (update-vals (fn [cels] (sort-by #(-> % :pos :frame-idx) cels))))]
     [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
      [:div
       [:div {:style {:display :flex}} "frames:"
@@ -138,6 +143,12 @@
                                 (. e stopPropagation)
                                 (re-frame/dispatch [::events/toggle-layer-visibility (:idx layer)]))}
             (if (:visibile? layer) "v0" "v-")]
+           [:div (:name layer)]]
+          [:div
+           [:button {:onClick (fn [e]
+                                (. e stopPropagation)
+                                (re-frame/dispatch [::events/toggle-layer-automatic-linking (:idx layer)]))}
+            (if (:automatic-linking? layer) "a+" "a-")]
            [:div (:name layer)]]]
          (for [cel (cels-by-layers (:idx layer))]
            [:div {:onClick (fn [] (re-frame/dispatch [::events/select-only-1-cel (:pos cel)]))
@@ -153,7 +164,12 @@
                           :image-rendering "pixelated"
                           :background-image (str "url(" (:img cel) ")")
                           :background-size "100% 100%"
-                          :cursor "pointer"}}])])]]))
+                          :cursor "pointer"
+                          :font-weight "bold"
+                          :font-size 18
+                          :color (when-let [group-number (:group-number cel)]
+                                   (get-group-color group-number))}}
+            (some-> (:group-number cel) inc)])])]]))
 
 (defn select [{:keys [value onChange options]}]
   (let [selected-option-idx (ffirst (filter #(= (:value (second %)) value) (map-indexed vector options)))]

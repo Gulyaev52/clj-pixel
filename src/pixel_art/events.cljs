@@ -195,6 +195,15 @@
                                   (sprite/update-layer idx #(update % :visibile? not) sprite))))))
 
 (re-frame/reg-event-fx
+ ::toggle-layer-automatic-linking
+ (fn [{:keys [db]} [_ idx]]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type))) ;; todo: нужно ли?
+       (update-in [:db :sprite] (fn [sprite]
+                                  (sprite/update-layer idx #(update % :automatic-linking? not) sprite))))))
+
+(re-frame/reg-event-fx
  ::set-cel-opacity
  (fn [{:keys [db]} [_ opacity]]
    (-> db
@@ -233,6 +242,22 @@
        (commit-changes-and-init-tool (get-in db [:tool :state :changes])
                                      (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/add-cels-range-to-selection pos %)))))
+
+(re-frame/reg-event-fx
+ ::link-selected-cels
+ (fn [{:keys [db]} [_ main-cel-pos]]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] #(sprite/link-selected-cels main-cel-pos %)))))
+
+(re-frame/reg-event-fx
+ ::unlink-selected-cels
+ (fn [{:keys [db]}]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] sprite/unlink-selected-cels))))
 
 (re-frame/reg-event-fx
  ::zoom
