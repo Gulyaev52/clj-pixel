@@ -151,7 +151,13 @@
             (if (:automatic-linking? layer) "a+" "a-")]
            [:div (:name layer)]]]
          (for [cel (cels-by-layers (:idx layer))]
-           [:div {:onClick (fn [] (re-frame/dispatch [::events/select-only-1-cel (:pos cel)]))
+           [:div {:onClick (fn [e]
+                             (cond
+                               (.. e -shiftKey)
+                               (re-frame/dispatch [::events/add-cels-range-to-selection (:pos cel)])
+                               (.. e -ctrlKey)
+                               (re-frame/dispatch [::events/toggle-cel-to-selection (:pos cel)])
+                               :else (re-frame/dispatch [::events/select-only-1-cel (:pos cel)])))
                   :style {:border-style "solid"
                           :border-color (if (:selected cel)
                                           "green"

@@ -537,16 +537,24 @@
       (rf/dispatch-sync [::events/add-frame])
 
       (is (= [{:pos {:frame-idx 0, :layer-idx 0},
-               :group-number 0}
+               :group-number 0
+               :current false
+               :selected false}
               {:pos {:frame-idx 0, :layer-idx 1},
-               :group-number 0}
+               :group-number 0
+               :current false
+               :selected false}
               {:pos {:frame-idx 1, :layer-idx 0},
-               :group-number 0}
+               :group-number 0
+               :current false
+               :selected false}
               {:pos {:frame-idx 1, :layer-idx 1},
-               :group-number 0}]
+               :group-number 0
+               :current true
+               :selected true}]
              (->> (:cels @(rf/subscribe [::subs/timeline]))
                   (filter :group-number)
-                  (map #(select-keys % [:pos :group-number]))))))))
+                  (map #(select-keys % [:pos :group-number :current :selected]))))))))
 
 #_(enable-console-print!)
 #_(run-tests)

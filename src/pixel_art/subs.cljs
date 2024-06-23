@@ -101,16 +101,17 @@
  (fn [db]
    (let [{:keys [cel-imgs sprite]} db
          {:keys [cels layers frames]} sprite
+         selected-cels-pos (sprite/get-selected-cels-pos sprite)
          current-cel (sprite/get-current-cel sprite)]
      {:cels (->> cels
                  (map (fn [cel] (merge cel {:img (cel-imgs (:pos cel))
                                             :empty (cel/emptyy? cel)}))))
       :layers (map-indexed (fn [idx layer]
-                             (merge layer {:current (= idx (:layer-idx (:pos current-cel)))
+                             (merge layer {:current (some? ((set (map :layer-idx selected-cels-pos)) idx))
                                            :idx idx}))
                            layers)
       :frames (map-indexed (fn [idx frame]
-                             (merge frame {:current (= idx (:frame-idx (:pos current-cel)))
+                             (merge frame {:current (some? ((set (map :frame-idx selected-cels-pos)) idx))
                                            :idx idx}))
                            frames)
       :current-cel-opacity (:opacity current-cel)})))

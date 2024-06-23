@@ -43,9 +43,6 @@
          (update-cel (fn [c] (assoc c :current false)) current-cel-pos)
          (update-cel (fn [c] (assoc c :current true :selected true)) cel-pos))))
 
-;; todo: delete?
-(def add-cel-to-selection select-cel)
-
 (defn get-selected-cels-pos [sprite]
   (set (map :pos (filter :selected (:cels sprite)))))
 
@@ -65,7 +62,7 @@
              (update-cel (fn [c] (assoc c :selected false :current false)) cel-pos)
              (select-cel current-cel-pos)))
 
-      :else (add-cel-to-selection cel-pos sprite))))
+      :else (select-cel cel-pos sprite))))
 
 (defn add-cels-range-to-selection [cel-pos sprite]
   (let [current-cel-pos (get-current-cel-pos sprite)
@@ -78,7 +75,7 @@
                              (for [layer-idx (range (:layer-idx less-cel) (inc (:frame-idx more-cel)))]
                                {:frame-idx frame-idx
                                 :layer-idx layer-idx})))]
-    (->> (reduce #(add-cel-to-selection %2 %1) sprite new-selected-cels)
+    (->> (reduce #(select-cel %2 %1) sprite new-selected-cels)
          (select-cel cel-pos))))
 
 ;; todo: rename потому что не понятно что остальные дропаются?
@@ -147,9 +144,11 @@
                                   inc)
                          0)
         main-cel (get-cel main-cel-pos sprite)]
-    (update-cels (fn [_ pos] (assoc main-cel
-                                    :group-number group-number
-                                    :pos pos))
+    (update-cels (fn [cel pos] (assoc cel
+                                      :opacity (:opacity main-cel)
+                                      :pixels (:pixels main-cel)
+                                      :group-number group-number
+                                      :pos pos))
                  cels-pos
                  sprite)))
 
@@ -249,9 +248,6 @@
 
 (defn update-layer [idx f sprite]
   (update-in sprite [:layers idx] f))
-
-(defn get-current-layer [sprite]
-  (-> sprite :layers (nth (get-current-layer-idx sprite))))
 
 (defn add-frame
   ([frame sprite]
