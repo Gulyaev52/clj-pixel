@@ -100,20 +100,17 @@
  ::timeline
  (fn [db]
    (let [{:keys [cel-imgs sprite]} db
-         {:keys [cels layers frames selected-cels-pos]} sprite
-         current-cel (sprite/get-current-cel sprite)
-         current-cel-pos (sprite/get-current-cel-pos sprite)]
+         {:keys [cels layers frames]} sprite
+         current-cel (sprite/get-current-cel sprite)]
      {:cels (->> cels
-                 (map (fn [cel] (merge cel {:current (= current-cel-pos (:pos cel))
-                                            :selected (some? (selected-cels-pos (:pos cel)))
-                                            :img (cel-imgs (:pos cel))
+                 (map (fn [cel] (merge cel {:img (cel-imgs (:pos cel))
                                             :empty (cel/emptyy? cel)}))))
       :layers (map-indexed (fn [idx layer]
-                             (merge layer {:current (= idx (:layer-idx current-cel-pos))
+                             (merge layer {:current (= idx (:layer-idx (:pos current-cel)))
                                            :idx idx}))
                            layers)
       :frames (map-indexed (fn [idx frame]
-                             (merge frame {:current (= idx (:frame-idx current-cel-pos))
+                             (merge frame {:current (= idx (:frame-idx (:pos current-cel)))
                                            :idx idx}))
                            frames)
       :current-cel-opacity (:opacity current-cel)})))

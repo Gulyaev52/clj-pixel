@@ -5,7 +5,10 @@
             [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.subs :as subs]
             [re-frame.core :as rf]
-            [pixel-art.utils.coll :as coll]))
+            [pixel-art.utils.coll :as coll]
+            [pjstadig.humane-test-output]))
+
+(pjstadig.humane-test-output/activate!)
 
 (rf/reg-sub
  :db
@@ -54,7 +57,6 @@
 (deftest test-add-frame
   (rf-test/run-test-sync
    (testing "add frames"
-     (def !db (rf/subscribe [:db]))
      (initialize-db)
      (def initial-timeline @(rf/subscribe [::subs/timeline]))
      (rf/dispatch-sync [::events/add-frame])
@@ -127,22 +129,22 @@
                  :pixels))
          "current cel should be updated"))))
 
+(defn create-fixture []
+  (initialize-db)
+  (def initial-db @(rf/subscribe [:db]))
+  (def !db (rf/subscribe [:db]))
+  (rf/dispatch-sync [::events/add-frame])
+  (rf/dispatch-sync [::events/add-frame])
+  (rf/dispatch-sync [::events/add-layer])
+  (rf/dispatch-sync [::events/add-layer]))
+
+(defn get-selected-cels-from-timeline []
+  (->> @(rf/subscribe [::subs/timeline])
+       :cels
+       (map #(select-keys % [:pos :current :selected]))
+       (filter #(or (:selected %) (:current %)))))
+
 (deftest test-selection
-  (defn create-fixture []
-    (initialize-db)
-    (def initial-db @(rf/subscribe [:db]))
-    (def !db (rf/subscribe [:db]))
-    (rf/dispatch-sync [::events/add-frame])
-    (rf/dispatch-sync [::events/add-frame])
-    (rf/dispatch-sync [::events/add-layer])
-    (rf/dispatch-sync [::events/add-layer]))
-
-  (defn get-selected-cels-from-timeline []
-    (->> @(rf/subscribe [::subs/timeline])
-         :cels
-         (map #(select-keys % [:pos :current :selected]))
-         (filter #(or (:selected %) (:current %)))))
-
   (rf-test/run-test-async
    (testing "select-only-1-cel"
      (create-fixture)

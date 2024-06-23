@@ -6,7 +6,9 @@
   {:pixels (vec (repeat (* (:width size) (:height size)) transparent-color))
    :size size
    :opacity 1
-   :pos pos})
+   :pos pos
+   :current false
+   :selected false})
 
 (defn remove-all-pixels [cel]
   (update cel :pixels #(map (fn [_] transparent-color) %)))
