@@ -158,7 +158,8 @@
                                (.. e -ctrlKey)
                                (re-frame/dispatch [::events/toggle-cel-to-selection (:pos cel)])
                                :else (re-frame/dispatch [::events/select-only-1-cel (:pos cel)])))
-                  :style {:border-style "solid"
+                  :style {:position "relative"
+                          :border-style "solid"
                           :border-color (if (:selected cel)
                                           "green"
                                           "black")
@@ -175,6 +176,16 @@
                           :font-size 18
                           :color (when-let [group-number (:group-number cel)]
                                    (get-group-color group-number))}}
+            (when (:selected cel)
+              [:div
+               [:button {:onClick (fn [e]
+                                    (. e stopPropagation)
+                                    (re-frame/dispatch [::events/link-selected-cels (:pos cel)]))
+                         :style {:position :absolute :top 0 :right 0}} "l"]
+               [:button {:onClick (fn [e]
+                                    (. e stopPropagation)
+                                    (re-frame/dispatch [::events/unlink-selected-cels (:pos cel)]))
+                         :style {:position :absolute :top 25 :right 0}} "u"]])
             (some-> (:group-number cel) inc)])])]]))
 
 (defn select [{:keys [value onChange options]}]

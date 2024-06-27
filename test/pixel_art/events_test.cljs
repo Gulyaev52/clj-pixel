@@ -5,10 +5,7 @@
             [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.subs :as subs]
             [re-frame.core :as rf]
-            [pixel-art.utils.coll :as coll]
-            [pjstadig.humane-test-output]))
-
-(pjstadig.humane-test-output/activate!)
+            [pixel-art.utils.coll :as coll]))
 
 (rf/reg-sub
  :db
