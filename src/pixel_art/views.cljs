@@ -14,7 +14,7 @@
             [sc.api]
             [clojure.string :as string]
             [pixel-art.model.cel :as cel]
-            [pixel-art.model.sprite :as sprite]))
+            [pixel-art.utils.coll :as coll]))
 
 (def !last-mouse-pos (atom nil))
 
@@ -438,20 +438,13 @@
         viewport-size @(re-frame/subscribe [::subs/viewport-size])
         onion-skin @(re-frame/subscribe [::subs/onion-skin])
         panning @(re-frame/subscribe [::subs/panning])
-        user-is-drawing @(re-frame/subscribe [::subs/user-is-drawing])]
+        user-is-drawing @(re-frame/subscribe [::subs/user-is-drawing])
+        layers @(re-frame/subscribe [::subs/layers])]
     [:div {:style {:display :flex :flex-direction :column :gap "10px" :align-items "center"}}
      [:div {:style {:display :flex :justify-content :center :align-items "center"}}
       [:div {:style {:position "relative"
                      :border "1px solid black"}
              :ref ref
-             :onClick (fn [e]
-                        (let [viewport-rect (.. viewport-ref -current getBoundingClientRect)
-                              center-pos {:x (- (.. e -clientX) (.. viewport-rect -left))
-                                          :y (- (.. e -clientY) (.. viewport-rect -top))}
-                              mouse-offset-pos {:x (+ (- (.. e -clientX) (.. viewport-rect -left))
-                                                      (.. viewport-ref -current -scrollLeft))
-                                                :y (+ (- (.. e -clientY) (.. viewport-rect -top))
-                                                      (.. viewport-ref -current -scrollTop))}]))
              :onContextMenu (fn [event]
                               (. event preventDefault))
              :onMouseDown (fn [event]
@@ -502,10 +495,22 @@
        [:div {:id "viewport" :ref viewport-ref :style {:overflow "auto" :width (:width viewport-size) :height (:height viewport-size)}}
         [:div {:id "drawing-canvas-container" :style {:position "relative"}}
          [:div {:id "canvas-layers" :style {:position "relative" :left "50%" :top "50%" :transform "translate(-50%, -50%)"}}
-          [:canvas {:id "tutorial"
-                    :style {:position "relative"
-                            :zIndex 1
+          (for [layer (reverse layers)]
+            [:canvas {:class "layer"
+                      :data-name (:name layer)
+                      :style {:position :absolute
+                              :left 0
+                              :top 0
+                              :imageRendering "pixelated"
+                              :zIndex (+ (:idx layer) 1)
+                              :width "100%"
+                              :height "100%"}}])
+          [:canvas {:id "preview"
+                    :style {:position :absolute
+                            :left 0
+                            :top 0
                             :imageRendering "pixelated"
+                            :zIndex (+ (:idx (coll/find-first :current layers)) 1)
                             :width "100%"
                             :height "100%"}}]
           [:canvas {:id "onion-skin"
@@ -514,22 +519,14 @@
                             :top 0
                             :imageRendering "pixelated"
                             :zIndex (if (= (:position onion-skin) :front)
-                                      4 0);; todo: подумать тут
-                            :width "100%"
-                            :height "100%"}}]
-          [:canvas {:id "preview"
-                    :style {:position :absolute
-                            :left 0
-                            :top 0
-                            :imageRendering "pixelated"
-                            :zIndex 3
+                                      (count layers) 0);; todo: подумать тут
                             :width "100%"
                             :height "100%"}}]
           [:canvas {:id "grid"
                     :style {:position :absolute
                             :left 0
                             :top 0
-                            :zIndex 10
+                            :zIndex (+ (count layers) 1)
                             :width "100%"
                             :height "100%"}}]]]]]]
      [drawing-info]]))

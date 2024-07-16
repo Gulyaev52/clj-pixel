@@ -82,7 +82,7 @@
      (.save ctx)
      (set! (.-globalAlpha ctx) opacity)
      (doseq [frame-idx onion-frames-idx]
-       (canvas/draw-frame frame-idx sprite canvas))
+       (canvas/draw-frame-on-single-canvas frame-idx sprite canvas))
      (.restore ctx))))
 
 (re-frame/reg-fx

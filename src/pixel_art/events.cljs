@@ -341,7 +341,7 @@
  :init-canvases
  (fn []
    (let [preview-canvas (. js/document (getElementById "preview"))
-         main-canvas (. js/document (getElementById "tutorial"))
+         main-canvas (vec (. js/document (getElementsByClassName "layer")))
          onion-skin-canvas (. js/document (getElementById "onion-skin"))
 
          drawing-container-size (:drawing-container-size @re-frame.db/app-db)
@@ -349,7 +349,7 @@
          scale (-> @re-frame.db/app-db :scale)
          drawing-canvas-container (.. js/document (getElementById "drawing-canvas-container"))
          canvas-layers (.. js/document (getElementById "canvas-layers"))]
-     (doseq [canvas [preview-canvas main-canvas onion-skin-canvas]]
+     (doseq [canvas (concat [preview-canvas onion-skin-canvas] main-canvas)]
        (set! (. canvas -width) (:width sprite-size))
        (set! (. canvas -height) (:height sprite-size)))
      (set! (.. canvas-layers -style -width) (str (* (:width sprite-size) scale) "px"))
@@ -453,12 +453,14 @@
 (re-frame/reg-fx
  :draw-preview
  (fn [changes]
-   (let [ctx (canvas/get-canvas-context "preview")
-         size (-> @re-frame.db/app-db :sprite sprite/get-size)]
-     (doseq [[pos color] changes]
-       (when (geometry/valid-point? pos size)
-         (set! (. ctx -fillStyle) (or color "white"))
-         (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))
+   (js/setTimeout (fn []
+                    (let [ctx (canvas/get-canvas-context "preview")
+                          size (-> @re-frame.db/app-db :sprite sprite/get-size)]
+                      (doseq [[pos color] changes]
+                        (when (geometry/valid-point? pos size)
+                          (set! (. ctx -fillStyle) (or color "white"))
+                          (. ctx (fillRect (:x pos) (:y pos) 1 1))))))
+                  10)))
 
 (re-frame/reg-fx
  :hide-pixels-grid
@@ -473,13 +475,15 @@
 (re-frame/reg-fx
  :clear-frame
  (fn []
-   (canvas/clear-canvas (. js/document (getElementById "tutorial")))))
+   (js/setTimeout (fn []
+                    (canvas/clear-canvases (vec (. js/document (getElementsByClassName "layer")))))
+                  10)))
 
 ;; todo: rename to current-frame
 (re-frame/reg-fx
  :draw-current-frame
  (fn []
-   (let [{:keys [sprite]} @re-frame.db/app-db]
-     (canvas/draw-frame (sprite/get-current-frame-idx sprite)
-                        sprite
-                        (. js/document (getElementById "tutorial"))))))
+   (js/setTimeout (fn []
+                    (let [{:keys [sprite]} @re-frame.db/app-db]
+                      (canvas/draw-frame (sprite/get-current-frame-idx sprite) sprite)))
+                  10)))

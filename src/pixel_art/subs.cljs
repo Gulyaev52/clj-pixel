@@ -5,6 +5,17 @@
             [pixel-art.model.cel :as cel]))
 
 (re-frame/reg-sub
+ ::layers
+ (fn [db]
+   (let [sprite (-> db :sprite)
+         current-cel-pos (sprite/get-current-cel-pos sprite)
+         layers (sprite :layers)]
+     (map-indexed (fn [idx layer]
+                    (merge layer {:current (= (:layer-idx current-cel-pos) idx)
+                                  :idx idx}))
+                  layers))))
+
+(re-frame/reg-sub
  ::sprite-size
  (fn [db]
    (-> db :sprite :size)))
@@ -109,7 +120,7 @@
                  (map (fn [cel] (merge cel {:img (cel-imgs (:pos cel))
                                             :empty (cel/emptyy? cel)}))))
       :layers (map-indexed (fn [idx layer]
-                             (merge layer {:current (some? ((set (map :layer-idx selected-cels-pos)) idx))
+                             (merge layer {:current (some? ((set (map :layer-idx selected-cels-pos)) idx)) ;; todo: почему current
                                            :idx idx}))
                            layers)
       :frames (map-indexed (fn [idx frame]
