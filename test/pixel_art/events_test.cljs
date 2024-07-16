@@ -126,6 +126,78 @@
                  :pixels))
          "current cel should be updated"))))
 
+(deftest test-duplicate-frame
+  (rf-test/run-test-sync
+   (initialize-db)
+   (def initial-db @(rf/subscribe [:db]))
+   (def initial-timeline @(rf/subscribe [::subs/timeline]))
+
+   (rf/dispatch-sync [::events/add-layer])
+   (rf/dispatch-sync [::events/duplicate-frame])
+
+   (def timeline @(rf/subscribe [::subs/timeline]))
+   (is (= [{:duration 100,
+            :current false,
+            :idx 0}
+           {:duration 100, :current true, :idx 1}]
+          (:frames timeline)))
+   (is (= [{:visibile? true,
+            :locked? false,
+            :automatic-linking? false,
+            :name "Layer 1",
+            :children nil,
+            :current false,
+            :idx 0}
+           {:visibile? true,
+            :locked? false,
+            :automatic-linking? false,
+            :name "Layer 2",
+            :children nil,
+            :current true,
+            :idx 1}]
+          (:layers timeline)))
+   (is (= (nth [{:pos {:frame-idx 0, :layer-idx 0},
+                 :current false,
+                 :selected false
+                 :pixels initial-cel-pixels}
+                {:pos {:frame-idx 0, :layer-idx 1},
+                 :current false,
+                 :selected false
+                 :pixels (create-pixels initial-size)}
+                {:pos {:frame-idx 1, :layer-idx 0},
+                 :current false,
+                 :selected false
+                 :pixels initial-cel-pixels}
+                {:pos {:frame-idx 1, :layer-idx 1},
+                 :current true,
+                 :selected true
+                 :pixels (create-pixels initial-size)}] 3)
+          (nth (map #(select-keys % [:pos :current :selected :pixels]) (:cels timeline)) 3)))))
+
+(deftest test-remove-frame
+  (testing "remove frame"
+    (rf-test/run-test-sync
+     (initialize-db)
+     (def !db (rf/subscribe [:db]))
+     (def initial-db @(rf/subscribe [:db]))
+
+     (rf/dispatch-sync [::events/add-frame])
+     (rf/dispatch-sync [::events/remove-frame])
+
+     (is (= (-> initial-db :sprite) (-> @!db :sprite))))))
+
+(deftest test-remove-layer
+  (testing "remove layer"
+    (rf-test/run-test-sync
+     (initialize-db)
+     (def !db (rf/subscribe [:db]))
+     (def initial-db @(rf/subscribe [:db]))
+
+     (rf/dispatch-sync [::events/add-layer])
+     (rf/dispatch-sync [::events/remove-layer 1])
+
+     (is (= (-> initial-db :sprite) (-> @!db :sprite))))))
+
 (defn create-fixture []
   (initialize-db)
   (def initial-db @(rf/subscribe [:db]))
@@ -236,10 +308,10 @@
        (is (= [{:pos {:frame-idx 0, :layer-idx 0},
                 :current false,
                 :selected true}
-               {:pos {:frame-idx 1, :layer-idx 0},
+               {:pos {:frame-idx 0, :layer-idx 1},
                 :current false,
                 :selected true}
-               {:pos {:frame-idx 0, :layer-idx 1},
+               {:pos {:frame-idx 1, :layer-idx 0},
                 :current false,
                 :selected true}
                {:pos {:frame-idx 1, :layer-idx 1},
@@ -256,10 +328,10 @@
        (is (= [{:pos {:frame-idx 0, :layer-idx 0},
                 :current true,
                 :selected true}
-               {:pos {:frame-idx 1, :layer-idx 0},
+               {:pos {:frame-idx 0, :layer-idx 1},
                 :current false,
                 :selected true}
-               {:pos {:frame-idx 0, :layer-idx 1},
+               {:pos {:frame-idx 1, :layer-idx 0},
                 :current false,
                 :selected true}
                {:pos {:frame-idx 1, :layer-idx 1},
@@ -277,10 +349,10 @@
        (is (= [{:pos {:frame-idx 0, :layer-idx 0},
                 :current true,
                 :selected true}
-               {:pos {:frame-idx 1, :layer-idx 0},
+               {:pos {:frame-idx 0, :layer-idx 1},
                 :current false,
                 :selected true}
-               {:pos {:frame-idx 0, :layer-idx 1},
+               {:pos {:frame-idx 1, :layer-idx 0},
                 :current false,
                 :selected true}
                {:pos {:frame-idx 1, :layer-idx 1},
@@ -321,78 +393,6 @@
    (testing "selection after frame moving")
 
    (testing "selection after layer moving")))
-
-(deftest test-duplicate-frame
-  (rf-test/run-test-sync
-   (initialize-db)
-   (def initial-db @(rf/subscribe [:db]))
-   (def initial-timeline @(rf/subscribe [::subs/timeline]))
-
-   (rf/dispatch-sync [::events/add-layer])
-   (rf/dispatch-sync [::events/duplicate-frame])
-
-   (def timeline @(rf/subscribe [::subs/timeline]))
-   (is (= [{:duration 100,
-            :current false,
-            :idx 0}
-           {:duration 100, :current true, :idx 1}]
-          (:frames timeline)))
-   (is (= [{:visibile? true,
-            :locked? false,
-            :automatic-linking? false,
-            :name "Layer 1",
-            :children nil,
-            :current false,
-            :idx 0}
-           {:visibile? true,
-            :locked? false,
-            :automatic-linking? false,
-            :name "Layer 2",
-            :children nil,
-            :current true,
-            :idx 1}]
-          (:layers timeline)))
-   (is (= [{:pos {:frame-idx 0, :layer-idx 0},
-            :current false,
-            :selected false
-            :pixels initial-cel-pixels}
-           {:pos {:frame-idx 0, :layer-idx 1},
-            :current false,
-            :selected false
-            :pixels (create-pixels initial-size)}
-           {:pos {:frame-idx 1, :layer-idx 0},
-            :current false,
-            :selected false
-            :pixels initial-cel-pixels}
-           {:pos {:frame-idx 1, :layer-idx 1},
-            :current true,
-            :selected true
-            :pixels (create-pixels initial-size)}]
-          (map #(select-keys % [:pos :current :selected :pixels]) (:cels timeline))))))
-
-(deftest test-remove-frame
-  (testing "remove frame"
-    (rf-test/run-test-sync
-     (initialize-db)
-     (def !db (rf/subscribe [:db]))
-     (def initial-db @(rf/subscribe [:db]))
-
-     (rf/dispatch-sync [::events/add-frame])
-     (rf/dispatch-sync [::events/remove-frame])
-
-     (is (= (-> initial-db :sprite) (-> @!db :sprite))))))
-
-(deftest test-remove-layer
-  (testing "remove layer"
-    (rf-test/run-test-sync
-     (initialize-db)
-     (def !db (rf/subscribe [:db]))
-     (def initial-db @(rf/subscribe [:db]))
-
-     (rf/dispatch-sync [::events/add-layer])
-     (rf/dispatch-sync [::events/remove-layer 1])
-
-     (is (= (-> initial-db :sprite) (-> @!db :sprite))))))
 
 (deftest test-links
   (defn create-fixture []
@@ -552,6 +552,25 @@
              (->> (:cels @(rf/subscribe [::subs/timeline]))
                   (filter :group-number)
                   (map #(select-keys % [:pos :group-number :current :selected]))))))))
+
+(deftest test-merge-layer-with-below
+  (testing "when only 1")
+  (testing "when last")
+  (testing "when linked")
+  (testing "should merge current layer with layer below"
+    (initialize-db {{:x 0 :y 0} "blue"
+                    {:x 0 :y 1} "blue"
+                    {:x 1 :y 0} "blue"})
+
+    (rf/dispatch-sync [::events/add-frame])
+    (apply-current-tool [{:x 0 :y 0}])
+
+    (rf/dispatch-sync [::events/add-layer])
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 1}])
+    (apply-current-tool [{:x 0 :y 0} {:x 0 :y 1} {:x 0 :y 2} {:x 1 :y 0} {:x 2 :y 0} {:x 3 :y 0}])
+
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+    (rf/dispatch-sync [::events/merge-layer-with-below])))
 
 #_(enable-console-print!)
 #_(run-tests)

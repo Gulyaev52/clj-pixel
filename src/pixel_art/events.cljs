@@ -58,13 +58,14 @@
           [:clear-frame]
           [:draw-current-frame]]})))
 
-;; todo: fix performance
+;; todo: fix performance; если позиция ячейки изменяется то тут ошибка; если удаляется
 (re-frame/reg-global-interceptor
  (on-changes
   :generate-cel-imgs
   #(-> % :sprite :cels)
   (fn [{:keys [db]}]
-    (let [cel-imgs (->> (-> db :sprite :cels)
+    (let [cel-imgs (->> (-> db :sprite)
+                        sprite/get-cels-with-pos-as-coll
                         (map (fn [cel] [(:pos cel)
                                         (canvas/generate-img #(canvas/draw-cel cel %)
                                                              (cel/get-size cel))]))

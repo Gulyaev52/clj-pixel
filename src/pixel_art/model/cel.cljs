@@ -2,11 +2,10 @@
   (:require [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.utils.geometry :as geometry]))
 
-(defn create [size pos]
+(defn create [size]
   {:pixels (vec (repeat (* (:width size) (:height size)) transparent-color))
    :size size
    :opacity 1
-   :pos pos
    :current false
    :selected false})
 
@@ -44,16 +43,13 @@
                                (:size above-cel)
                                (:pixels below-cel)))))
 (comment
-  (def above-cel (->> (create {:width 2 :height 2} {:frame-idx 0
-                                                    :layer-idx 0})
+  (def above-cel (->> (create {:width 2 :height 2})
                       (set-pixels {{:x 0 :y 0} "black"
                                    {:x 1 :y 1} "black"})))
-  (def below-cel (->> (create {:width 2 :height 2}
-                              {:frame-idx 0
-                               :layer-idx 0})
+  (def below-cel (->> (create {:width 2 :height 2})
                       (set-pixels {{:x 0 :y 0} "red"
                                    {:x 0 :y 1} "green"})))
-  (merge-cels above-cel below-cel))
+  (merge-cels below-cel above-cel))
 
 (defn emptyy? [cel]
   (every? #(= % transparent-color) (:pixels cel)))

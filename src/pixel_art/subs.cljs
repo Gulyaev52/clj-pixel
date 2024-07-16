@@ -99,11 +99,13 @@
 (re-frame/reg-sub
  ::timeline
  (fn [db]
+   (def db db)
    (let [{:keys [cel-imgs sprite]} db
-         {:keys [cels layers frames]} sprite
+         {:keys [layers frames]} sprite
          selected-cels-pos (sprite/get-selected-cels-pos sprite)
-         current-cel (sprite/get-current-cel sprite)]
-     {:cels (->> cels
+         current-cel (sprite/get-current-cel sprite)
+         cels-coll (sprite/get-cels-with-pos-as-coll sprite)]
+     {:cels (->> cels-coll
                  (map (fn [cel] (merge cel {:img (cel-imgs (:pos cel))
                                             :empty (cel/emptyy? cel)}))))
       :layers (map-indexed (fn [idx layer]
