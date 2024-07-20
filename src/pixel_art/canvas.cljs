@@ -11,35 +11,6 @@
     (draw canvas-elem)
     (. canvas-elem (toDataURL "image/png"))))
 
-(defn draw-frame [frame-idx sprite]
-  (let [size (sprite/get-size sprite)
-        cels (sprite/get-frame-cels-with-layers frame-idx sprite)
-        layers-canvases (reverse (vec (. js/document (getElementsByClassName "layer"))))]
-    (doseq [[cel canvas] (map vector (reverse cels) layers-canvases)]
-      (let [ctx (. canvas (getContext "2d"))]
-        (when (-> cel :layer :visibile?)
-          (doseq [x (range 0 (:width size))
-                  y (range 0 (:height size))]
-            (when-let [color (cel/get-pixel {:x x :y y} cel)]
-              (set! (. ctx -fillStyle) (.. (tinycolor color)
-                                           (setAlpha (:opacity cel))
-                                           (toRgbString)))
-              (. ctx (fillRect x y 1 1)))))))))
-
-(defn draw-frame-on-single-canvas [frame-idx sprite canvas]
-  (let [ctx (. canvas (getContext "2d"))
-        size (sprite/get-size sprite)
-        cels (sprite/get-frame-cels-with-layers frame-idx sprite)]
-    (doseq [cel (reverse cels)]
-      (when (-> cel :layer :visibile?)
-        (doseq [x (range 0 (:width size))
-                y (range 0 (:height size))]
-          (when-let [color (cel/get-pixel {:x x :y y} cel)]
-            (set! (. ctx -fillStyle) (.. (tinycolor color)
-                                         (setAlpha (:opacity cel))
-                                         (toRgbString)))
-            (. ctx (fillRect x y 1 1))))))))
-
 (defn draw-cel [cel canvas]
   (let [ctx (. canvas (getContext "2d"))
         size (cel/get-size cel)]
@@ -50,6 +21,23 @@
                                      (setAlpha (:opacity cel))
                                      (toRgbString)))
         (. ctx (fillRect x y 1 1))))))
+
+(defn draw-frame [frame-idx sprite]
+  (let [{:keys [layer-idx]} (sprite/get-current-cel-pos sprite)
+        cels (sprite/get-frame-cels-with-layers frame-idx sprite)
+        cels-above [(reverse (take layer-idx cels)) (. js/document (getElementById "layers-above"))]
+        cels-below [(reverse (drop (inc layer-idx) cels)) (. js/document (getElementById "layers-below"))]
+        current-cel [[(nth cels layer-idx)] (. js/document (getElementById "current-layer"))]]
+    (doseq [[cels canvas] [cels-above cels-below current-cel]]
+      (doseq [cel cels]
+        (when (-> cel :layer :visibile?)
+          (draw-cel cel canvas))))))
+
+(defn draw-frame-on-single-canvas [frame-idx sprite canvas]
+  (let [cels (sprite/get-frame-cels-with-layers frame-idx sprite)]
+    (doseq [cel (reverse cels)]
+      (when (-> cel :layer :visibile?)
+        (draw-cel cel canvas)))))
 
 (defn clear-canvas [canvas]
   (let [ctx (. canvas (getContext "2d"))]

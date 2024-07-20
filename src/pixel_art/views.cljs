@@ -199,9 +199,8 @@
                   options)]))
 
 (defn sprite-preview-modal-component []
-  (let [{:keys [size displayed-frame-idx]} @(re-frame/subscribe [::subs/sprite-preview])
+  (let [{:keys [size displayed-frame-idx frame-imgs]} @(re-frame/subscribe [::subs/sprite-preview])
         sprite-size @(re-frame/subscribe [::subs/sprite-size])
-        frame-imgs @(re-frame/subscribe [::subs/frame-imgs])
         frame-img (or (get frame-imgs displayed-frame-idx nil) (get frame-imgs 0))
         image-size (case size
                      :1x sprite-size
@@ -495,22 +494,39 @@
        [:div {:id "viewport" :ref viewport-ref :style {:overflow "auto" :width (:width viewport-size) :height (:height viewport-size)}}
         [:div {:id "drawing-canvas-container" :style {:position "relative"}}
          [:div {:id "canvas-layers" :style {:position "relative" :left "50%" :top "50%" :transform "translate(-50%, -50%)"}}
-          (for [layer (reverse layers)]
-            [:canvas {:class "layer"
-                      :data-name (:name layer)
-                      :style {:position :absolute
-                              :left 0
-                              :top 0
-                              :imageRendering "pixelated"
-                              :zIndex (+ (:idx layer) 1)
-                              :width "100%"
-                              :height "100%"}}])
+          [:canvas {:id "layers-below"
+                    :className "layer"
+                    :style {:position :absolute
+                            :left 0
+                            :top 0
+                            :imageRendering "pixelated"
+                            :zIndex 0
+                            :width "100%"
+                            :height "100%"}}]
+          [:canvas {:id "current-layer"
+                    :className "layer"
+                    :style {:position :absolute
+                            :left 0
+                            :top 0
+                            :imageRendering "pixelated"
+                            :zIndex 1
+                            :width "100%"
+                            :height "100%"}}]
           [:canvas {:id "preview"
                     :style {:position :absolute
                             :left 0
                             :top 0
                             :imageRendering "pixelated"
-                            :zIndex (+ (:idx (coll/find-first :current layers)) 1)
+                            :zIndex 1
+                            :width "100%"
+                            :height "100%"}}]
+          [:canvas {:id "layers-above"
+                    :className "layer"
+                    :style {:position :absolute
+                            :left 0
+                            :top 0
+                            :imageRendering "pixelated"
+                            :zIndex 2
                             :width "100%"
                             :height "100%"}}]
           [:canvas {:id "onion-skin"

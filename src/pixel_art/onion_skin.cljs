@@ -1,9 +1,9 @@
 (ns pixel-art.onion-skin
-  (:require [pixel-art.utils.interceptor :refer [on-changes]]
+  (:require [pixel-art.canvas :as canvas]
+            [pixel-art.model.sprite :as sprite]
+            [pixel-art.utils.interceptor :refer [on-changes]]
             [re-frame.core :as re-frame]
-            [re-frame.db :as db]
-            [pixel-art.canvas :as canvas]
-            [pixel-art.model.sprite :as sprite]))
+            [re-frame.db :as db]))
 
 (defn init []
   {:enabled false
@@ -12,7 +12,8 @@
    :frames-count {:prev 1 :next 1}})
 
 (defn get-onion-skin-frames-idx [sprite frames-count]
-  (let [{:keys [current-frame-idx frames]} sprite
+  (let [{:keys [frames]} sprite
+        current-frame-idx (sprite/get-current-frame-idx sprite)
         prev-idxs (range (max (- current-frame-idx (:prev frames-count)) 0) current-frame-idx)
         next-idxs (range (inc current-frame-idx)
                          (inc (min (+ current-frame-idx (:next frames-count))
