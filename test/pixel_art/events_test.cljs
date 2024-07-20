@@ -214,185 +214,180 @@
        (filter #(or (:selected %) (:current %)))))
 
 (deftest test-selection
-  (rf-test/run-test-async
-   (testing "select-only-1-cel"
-     (create-fixture)
+  (testing "select-only-1-cel"
+    (create-fixture)
 
-     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
-     (is (= [{:current true,
-              :selected true,
-              :pos {:frame-idx 0, :layer-idx 0}}]
-            (get-selected-cels-from-timeline)))
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+    (is (= [{:current true,
+             :selected true,
+             :pos {:frame-idx 0, :layer-idx 0}}]
+           (get-selected-cels-from-timeline)))
 
-     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 1 :layer-idx 1}])
-     (is (= [{:current true,
-              :selected true,
-              :pos {:frame-idx 1, :layer-idx 1}}]
-            (get-selected-cels-from-timeline))))
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 1 :layer-idx 1}])
+    (is (= [{:current true,
+             :selected true,
+             :pos {:frame-idx 1, :layer-idx 1}}]
+           (get-selected-cels-from-timeline))))
 
-   (testing "select-frame"
-     (create-fixture)
+  (testing "select-frame"
+    (create-fixture)
 
-     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
-     (rf/dispatch-sync [::events/select-frame 2])
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+    (rf/dispatch-sync [::events/select-frame 2])
 
-     (is (= [{:current true,
-              :selected true,
-              :pos {:frame-idx 2, :layer-idx 0}}]
-            (get-selected-cels-from-timeline))))
+    (is (= [{:current true,
+             :selected true,
+             :pos {:frame-idx 2, :layer-idx 0}}]
+           (get-selected-cels-from-timeline))))
 
-   (testing "select-layer"
-     (create-fixture)
+  (testing "select-layer"
+    (create-fixture)
 
-     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
-     (rf/dispatch-sync [::events/select-layer 2])
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+    (rf/dispatch-sync [::events/select-layer 2])
 
-     (is (= [{:current true,
-              :selected true,
-              :pos {:frame-idx 0, :layer-idx 2}}]
-            (get-selected-cels-from-timeline))))
+    (is (= [{:current true,
+             :selected true,
+             :pos {:frame-idx 0, :layer-idx 2}}]
+           (get-selected-cels-from-timeline))))
 
-   (testing "toggle-cel-to-selection"
-     (testing "add to selection"
-       (create-fixture)
+  (testing "toggle-cel-to-selection"
+    (testing "add to selection"
+      (create-fixture)
 
-       (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
-       (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
+      (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+      (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
 
-       (is (= [{:selected true :current false :pos {:frame-idx 0 :layer-idx 0}}
-               {:selected true :current true :pos {:frame-idx 1 :layer-idx 1}}]
-              (get-selected-cels-from-timeline))))
+      (is (= [{:selected true :current false :pos {:frame-idx 0 :layer-idx 0}}
+              {:selected true :current true :pos {:frame-idx 1 :layer-idx 1}}]
+             (get-selected-cels-from-timeline))))
 
-     (testing "remove from selection"
-       (create-fixture)
+    (testing "remove from selection"
+      (create-fixture)
 
-       (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
-       (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
-       (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
+      (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+      (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
+      (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
 
-       (is (= [{:selected true :current true :pos {:frame-idx 0 :layer-idx 0}}]
-              (get-selected-cels-from-timeline))))
+      (is (= [{:selected true :current true :pos {:frame-idx 0 :layer-idx 0}}]
+             (get-selected-cels-from-timeline))))
 
-     (testing "when only 1 selected, it should not be removed"
-       (create-fixture)
+    (testing "when only 1 selected, it should not be removed"
+      (create-fixture)
 
-       (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
-       (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 0 :layer-idx 0}])
+      (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+      (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 0 :layer-idx 0}])
 
-       (is (= [{:selected true :current true :pos {:frame-idx 0 :layer-idx 0}}]
-              (get-selected-cels-from-timeline))))
+      (is (= [{:selected true :current true :pos {:frame-idx 0 :layer-idx 0}}]
+             (get-selected-cels-from-timeline))))
 
-     (testing "when remove not current then current should not be changed"
-       (create-fixture)
+    (testing "when remove not current then current should not be changed"
+      (create-fixture)
 
-       (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
-       (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
-       (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 2 :layer-idx 2}]) ;; current
-       (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 0 :layer-idx 0}])
+      (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+      (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 1 :layer-idx 1}])
+      (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 2 :layer-idx 2}]) ;; current
+      (rf/dispatch-sync [::events/toggle-cel-to-selection {:frame-idx 0 :layer-idx 0}])
 
-       (is (= [{:pos {:frame-idx 1, :layer-idx 1},
-                :current false,
-                :selected true}
-               {:pos {:frame-idx 2, :layer-idx 2},
-                :current true,
-                :selected true}]
-              (get-selected-cels-from-timeline)))))
+      (is (= [{:pos {:frame-idx 1, :layer-idx 1},
+               :current false,
+               :selected true}
+              {:pos {:frame-idx 2, :layer-idx 2},
+               :current true,
+               :selected true}]
+             (get-selected-cels-from-timeline)))))
 
-   (testing "add-cels-range-to-selection"
-     (testing "add range from left to the right"
-       (create-fixture)
+  (testing "add-cels-range-to-selection"
+    (testing "add range from left to the right"
+      (create-fixture)
 
-       (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
-       (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
+      (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+      (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
 
-       (is (= [{:pos {:frame-idx 0, :layer-idx 0},
-                :current false,
-                :selected true}
-               {:pos {:frame-idx 0, :layer-idx 1},
-                :current false,
-                :selected true}
-               {:pos {:frame-idx 1, :layer-idx 0},
-                :current false,
-                :selected true}
-               {:pos {:frame-idx 1, :layer-idx 1},
-                :current true,
-                :selected true}]
-              (get-selected-cels-from-timeline))))
+      (is (= [{:pos {:frame-idx 0, :layer-idx 0},
+               :current false,
+               :selected true}
+              {:pos {:frame-idx 0, :layer-idx 1},
+               :current false,
+               :selected true}
+              {:pos {:frame-idx 1, :layer-idx 0},
+               :current false,
+               :selected true}
+              {:pos {:frame-idx 1, :layer-idx 1},
+               :current true,
+               :selected true}]
+             (get-selected-cels-from-timeline))))
 
-     (testing "add range from right to the left"
-       (create-fixture)
+    (testing "add range from right to the left"
+      (create-fixture)
 
-       (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 1 :layer-idx 1}])
-       (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 0 :layer-idx 0}])
+      (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 1 :layer-idx 1}])
+      (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 0 :layer-idx 0}])
 
-       (is (= [{:pos {:frame-idx 0, :layer-idx 0},
-                :current true,
-                :selected true}
-               {:pos {:frame-idx 0, :layer-idx 1},
-                :current false,
-                :selected true}
-               {:pos {:frame-idx 1, :layer-idx 0},
-                :current false,
-                :selected true}
-               {:pos {:frame-idx 1, :layer-idx 1},
-                :current false,
-                :selected true}]
-              (get-selected-cels-from-timeline))))
+      (is (= [{:pos {:frame-idx 0, :layer-idx 0},
+               :current true,
+               :selected true}
+              {:pos {:frame-idx 0, :layer-idx 1},
+               :current false,
+               :selected true}
+              {:pos {:frame-idx 1, :layer-idx 0},
+               :current false,
+               :selected true}
+              {:pos {:frame-idx 1, :layer-idx 1},
+               :current false,
+               :selected true}]
+             (get-selected-cels-from-timeline))))
 
-     (testing "when create range for already added then should select it"
-       (create-fixture)
+    (testing "when create range for already added then should select it"
+      (create-fixture)
 
-       (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
-       (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
-       (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 0 :layer-idx 0}])
+      (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+      (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
+      (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 0 :layer-idx 0}])
 
-       (is (= [{:pos {:frame-idx 0, :layer-idx 0},
-                :current true,
-                :selected true}
-               {:pos {:frame-idx 0, :layer-idx 1},
-                :current false,
-                :selected true}
-               {:pos {:frame-idx 1, :layer-idx 0},
-                :current false,
-                :selected true}
-               {:pos {:frame-idx 1, :layer-idx 1},
-                :current false,
-                :selected true}]
-              (get-selected-cels-from-timeline)))))
+      (is (= [{:pos {:frame-idx 0, :layer-idx 0},
+               :current true,
+               :selected true}
+              {:pos {:frame-idx 0, :layer-idx 1},
+               :current false,
+               :selected true}
+              {:pos {:frame-idx 1, :layer-idx 0},
+               :current false,
+               :selected true}
+              {:pos {:frame-idx 1, :layer-idx 1},
+               :current false,
+               :selected true}]
+             (get-selected-cels-from-timeline)))))
 
-   (testing "selection after frame removing"
-     (create-fixture)
+  (testing "selection after frame removing"
+    (create-fixture)
 
-     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
-     (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
-     (rf/dispatch-sync [::events/remove-frame 1])
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+    (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
+    (rf/dispatch-sync [::events/remove-frame 1])
 
-     (is (= [{:pos {:frame-idx 0, :layer-idx 0},
-              :current false,
-              :selected true}
-             {:pos {:frame-idx 0, :layer-idx 1},
-              :current true,
-              :selected true}]
-            (get-selected-cels-from-timeline))))
+    (is (= [{:pos {:frame-idx 0, :layer-idx 0},
+             :current false,
+             :selected true}
+            {:pos {:frame-idx 0, :layer-idx 1},
+             :current true,
+             :selected true}]
+           (get-selected-cels-from-timeline))))
 
-   (testing "selection after layer removing"
-     (create-fixture)
+  (testing "selection after layer removing"
+    (create-fixture)
 
-     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
-     (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
-     (rf/dispatch-sync [::events/remove-layer 1])
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+    (rf/dispatch-sync [::events/add-cels-range-to-selection {:frame-idx 1 :layer-idx 1}])
+    (rf/dispatch-sync [::events/remove-layer 1])
 
-     (is (= [{:pos {:frame-idx 0, :layer-idx 0},
-              :current false,
-              :selected true}
-             {:pos {:frame-idx 1, :layer-idx 0},
-              :current true,
-              :selected true}]
-            (get-selected-cels-from-timeline))))
-
-   (testing "selection after frame moving")
-
-   (testing "selection after layer moving")))
+    (is (= [{:pos {:frame-idx 0, :layer-idx 0},
+             :current false,
+             :selected true}
+            {:pos {:frame-idx 1, :layer-idx 0},
+             :current true,
+             :selected true}]
+           (get-selected-cels-from-timeline)))))
 
 (deftest test-links
   (defn create-fixture []

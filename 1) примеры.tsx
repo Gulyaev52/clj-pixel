@@ -1,22 +1,33 @@
-;; todo: test merge-layer-with-below, move-layer
+;; todo: test merge-layer-with-below, move-layer; tests для рисования
 ;; todo: bulk delete layers, bulk delete frames, buld remove cels and etc
-;; todo: исп id?
 4) view для переноса
-5) groups для слоёв
-6) место sprite в арг функций
-7) удалить init-canvases и такую же логику из зума
-8) переименовать preview ак как есть клеш с sprite-preivew
-9) cel-imgs
-10) рендерить фреймы во вьюхе
-12) eraser. background. отдельный слой? 
-  можно просто сделать background как отдельный слой(скорее всего недоступный в ui) 
-  сейчас eraser просто закрашивает белым и поэтому работает.
+12) eraser.
+  сейчас eraser просто закрашивает белым. на самом верхнем слое
   11) нужно ли preview
 5) при создание выбирать background как в aseprite
-6) image
-7) подсветка текущего слоя?
+  background. отдельный слой? 
+  можно просто сделать background как отдельный слой(скорее всего недоступный в ui) 
+7) подсветка текущего слоя на ховер ячейки?
+8) сделать норм подсветку для активной ячейки
+11) импорт, экспорт
+  текст
+  картинка
+12) хоткеи
+13) history что-то странное
 
+13) разные курсоры?
 
+рефакторинг
+11) исп id?
+10) рендерить фреймы во вьюхе
+  cel-imgs
+6) место sprite в арг функций
+7) удалить init-canvases и такую же логику из зума
+8) переименовать preview так как есть клеш с sprite-preivew
+9) для preview исп данные?
+
+5) groups для слоёв
+  
 копирования +
 рисование на preview +
 onion skin, когда opacity стоит +
