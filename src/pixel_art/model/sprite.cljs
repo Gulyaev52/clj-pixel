@@ -153,7 +153,7 @@
 (defn link-layer-cels [cels-pos main-cel-pos sprite]
   (let [group-number (or (:group-number (get-cel main-cel-pos sprite))
                          (some->> (:cels sprite)
-                                  (map #(nth (:layer-idx main-cel-pos) %))
+                                  (map #(nth % (:layer-idx main-cel-pos)))
                                   (keep :group-number)
                                   (apply max)
                                   inc)

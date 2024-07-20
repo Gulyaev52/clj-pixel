@@ -69,16 +69,17 @@
   (let [options @(re-frame/subscribe [::subs/tool-options])
         options-spec (tool/options-specs tool-type)]
     [:div {:style {:display :flex :align-items :center :gap "6px"}}
-     (map (fn [option-spec]
-            (let [value (get options (:field option-spec))
-                  onChange #(re-frame/dispatch [::events/change-tool-option (:field option-spec) %])
-                  props (assoc option-spec
-                               :value value
-                               :onChange onChange)]
-              (case (:type option-spec)
-                :slider (slider props)
-                :checkbox (checkbox props))))
-          options-spec)]))
+     (for [option-spec options-spec]
+       (let [value (get options (:field option-spec))
+             onChange #(re-frame/dispatch [::events/change-tool-option (:field option-spec) %])
+             props (assoc option-spec
+                          :value value
+                          :onChange onChange)]
+         ^{:key option-spec}
+         [:div
+          (case (:type option-spec)
+            :slider (slider props)
+            :checkbox (checkbox props))]))]))
 
 (defn get-group-color [group-number]
   (nth (cycle ["green" "pink" "yellow" "red" "blue" "purple"]) group-number))
@@ -115,6 +116,7 @@
                     :grid-column-gap "4px"
                     :grid-row-gap "4px"}}
       [:div "Layers"] (for [frame frames]
+                        ^{:key frame}
                         [:div {:onClick (fn [] (re-frame/dispatch [::events/select-frame (:idx frame)]))
                                :style {:border-style "solid"
                                        :border-color (if (:current frame)
@@ -126,6 +128,7 @@
                                        :text-align "center"
                                        :cursor "pointer"}} (inc (:idx frame))])
       (for [layer layers]
+        ^{:key layer}
         [:<>
          [:div {:onClick (fn [] (re-frame/dispatch [::events/select-layer (:idx layer)]))
                 :style {:display "flex"
@@ -151,6 +154,7 @@
             (if (:automatic-linking? layer) "a+" "a-")]
            [:div (:name layer)]]]
          (for [cel (cels-by-layers (:idx layer))]
+           ^{:key cel}
            [:div {:onClick (fn [e]
                              (cond
                                (.. e -shiftKey)
@@ -190,13 +194,14 @@
 
 (defn select [{:keys [value onChange options]}]
   (let [selected-option-idx (ffirst (filter #(= (:value (second %)) value) (map-indexed vector options)))]
-    [:select {:value selected-option-idx
+    [:select {:value (or selected-option-idx "")
               :onChange (fn [event]
                           (let [selected-option (nth options (parse-double (.. event -target -value)) nil)]
                             (when selected-option
                               (onChange (:value selected-option)))))}
-     (map-indexed (fn [idx opt] [:option {:value idx} (:label opt)])
-                  options)]))
+     (for [[idx opt] (map-indexed vector options)]
+       ^{:key idx}
+       [:option {:value idx} (:label opt)])]))
 
 (defn sprite-preview-modal-component []
   (let [{:keys [size displayed-frame-idx frame-imgs]} @(re-frame/subscribe [::subs/sprite-preview])
@@ -321,6 +326,7 @@
                     :grid-gap "2px"
                     :width "200px"}}
       (for [[idx color] (map-indexed vector (:colors selected-palette))]
+        ^{:key color}
         [:div {:onClick (fn []
                           (re-frame/dispatch [::palette/select-color idx false]))
                :onContextMenu (fn [e]

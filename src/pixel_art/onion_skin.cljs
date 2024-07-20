@@ -56,7 +56,7 @@
   #(-> % :sprite)
   (fn [{:keys [db old new]}]
     (let [onion-skin (:onion-skin db)]
-      (if (:enabled onion-skin)
+      (if (:enabled onion-skin) ;; todo: refactoring
         (let [need-redraw (if (not= (sprite/get-current-frame old) (sprite/get-current-frame new))
                             true
                             (let [old-frames-idx (get-onion-skin-frames-idx old (:frames-count onion-skin))
