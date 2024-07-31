@@ -4,7 +4,9 @@
             [pixel-art.events :as events]
             [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.sprite-import-export :as sprite-import-export]
+            [pixel-art.palette :as palette]
             [pixel-art.subs :as subs]
+            [pixel-art.local-storage :as local-storage]
             [re-frame.core :as rf]
             [pixel-art.utils.coll :as coll]))
 
@@ -12,6 +14,18 @@
  :db
  (fn [db]
    db))
+
+(def !last-download-file-desc (atom nil))
+(rf/reg-fx
+ :download-file
+ (fn [file-desc]
+   (reset! !last-download-file-desc file-desc)))
+
+(def !local-storage (atom {}))
+(rf/reg-fx
+ ::local-storage/set-item
+ (fn [{:keys [key value]}]
+   (reset! !local-storage (assoc @!local-storage key value))))
 
 (def initial-size {:width 8 :height 8})
 
@@ -35,11 +49,22 @@
                                       %
                                       initial-cel-pixels-map))))
 
+(def initial-palettes-info
+  {:selected-palette-idx 0
+   :palettes [{:name "default"
+               :colors ["black" "red" "blue" "green"]}
+              {:name "palette1"
+               :colors ["rgb(0, 0, 0)"
+                        "rgb(255, 0, 0)"
+                        "rgb(0, 0, 255)"
+                        "rgb(0, 128, 0)"]}]})
+(def initial-selected-palette (-> initial-palettes-info :palettes first))
+
 (defn initialize-db
   ([]
-   (rf/dispatch-sync [::events/initialize-db initial-cel-pixels-map]))
-  ([pixels-map]
-   (rf/dispatch-sync [::events/initialize-db pixels-map])))
+   (rf/dispatch-sync [::events/initialize-db {:initial-pixels-map initial-cel-pixels-map :palettes-info initial-palettes-info}]))
+  ([data]
+   (rf/dispatch-sync [::events/initialize-db (merge {:palettes-info initial-palettes-info} data)])))
 
 (defn apply-current-tool [poses]
   (let [mouse-down-pos (first poses)
@@ -554,9 +579,9 @@
   (testing "when last")
   (testing "when linked")
   (testing "should merge current layer with layer below"
-    (initialize-db {{:x 0 :y 0} "blue"
-                    {:x 0 :y 1} "blue"
-                    {:x 1 :y 0} "blue"})
+    (initialize-db {:initial-pixels-map {{:x 0 :y 0} "blue"
+                                         {:x 0 :y 1} "blue"
+                                         {:x 1 :y 0} "blue"}})
 
     (rf/dispatch-sync [::events/add-frame])
     (apply-current-tool [{:x 0 :y 0}])
@@ -568,13 +593,6 @@
     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
     (rf/dispatch-sync [::events/merge-layer-with-below])))
 
-(def !last-download-file-desc (atom nil))
-(rf/reg-fx
- :download-file
- (fn [file-desc]
-   (println "bla")
-   (reset! !last-download-file-desc file-desc)))
-
 (deftest test-import-export-sprite-as-file
   (do
     (initialize-db)
@@ -584,6 +602,101 @@
       (rf/dispatch-sync [::sprite-import-export/import-sprite-from-file @!last-download-file-desc])
 
       (is (= initial-db (dissoc @(rf/subscribe [:db]) :user-is-drawing :mouse-pos))))))
+
+(defn check-current-palettes-info-saved-in-local-storage []
+  (is (= (select-keys @(rf/subscribe [:db]) [:selected-palette-idx :palettes])
+         (:palettes @!local-storage))))
+
+(deftest test-palettes
+  (testing "select primary and secondary color"
+    (initialize-db)
+
+    (rf/dispatch-sync [::palette/select-color 2 false])
+    (is (= (nth (:colors initial-selected-palette) 2) @(rf/subscribe [::subs/primary-color])))
+    (is (= (nth (:colors initial-selected-palette) 1) @(rf/subscribe [::subs/secondary-color])))
+
+    (rf/dispatch-sync [::palette/select-color 3 true])
+    (is (= (nth (:colors initial-selected-palette) 2) @(rf/subscribe [::subs/primary-color])))
+    (is (= (nth (:colors initial-selected-palette) 3) @(rf/subscribe [::subs/secondary-color]))))
+
+  (testing "add color"
+    (testing "add new color"
+      (initialize-db)
+      (let [new-color "rgb(100, 100, 0)"]
+        (rf/dispatch-sync [::palette/add-color new-color])
+        (is (= new-color (last (:colors @(rf/subscribe [::subs/selected-palette])))))
+        (is (= new-color @(rf/subscribe [::subs/primary-color]))))
+      (check-current-palettes-info-saved-in-local-storage))
+
+    (testing "colors are unique"
+      (initialize-db)
+      (let [initial-selected-palette @(rf/subscribe [::subs/selected-palette])
+            new-color "black"]
+        (rf/dispatch-sync [::palette/add-color new-color])
+        (is (= new-color @(rf/subscribe [::subs/primary-color])))
+        (is (= initial-selected-palette @(rf/subscribe [::subs/selected-palette]))))
+      (check-current-palettes-info-saved-in-local-storage)))
+
+  (testing "remove color"
+    (initialize-db)
+    (let [initial-selected-palette @(rf/subscribe [::subs/selected-palette])]
+      (rf/dispatch-sync [::palette/remove-color 0])
+      (is (= (rest (:colors initial-selected-palette))
+             (:colors @(rf/subscribe [::subs/selected-palette]))))
+      (check-current-palettes-info-saved-in-local-storage)))
+
+  (testing "select palette"
+    (initialize-db)
+    (rf/dispatch-sync [::palette/select-palette 1])
+    (is (= (-> initial-palettes-info :palettes (nth 1)) @(rf/subscribe [::subs/selected-palette]))))
+
+  (testing "remove selected palette"
+    (initialize-db)
+    (let [second-palette (-> initial-palettes-info :palettes (nth 1))]
+      (rf/dispatch-sync [::palette/remove-selected-palette])
+      (is (= second-palette
+             @(rf/subscribe [::subs/selected-palette])))
+      (is (= [second-palette]
+             @(rf/subscribe [::subs/palettes])))
+      (check-current-palettes-info-saved-in-local-storage)))
+
+  (testing "create palette"
+    (initialize-db)
+    (rf/dispatch-sync [::palette/create-palette "new-palette"])
+    (is (= (conj (:palettes initial-palettes-info)
+                 {:name "new-palette"
+                  :colors []})
+           @(rf/subscribe [::subs/palettes])))
+    (is (= {:name "new-palette" :colors []}
+           @(rf/subscribe [::subs/selected-palette])))
+    (is (= (select-keys @(rf/subscribe [:db]) [:selected-palette-idx :palettes])
+           (:palettes @!local-storage))))
+
+  (testing "rename palette"
+    (initialize-db)
+    (rf/dispatch-sync [::palette/rename-selected-palette "renamed"])
+    (is (= (assoc initial-selected-palette :name "renamed")
+           @(rf/subscribe [::subs/selected-palette])))
+    (is (= (select-keys @(rf/subscribe [:db]) [:selected-palette-idx :palettes])
+           (:palettes @!local-storage))))
+
+  (testing "load/download palette"
+    (initialize-db)
+
+    (let [initial-palettes @(rf/subscribe [::subs/palettes])]
+      (rf/dispatch-sync [::palette/select-palette 1])
+      (rf/dispatch-sync [::palette/download-palette])
+      (is (= {:file-name "palette1.gpl",
+              :content
+              "GIMP Palette\nName: palette1\nColumns: 0\n0 0 0 Untitled\n255 0 0 Untitled\n0 0 255 Untitled\n0 128 0 Untitled"}
+             @!last-download-file-desc))
+
+      (rf/dispatch-sync [::palette/remove-selected-palette])
+
+      (rf/dispatch-sync [::palette/load-palette @!last-download-file-desc])
+      (is (= initial-palettes @(rf/subscribe [::subs/palettes])))
+      (is (= (:name (nth initial-palettes 1)) (:name @(rf/subscribe [::subs/selected-palette]))))
+      (check-current-palettes-info-saved-in-local-storage))))
 
 #_(enable-console-print!)
 #_(run-tests)

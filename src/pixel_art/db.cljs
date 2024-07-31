@@ -45,7 +45,7 @@
          :pixels-grid-enabled true}
         (palette/init palettes-info))))
 
-(defn get-default-db [palette-local-storage-item initial-pixels-map]
+(defn get-default-db [{:keys [palettes-info initial-pixels-map]}]
   (let [sprite-size {:width 8 :height 8}]
     (get-db {:sprite
              (sprite/create {:size sprite-size
@@ -65,6 +65,6 @@
                                              {:x 3 :y 4} "black"
                                              {:x 4 :y 3} "black"
                                              {:x 4 :y 4} "black"})))})
-             :palettes-info palette-local-storage-item
+             :palettes-info palettes-info
              :primary-color "black"
              :secondary-color "red"})))

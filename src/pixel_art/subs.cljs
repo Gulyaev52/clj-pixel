@@ -76,6 +76,13 @@
    (:selected-palette-idx db)))
 
 (re-frame/reg-sub
+ ::selected-palette
+ (fn [db]
+   (let [selected-palette-idx (:selected-palette-idx db)
+         palettes (:palettes db)]
+     (nth palettes selected-palette-idx))))
+
+(re-frame/reg-sub
  ::palettes
  (fn [db]
    (:palettes db)))

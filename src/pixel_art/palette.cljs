@@ -83,8 +83,7 @@
  (fn [{:keys [db]} [_ name]]
    {:db (-> db
             (update :palettes #(conj % {:name name :colors []}))
-            (assoc :selected-palette-idx (count (:palettes db)))
-            (dissoc :palette-manager))}))
+            (assoc :selected-palette-idx (count (:palettes db))))}))
 
 (re-frame/reg-event-fx
  ::remove-color
@@ -95,16 +94,15 @@
  ::add-color
  (fn [{:keys [db]} [_ color]]
    {:db (-> db
-            (update-in [:palettes (:selected-palette-idx db) :colors] #(-> %
-                                                                           (conj color)
+            (update-in [:palettes (:selected-palette-idx db) :colors] #(-> (conj % color)
                                                                            distinct
                                                                            vec))
             (assoc :primary-color color))}))
 
 (re-frame/reg-event-fx
  ::load-palette
- (fn [{:keys [db]} [_ {:keys [file-name content]}]]
-   (if-let [palette (:ok (gimp-file/parse-content content))]
+ (fn [{:keys [db]} [_ file-desc]]
+   (if-let [palette (:ok (gimp-file/parse-content (:content file-desc)))]
      {:db (-> db
               (update :palettes #(conj % palette))
               (assoc :selected-palette-idx (count (:palettes db))))}
@@ -117,14 +115,3 @@
    {:db db
     :fx [[:download-file (->> (get-current-palette db)
                               gimp-file/palette->file-desc)]]}))
-
-(re-frame/reg-fx
- :download-file ;; todo: move to another place
- (fn [{:keys [file-name content]}]
-   (let [data-blob (js/Blob. #js [content] #js {:type "application/json"})
-         link (.createElement js/document "a")]
-     (set! (.-href link) (.createObjectURL js/URL data-blob))
-     (.setAttribute link "download" file-name)
-     (.appendChild (.-body js/document) link)
-     (.click link)
-     (.removeChild (.-body js/document) link))))

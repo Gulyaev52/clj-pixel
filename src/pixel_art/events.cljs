@@ -33,9 +33,10 @@
 (re-frame/reg-event-fx
  ::initialize-db
  [(re-frame/inject-cofx ::local-storage/get-item palette/local-storage-key)]
- (fn [coeffects [_ initial-pixels-map]]
-   {:db (db/get-default-db (get coeffects palette/local-storage-key)
-                           initial-pixels-map)
+ (fn [coeffects [_ {:keys [initial-pixels-map palettes-info]}]]
+   {:db (db/get-default-db {:palettes-info (or palettes-info
+                                               (get coeffects palette/local-storage-key))
+                            :initial-pixels-map initial-pixels-map})
     :fx [[:dispatch [::rp/set-keydown-rules
                      {:event-keys (concat history.events/hotkeys
                                           rectangle-select/hotkeys
@@ -495,3 +496,14 @@
  (fn [message on-confirm]
    (when (js/confirm message)
      (re-frame/dispatch on-confirm))))
+
+(re-frame/reg-fx
+ :download-file ;; todo: move to another place
+ (fn [{:keys [file-name content]}]
+   (let [data-blob (js/Blob. #js [content] #js {:type "application/json"})
+         link (.createElement js/document "a")]
+     (set! (.-href link) (.createObjectURL js/URL data-blob))
+     (.setAttribute link "download" file-name)
+     (.appendChild (.-body js/document) link)
+     (.click link)
+     (.removeChild (.-body js/document) link))))

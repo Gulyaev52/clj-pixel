@@ -1,21 +1,46 @@
-;; todo: test merge-layer-with-below, move-layer; tests для рисования
-;; todo: bulk delete layers, bulk delete frames, buld remove cels and etc
+1) тесты на палетку
+2) отрефачить palette/init
+  начальные цвета. индексы?
+  при переключение палеты старые выбр цвета ост
+3) структура palette/init
+4) confirm в ui
+7) import -> save
+
+
 4) view для переноса
+  1) нужно обновить картинки
+  2) когда переносишь со слоя на слой и оно залинковано
 12) eraser.
   сейчас eraser просто закрашивает белым. на самом верхнем слое
   11) нужно ли preview
-5) при создание выбирать background как в aseprite
-  background. отдельный слой? 
-  можно просто сделать background как отдельный слой(скорее всего недоступный в ui) 
-7) подсветка текущего слоя на ховер ячейки?
-8) сделать норм подсветку для активной ячейки
 11) импорт, экспорт
   текст
   картинка
 12) хоткеи
-13) history что-то странное
+  13) history что-то странное
+14) resize
+15) дизейблинг действий типо на remove
+17) доделать остальные инструменты
+  доделать опции
+5) при создание выбирать background как в aseprite
+  background. отдельный слой? 
+  можно просто сделать background как отдельный слой(скорее всего недоступный в ui) 
+8) сделать норм подсветку для активной ячейки
+15) зум
+17) дизайн
+18) colorpicker и добавление в палетку. добавить цвета в палетку с фрейма
+19) раз цвета могут быть не привязанны к палетке то нужно их отобржать
+20) сохранение проекта в локал сторадж
 
+улучшения:
+21) палетта плоская - неудобно
+18) ошибка когда пытаешься рисовать на холсте 
+7) подсветка текущего слоя на ховер ячейки?
 13) разные курсоры?
+14) ;; todo: move-layer; tests для рисования
+15) ;; todo: bulk delete layers, bulk delete frames, buld remove cels and etc
+19) теги для фреймов
+20) повороты, растягивания
 
 рефакторинг
 11) исп id?
@@ -146,3 +171,18 @@ rectangle-select. transpare-color
 удалить initial-mouse-down-pos из стейта
 
 
+
+
+
+(defn duplicate-frame [sprite]
+  (->> (get-selected-cels-pos sprite)
+       (sort-by :frame-idx)
+       (map (fn [{:keys [frame-idx]}]
+              [frame-idx (nth (:frames sprite) frame-idx)]))
+       (reduce (fn [res-sprite [frame-idx frame]]
+                 (add-frame frame
+                            (fn [pos] (get-cel {:frame-idx frame-idx
+                                                :layer-idx (:layer-idx pos)}
+                                               sprite))
+                            res-sprite))
+               sprite)))

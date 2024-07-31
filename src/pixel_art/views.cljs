@@ -299,7 +299,7 @@
 (defn palettes-section []
   (let [palettes @(re-frame/subscribe [::subs/palettes])
         selected-palette-idx @(re-frame/subscribe [::subs/selected-palette-idx])
-        selected-palette (nth palettes selected-palette-idx)
+        selected-palette @(re-frame/subscribe [::subs/selected-palette])
         primary-color @(re-frame/subscribe [::subs/primary-color])
         secondary-color @(re-frame/subscribe [::subs/secondary-color])]
     [:div
