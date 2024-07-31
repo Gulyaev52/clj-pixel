@@ -3,6 +3,7 @@
             [day8.re-frame.test :as rf-test]
             [pixel-art.events :as events]
             [pixel-art.model.color :refer [transparent-color]]
+            [pixel-art.sprite-import-export :as sprite-import-export]
             [pixel-art.subs :as subs]
             [re-frame.core :as rf]
             [pixel-art.utils.coll :as coll]))
@@ -566,6 +567,23 @@
 
     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
     (rf/dispatch-sync [::events/merge-layer-with-below])))
+
+(def !last-download-file-desc (atom nil))
+(rf/reg-fx
+ :download-file
+ (fn [file-desc]
+   (println "bla")
+   (reset! !last-download-file-desc file-desc)))
+
+(deftest test-import-export-sprite-as-file
+  (do
+    (initialize-db)
+    (let [initial-db @(rf/subscribe [:db])]
+      (rf/dispatch-sync [::sprite-import-export/export-sprite-as-file])
+      (apply-current-tool [{:x 0 :y 0} {:x 1 :y 0} {:x 2 :y 0} {:x 3 :y 0}])
+      (rf/dispatch-sync [::sprite-import-export/import-sprite-from-file @!last-download-file-desc])
+
+      (is (= initial-db (dissoc @(rf/subscribe [:db]) :user-is-drawing :mouse-pos))))))
 
 #_(enable-console-print!)
 #_(run-tests)

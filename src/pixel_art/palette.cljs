@@ -22,12 +22,15 @@
     (nth palettes selected-palette-idx)))
 
 (def local-storage-key :palettes)
-(defn init [db local-storage-item]
-  (merge db (or local-storage-item
-                {:selected-palette-idx 0
+(defn init [db palettes-info]
+  (merge db (or palettes-info
+                {:selected-palette-idx 0 ;; todo: не делать плоским
                  :palettes [{:name "default"
                              :colors ["black" "red" "green" "blue" "yellow" "gray" "purple"]} ;; todo: use set?
                             ]})))
+
+(defn get-palettes-info-from-db [db]
+  (select-keys db [:selected-palette-idx :palettes]))
 
 (re-frame/reg-global-interceptor
  (on-changes
@@ -121,7 +124,7 @@
    (js/alert message)))
 
 (re-frame/reg-fx
- :download-file
+ :download-file ;; todo: move to another place
  (fn [{:keys [file-name content]}]
    (let [data-blob (js/Blob. #js [content] #js {:type "application/json"})
          link (.createElement js/document "a")]

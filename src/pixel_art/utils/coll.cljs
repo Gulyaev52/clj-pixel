@@ -24,3 +24,11 @@
        (f item)
        item))
    coll))
+
+;; todo: map-cels
+(defn map-matrix [f matrix]
+  (vec (map-indexed (fn [y layer-cels]
+                      (vec (map-indexed (fn [x cel]
+                                          (f cel {:y y :x x}))
+                                        layer-cels)))
+                    matrix)))

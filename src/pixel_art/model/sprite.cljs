@@ -240,7 +240,6 @@
 (defn move-layer-down [idx sprite]
   (move-layer idx (inc idx) sprite))
 
-;; todo: linked cels 
 (defn merge-layer-with-below [sprite]
   (if (and (< (get-current-layer-idx sprite) (count (:layers sprite)))
            (> (count (:layers sprite)) 1))

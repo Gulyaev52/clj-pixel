@@ -13,6 +13,7 @@
             [pixel-art.model.sprite :as sprite]
             [pixel-art.palette :as palette]
             [pixel-art.tool.core :as tool]
+            [pixel-art.sprite-import-export]
             [pixel-art.tool.rectangle-select :as rectangle-select]
             [pixel-art.tool.shape-select :as shape-select]
             [pixel-art.tool.utils :refer [commit-changes-and-init-tool
