@@ -119,11 +119,6 @@
                               gimp-file/palette->file-desc)]]}))
 
 (re-frame/reg-fx
- :show-alert
- (fn [message]
-   (js/alert message)))
-
-(re-frame/reg-fx
  :download-file ;; todo: move to another place
  (fn [{:keys [file-name content]}]
    (let [data-blob (js/Blob. #js [content] #js {:type "application/json"})

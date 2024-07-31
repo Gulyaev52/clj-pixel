@@ -40,8 +40,7 @@
  (fn [{:keys [db]} [_ file-desc]]
    (let [parse-result (parse-sprite file-desc)]
      (if-let [sprite (:ok parse-result)]
-       {#_:fx #_[:warning]
-        :db (get-db (merge {:sprite sprite
+       {:db (get-db (merge {:sprite sprite
                             :palettes-info (get-palettes-info-from-db db)}
                            (select-keys db [:primary-color :secondary-color])))}
        {:fx [[:show-alert (:error parse-result)]]}))))

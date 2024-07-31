@@ -14,7 +14,7 @@
             [sc.api]
             [clojure.string :as string]
             [pixel-art.model.cel :as cel]
-            [pixel-art.utils.coll :as coll]))
+            [pixel-art.sprite-import-export :as sprite-import-export]))
 
 (def !last-mouse-pos (atom nil))
 
@@ -556,6 +556,14 @@
 (defn canvases-section []
   [:f> canvases-section-component])
 
+(defn import-export-section []
+  [:div
+   [:button {:onClick (fn [] (re-frame/dispatch [::sprite-import-export/export-sprite-as-file]))}
+    "save as file"]
+   [file-uploader {:onUpload (fn [file-desc]
+                               (re-frame/dispatch [::sprite-import-export/import-sprite-from-file file-desc]))}
+    "load from file"]])
+
 (defn main-panel []
   (let [tool @(re-frame/subscribe [::subs/tool])
         pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])
@@ -577,7 +585,8 @@
       [:div [timeline-panel]]
       [sprite-preview-section]
       [onion-skin-section]
-      [palettes-section]]
+      [palettes-section]
+      [import-export-section]]
      [canvases-section]]))
 
 (defn mount-root []

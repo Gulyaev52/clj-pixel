@@ -484,3 +484,14 @@
  (fn []
    (let [{:keys [sprite]} @re-frame.db/app-db]
      (canvas/draw-frame (sprite/get-current-frame-idx sprite) sprite))))
+
+(re-frame/reg-fx
+ :show-alert
+ (fn [message]
+   (js/alert message)))
+
+(re-frame/reg-fx
+ :show-confirm
+ (fn [message on-confirm]
+   (when (js/confirm message)
+     (re-frame/dispatch on-confirm))))
