@@ -17,20 +17,19 @@
 (defn deletable-palette? [palettes]
   (> (count palettes) 1))
 
+(defn get-current-palette-idx [db]
+  (coll/find-first-idx :current (:palettes db)))
+
 (defn get-current-palette [db]
-  (let [{:keys [selected-palette-idx palettes]} db]
-    (nth palettes selected-palette-idx)))
+  (nth (:palettes db) (get-current-palette-idx db)))
 
 (def local-storage-key :palettes)
-(defn init [db palettes-info]
-  (merge db (or palettes-info
-                {:selected-palette-idx 0 ;; todo: не делать плоским
-                 :palettes [{:name "default"
-                             :colors ["black" "red" "green" "blue" "yellow" "gray" "purple"]} ;; todo: use set?
-                            ]})))
-
-(defn get-palettes-info-from-db [db]
-  (select-keys db [:selected-palette-idx :palettes]))
+(defn init [palettes]
+  (or palettes
+      [{:name "default"
+        :current true
+        :colors ["black" "red" "green" "blue" "yellow" "gray" "purple"]} ;; todo: use set?
+       ]))
 
 (re-frame/reg-global-interceptor
  (on-changes
@@ -39,73 +38,68 @@
   (fn [{:keys [db]}]
     {:db db
      :fx [[::local-storage/set-item {:key local-storage-key
-                                     :value (select-keys db [:selected-palette-idx :palettes])}]]})))
-
-(re-frame/reg-global-interceptor ;; todo: find a way to avoid this
- (on-changes
-  :save-palettes-in-local-storage-on-selected-palette-change
-  #(:selected-palette-idx %)
-  (fn [{:keys [db]}]
-    {:db db
-     :fx [[::local-storage/set-item {:key local-storage-key
-                                     :value (select-keys db [:selected-palette-idx :palettes])}]]})))
+                                     :value (:palettes db)}]]})))
 
 (re-frame/reg-event-fx
  ::select-palette
- (fn [{:keys [db]} [_ idx]]
-   {:db (assoc db :selected-palette-idx idx)}))
+ (fn [{:keys [db]} [_ new-current-idx]]
+   (let [palettes (vec (map-indexed (fn [p-idx p] (assoc p :current (= new-current-idx p-idx)))
+                                    (:palettes db)))]
+     {:db (assoc db :palettes palettes)})))
 
 (re-frame/reg-event-fx
  ::select-color
  (fn [{:keys [db]} [_ idx right-mouse-button]]
-   (let [new-selected-color (-> (get-current-palette db)
-                                :colors
-                                (nth idx))]
-     {:db (assoc db (get-active-color-type right-mouse-button) new-selected-color)})))
+   (let [new-current-color (-> (get-current-palette db)
+                               :colors
+                               (nth idx))]
+     {:db (assoc db (get-active-color-type right-mouse-button) new-current-color)})))
 
 (re-frame/reg-event-fx
  ::remove-selected-palette
  (fn [{:keys [db]} [_]]
    (if (deletable-palette? (:palettes db))
-     {:db (-> db
-              (update :palettes #(coll/removev (:selected-palette-idx db) %))
-              (assoc :selected-palette-idx 0))}
+     (let [palettes (->> (:palettes db)
+                         (coll/removev (get-current-palette-idx db))
+                         (#(assoc-in % [0 :current] true)))]
+       {:db (assoc db :palettes palettes)})
      {:db db})))
 
 (re-frame/reg-event-fx
  ::rename-selected-palette
  (fn [{:keys [db]} [_ name]]
    {:db (-> db
-            (assoc-in [:palettes (:selected-palette-idx db) :name] name))}))
+            (assoc-in [:palettes (get-current-palette-idx db) :name] name))}))
 
 (re-frame/reg-event-fx
  ::create-palette
  (fn [{:keys [db]} [_ name]]
-   {:db (-> db
-            (update :palettes #(conj % {:name name :colors []}))
-            (assoc :selected-palette-idx (count (:palettes db))))}))
+   (let [palettes (conj (mapv #(assoc % :current false) (:palettes db))
+                        {:name name :colors [] :current true})]
+     {:db (assoc db :palettes palettes)})))
 
 (re-frame/reg-event-fx
  ::remove-color
  (fn [{:keys [db]} [_ idx]]
-   {:db (update-in db [:palettes (:selected-palette-idx db) :colors] #(coll/removev idx %))}))
+   {:db (update-in db [:palettes (get-current-palette-idx db) :colors] #(coll/removev idx %))}))
 
 (re-frame/reg-event-fx
  ::add-color
  (fn [{:keys [db]} [_ color]]
    {:db (-> db
-            (update-in [:palettes (:selected-palette-idx db) :colors] #(-> (conj % color)
-                                                                           distinct
-                                                                           vec))
+            (update-in [:palettes (get-current-palette-idx db) :colors] #(-> (conj % color)
+                                                                             distinct
+                                                                             vec))
             (assoc :primary-color color))}))
 
 (re-frame/reg-event-fx
  ::load-palette
  (fn [{:keys [db]} [_ file-desc]]
    (if-let [palette (:ok (gimp-file/parse-content (:content file-desc)))]
-     {:db (-> db
-              (update :palettes #(conj % palette))
-              (assoc :selected-palette-idx (count (:palettes db))))}
+     (let [palettes (->> (:palettes db)
+                         (mapv #(assoc % :current false))
+                         (#(conj % (assoc palette :current true))))]
+       {:db (assoc db :palettes palettes)})
      {:db db
       :fx [[:show-alert "invalid file content"]]})))
 

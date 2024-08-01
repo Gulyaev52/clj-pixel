@@ -17,6 +17,9 @@
 (defn find-first [pred coll]
   (first (filter pred coll)))
 
+(defn find-first-idx [pred coll]
+  (ffirst (filter (fn [[_ v]] (pred v)) (map-indexed vector coll))))
+
 (defn update-byv [pred f coll]
   (mapv
    (fn [item]

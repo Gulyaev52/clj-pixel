@@ -2,7 +2,8 @@
   (:require [pixel-art.model.sprite :as sprite]
             [pixel-art.tool.utils :refer [get-tool-options]]
             [re-frame.core :as re-frame]
-            [pixel-art.model.cel :as cel]))
+            [pixel-art.model.cel :as cel]
+            [pixel-art.utils.coll :as coll]))
 
 (re-frame/reg-sub
  ::layers
@@ -71,16 +72,9 @@
    (:secondary-color db)))
 
 (re-frame/reg-sub
- ::selected-palette-idx
+ ::current-palette
  (fn [db]
-   (:selected-palette-idx db)))
-
-(re-frame/reg-sub
- ::selected-palette
- (fn [db]
-   (let [selected-palette-idx (:selected-palette-idx db)
-         palettes (:palettes db)]
-     (nth palettes selected-palette-idx))))
+   (coll/find-first :current (:palettes db))))
 
 (re-frame/reg-sub
  ::palettes

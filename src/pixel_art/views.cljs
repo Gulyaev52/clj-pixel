@@ -14,7 +14,8 @@
             [sc.api]
             [clojure.string :as string]
             [pixel-art.model.cel :as cel]
-            [pixel-art.sprite-import-export :as sprite-import-export]))
+            [pixel-art.sprite-import-export :as sprite-import-export]
+            [pixel-art.utils.coll :as coll]))
 
 (def !last-mouse-pos (atom nil))
 
@@ -298,13 +299,13 @@
 
 (defn palettes-section []
   (let [palettes @(re-frame/subscribe [::subs/palettes])
-        selected-palette-idx @(re-frame/subscribe [::subs/selected-palette-idx])
-        selected-palette @(re-frame/subscribe [::subs/selected-palette])
+        current-palette-idx (coll/find-first-idx :current palettes)
+        current-palette (coll/find-first :current palettes)
         primary-color @(re-frame/subscribe [::subs/primary-color])
         secondary-color @(re-frame/subscribe [::subs/secondary-color])]
     [:div
      [:div {:style {:display :flex}}
-      [select {:value selected-palette-idx
+      [select {:value current-palette-idx
                :options (map-indexed (fn [idx p] {:value idx :label (:name p)}) palettes)
                :onChange (fn [idx]
                            (re-frame/dispatch [::palette/select-palette idx]))}]
@@ -325,7 +326,7 @@
                     :grid-template-columns "repeat(auto-fill, 33px)"
                     :grid-gap "2px"
                     :width "200px"}}
-      (for [[idx color] (map-indexed vector (:colors selected-palette))]
+      (for [[idx color] (map-indexed vector (:colors current-palette))]
         ^{:key color}
         [:div {:onClick (fn []
                           (re-frame/dispatch [::palette/select-color idx false]))

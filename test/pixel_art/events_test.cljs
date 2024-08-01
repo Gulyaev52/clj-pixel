@@ -49,22 +49,23 @@
                                       %
                                       initial-cel-pixels-map))))
 
-(def initial-palettes-info
-  {:selected-palette-idx 0
-   :palettes [{:name "default"
-               :colors ["black" "red" "blue" "green"]}
-              {:name "palette1"
-               :colors ["rgb(0, 0, 0)"
-                        "rgb(255, 0, 0)"
-                        "rgb(0, 0, 255)"
-                        "rgb(0, 128, 0)"]}]})
-(def initial-selected-palette (-> initial-palettes-info :palettes first))
+(def initial-palettes
+  [{:name "default"
+    :current true
+    :colors ["black" "red" "blue" "green"]}
+   {:name "palette1"
+    :current false
+    :colors ["rgb(0, 0, 0)"
+             "rgb(255, 0, 0)"
+             "rgb(0, 0, 255)"
+             "rgb(0, 128, 0)"]}])
+(def initial-selected-palette (first initial-palettes))
 
 (defn initialize-db
   ([]
-   (rf/dispatch-sync [::events/initialize-db {:initial-pixels-map initial-cel-pixels-map :palettes-info initial-palettes-info}]))
+   (rf/dispatch-sync [::events/initialize-db {:initial-pixels-map initial-cel-pixels-map :palettes initial-palettes}]))
   ([data]
-   (rf/dispatch-sync [::events/initialize-db (merge {:palettes-info initial-palettes-info} data)])))
+   (rf/dispatch-sync [::events/initialize-db (merge {:palettes initial-palettes} data)])))
 
 (defn apply-current-tool [poses]
   (let [mouse-down-pos (first poses)
@@ -604,7 +605,7 @@
       (is (= initial-db (dissoc @(rf/subscribe [:db]) :user-is-drawing :mouse-pos))))))
 
 (defn check-current-palettes-info-saved-in-local-storage []
-  (is (= (select-keys @(rf/subscribe [:db]) [:selected-palette-idx :palettes])
+  (is (= (:palettes @(rf/subscribe [:db]))
          (:palettes @!local-storage))))
 
 (deftest test-palettes
@@ -624,61 +625,63 @@
       (initialize-db)
       (let [new-color "rgb(100, 100, 0)"]
         (rf/dispatch-sync [::palette/add-color new-color])
-        (is (= new-color (last (:colors @(rf/subscribe [::subs/selected-palette])))))
+        (is (= new-color (last (:colors @(rf/subscribe [::subs/current-palette])))))
         (is (= new-color @(rf/subscribe [::subs/primary-color]))))
       (check-current-palettes-info-saved-in-local-storage))
 
     (testing "colors are unique"
       (initialize-db)
-      (let [initial-selected-palette @(rf/subscribe [::subs/selected-palette])
+      (let [initial-selected-palette @(rf/subscribe [::subs/current-palette])
             new-color "black"]
         (rf/dispatch-sync [::palette/add-color new-color])
         (is (= new-color @(rf/subscribe [::subs/primary-color])))
-        (is (= initial-selected-palette @(rf/subscribe [::subs/selected-palette]))))
+        (is (= initial-selected-palette @(rf/subscribe [::subs/current-palette]))))
       (check-current-palettes-info-saved-in-local-storage)))
 
   (testing "remove color"
     (initialize-db)
-    (let [initial-selected-palette @(rf/subscribe [::subs/selected-palette])]
+    (let [initial-selected-palette @(rf/subscribe [::subs/current-palette])]
       (rf/dispatch-sync [::palette/remove-color 0])
       (is (= (rest (:colors initial-selected-palette))
-             (:colors @(rf/subscribe [::subs/selected-palette]))))
+             (:colors @(rf/subscribe [::subs/current-palette]))))
       (check-current-palettes-info-saved-in-local-storage)))
 
   (testing "select palette"
     (initialize-db)
     (rf/dispatch-sync [::palette/select-palette 1])
-    (is (= (-> initial-palettes-info :palettes (nth 1)) @(rf/subscribe [::subs/selected-palette]))))
+    (is (= (assoc (nth initial-palettes 1)
+                  :current true)
+           @(rf/subscribe [::subs/current-palette])))
+    (check-current-palettes-info-saved-in-local-storage))
 
   (testing "remove selected palette"
     (initialize-db)
-    (let [second-palette (-> initial-palettes-info :palettes (nth 1))]
+    (let [current-second-palette (assoc (nth initial-palettes 1) :current true)]
       (rf/dispatch-sync [::palette/remove-selected-palette])
-      (is (= second-palette
-             @(rf/subscribe [::subs/selected-palette])))
-      (is (= [second-palette]
+      (is (= current-second-palette
+             @(rf/subscribe [::subs/current-palette])))
+      (is (= [current-second-palette]
              @(rf/subscribe [::subs/palettes])))
       (check-current-palettes-info-saved-in-local-storage)))
 
   (testing "create palette"
     (initialize-db)
     (rf/dispatch-sync [::palette/create-palette "new-palette"])
-    (is (= (conj (:palettes initial-palettes-info)
+    (is (= (conj (assoc-in initial-palettes [0 :current] false)
                  {:name "new-palette"
+                  :current true
                   :colors []})
            @(rf/subscribe [::subs/palettes])))
-    (is (= {:name "new-palette" :colors []}
-           @(rf/subscribe [::subs/selected-palette])))
-    (is (= (select-keys @(rf/subscribe [:db]) [:selected-palette-idx :palettes])
-           (:palettes @!local-storage))))
+    (is (= {:name "new-palette" :current true :colors []}
+           @(rf/subscribe [::subs/current-palette])))
+    (check-current-palettes-info-saved-in-local-storage))
 
   (testing "rename palette"
     (initialize-db)
     (rf/dispatch-sync [::palette/rename-selected-palette "renamed"])
     (is (= (assoc initial-selected-palette :name "renamed")
-           @(rf/subscribe [::subs/selected-palette])))
-    (is (= (select-keys @(rf/subscribe [:db]) [:selected-palette-idx :palettes])
-           (:palettes @!local-storage))))
+           @(rf/subscribe [::subs/current-palette])))
+    (check-current-palettes-info-saved-in-local-storage))
 
   (testing "load/download palette"
     (initialize-db)
@@ -694,8 +697,11 @@
       (rf/dispatch-sync [::palette/remove-selected-palette])
 
       (rf/dispatch-sync [::palette/load-palette @!last-download-file-desc])
-      (is (= initial-palettes @(rf/subscribe [::subs/palettes])))
-      (is (= (:name (nth initial-palettes 1)) (:name @(rf/subscribe [::subs/selected-palette]))))
+      (is (= (-> initial-palettes
+                 (assoc-in [0 :current] false)
+                 (assoc-in [1 :current] true))
+             @(rf/subscribe [::subs/palettes])))
+      (is (= (:name (nth initial-palettes 1)) (:name @(rf/subscribe [::subs/current-palette]))))
       (check-current-palettes-info-saved-in-local-storage))))
 
 #_(enable-console-print!)

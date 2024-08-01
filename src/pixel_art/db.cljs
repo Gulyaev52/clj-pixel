@@ -23,7 +23,7 @@
 
 (def initial-frame-duration 100)
 
-(defn get-db [{:keys [sprite palettes-info primary-color secondary-color]}]
+(defn get-db [{:keys [sprite palettes primary-color secondary-color]}]
   (let [viewport-size {:width 900 :height 700}
         scale max-scale
         canvas-size (update-vals (sprite/get-size sprite) #(* % scale))
@@ -42,10 +42,10 @@
          :onion-skin (onion-skin/init)
          :history (history/init {:sprite sprite})
          :sprite-preview (preview/init)
-         :pixels-grid-enabled true}
-        (palette/init palettes-info))))
+         :pixels-grid-enabled true
+         :palettes (palette/init palettes)})))
 
-(defn get-default-db [{:keys [palettes-info initial-pixels-map]}]
+(defn get-default-db [{:keys [palettes initial-pixels-map]}]
   (let [sprite-size {:width 8 :height 8}]
     (get-db {:sprite
              (sprite/create {:size sprite-size
@@ -65,6 +65,6 @@
                                              {:x 3 :y 4} "black"
                                              {:x 4 :y 3} "black"
                                              {:x 4 :y 4} "black"})))})
-             :palettes-info palettes-info
+             :palettes palettes
              :primary-color "black"
              :secondary-color "red"})))

@@ -33,9 +33,9 @@
 (re-frame/reg-event-fx
  ::initialize-db
  [(re-frame/inject-cofx ::local-storage/get-item palette/local-storage-key)]
- (fn [coeffects [_ {:keys [initial-pixels-map palettes-info]}]]
-   {:db (db/get-default-db {:palettes-info (or palettes-info
-                                               (get coeffects palette/local-storage-key))
+ (fn [coeffects [_ {:keys [initial-pixels-map palettes]}]]
+   {:db (db/get-default-db {:palettes (or palettes
+                                          (get coeffects palette/local-storage-key))
                             :initial-pixels-map initial-pixels-map})
     :fx [[:dispatch [::rp/set-keydown-rules
                      {:event-keys (concat history.events/hotkeys

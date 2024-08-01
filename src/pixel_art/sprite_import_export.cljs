@@ -1,6 +1,5 @@
 (ns pixel-art.sprite-import-export ;; todo: project instead of sprite?
   (:require [pixel-art.db :refer [get-db]]
-            [pixel-art.palette :refer [get-palettes-info-from-db]]
             [pixel-art.utils.coll :as coll]
             [re-frame.core :as re-frame]))
 
@@ -40,7 +39,6 @@
  (fn [{:keys [db]} [_ file-desc]]
    (let [parse-result (parse-sprite file-desc)]
      (if-let [sprite (:ok parse-result)]
-       {:db (get-db (merge {:sprite sprite
-                            :palettes-info (get-palettes-info-from-db db)}
-                           (select-keys db [:primary-color :secondary-color])))}
+       {:db (get-db (merge {:sprite sprite}
+                           (select-keys db [:palettes :primary-color :secondary-color])))}
        {:fx [[:show-alert (:error parse-result)]]}))))

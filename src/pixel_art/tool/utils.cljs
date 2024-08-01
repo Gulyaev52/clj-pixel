@@ -1,7 +1,6 @@
 (ns pixel-art.tool.utils
   (:require [pixel-art.model.sprite :as sprite]
             [pixel-art.history :as history]
-            [pixel-art.model.cel :as cel]
             [sc.api]))
 
 (defn get-tool-options [db]
