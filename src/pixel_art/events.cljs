@@ -315,7 +315,7 @@
                :initial-viewport-scroll nil)}))
 
 (re-frame/reg-event-fx
- ::swap-colors ;; todo: current
+ ::swap-current-colors ;; todo: current
  (fn [{:keys [db]}]
    {:db (assoc db
                :primary-color (:secondary-color db)

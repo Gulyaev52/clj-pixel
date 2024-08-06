@@ -9,11 +9,11 @@
 (defn get-current-cel [db]
   (-> db :sprite sprite/get-current-cel))
 
-(defn get-active-color-type [right-button]
+(defn get-current-color-type [right-button]
   (if right-button :secondary-color :primary-color))
 
-(defn get-active-color [db event]
-  ((get-active-color-type (:right-button event)) db))
+(defn get-current-color [db event]
+  ((get-current-color-type (:right-button event)) db))
 
 (defn commit-changes-and-init-tool [db changes tool-init]
   (-> (if (seq changes)

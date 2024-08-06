@@ -596,7 +596,7 @@
       [current-color-selection {:value secondary-color
                                 :onChange (fn [new-secondary-color]
                                             (re-frame/dispatch [::events/set-current-color :secondary-color new-secondary-color]))}]]
-     [:div {:onClick (fn [] (re-frame/dispatch [::events/swap-colors]))
+     [:div {:onClick (fn [] (re-frame/dispatch [::events/swap-current-colors]))
             :style {:position "absolute" :top "52px" :left "9px" :cursor "pointer"}}
       "X"]]))
 

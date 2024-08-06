@@ -1,7 +1,7 @@
 (ns pixel-art.palette
   (:require [pixel-art.local-storage :as local-storage]
             [pixel-art.palette.gimp-file :as gimp-file]
-            [pixel-art.tool.utils :refer [get-active-color-type]]
+            [pixel-art.tool.utils :refer [get-current-color-type]]
             [pixel-art.utils.coll :as coll]
             [pixel-art.utils.interceptor :refer [on-changes]]
             [re-frame.core :as re-frame]
@@ -48,7 +48,7 @@
    (let [new-current-color (-> (get-current-palette db)
                                :colors
                                (nth idx))]
-     {:db (assoc db (get-active-color-type right-mouse-button) new-current-color)})))
+     {:db (assoc db (get-current-color-type right-mouse-button) new-current-color)})))
 
 (re-frame/reg-event-fx
  ::remove-selected-palette
