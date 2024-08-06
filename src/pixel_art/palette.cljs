@@ -1,5 +1,7 @@
 (ns pixel-art.palette
   (:require [pixel-art.local-storage :as local-storage]
+            [pixel-art.model.color :refer [transparent-color]]
+            [pixel-art.model.sprite :as sprite]
             [pixel-art.palette.gimp-file :as gimp-file]
             [pixel-art.tool.utils :refer [get-current-color-type]]
             [pixel-art.utils.coll :as coll]
@@ -8,8 +10,6 @@
             [sc.api]))
 
 ;; todo
-;; primary/secondary colors
-;;     color-picker-with-button. primary-color
 ;; добавлять в историю?
 ;; move color
 ;; default палетка должна быть особенной?
@@ -85,6 +85,20 @@
             (update-in [:palettes (get-current-palette-idx db) :colors] #(-> (conj % color)
                                                                              distinct
                                                                              vec)))}))
+
+(re-frame/reg-event-fx
+ ::add-colors-from-frame
+ (fn [{:keys [db]}]
+   (let [sprite (:sprite db)
+         cels (sprite/get-frame-cels (sprite/get-current-frame-idx sprite) sprite)
+         colors (->> cels
+                     (mapcat :pixels)
+                     distinct
+                     (remove #(= transparent-color %)))]
+     {:db (-> db
+              (update-in [:palettes (get-current-palette-idx db) :colors] #(->> (concat % colors)
+                                                                                distinct
+                                                                                vec)))})))
 
 (re-frame/reg-event-fx
  ::load-palette

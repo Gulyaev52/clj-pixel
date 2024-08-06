@@ -2,13 +2,14 @@
   (:require [cljs.test :refer-macros [deftest testing is run-tests]]
             [day8.re-frame.test :as rf-test]
             [pixel-art.events :as events]
-            [pixel-art.model.color :refer [transparent-color]]
-            [pixel-art.sprite-import-export :as sprite-import-export]
-            [pixel-art.palette :as palette]
-            [pixel-art.subs :as subs]
             [pixel-art.local-storage :as local-storage]
+            [pixel-art.model.color :refer [transparent-color]]
+            [pixel-art.palette :as palette]
+            [pixel-art.sprite-import-export :as sprite-import-export]
+            [pixel-art.subs :as subs]
+            [pixel-art.utils.coll :as coll]
             [re-frame.core :as rf]
-            [pixel-art.utils.coll :as coll]))
+            [sc.api]))
 
 (rf/reg-sub
  :db
@@ -59,7 +60,7 @@
              "rgb(255, 0, 0)"
              "rgb(0, 0, 255)"
              "rgb(0, 128, 0)"]}])
-(def initial-selected-palette (first initial-palettes))
+(def initial-current-palette (first initial-palettes))
 
 (defn initialize-db
   ([]
@@ -613,12 +614,12 @@
     (initialize-db)
 
     (rf/dispatch-sync [::palette/select-color 2 false])
-    (is (= (nth (:colors initial-selected-palette) 2) @(rf/subscribe [::subs/primary-color])))
-    (is (= (nth (:colors initial-selected-palette) 1) @(rf/subscribe [::subs/secondary-color])))
+    (is (= (nth (:colors initial-current-palette) 2) @(rf/subscribe [::subs/primary-color])))
+    (is (= (nth (:colors initial-current-palette) 1) @(rf/subscribe [::subs/secondary-color])))
 
     (rf/dispatch-sync [::palette/select-color 3 true])
-    (is (= (nth (:colors initial-selected-palette) 2) @(rf/subscribe [::subs/primary-color])))
-    (is (= (nth (:colors initial-selected-palette) 3) @(rf/subscribe [::subs/secondary-color]))))
+    (is (= (nth (:colors initial-current-palette) 2) @(rf/subscribe [::subs/primary-color])))
+    (is (= (nth (:colors initial-current-palette) 3) @(rf/subscribe [::subs/secondary-color]))))
 
   (testing "add color"
     (testing "add new color"
@@ -678,7 +679,7 @@
   (testing "rename palette"
     (initialize-db)
     (rf/dispatch-sync [::palette/rename-selected-palette "renamed"])
-    (is (= (assoc initial-selected-palette :name "renamed")
+    (is (= (assoc initial-current-palette :name "renamed")
            @(rf/subscribe [::subs/current-palette])))
     (check-current-palettes-info-saved-in-local-storage))
 
@@ -701,7 +702,22 @@
                  (assoc-in [1 :current] true))
              @(rf/subscribe [::subs/palettes])))
       (is (= (:name (nth initial-palettes 1)) (:name @(rf/subscribe [::subs/current-palette]))))
-      (check-current-palettes-info-saved-in-local-storage))))
+      (check-current-palettes-info-saved-in-local-storage)))
+
+  (testing "add current frame colors to current palette"
+    (initialize-db)
+
+    (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
+    (rf/dispatch-sync [::events/set-current-color :primary-color "rgb(90, 44, 44)"])
+    (apply-current-tool [{:x 0 :y 0} {:x 1 :y 0} {:x 2 :y 0}])
+    (rf/dispatch-sync [::events/add-layer])
+    (rf/dispatch-sync [::events/set-current-color :primary-color "rgb(167, 46, 46)"])
+    (apply-current-tool [{:x 5 :y 0} {:x 6 :y 0} {:x 7 :y 0}])
+
+    (rf/dispatch-sync [::palette/add-colors-from-frame])
+    (let [current-palette @(rf/subscribe [::subs/current-palette])]
+      (is (= (into (:colors initial-current-palette) ["rgb(90, 44, 44)" "rgb(167, 46, 46)"])
+             (:colors current-palette))))))
 
 #_(enable-console-print!)
 #_(run-tests)

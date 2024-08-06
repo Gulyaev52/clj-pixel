@@ -323,7 +323,10 @@
       [:button {:onClick (fn []
                            (when-let [name (js/prompt)]
                              (re-frame/dispatch [::palette/rename-selected-palette name])))}
-       "rename palette"]]
+       "rename palette"]
+      [:button {:onClick (fn []
+                           (re-frame/dispatch [::palette/add-colors-from-frame]))}
+       "add colors from current frame"]]
      [:div {:style {:display :grid
                     :grid-template-columns "repeat(auto-fill, 33px)"
                     :grid-gap "2px"
