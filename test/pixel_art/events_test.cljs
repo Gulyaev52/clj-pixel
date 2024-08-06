@@ -625,8 +625,7 @@
       (initialize-db)
       (let [new-color "rgb(100, 100, 0)"]
         (rf/dispatch-sync [::palette/add-color new-color])
-        (is (= new-color (last (:colors @(rf/subscribe [::subs/current-palette])))))
-        (is (= new-color @(rf/subscribe [::subs/primary-color]))))
+        (is (= new-color (last (:colors @(rf/subscribe [::subs/current-palette]))))))
       (check-current-palettes-info-saved-in-local-storage))
 
     (testing "colors are unique"

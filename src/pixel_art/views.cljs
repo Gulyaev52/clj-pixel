@@ -1,6 +1,6 @@
 (ns pixel-art.views
-  (:require ["react-color" :as react-color]
-            ["tinycolor2" :as tinycolor]
+  (:require ["tinycolor2" :as tinycolor]
+            ["./colorPicker$default" :as color-picker-js]
             [pixel-art.events :as events]
             [pixel-art.onion-skin :as onion-skin]
             [pixel-art.palette :as palette :refer [deletable-palette?]]
@@ -18,13 +18,6 @@
             [pixel-art.utils.coll :as coll]))
 
 (def !last-mouse-pos (atom nil))
-
-(defn get-mouse-offset-pos [e]
-  (if (. e -nativeEvent)
-    {:x (.. e -nativeEvent -offsetX)
-     :y (.. e -nativeEvent -offsetY)}
-    {:x (.. e -offsetX)
-     :y (.. e -offsetY)}))
 
 (defn get-mouse-client-pos [e]
   {:x (. e -clientX)
@@ -237,43 +230,33 @@
 (defn sprite-preview-modal []
   [:f> sprite-preview-modal-component])
 
-(defn color-picker-component [{:keys [value onChange onCancel]}]
-  (let [!temp-rgb (r/atom (or value "#FFFFFF"))] ;; use ratom
-    (fn []
-      [:> react-color/PhotoshopPicker
-       {:color @!temp-rgb
-        :onChange (fn [e] (let [rgb (. e -rgb)]
-                            (reset! !temp-rgb (str "rgb(" (. rgb -r) ", " (. rgb -g) ", " (. rgb -b) ")"))))
-        :onCancel (fn [] (onCancel))
-        :onAccept (fn [] (onChange @!temp-rgb))}])))
+(defn color-picker [{:keys [value presetColors actions onChange]}]
+  [:> color-picker-js
+   {:color value
+    :disableAlpha true
+    :presetColors (clj->js (map (fn [obj] (update obj :color #(. (tinycolor %) toHexString)))
+                                presetColors))
+    :actions (clj->js (map #(reagent.core/as-element %) actions))
+    :onChange (fn [e] (let [rgb (. e -rgb)]
+                        (onChange (str "rgb(" (. rgb -r) ", " (. rgb -g) ", " (. rgb -b) ")"))))}])
 
-(defn color-picker [props]
-  [:f> color-picker-component props])
-
-(defn color-picker-with-button [_ _]
+(defn popper []
   (let [!opened (r/atom false)]
-    (fn [color-picker-props button-text]
+    (fn [trigger over]
       [:div {:style {:position "relative"}}
-       [:button {:onClick (fn []
-                            (reset! !opened true))} button-text]
+       (trigger (fn [] (reset! !opened true)))
        (when @!opened
          [:div
           [:div {:style {:position "fixed"
+                         :zIndex 100
                          :top "0px"
                          :right "0px"
                          :bottom "0px"
                          :left "0px"}
                  :onClick (fn []
-                            ((:onCancel color-picker-props))
                             (reset! !opened false))}]
-          [:div {:style {:position "absolute" :zIndex 1 :bottom "calc(100% + 5px)"}}
-           [color-picker (-> color-picker-props
-                             (assoc :onCancel (fn []
-                                                ((:onCancel color-picker-props))
-                                                (reset! !opened false)))
-                             (assoc :onChange (fn [res]
-                                                ((:onChange color-picker-props) res)
-                                                (reset! !opened false))))]]])])))
+          [:div {:style {:position "absolute" :zIndex 101 :bottom "calc(100% + 5px)"}}
+           (over (fn [] (reset! !opened false)))]])])))
 
 (defn file-uploader-comp [{:keys [onUpload accept]} label]
   (let [input-ref (react/useRef)]
@@ -296,6 +279,25 @@
 
 (defn file-uploader [props label]
   [:f> file-uploader-comp props label])
+
+(defn add-new-color-picker []
+  (let [primary-color @(re-frame/subscribe [::subs/primary-color])
+        secondary-color @(re-frame/subscribe [::subs/secondary-color])
+        last-color (last (:colors @(re-frame/subscribe [::subs/current-palette])))
+        !temp-new-value (r/atom primary-color)]
+    (fn [{:keys [onClose]}]
+      [color-picker {:value @!temp-new-value
+                     :onChange (fn [new-value] (reset! !temp-new-value new-value))
+                     :actions [[:button
+                                {:onClick (fn []
+                                            (re-frame/dispatch [::palette/add-color @!temp-new-value])
+                                            (onClose))}
+                                "add"]]
+                     :presetColors [{:color primary-color :title "primary"}
+                                    {:color secondary-color :title "secondary"}
+                                    {:color last-color}]
+                     :onCancel (fn []
+                                 (onClose))}])))
 
 (defn palettes-section []
   (let [palettes @(re-frame/subscribe [::subs/palettes])
@@ -354,11 +356,11 @@
      [file-uploader {:onUpload (fn [file-desc]
                                  (re-frame/dispatch [::palette/load-palette file-desc]))}
       "load"]
-     [color-picker-with-button {:value primary-color ;; todo: ?
-                                :onChange (fn [color]
-                                            (re-frame/dispatch [::palette/add-color color]))
-                                :onCancel (fn [])}
-      "add color"]]))
+     [popper
+      (fn [close]
+        [:button {:onClick close} "add color"])
+      (fn [close]
+        [add-new-color-picker {:onClose close}])]]))
 
 (defn sprite-preview-section []
   (let [sprite-preview @(re-frame/subscribe [::subs/sprite-preview])]
@@ -565,11 +567,42 @@
                                (re-frame/dispatch [::sprite-import-export/import-sprite-from-file file-desc]))}
     "load from file"]])
 
+(defn- current-color-selection [initial-props]
+  (let [initial-value (:value initial-props)]
+    (fn [{:keys [value onChange]}]
+      [popper
+       (fn [close]
+         [:div {:style {:width "45px"
+                        :height "45px"
+                        :border-radius "5px"
+                        :background-color value
+                        :border "thin solid black"}
+                :onClick close}])
+       (fn [close]
+         [color-picker {:value value
+                        :onChange onChange
+                        :presetColors [{:color initial-value}]
+                        :onCancel close}])])))
+
+(defn current-colors-selection []
+  (let [primary-color @(re-frame/subscribe [::subs/primary-color])
+        secondary-color @(re-frame/subscribe [::subs/secondary-color])]
+    [:div {:style {:position "relative"}}
+     [:div {:style {:position "relative" :z-index 1 :cursor "pointer"}}
+      [current-color-selection {:value primary-color
+                                :onChange (fn [new-primary-color]
+                                            (re-frame/dispatch [::events/set-current-color :primary-color new-primary-color]))}]]
+     [:div {:style {:position "relative" :top "-25px" :right "-32px" :cursor "pointer"}}
+      [current-color-selection {:value secondary-color
+                                :onChange (fn [new-secondary-color]
+                                            (re-frame/dispatch [::events/set-current-color :secondary-color new-secondary-color]))}]]
+     [:div {:onClick (fn [] (re-frame/dispatch [::events/swap-colors]))
+            :style {:position "absolute" :top "52px" :left "9px" :cursor "pointer"}}
+      "X"]]))
+
 (defn main-panel []
   (let [tool @(re-frame/subscribe [::subs/tool])
-        pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])
-        primary-color @(re-frame/subscribe [::subs/primary-color])
-        secondary-color @(re-frame/subscribe [::subs/secondary-color])]
+        pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])]
     [:div {:style {:display :grid :grid-template-columns "490px 1fr"}}
      [:div {:style {:display :flex :flex-direction :column :gap "10px"}}
       [options-toolbar (:type tool)]
@@ -580,13 +613,12 @@
                 :options (map (fn [t] {:value t :label (name t)}) tool/types)})
        [checkbox {:value pixels-grid-enabled
                   :label "grid"
-                  :onChange (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]
-       [:div (str "primary-color=" primary-color)]
-       [:div (str "secondary-color=" secondary-color)]]
+                  :onChange (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]]
       [:div [timeline-panel]]
       [sprite-preview-section]
       [onion-skin-section]
       [palettes-section]
+      [current-colors-selection]
       [import-export-section]]
      [canvases-section]]))
 

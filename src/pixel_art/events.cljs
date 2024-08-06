@@ -315,6 +315,18 @@
                :initial-viewport-scroll nil)}))
 
 (re-frame/reg-event-fx
+ ::swap-colors ;; todo: current
+ (fn [{:keys [db]}]
+   {:db (assoc db
+               :primary-color (:secondary-color db)
+               :secondary-color (:primary-color db))}))
+
+(re-frame/reg-event-fx
+ ::set-current-color
+ (fn [{:keys [db]} [_ type color]]
+   {:db (assoc db type color)}))
+
+(re-frame/reg-event-fx
  ::handle-mouse-event
  (fn [{:keys [db]} [_ event-type mouse-pos right-button]]
    (let [event {:type event-type :pos mouse-pos :right-button right-button}]

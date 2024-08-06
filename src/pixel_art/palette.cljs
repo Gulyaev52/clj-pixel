@@ -89,8 +89,7 @@
    {:db (-> db
             (update-in [:palettes (get-current-palette-idx db) :colors] #(-> (conj % color)
                                                                              distinct
-                                                                             vec))
-            (assoc :primary-color color))}))
+                                                                             vec)))}))
 
 (re-frame/reg-event-fx
  ::load-palette
