@@ -24,12 +24,7 @@
   (nth (:palettes db) (get-current-palette-idx db)))
 
 (def local-storage-key :palettes)
-(defn init [palettes]
-  (or palettes
-      [{:name "default"
-        :current true
-        :colors ["black" "red" "green" "blue" "yellow" "gray" "purple"]} ;; todo: use set?
-       ]))
+(defn init [palettes] palettes)
 
 (re-frame/reg-global-interceptor
  (on-changes

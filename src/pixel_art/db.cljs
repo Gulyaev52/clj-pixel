@@ -1,14 +1,16 @@
 (ns pixel-art.db
-  (:require [pixel-art.history :as history]
+  (:require ["tinycolor2" :as tinycolor]
+            [pixel-art.history :as history]
             [pixel-art.model.cel :as cel]
             [pixel-art.model.color :refer [transparent-color]]
+            [pixel-art.model.frame :as frame]
+            [pixel-art.model.layer :as layer]
             [pixel-art.model.sprite :as sprite]
             [pixel-art.onion-skin :as onion-skin]
             [pixel-art.palette :as palette]
             [pixel-art.sprite-preview :as preview]
             [pixel-art.tool.core :as tool]
-            [pixel-art.model.layer :as layer]
-            [pixel-art.model.frame :as frame]))
+            [sc.api]))
 
 (def max-scale 80)
 
@@ -22,6 +24,11 @@
   (str (if (= type :group) "Group " "Layer ") (inc layers-count)))
 
 (def initial-frame-duration 100)
+
+(def initial-palettes
+  [{:name "default"
+    :current true
+    :colors (map #(. (tinycolor %) toRgbString) ["black" "red" "green" "blue" "yellow" "gray" "purple"])}])
 
 (defn get-db [{:keys [sprite palettes primary-color secondary-color]}]
   (let [viewport-size {:width 900 :height 700}
@@ -46,7 +53,10 @@
          :palettes (palette/init palettes)})))
 
 (defn get-default-db [{:keys [palettes initial-pixels-map]}]
-  (let [sprite-size {:width 8 :height 8}]
+  (let [sprite-size {:width 8 :height 8}
+        res-palettes (or palettes initial-palettes)
+        primary-color (or (-> res-palettes first :colors first) "rgb(0,0,0)")
+        secondary-color (or (-> res-palettes first :colors second) primary-color)]
     (get-db {:sprite
              (sprite/create {:size sprite-size
                              :layer (layer/create (get-layer-name :single 0) nil)
@@ -58,13 +68,13 @@
                                                             (into {})))
                                        (cel/set-pixels
                                         (or initial-pixels-map
-                                            {{:x 0 :y 0} "black"
+                                            {{:x 0 :y 0} primary-color
                                              {:x 0 :y 1} transparent-color
-                                             {:x 1 :y 1} "black"
-                                             {:x 3 :y 3} "black"
-                                             {:x 3 :y 4} "black"
-                                             {:x 4 :y 3} "black"
-                                             {:x 4 :y 4} "black"})))})
-             :palettes palettes
-             :primary-color "black"
-             :secondary-color "red"})))
+                                             {:x 1 :y 1} primary-color
+                                             {:x 3 :y 3} primary-color
+                                             {:x 3 :y 4} primary-color
+                                             {:x 4 :y 3} primary-color
+                                             {:x 4 :y 4} primary-color})))})
+             :palettes res-palettes
+             :primary-color primary-color
+             :secondary-color secondary-color})))
