@@ -125,7 +125,10 @@
         ^{:key layer}
         [:<>
          [:div {:onClick (fn [] (re-frame/dispatch [::events/select-layer (:idx layer)]))
-                :style {:display "flex"
+                :style {:display :flex
+                        :flex-direction :column
+                        :align-items "center"
+                        :justify-content "center"
                         :border-style "solid"
                         :border-color (if (:current layer)
                                         "green"
@@ -133,20 +136,25 @@
                         :border-width (if (:current layer)
                                         "2px"
                                         "1px")
-                        :align-items "center"
                         :cursor "pointer"}}
-          [:div
+          [:div {:style {:display :flex}}
+           [:div
+            [:button {:onClick (fn [e]
+                                 (. e stopPropagation)
+                                 (re-frame/dispatch [::events/toggle-layer-visibility (:idx layer)]))}
+             (if (:visibile? layer) "v0" "v-")]]
+           [:div
+            [:button {:onClick (fn [e]
+                                 (. e stopPropagation)
+                                 (re-frame/dispatch [::events/toggle-layer-automatic-linking (:idx layer)]))}
+             (if (:automatic-linking? layer) "a+" "a-")]]
            [:button {:onClick (fn [e]
                                 (. e stopPropagation)
-                                (re-frame/dispatch [::events/toggle-layer-visibility (:idx layer)]))}
-            (if (:visibile? layer) "v0" "v-")]
-           [:div (:name layer)]]
-          [:div
-           [:button {:onClick (fn [e]
-                                (. e stopPropagation)
-                                (re-frame/dispatch [::events/toggle-layer-automatic-linking (:idx layer)]))}
-            (if (:automatic-linking? layer) "a+" "a-")]
-           [:div (:name layer)]]]
+                                (let [new-name (js/prompt)]
+                                  (when (seq (string/trim new-name))
+                                    (re-frame/dispatch [::events/rename-layer (:idx layer) new-name]))))}
+            "re"]]
+          (:name layer)]
          (for [cel (cels-by-layers (:idx layer))]
            ^{:key cel}
            [:div {:onClick (fn [e]

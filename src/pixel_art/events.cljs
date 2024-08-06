@@ -181,6 +181,15 @@
        (update-in [:db] history/save-sprite))))
 
 (re-frame/reg-event-fx
+ ::rename-layer
+ (fn [{:keys [db]} [_ idx new-name]]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type))) ;; todo: нужно ли?
+       (update-in [:db :sprite] (fn [sprite]
+                                  (sprite/update-layer idx #(assoc % :name new-name) sprite))))))
+
+(re-frame/reg-event-fx
  ::move-layer-down
  (fn [{:keys [db]}]
    (-> db
