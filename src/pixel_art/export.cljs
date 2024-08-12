@@ -45,14 +45,14 @@
    {:frames :all
     :layers {:type :visible}
     :direction :forward
-    :file-name "untitled" ;; todo: validation
+    :file-name "untitled"
     :file-type :png
     :scale max-scale}
    :image-settings
    {:repeat true ;; todo: only when gif
     :split-layers false}
    :spritesheet-settings
-   {:columns nil} ;; поле вычисляется на [::set-opened true]
+   {:columns nil} ;; this field is calculated on [::set-opened true] because it depends of actual frames number
    :exporting false})
 
 (re-frame/reg-event-fx
@@ -228,10 +228,8 @@
 ;; баги
 ;; 4) preview
 ;; 8) когда выбран 1 файл то нет смысла экспортировать как зип?
-;; 11) empty file name validation
-;; 9) указание фпс для гифки?
+;; 9) fps and frame duration
 ;; 1) чёрный цвет в гифке
-;; 3) fps and frame duration
 
 ;; 13) тесты
 ;; 14) отрефакторить

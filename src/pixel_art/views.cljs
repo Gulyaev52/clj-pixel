@@ -714,13 +714,14 @@
 (defn export-modal []
   (let [current-tab @(re-frame/subscribe [::subs/export-current-tab])
         opened @(re-frame/subscribe [::subs/export-modal-opened])
-        exporting @(re-frame/subscribe [::subs/exporting])]
+        exporting @(re-frame/subscribe [::subs/exporting])
+        export-settings-valid? @(re-frame/subscribe [::subs/export-settings-valid?])]
     (when opened
       [modal {:cancel-button {:text "Cancel"
                               :onClick (fn []
                                          (re-frame/dispatch [::export/set-opened false]))}
               :ok-button {:text "Export"
-                          :disabled exporting
+                          :disabled (or exporting (not export-settings-valid?))
                           :onClick (fn []
                                      (re-frame/dispatch [::export/export]))}}
 

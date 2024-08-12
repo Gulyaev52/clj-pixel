@@ -21,6 +21,11 @@
  export/get-image-settings)
 
 (re-frame/reg-sub
+ ::export-settings-valid?
+ (fn [db]
+   (not (empty? (-> db :export :common-settings :file-name)))))
+
+(re-frame/reg-sub
  ::exporting
  (fn [db]
    (-> db :export :exporting)))
