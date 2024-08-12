@@ -519,7 +519,7 @@
      (re-frame/dispatch on-confirm))))
 
 (re-frame/reg-fx
- :download-file ;; todo: move to another place
+ :download-file ;; todo: move to another place. todo: не универсальный
  (fn [{:keys [file-name content]}]
    (let [data-blob (js/Blob. #js [content] #js {:type "application/json"})
          link (.createElement js/document "a")]

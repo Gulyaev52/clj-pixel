@@ -29,7 +29,8 @@
    :modules
    {:app {:init-fn pixel-art.core/init}}
    :devtools
-   {:preloads [flow-storm.preload]}
+   {:preloads [day8.re-frame-10x.preload
+               flow-storm.preload]}
    :dev
    {:compiler-options
     {:closure-defines

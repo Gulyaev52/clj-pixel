@@ -20,7 +20,8 @@
         (set! (. ctx -fillStyle) (.. (tinycolor color)
                                      (setAlpha (:opacity cel))
                                      (toRgbString)))
-        (. ctx (fillRect x y 1 1))))))
+        (. ctx (fillRect x y 1 1))))
+    canvas))
 
 (defn draw-frame [frame-idx sprite]
   (let [{:keys [layer-idx]} (sprite/get-current-cel-pos sprite)
@@ -39,6 +40,12 @@
       (when (-> cel :layer :visibile?)
         (draw-cel cel canvas)))))
 
+;; todo: refactore above
+(defn draw-cels-on-single-canvas [cels canvas]
+  (doseq [cel (reverse cels)]
+    (draw-cel cel canvas))
+  canvas)
+
 (defn clear-canvas [canvas]
   (let [ctx (. canvas (getContext "2d"))]
     (. ctx (clearRect 0 0 (. canvas -width) (. canvas -height)))))
@@ -50,3 +57,13 @@
 (defn get-canvas-context [id]
   (let [canvas (. js/document (getElementById id))]
     (.. canvas (getContext "2d"))))
+
+(defn get-base64-from-canvas [canvas format]
+  (let [data (. canvas (toDataURL (str "image/" format)))]
+    (. data (substr (+ (. data (indexOf ",")) 1)))))
+
+(defn create-canvas [{:keys [width height]}]
+  (let [canvas (.. js/document (createElement "canvas"))]
+    (set! (. canvas -width) width)
+    (set! (. canvas -height) height)
+    canvas))

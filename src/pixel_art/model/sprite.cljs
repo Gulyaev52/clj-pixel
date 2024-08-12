@@ -55,6 +55,11 @@
              %))
          (update-cel (fn [c] (assoc c :current true :selected true)) cel-pos))))
 
+(defn get-selected-cels [sprite]
+  (->> sprite
+       get-cels-with-pos-as-coll
+       (filter :selected)))
+
 (defn get-selected-cels-pos [sprite]
   (->> sprite
        get-cels-with-pos-as-coll
@@ -118,6 +123,16 @@
     (->> (get-frame-cels frame-idx sprite)
          (map-indexed (fn [idx cel]
                         (assoc cel :layer (nth layers idx)))))))
+
+;; todo: remove extra
+(defn get-cels-with-layers-and-pos [sprite]
+  (let [{:keys [cels layers]} sprite]
+    (->> cels
+         (coll/map-matrix (fn [cel {:keys [x y]}]
+                            (assoc cel
+                                   :layer (nth layers x)
+                                   :pos {:frame-idx y
+                                         :layer-idx x}))))))
 
 (defn get-size [sprite] (:size sprite))
 

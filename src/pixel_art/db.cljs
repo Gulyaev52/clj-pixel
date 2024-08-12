@@ -1,5 +1,6 @@
 (ns pixel-art.db
   (:require ["tinycolor2" :as tinycolor]
+            [pixel-art.export :as export]
             [pixel-art.history :as history]
             [pixel-art.model.cel :as cel]
             [pixel-art.model.color :refer [transparent-color]]
@@ -50,7 +51,8 @@
          :history (history/init {:sprite sprite})
          :sprite-preview (preview/init)
          :pixels-grid-enabled true
-         :palettes (palette/init palettes)})))
+         :palettes (palette/init palettes)
+         :export (export/init)})))
 
 (defn get-default-db [{:keys [palettes initial-pixels-map]}]
   (let [sprite-size {:width 8 :height 8}
@@ -68,13 +70,13 @@
                                                             (into {})))
                                        (cel/set-pixels
                                         (or initial-pixels-map
-                                            {{:x 0 :y 0} primary-color
+                                            {{:x 0 :y 0} secondary-color
                                              {:x 0 :y 1} transparent-color
-                                             {:x 1 :y 1} primary-color
-                                             {:x 3 :y 3} primary-color
-                                             {:x 3 :y 4} primary-color
-                                             {:x 4 :y 3} primary-color
-                                             {:x 4 :y 4} primary-color})))})
+                                             {:x 1 :y 1} secondary-color
+                                             {:x 3 :y 3} secondary-color
+                                             {:x 3 :y 4} secondary-color
+                                             {:x 4 :y 3} secondary-color
+                                             {:x 4 :y 4} secondary-color})))})
              :palettes res-palettes
              :primary-color primary-color
              :secondary-color secondary-color})))

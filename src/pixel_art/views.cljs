@@ -1,12 +1,14 @@
 (ns pixel-art.views
   (:require ["tinycolor2" :as tinycolor]
             ["./colorPicker$default" :as color-picker-js]
+            ["./gif$default" :as create-gif]
             [pixel-art.events :as events]
             [pixel-art.onion-skin :as onion-skin]
             [pixel-art.palette :as palette :refer [deletable-palette?]]
             [pixel-art.sprite-preview :as sprite-preview]
             [pixel-art.subs :as subs]
             [pixel-art.tool.core :as tool]
+            [pixel-art.export :as export]
             [re-frame.core :as re-frame]
             [react :as react]
             [reagent.core :as r]
@@ -382,7 +384,7 @@
       "preview size"
       [select {:value (:size sprite-preview)
                :options (map (fn [s] {:value s :label (name s)}) [:1x :2x :4x :custom])
-               :onChange (fn [s] (re-frame/dispatch [::sprite-preview/change-size s]))}]]
+               :onChange (fn [s] (re-frame/dispatch [::sprite-preview/set-size s]))}]]
      [:button {:onClick (fn [] (re-frame/dispatch [::sprite-preview/open]))} "show preview"]]))
 
 (defn onion-skin-section []
@@ -570,14 +572,6 @@
 (defn canvases-section []
   [:f> canvases-section-component])
 
-(defn import-export-section []
-  [:div
-   [:button {:onClick (fn [] (re-frame/dispatch [::sprite-import-export/export-sprite-as-file]))}
-    "save as file"]
-   [file-uploader {:onUpload (fn [file-desc]
-                               (re-frame/dispatch [::sprite-import-export/import-sprite-from-file file-desc]))}
-    "load from file"]])
-
 (defn- current-color-selection [initial-props]
   (let [initial-value (:value initial-props)]
     (fn [{:keys [value onChange]}]
@@ -610,6 +604,155 @@
      [:div {:onClick (fn [] (re-frame/dispatch [::events/swap-current-colors]))
             :style {:position "absolute" :top "52px" :left "9px" :cursor "pointer"}}
       "X"]]))
+
+;; export import
+
+(defn export-common-settings-fields [{:keys [common-settings type-options size-info]}]
+  (let [layers @(re-frame/subscribe [::subs/layers])
+        layer-options (concat
+                       [{:label "Visible layers" :value {:type :visible}}
+                        {:label "Selected layers" :value {:type :selected}}]
+                       (map-indexed (fn [idx l] {:label (:name l) :value {:type :layer :idx idx}}) layers))]
+    [:<>
+     "Frames:" [select {:value (:frames common-settings)
+                        :options [{:label "All frames" :value :all}
+                                  {:label "Selected frames" :value :selected}]
+                        :onChange (fn [value]
+                                    (re-frame/dispatch [::export/set-common-settings-option :frames value]))}]
+     "Layers:" [select {:value (:layers common-settings)
+                        :options layer-options
+                        :onChange (fn [value]
+                                    (re-frame/dispatch [::export/set-common-settings-option :layers value]))}]
+     "Direction:" [select {:value (:direction common-settings)
+                           :options [{:label "Forward" :value :forward}
+                                     {:label "Backwards" :value :backwards}]
+                           :onChange (fn [value]
+                                       (re-frame/dispatch [::export/set-common-settings-option :direction value]))}]
+     "Frame scale:" [slider {:value (:scale common-settings)
+                             :min export/min-scale
+                             :max export/max-scale
+                             :step 1
+                             :onChange (fn [value]
+                                         (re-frame/dispatch [::export/set-common-settings-option :scale value]))}]
+     "Frame size:" [:div {:style {:display :flex :gap "6px"}}
+                    [:input {:type "number"
+                             :value (-> common-settings :frame-size :width)
+                             :onChange (fn [e]
+                                         (re-frame/dispatch [::export/set-common-settings-option :frame-size-width (parse-double (.. e -target -value))]))}]
+                    [:input {:type "number"
+                             :value (-> common-settings :frame-size :height)
+                             :onChange (fn [e]
+                                         (re-frame/dispatch [::export/set-common-settings-option :frame-size-height (parse-double (.. e -target -value))]))}]]
+     [:<> size-info]
+     "File:" [:input {:value (:file-name common-settings)
+                      :onChange (fn [e]
+                                  (re-frame/dispatch [::export/set-common-settings-option :file-name (.. e -target -value)]))}]
+     "Type:" [select {:value (:file-type common-settings)
+                      :options type-options
+                      :onChange (fn [value]
+                                  (re-frame/dispatch [::export/set-common-settings-option :file-type value]))}]]))
+
+(defn modal [props children]
+  (let [{:keys [cancel-button ok-button]} props]
+    [:div {:style {:position "fixed"
+                   :display "flex"
+                   :zIndex 1000
+                   :alignItems "center"
+                   :justifyContent "center"
+                   :left 0
+                   :right 0
+                   :bottom 0
+                   :top 0
+                   :backgroundColor "rgba(37,37,37,.9)"}}
+     [:div {:style {:position :absolute
+                    :display :flex
+                    :flex-direction :column
+                    :width "50%"
+                    :height "50%"
+                    :background-color "white"
+                    :border "1px solid white"}}
+      children
+      [:div {:style {:display :flex
+                     :gap "6px"
+                     :margin-top :auto
+                     :margin-left :auto}}
+       [:button {:onClick (:onClick cancel-button) :disabled (:disabled cancel-button)} (:text cancel-button)]
+       [:button {:onClick (:onClick ok-button) :disabled (:disabled ok-button)} (:text ok-button)]]]]))
+
+(defn export-image-settings-form []
+  (let [image-settings @(re-frame/subscribe [::subs/export-image-settings])]
+    [:<>
+     [export-common-settings-fields
+      {:common-settings image-settings
+       :type-options [{:label "png" :value :png}
+                      {:label "gif" :value :gif}]}]
+     (when (= (:file-type image-settings) :gif)
+       [:<>
+        "Never repeat" [checkbox {:value (not (:repeat image-settings))
+                                  :onChange (fn [value]
+                                              (re-frame/dispatch [::export/set-image-settings-option :repeat (not value)]))}]])
+     "Split layers" [checkbox {:value (:split-layers image-settings)
+                               :onChange (fn [value]
+                                           (re-frame/dispatch [::export/set-image-settings-option :split-layers value]))}]]))
+
+(defn export-spritesheet-settings-form []
+  (let [settings @(re-frame/subscribe [::subs/export-spritesheet-settings])]
+    [:<>
+     "Columns:" [:input {:value (:columns settings)
+                         :type "number"
+                         :onChange (fn [e]
+                                     (re-frame/dispatch [::export/set-spritesheet-settings-columns (parse-double (.. e -target -value))]))}]
+     "Rows:" [:div (:rows settings)]
+     [export-common-settings-fields
+      {:common-settings settings
+       :size-info [:<> "Spritesheet size:" (str (-> settings :spritesheet-size :width)
+                                                "x"
+                                                (-> settings :spritesheet-size :height))
+                   [:br]]
+       :type-options [{:label "png" :value :png}]}]]))
+
+(defn export-modal []
+  (let [current-tab @(re-frame/subscribe [::subs/export-current-tab])
+        opened @(re-frame/subscribe [::subs/export-modal-opened])
+        exporting @(re-frame/subscribe [::subs/exporting])]
+    (when opened
+      [modal {:cancel-button {:text "Cancel"
+                              :onClick (fn []
+                                         (re-frame/dispatch [::export/set-opened false]))}
+              :ok-button {:text "Export"
+                          :disabled exporting
+                          :onClick (fn []
+                                     (re-frame/dispatch [::export/export]))}}
+
+       [:div
+        [:div
+         [:button {:style {:border (when (= current-tab :image)
+                                     "1px solid blue")}
+                   :onClick (fn []
+                              (re-frame/dispatch [::export/select-tab :image]))}
+          "image"]
+         [:button {:style {:border (when (= current-tab :spritesheet)
+                                     "1px solid blue")}
+                   :onClick (fn []
+                              (re-frame/dispatch [::export/select-tab :spritesheet]))}
+          "spritesheet"]]
+
+        [:div {:style {:display :grid}}
+         (case current-tab
+           :image [export-image-settings-form]
+           :spritesheet [export-spritesheet-settings-form])]]])))
+
+(defn import-export-section []
+  [:<>
+   [export-modal]
+   [:div
+    [:button {:onClick (fn [] (re-frame/dispatch [::sprite-import-export/export-sprite-as-file]))}
+     "save as file"]
+    [file-uploader {:onUpload (fn [file-desc]
+                                (re-frame/dispatch [::sprite-import-export/import-sprite-from-file file-desc]))}
+     "load from file"]
+    [:button {:onClick (fn [] (re-frame/dispatch [::export/set-opened true]))}
+     "open export panel"]]])
 
 (defn main-panel []
   (let [tool @(re-frame/subscribe [::subs/tool])

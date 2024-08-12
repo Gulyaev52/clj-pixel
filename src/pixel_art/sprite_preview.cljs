@@ -10,7 +10,7 @@
    :frame-imgs {}})
 
 (re-frame/reg-event-fx
- ::change-size
+ ::set-size
  (fn [{:keys [db]} [_ size]]
    {:db (assoc-in db [:sprite-preview :size] size)}))
 

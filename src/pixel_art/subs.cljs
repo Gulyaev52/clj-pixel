@@ -1,20 +1,39 @@
 (ns pixel-art.subs
-  (:require [pixel-art.model.sprite :as sprite]
+  (:require [pixel-art.model.cel :as cel]
+            [pixel-art.model.sprite :as sprite]
             [pixel-art.tool.utils :refer [get-tool-options]]
+            [pixel-art.utils.coll :as coll]
             [re-frame.core :as re-frame]
-            [pixel-art.model.cel :as cel]
-            [pixel-art.utils.coll :as coll]))
+            [sc.api :as api]
+            [pixel-art.export :as export]))
 
 (re-frame/reg-sub
  ::layers
  (fn [db]
-   (let [sprite (-> db :sprite)
-         current-cel-pos (sprite/get-current-cel-pos sprite)
-         layers (sprite :layers)]
-     (map-indexed (fn [idx layer]
-                    (merge layer {:current (= (:layer-idx current-cel-pos) idx)
-                                  :idx idx}))
-                  layers))))
+   (-> db :sprite :layers)))
+
+(re-frame/reg-sub
+ ::export-spritesheet-settings
+ export/get-spritesheet-settings)
+
+(re-frame/reg-sub
+ ::export-image-settings
+ export/get-image-settings)
+
+(re-frame/reg-sub
+ ::exporting
+ (fn [db]
+   (-> db :export :exporting)))
+
+(re-frame/reg-sub
+ ::export-current-tab
+ (fn [db]
+   (-> db :export :current-tab)))
+
+(re-frame/reg-sub
+ ::export-modal-opened
+ (fn [db]
+   (-> db :export :opened)))
 
 (re-frame/reg-sub
  ::sprite-size
