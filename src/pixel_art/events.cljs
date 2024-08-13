@@ -99,7 +99,9 @@
 (re-frame/reg-event-fx
  ::add-frame
  (fn [{:keys [db]}]
-   (let [new-frame (frame/create initial-frame-duration)]
+   (let [new-frame (-> (sprite/get-current-frame (:sprite db))
+                       :duration
+                       frame/create)]
      (-> db
          (commit-changes-and-init-tool (get-in db [:tool :state :changes])
                                        (tool/init (-> db :tool :type)))
@@ -273,6 +275,27 @@
                                      (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] sprite/unlink-selected-cels)
        (update-in [:db] history/save-sprite))))
+
+(re-frame/reg-event-fx
+ ::set-frame-duration
+ (fn [{:keys [db]} [_ idx duration]]
+   (let [valid-duration (max duration 1)]
+     {:db (-> db
+              (update :sprite (fn [sprite]
+                                (sprite/update-frame idx #(assoc % :duration valid-duration) sprite)))
+              history/save-sprite)})))
+
+(re-frame/reg-event-fx
+ ::set-frame-duration-for-all
+ (fn [{:keys [db]} [_ duration]]
+   (let [valid-duration (max duration 1)]
+     {:db (-> db
+              (update :sprite (fn [sprite]
+                                (->> (range 0 (count (:frames sprite)))
+                                     (reduce (fn [res-sprite idx]
+                                               (sprite/update-frame idx #(assoc % :duration valid-duration) res-sprite))
+                                             sprite))))
+              history/save-sprite)})))
 
 (re-frame/reg-event-fx
  ::zoom

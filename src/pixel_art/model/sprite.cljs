@@ -272,6 +272,9 @@
 (defn update-layer [idx f sprite]
   (update-in sprite [:layers idx] f))
 
+(defn update-frame [idx f sprite]
+  (update-in sprite [:frames idx] f))
+
 (defn add-frame
   ([frame sprite]
    (add-frame frame (fn [] (cel/create (get-size sprite))) sprite))

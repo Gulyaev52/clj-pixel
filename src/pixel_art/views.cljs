@@ -82,6 +82,9 @@
 
 (defn timeline-panel []
   (let [{:keys [cels layers frames current-cel-opacity]} @(re-frame/subscribe [::subs/timeline])
+        current-frame (coll/find-first :current frames) ;; todo: to subs?
+        all-frames-duration (when (apply = (map :duration frames))
+                              (-> frames first :duration))
         cels-by-layers (-> cels
                            (#(group-by (fn [c] (-> c :pos :layer-idx)) %))
                            (update-vals (fn [cels] (sort-by #(-> % :pos :frame-idx) cels))))]
@@ -90,7 +93,18 @@
       [:div {:style {:display :flex}} "frames:"
        [:button {:onClick (fn [] (re-frame/dispatch [::events/add-frame]))} "add"]
        [:button {:onClick (fn [] (re-frame/dispatch [::events/remove-frame]))} "remove"]
-       [:button {:onClick (fn [] (re-frame/dispatch [::events/duplicate-frame]))} "duplicate"]]
+       [:button {:onClick (fn [] (re-frame/dispatch [::events/duplicate-frame]))} "duplicate"]
+       [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
+        [:span "Duration (ms):"]
+        [:input {:value (:duration current-frame)
+                 :onChange (fn [e]
+                             (re-frame/dispatch [::events/set-frame-duration (:idx current-frame) (parse-double (.. e -target -value))]))}]]
+
+       [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
+        [:span "All frames duration (ms):"]
+        [:input {:value all-frames-duration
+                 :onChange (fn [e]
+                             (re-frame/dispatch [::events/set-frame-duration-for-all (parse-double (.. e -target -value))]))}]]]
       [:div {:style {:display :flex}} "layers:"
        [:button {:onClick (fn [] (re-frame/dispatch [::events/add-layer]))} "add"]
        [:button {:onClick (fn [] (re-frame/dispatch [::events/remove-layer]))} "remove"]
