@@ -124,13 +124,14 @@
          (map-indexed (fn [idx cel]
                         (assoc cel :layer (nth layers idx)))))))
 
-;; todo: remove extra
-(defn get-cels-with-layers-and-pos [sprite]
-  (let [{:keys [cels layers]} sprite]
+;; todo: rename; do we need get-frame-cels-with-layers, get-frame-cels?
+(defn get-denormalized-cels [sprite]
+  (let [{:keys [cels layers frames]} sprite]
     (->> cels
          (coll/map-matrix (fn [cel {:keys [x y]}]
                             (assoc cel
                                    :layer (nth layers x)
+                                   :frame (nth frames y)
                                    :pos {:frame-idx y
                                          :layer-idx x}))))))
 

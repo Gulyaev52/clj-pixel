@@ -115,7 +115,7 @@
    {:db (assoc-in db [:export :exporting] exporting)}))
 
 (defn get-cels-for-rendering [settings sprite]
-  (let [cels (sprite/get-cels-with-layers-and-pos sprite)
+  (let [cels (sprite/get-denormalized-cels sprite)
         selected-poses (sprite/get-selected-cels-pos sprite)]
     (->> (if (= (:frames settings) :selected)
            (->> (sort-by :frame-idx (map :frame-idx selected-poses))
@@ -203,40 +203,47 @@
                                    (scale-canvas size frame-size))
                       :cels cels})))]
      (case (:file-type settings)
-       :png (let [files-desc
-                  (->> rendered-frames
-                       (map (fn [{:keys [canvas cels]}]
-                              {:canvas canvas
-                               :file-content (canvas/get-base64-from-canvas canvas "png") ;; todo: use arraybuffer?
-                               :file-name (let [cel (first cels)
-                                                frame-idx (-> cel :pos :frame-idx inc)]
-                                            (if (:split-layers settings)
-                                              (let [layer-name (string/replace (-> cel :layer :name) #"\s+" "_")]
-                                                (str (:file-name settings) "_" frame-idx "_" layer-name ".png"))
-                                              (str (:file-name settings) "_" frame-idx ".png")))})))]
-              (if (= (count files-desc) 1)
-                (let [file-desc (first files-desc)]
-                  (. (:canvas file-desc)
-                     (toBlob (fn [blob]
-                               (download-file (:file-name file-desc) blob)
-                               (re-frame/dispatch [::set-exporting false])))))
-                (let [zip (jszip)]
-                  (doseq [{:keys [file-name file-content]} files-desc]
-                    (. zip (file file-name file-content #js {"base64" true})))
-                  (.. zip
-                      (generateAsync #js {"type" "blob"})
-                      (then (fn [blob]
-                              (download-file "new_pixel.zip" blob)
-                              (re-frame/dispatch [::set-exporting false])))))))
+       :png
+       (let [files-desc
+             (->> rendered-frames
+                  (map (fn [{:keys [canvas cels]}]
+                         {:canvas canvas
+                          :file-content (canvas/get-base64-from-canvas canvas "png") ;; todo: use arraybuffer?
+                          :file-name (let [cel (first cels)
+                                           frame-idx (-> cel :pos :frame-idx inc)]
+                                       (if (:split-layers settings)
+                                         (let [layer-name (string/replace (-> cel :layer :name) #"\s+" "_")]
+                                           (str (:file-name settings) "_" frame-idx "_" layer-name ".png"))
+                                         (str (:file-name settings) "_" frame-idx ".png")))})))]
+         (if (= (count files-desc) 1)
+           (let [file-desc (first files-desc)]
+             (. (:canvas file-desc)
+                (toBlob (fn [blob]
+                          (download-file (:file-name file-desc) blob)
+                          (re-frame/dispatch [::set-exporting false])))))
+           (let [zip (jszip)]
+             (doseq [{:keys [file-name file-content]} files-desc]
+               (. zip (file file-name file-content #js {"base64" true})))
+             (.. zip
+                 (generateAsync #js {"type" "blob"})
+                 (then (fn [blob]
+                         (download-file "new_pixel.zip" blob)
+                         (re-frame/dispatch [::set-exporting false])))))))
 
-
-       :gif (create-gif (clj->js (map :canvas rendered-frames))
-                        (fn [blob]
-                          (download-file (str (:file-name settings) ".gif") blob)
-                          (re-frame/dispatch [::set-exporting false])))))))
+       :gif
+       (let [gif (create-gif (clj->js {"workers" 2
+                                       "quality" 1
+                                       "transparent" "rgba(0,0,0,0)"
+                                       "background" "#000"}))]
+         (doseq [{:keys [canvas cels]} rendered-frames]
+           (let [cel (first cels)] ;; todo: refactor?
+             (. gif (addFrame canvas #js {"delay" (-> cel :frame :duration)}))))
+         (. gif (on "finished" (fn [blob]
+                                 (download-file (str (:file-name settings) ".gif") blob)
+                                 (re-frame/dispatch [::set-exporting false]))))
+         (. gif (render)))))))
 
 ;; баги
-;; 9) fps and frame duration
 ;; 4) preview
 ;; 1) чёрный цвет в гифке
 ;; 11) мб скейла достаточно
