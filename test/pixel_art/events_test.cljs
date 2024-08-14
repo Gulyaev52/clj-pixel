@@ -1,7 +1,9 @@
 (ns pixel-art.events-test
-  (:require [cljs.test :refer-macros [deftest testing is run-tests]]
+  (:require [cljs.test :refer-macros [deftest testing is run-tests] :refer [async]]
+            [clojure.core.async :refer [go]]
             [day8.re-frame.test :as rf-test]
             [pixel-art.events :as events]
+            [pixel-art.export :as export]
             [pixel-art.local-storage :as local-storage]
             [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.palette :as palette]
@@ -718,6 +720,29 @@
     (let [current-palette @(rf/subscribe [::subs/current-palette])]
       (is (= (into (:colors initial-current-palette) ["rgb(90, 44, 44)" "rgb(167, 46, 46)"])
              (:colors current-palette))))))
+
+;; export testing
+
+(deftest test-export
+  (rf-test/run-test-sync
+   (testing "open export modal"
+     (testing "open"
+       (initialize-db)
+
+       (rf/dispatch-sync [::export/set-opened true])
+
+       (is (= :image @(rf/subscribe [::subs/export-current-tab])))
+       (is (= true @(rf/subscribe [::subs/export-modal-opened])))
+       (is (= false @(rf/subscribe [::subs/exporting])))
+       (is (= true @(rf/subscribe [::subs/export-settings-valid?]))))
+
+     (testing "close"
+       (initialize-db)
+
+       (rf/dispatch-sync [::export/set-opened true])
+       (rf/dispatch-sync [::export/set-opened false])
+
+       (is (= false @(rf/subscribe [::subs/export-modal-opened])))))))
 
 #_(enable-console-print!)
 #_(run-tests)

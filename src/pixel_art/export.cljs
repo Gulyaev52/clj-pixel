@@ -234,7 +234,8 @@
        (let [gif (create-gif (clj->js {"workers" 2
                                        "quality" 1
                                        "transparent" "rgba(0,0,0,0)"
-                                       "background" "#000"}))]
+                                       "background" "#000"
+                                       "repeat" (if (:repeat settings) 0 -1)}))]
          (doseq [{:keys [canvas cels]} rendered-frames]
            (let [cel (first cels)] ;; todo: refactor?
              (. gif (addFrame canvas #js {"delay" (-> cel :frame :duration)}))))
