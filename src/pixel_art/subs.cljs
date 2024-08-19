@@ -26,6 +26,11 @@
    (not (empty? (-> db :export :common-settings :file-name)))))
 
 (re-frame/reg-sub
+ ::export-preview
+ (fn [db]
+   (-> db :export (select-keys [:preview :preview-generation]))))
+
+(re-frame/reg-sub
  ::exporting
  (fn [db]
    (-> db :export :exporting)))

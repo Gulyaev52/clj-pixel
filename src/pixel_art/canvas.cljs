@@ -58,7 +58,10 @@
   (let [canvas (. js/document (getElementById id))]
     (.. canvas (getContext "2d"))))
 
-(defn get-base64-from-canvas [canvas format]
+(defn to-data-url [canvas format]
+  (. canvas (toDataURL (str "image/" format))))
+
+(defn to-base64 [canvas format]
   (let [data (. canvas (toDataURL (str "image/" format)))]
     (. data (substr (+ (. data (indexOf ",")) 1)))))
 

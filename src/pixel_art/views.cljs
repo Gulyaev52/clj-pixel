@@ -682,7 +682,7 @@
                     :display :flex
                     :flex-direction :column
                     :width "50%"
-                    :height "50%"
+                    :min-height "50%"
                     :background-color "white"
                     :border "1px solid white"}}
       children
@@ -729,7 +729,9 @@
   (let [current-tab @(re-frame/subscribe [::subs/export-current-tab])
         opened @(re-frame/subscribe [::subs/export-modal-opened])
         exporting @(re-frame/subscribe [::subs/exporting])
-        export-settings-valid? @(re-frame/subscribe [::subs/export-settings-valid?])]
+        export-settings-valid? @(re-frame/subscribe [::subs/export-settings-valid?])
+        spritesheet-settings @(re-frame/subscribe [::subs/export-spritesheet-settings])
+        preview @(re-frame/subscribe [::subs/export-preview])]
     (when opened
       [modal {:cancel-button {:text "Cancel"
                               :onClick (fn []
@@ -751,6 +753,44 @@
                    :onClick (fn []
                               (re-frame/dispatch [::export/select-tab :spritesheet]))}
           "spritesheet"]]
+
+        [:div {:style {:display :grid
+                       :grid-template-columns "repeat(auto-fit, minmax(150px, 1fr))"
+                       :justify-content "center"
+                       :justify-items "center"
+                       :width "100%"
+                       :height "200px"
+                       :border "1px solid black"
+                       :padding "2px"
+                       :overflow "auto"
+                       :opacity (when (:preview-generation preview) "0.6")
+                       :background-image "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABlBMVEVMTExVVVUnhsEkAAAAHUlEQVR4AWOAAUYoQOePEAUj3v9oYDQ9gMBoegAAJFwCAbLaTIMAAAAASUVORK5CYII=)"}}
+         (cond
+           (= current-tab :spritesheet)
+           [:img {:src (-> preview :preview first)
+                  :style {:height (* (:rows spritesheet-settings) 70)
+                          :width (* (:columns spritesheet-settings) 70)
+                          :image-rendering "pixelated"
+                          :margin "auto"}}]
+
+           (= (count (:preview preview)) 1)
+           [:img {:src (-> preview :preview first)
+                  :style {:height "100%"
+                          :min-height "70px"
+                          :image-rendering "pixelated"}}]
+
+           :else (for [[idx data-url] (map-indexed vector (:preview preview))]
+                   ^{:key (str data-url "-" idx)}
+                   [:div {:style {:display :flex
+                                  :flex-direction :column
+                                  :height "100%"
+                                  :align-items "center"}}
+                    [:img {:src data-url
+                           :style {:height "100%"
+                                   :min-height "70px"
+                                   :image-rendering "pixelated"}}]
+                    [:div {:style {:padding "5px" :color "white"}}
+                     (inc idx)]]))]
 
         [:div {:style {:display :grid}}
          (case current-tab
