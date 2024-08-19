@@ -54,8 +54,8 @@
          :palettes (palette/init palettes)
          :export (export/init)})))
 
-(defn get-default-db [{:keys [palettes initial-pixels-map]}]
-  (let [sprite-size {:width 8 :height 8}
+(defn get-default-db [{:keys [palettes initial-pixels-map sprite-size]}]
+  (let [sprite-size (or sprite-size {:width 8 :height 8})
         res-palettes (or palettes initial-palettes)
         primary-color (or (-> res-palettes first :colors first) "rgb(0,0,0)")
         secondary-color (or (-> res-palettes first :colors second) primary-color)]

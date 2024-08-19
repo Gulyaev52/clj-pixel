@@ -1,8 +1,11 @@
 (ns pixel-art.events-test
-  (:require [cljs.test :refer-macros [deftest testing is run-tests] :refer [async]]
-            [clojure.core.async :refer [go]]
+  (:require ["./jszip" :as jszip]
+            [cljs.test :refer-macros [deftest testing is run-tests] :refer [async]]
+            [clojure.data :as d]
             [day8.re-frame.test :as rf-test]
+            [pixel-art.canvas :as canvas]
             [pixel-art.events :as events]
+            [pixel-art.events.event-collector :as event-collector]
             [pixel-art.export :as export]
             [pixel-art.local-storage :as local-storage]
             [pixel-art.model.color :refer [transparent-color]]
@@ -35,13 +38,13 @@
 (defn create-pixels [size]
   (vec (repeat (* (:width size) (:height size)) transparent-color)))
 
-(def initial-cel-pixels-map {{:x 0 :y 0} "black"
+(def initial-cel-pixels-map {{:x 0 :y 0} "red"
                              {:x 0 :y 1} transparent-color
-                             {:x 1 :y 1} "black"
-                             {:x 3 :y 3} "black"
-                             {:x 3 :y 4} "black"
-                             {:x 4 :y 3} "black"
-                             {:x 4 :y 4} "black"})
+                             {:x 1 :y 1} "red"
+                             {:x 3 :y 3} "red"
+                             {:x 3 :y 4} "red"
+                             {:x 4 :y 3} "red"
+                             {:x 4 :y 4} "red"})
 
 (defn pos->idx [{:keys [x y]} {:keys [width]}]
   (+ x (* width y)))
@@ -723,9 +726,15 @@
 
 ;; export testing
 
+(def !last-download-file (atom nil))
+(rf/reg-fx
+ ::export/download-file
+ (fn [file-desc]
+   (reset! !last-download-file file-desc)))
+
 (deftest test-export
-  (rf-test/run-test-sync
-   (testing "open export modal"
+  (testing "open export modal"
+    (rf-test/run-test-sync
      (testing "open"
        (initialize-db)
 
@@ -744,5 +753,120 @@
 
        (is (= false @(rf/subscribe [::subs/export-modal-opened])))))))
 
+(defn wait-for
+  ([done pred on-success]
+   (wait-for done pred on-success 1))
+  ([done pred on-success times]
+   (cond
+     (> times 10)
+     (do (is false "timeout")
+         (done))
+
+     (pred)
+     (on-success)
+
+     :else
+     (js/setTimeout (fn [] (wait-for done pred on-success (inc times))) 10))))
+
+(defn wait-for-event [done event on-success]
+  (wait-for done
+            (fn []
+              (let [[last-event] (first @event-collector/event-store)]
+                (= event last-event)))
+            on-success))
+
+(def r (atom 1))
+
+(def done (fn [] (println "done")))
+
+(defn blob->pixels [blob]
+  (.. (js/createImageBitmap blob)
+      (then (fn [bitmap]
+              (let [canvas (canvas/create-canvas {:width (. bitmap -width)
+                                                  :height (. bitmap -height)})
+                    _ (.. canvas (getContext "2d") (drawImage bitmap 0 0))
+                    image-data (.. canvas (getContext "2d") (getImageData 0 0 (. bitmap -width) (. bitmap -height)))]
+                (for [x (range 0 (. bitmap -width))
+                      y (range 0 (. bitmap -height))]
+                  (let [index (* (+ x (* y (. image-data -width))) 4)]
+                    (let [r (aget (.. image-data -data) index)
+                          g (aget (.. image-data -data) (+ index 1))
+                          b (aget (.. image-data -data) (+ index 2))
+                          a (aget (.. image-data -data) (+ index 3))]
+                      [[x y]
+                       (when (not= [r g b a] [0 0 0 0])
+                         (str "rgb(" r "," g "," b ")"))]))))))))
+
+(defn zip-blob->pixels-map [blob]
+  (. (jszip/loadAsync blob)
+     (then (fn [zip]
+             (.. js/Promise
+                 (all
+                  (for [[file-name content] (. js/Object (entries (. zip -files)))]
+                    (.. content
+                        (async "blob")
+                        (then blob->pixels)
+                        (then (fn [pixels]
+                                [file-name pixels])))))
+                 (then #(into {} %)))))))
+
+(def initial-pixels-map
+  {{:x 0 :y 0} "rgb(255,0,0)"
+   {:x 0 :y 1} "rgb(255,0,0)"
+   {:x 1 :y 0} nil
+   {:x 1 :y 1} "rgb(0,0,0)"})
+
+(def expected-pixels
+  (map (fn [[{:keys [x y]} c]] [[x y] c]) initial-pixels-map))
+
+(def sprite-size {:width 2 :height 2})
+
+(deftest test-export-png
+  (async done
+         (do
+           (initialize-db {:initial-pixels-map initial-pixels-map
+                           :sprite-size sprite-size})
+           (rf/dispatch-sync [::export/set-opened true])
+           (rf/dispatch-sync [::export/select-tab :image])
+
+           (rf/dispatch-sync [::export/export])
+
+           (wait-for-event done
+                           ::export/download-generated-blob
+                           (fn []
+                             (is (= (:file-name @!last-download-file) "untitled")) ;; тут нужно добавить формат
+                             (.. (blob->pixels (:file-content @!last-download-file))
+                                 (then (fn [res]
+                                         (is (= expected-pixels res))))
+                                 (finally done)))))))
+
+(deftest test-export-zip
+  (async done
+         (do
+           (initialize-db {:initial-pixels-map initial-pixels-map
+                           :sprite-size sprite-size})
+           (rf/dispatch-sync [::events/duplicate-frame])
+           (rf/dispatch-sync [::export/set-opened true])
+           (rf/dispatch-sync [::export/select-tab :image])
+
+           (rf/dispatch-sync [::export/export])
+
+           (wait-for-event done
+                           ::export/download-generated-blob
+                           (fn []
+                             (is (= (:file-name @!last-download-file) "untitled")) ;; тут нужно добавить формат
+                             (.. (zip-blob->pixels-map (:file-content @!last-download-file))
+                                 (then (fn [pixels-map]
+                                         (is (= {"untitled_1.png" expected-pixels
+                                                 "untitled_2.png" expected-pixels}
+                                                pixels-map))))
+                                 (finally done)))))))
+
 #_(enable-console-print!)
 #_(run-tests)
+
+;; zip
+;; gif
+;; png +
+;; имя файла формировать
+;; todo: передавать в инит sprite
