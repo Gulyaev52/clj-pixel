@@ -39,19 +39,17 @@
 (defn get-common-settings-res [db]
   (let [common-settings (-> db :export :common-settings)
         sprite-size (-> db :sprite sprite/get-size)
-        frame-size (update-vals sprite-size #(. js/Math (round (* (:scale common-settings) %))))]
-    (assoc common-settings :frame-size frame-size)))
+        scaled-frame-size (update-vals sprite-size #(. js/Math (round (* (:scale common-settings) %))))]
+    (assoc common-settings :scaled-frame-size scaled-frame-size)))
 
 (defn get-spritesheet-settings [db]
   (let [common-settings (get-common-settings-res db)
         spritesheet-settings (-> db :export :spritesheet-settings)
         columns (:columns spritesheet-settings)
         frames (-> db :sprite :frames)
-        rows (calc-export-rows columns frames)
-        spritesheet-size {:width (* (-> common-settings :frame-size :width) columns)
-                          :height (* (-> common-settings :frame-size :height) rows)}]
+        rows (calc-export-rows columns frames)]
     (-> spritesheet-settings
-        (assoc :rows rows :spritesheet-size spritesheet-size)
+        (assoc :rows rows)
         (merge common-settings))))
 
 (defn get-image-settings [db]
@@ -141,35 +139,21 @@
        generate-preview)))
 
 (re-frame/reg-event-fx
- ::set-common-settings-option
+ ::set-settings-option
  (fn [{:keys [db]} [_ option-key value]]
-   ;; generate-preview. не имеет смысла запускать на scale, frame-size, file
-   (let [updated-db
-         (if (or (= option-key :frame-size-width)
-                 (= option-key :frame-size-height))
-           (let [sprite-size (-> db :sprite sprite/get-size)
-                 new-scale (/ value ((if (= option-key :frame-size-width) :width :height)
-                                     sprite-size))]
-             (assoc-in db [:export :common-settings :scale] new-scale))
-           (assoc-in db [:export :common-settings option-key] value))]
-     (generate-preview updated-db))))
-
-(re-frame/reg-event-fx
- ::set-image-settings-option
- (fn [{:keys [db]} [_ option-key value]]
-   ;; generate-preview. не имеет смысла запускать на scale, frame-size, file
-   (-> db
-       (assoc-in [:export :image-settings option-key] value)
-       generate-preview)))
-
-(re-frame/reg-event-fx
- ::set-spritesheet-settings-columns
- (fn [{:keys [db]} [_ value]]
-   ;; generate-preview. не имеет смысла запускать на scale, frame-size, file
-   (-> db
-       (assoc-in [:export :spritesheet-settings :columns]
-                 (adjust-columns-if-need value (-> db :sprite :frames)))
-       generate-preview)))
+   (case option-key
+     :columns (-> db
+                  (assoc-in [:export :spritesheet-settings option-key]
+                            (adjust-columns-if-need value (-> db :sprite :frames)))
+                  generate-preview)
+     :repeat (-> db
+                 (assoc-in [:export :image-settings option-key] value)
+                 generate-preview)
+     (-> db
+         (assoc-in [:export :common-settings option-key] value)
+         (#(if-not (some #{option-key} [:file-name :scale])
+             (generate-preview %)
+             {:db %}))))))
 
 (re-frame/reg-event-fx
  ::export
@@ -180,13 +164,15 @@
        :spritesheet
        (let [settings (get-spritesheet-settings db)
              size (sprite/get-size sprite)
-             frame-size (:frame-size settings)
+             scaled-size (:scaled-frame-size settings)
+             scaled-spritesheet-size {:width (* (:width scaled-size) (:columns settings))
+                                      :height (* (:height scaled-size) (:rows settings))}
              image-canvas (->> (get-cels-for-rendering settings sprite)
                                (map (fn [cels]
                                       (->> (canvas/create-canvas size)
                                            (canvas/draw-cels-on-single-canvas cels)
-                                           (canvas/scale size frame-size))))
-                               (canvas/combine frame-size (:spritesheet-size settings) (:columns settings)))]
+                                           (canvas/scale size scaled-size))))
+                               (canvas/combine scaled-size scaled-spritesheet-size (:columns settings)))]
          {:db db
           :fx [[::generate-plain-image {:canvas image-canvas
                                         :on-finish [::download-generated-blob (:file-name settings)]}]]})
@@ -194,13 +180,13 @@
        :image
        (let [settings (get-image-settings db)
              size (sprite/get-size sprite)
-             frame-size (:frame-size settings)
+             scaled-size (:scaled-frame-size settings)
              rendered-frames
              (->> (get-cels-for-rendering settings sprite)
                   (map (fn [cels]
                          {:canvas (->> (canvas/create-canvas size)
                                        (canvas/draw-cels-on-single-canvas cels)
-                                       (canvas/scale size frame-size))
+                                       (canvas/scale size scaled-size))
                           :cels cels})))]
          (case (:file-type settings)
            :png
@@ -289,14 +275,6 @@
 ;; 1) чёрный цвет в гифке
 ;; 14) в spritesheet считать строки только по выбранным
 
-;; 11) мб скейла достаточно
-;; 12) исп blob vs base64. нужно смотреть большое кол-во больших элементов
 ;; 13) оптимизация для слинкованых ячеек
-;; 13) тесты
-;; 14) отрефакторить
 ;; 5) избавиться от повторения упоминаний :image, :spritesheet(кнопки, сеттинги)
-;; 7) поля формы мёржатся при этом экшены раздельные
-;; 12) исп cond-> или as->
-;; 13) export size export resulotion
 ;; 15) переименовать import-export помдуль
-;;  todo: нужен ли этот пайплайн? исп scale, transform

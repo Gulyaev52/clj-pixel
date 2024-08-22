@@ -621,7 +621,7 @@
 
 ;; export import
 
-(defn export-common-settings-fields [{:keys [common-settings type-options size-info]}]
+(defn export-common-settings-fields [{:keys [common-settings type-options]}]
   (let [layers @(re-frame/subscribe [::subs/layers])
         layer-options (concat
                        [{:label "Visible layers" :value {:type :visible}}
@@ -632,42 +632,36 @@
                         :options [{:label "All frames" :value :all}
                                   {:label "Selected frames" :value :selected}]
                         :onChange (fn [value]
-                                    (re-frame/dispatch [::export/set-common-settings-option :frames value]))}]
+                                    (re-frame/dispatch [::export/set-settings-option :frames value]))}]
      "Layers:" [select {:value (:layers common-settings)
                         :options layer-options
                         :onChange (fn [value]
-                                    (re-frame/dispatch [::export/set-common-settings-option :layers value]))}]
+                                    (re-frame/dispatch [::export/set-settings-option :layers value]))}]
      "Direction:" [select {:value (:direction common-settings)
                            :options [{:label "Forward" :value :forward}
                                      {:label "Backwards" :value :backwards}]
                            :onChange (fn [value]
-                                       (re-frame/dispatch [::export/set-common-settings-option :direction value]))}]
+                                       (re-frame/dispatch [::export/set-settings-option :direction value]))}]
      "Frame scale:" [slider {:value (:scale common-settings)
                              :min export/min-scale
                              :max export/max-scale
                              :step 1
                              :onChange (fn [value]
-                                         (re-frame/dispatch [::export/set-common-settings-option :scale value]))}]
-     "Frame size:" [:div {:style {:display :flex :gap "6px"}}
-                    [:input {:type "number"
-                             :value (-> common-settings :frame-size :width)
-                             :onChange (fn [e]
-                                         (re-frame/dispatch [::export/set-common-settings-option :frame-size-width (parse-double (.. e -target -value))]))}]
-                    [:input {:type "number"
-                             :value (-> common-settings :frame-size :height)
-                             :onChange (fn [e]
-                                         (re-frame/dispatch [::export/set-common-settings-option :frame-size-height (parse-double (.. e -target -value))]))}]]
-     [:<> size-info]
+                                         (re-frame/dispatch [::export/set-settings-option :scale value]))}]
+     "Frame size:" [:<> (str (-> common-settings :scaled-frame-size :width)
+                             "x"
+                             (-> common-settings :scaled-frame-size :height))
+                    [:br]]
      "File:" [:input {:value (:file-name common-settings)
                       :onChange (fn [e]
-                                  (re-frame/dispatch [::export/set-common-settings-option :file-name (.. e -target -value)]))}]
+                                  (re-frame/dispatch [::export/set-settings-option :file-name (.. e -target -value)]))}]
      "Type:" [select {:value (:file-type common-settings)
                       :options type-options
                       :onChange (fn [value]
-                                  (re-frame/dispatch [::export/set-common-settings-option :file-type value]))}]
+                                  (re-frame/dispatch [::export/set-settings-option :file-type value]))}]
      "Split layers" [checkbox {:value (:split-layers common-settings)
                                :onChange (fn [value]
-                                           (re-frame/dispatch [::export/set-common-settings-option :split-layers value]))}]]))
+                                           (re-frame/dispatch [::export/set-settings-option :split-layers value]))}]]))
 
 (defn modal [props children]
   (let [{:keys [cancel-button ok-button]} props]
@@ -707,7 +701,7 @@
        [:<>
         "Never repeat" [checkbox {:value (not (:repeat image-settings))
                                   :onChange (fn [value]
-                                              (re-frame/dispatch [::export/set-image-settings-option :repeat (not value)]))}]])]))
+                                              (re-frame/dispatch [::export/set-settings-option :repeat (not value)]))}]])]))
 
 (defn export-spritesheet-settings-form []
   (let [settings @(re-frame/subscribe [::subs/export-spritesheet-settings])]
@@ -715,14 +709,10 @@
      "Columns:" [:input {:value (:columns settings)
                          :type "number"
                          :onChange (fn [e]
-                                     (re-frame/dispatch [::export/set-spritesheet-settings-columns (parse-double (.. e -target -value))]))}]
+                                     (re-frame/dispatch [::export/set-settings-option :columns (parse-double (.. e -target -value))]))}]
      "Rows:" [:div (:rows settings)]
      [export-common-settings-fields
       {:common-settings settings
-       :size-info [:<> "Spritesheet size:" (str (-> settings :spritesheet-size :width)
-                                                "x"
-                                                (-> settings :spritesheet-size :height))
-                   [:br]]
        :type-options [{:label "png" :value :png}]}]]))
 
 (defn export-modal []

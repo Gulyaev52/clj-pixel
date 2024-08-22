@@ -994,6 +994,44 @@
                                             actual-previews-pixels))))
                              (finally done))))))))
 
+(deftest test-settings
+  (testing "image settings"
+    (initialize-db-for-export :image)
+
+    (rf/dispatch-sync [::export/set-settings-option :frames :selected])
+    (is (= :selected (:frames @(rf/subscribe [::subs/export-image-settings]))))
+
+    (is (= {:scale 1 :scaled-frame-size {:width 2 :height 2}}
+           (select-keys @(rf/subscribe [::subs/export-image-settings]) [:scale :scaled-frame-size])))
+    (rf/dispatch-sync [::export/set-settings-option :scale 4])
+    (is (= {:scale 4 :scaled-frame-size {:width 8 :height 8}}
+           (select-keys @(rf/subscribe [::subs/export-image-settings]) [:scale :scaled-frame-size])))
+
+    (rf/dispatch-sync [::export/set-settings-option :file-type :gif])
+    (is (= :gif (:file-type @(rf/subscribe [::subs/export-image-settings]))))
+    (rf/dispatch-sync [::export/set-settings-option :file-type :png])
+    (is (= :png (:file-type @(rf/subscribe [::subs/export-image-settings]))))
+
+    (rf/dispatch-sync [::export/set-settings-option :repeat false])
+    (is (= false (:repeat @(rf/subscribe [::subs/export-image-settings])))))
+
+  (testing "spritesheet settings"
+    (initialize-db-for-export :spritesheet)
+
+    (rf/dispatch-sync [::export/set-settings-option :frames :selected])
+    (is (= :selected (:frames @(rf/subscribe [::subs/export-spritesheet-settings]))))
+
+    (is (= {:scale 1 :scaled-frame-size {:width 2 :height 2}}
+           (select-keys @(rf/subscribe [::subs/export-spritesheet-settings]) [:scale :scaled-frame-size])))
+    (rf/dispatch-sync [::export/set-settings-option :scale 4])
+    (is (= {:scale 4 :scaled-frame-size {:width 8 :height 8}}
+           (select-keys @(rf/subscribe [::subs/export-spritesheet-settings]) [:scale :scaled-frame-size])))
+
+    (rf/dispatch-sync [::export/set-settings-option :columns 3])
+    (is (= {:columns 2 :rows 1}
+           (select-keys @(rf/subscribe [::subs/export-spritesheet-settings])
+                        [:columns :rows])))))
+
 #_(enable-console-print!)
 #_(run-tests)
 
