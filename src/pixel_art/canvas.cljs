@@ -94,3 +94,6 @@
       (set! (. new-canvas-ctx -imageSmoothingEnabled) false)
       (. new-canvas-ctx (drawImage canvas 0 0 (:width size) (:height size) 0 0 (:width new-size) (:height new-size)))
       new-canvas)))
+
+(defn ->blob-promise [canvas]
+  (js/Promise. (fn [resolve] (. canvas (toBlob resolve)))))

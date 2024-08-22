@@ -26,11 +26,11 @@
  (fn [db]
    db))
 
-(def !last-download-file-desc (atom nil))
+(def !last-download-file (atom nil))
 (rf/reg-fx
  :download-file
  (fn [file-desc]
-   (reset! !last-download-file-desc file-desc)))
+   (reset! !last-download-file file-desc)))
 
 (def !local-storage (atom {}))
 (rf/reg-fx
@@ -613,7 +613,7 @@
     (let [initial-db @(rf/subscribe [:db])]
       (rf/dispatch-sync [::sprite-import-export/export-sprite-as-file])
       (apply-current-tool [{:x 0 :y 0} {:x 1 :y 0} {:x 2 :y 0} {:x 3 :y 0}])
-      (rf/dispatch-sync [::sprite-import-export/import-sprite-from-file @!last-download-file-desc])
+      (rf/dispatch-sync [::sprite-import-export/import-sprite-from-file @!last-download-file])
 
       (is (= initial-db (dissoc @(rf/subscribe [:db]) :user-is-drawing :mouse-pos))))))
 
@@ -703,12 +703,13 @@
       (rf/dispatch-sync [::palette/download-palette])
       (is (= {:file-name "palette1.gpl",
               :content
-              "GIMP Palette\nName: palette1\nColumns: 0\n0 0 0 Untitled\n255 0 0 Untitled\n0 0 255 Untitled\n0 128 0 Untitled"}
-             @!last-download-file-desc))
+              "GIMP Palette\nName: palette1\nColumns: 0\n0 0 0 Untitled\n255 0 0 Untitled\n0 0 255 Untitled\n0 128 0 Untitled"
+              :content-type :json}
+             @!last-download-file))
 
       (rf/dispatch-sync [::palette/remove-selected-palette])
 
-      (rf/dispatch-sync [::palette/load-palette @!last-download-file-desc])
+      (rf/dispatch-sync [::palette/load-palette @!last-download-file])
       (is (= (-> initial-palettes
                  (assoc-in [0 :current] false)
                  (assoc-in [1 :current] true))
@@ -730,14 +731,6 @@
     (let [current-palette @(rf/subscribe [::subs/current-palette])]
       (is (= (into (:colors initial-current-palette) ["rgb(90, 44, 44)" "rgb(167, 46, 46)"])
              (:colors current-palette))))))
-
-;; export testing
-
-(def !last-download-file (atom nil))
-(rf/reg-fx
- ::export/download-file
- (fn [file-desc]
-   (reset! !last-download-file file-desc)))
 
 (deftest test-export
   (testing "open export modal"
@@ -871,7 +864,7 @@
                            ::export/download-generated-blob
                            (fn []
                              (is (= (:file-name @!last-download-file) "untitled")) ;; тут нужно добавить формат
-                             (.. (zip-blob->pixels-map (:file-content @!last-download-file))
+                             (.. (zip-blob->pixels-map (:content @!last-download-file))
                                  (then (fn [pixels-map]
                                          (is (= {"untitled_1.png" (get-cel-pixels-with-pos {:frame-idx 0 :layer-idx 0} sprite-for-export)
                                                  "untitled_2.png" (get-cel-pixels-with-pos {:frame-idx 1 :layer-idx 0} sprite-for-export)}
@@ -909,7 +902,7 @@
                            ::export/download-generated-blob
                            (fn []
                              (is (= (:file-name @!last-download-file) "untitled")) ;; тут нужно добавить формат
-                             (.. (:file-content @!last-download-file)
+                             (.. (:content @!last-download-file)
                                  arrayBuffer
                                  (then (fn [array-buffer]
                                          (let [gif-frames (-> array-buffer
@@ -973,7 +966,7 @@
                            ::export/download-generated-blob
                            (fn []
                              (is (= (:file-name @!last-download-file) "untitled")) ;; тут нужно добавить формат
-                             (.. (blob->pixels (:file-content @!last-download-file))
+                             (.. (blob->pixels (:content @!last-download-file))
                                  (then (fn [res]
                                          (is (= (concat (get-cel-pixels-with-pos {:frame-idx 0 :layer-idx 0} sprite-for-export)
                                                         (map (fn [[[x y] b]]

@@ -21,10 +21,11 @@
     :direction :forward
     :file-name "untitled"
     :file-type :png
-    :scale min-scale}
+    :scale min-scale
+    :split-layers false}
    :image-settings
    {:repeat true ;; only when gif
-    :split-layers false}
+    }
    :spritesheet-settings
    {:columns 1}
    :exporting false})
@@ -92,13 +93,12 @@
       (let [settings (get-spritesheet-settings db)
             size (sprite/get-size sprite)
             spritesheet-size {:width (* (:width size) (:columns settings))
-                              :height (* (:width size) (:rows settings))} ;; todo: размеры разные
+                              :height (* (:width size) (:rows settings))}
             canvas-frames
             (->> (get-cels-for-rendering settings sprite)
                  (map (fn [cels]
                         (->> (canvas/create-canvas size)
-                             (canvas/draw-cels-on-single-canvas cels) ;; убираем scale
-                             ))))
+                             (canvas/draw-cels-on-single-canvas cels)))))
             res-canvas (canvas/combine size spritesheet-size (:columns settings) canvas-frames)
             img (canvas/to-data-url res-canvas "png") ;; todo: нам не нужно генерить blob. мб и там генерить base64. это зависит от того как будет работать с большим кол-вом ?
             ]
@@ -110,10 +110,8 @@
             rendered-frames
             (->> (get-cels-for-rendering settings sprite)
                  (map (fn [cels]
-                                       ;;  todo: нужен ли этот пайплайн? исп scale, transform
                         {:canvas (->> (canvas/create-canvas size)
-                                      (canvas/draw-cels-on-single-canvas cels) ;; убираем scale
-                                      )
+                                      (canvas/draw-cels-on-single-canvas cels))
                          :cels cels})))]
         (case (:file-type settings)
           :png
@@ -180,30 +178,10 @@
        generate-preview)))
 
 (re-frame/reg-event-fx
- ::set-exporting
- (fn [{:keys [db]} [_ exporting]]
-   {:db (assoc-in db [:export :exporting] exporting)}))
-
-(defn download-file [file-name content-blob]
-  (let [link (.createElement js/document "a")]
-    (set! (.-href link) (.createObjectURL js/URL content-blob))
-    (.setAttribute link "download" file-name)
-    (.appendChild (.-body js/document) link)
-    (.click link)
-    (.removeChild (.-body js/document) link)))
-
-;; todo: remove
-(re-frame/reg-fx
- ::download-file
- (fn [{:keys [file-name file-content]}]
-   (println file-name file-content)
-   (download-file file-name file-content)))
-
-(re-frame/reg-event-fx
  ::download-generated-blob
  (fn [{:keys [db]} [_ file-name blob]]
    {:db (assoc-in db [:export :exporting] false)
-    :fx [[::download-file {:file-name file-name :file-content blob}]]}))
+    :fx [[:download-file {:file-name file-name :content blob}]]}))
 
 (re-frame/reg-event-fx
  ::generate-gif-preview-success
@@ -253,7 +231,7 @@
              (let [files-desc
                    (->> rendered-frames
                         (map (fn [{:keys [canvas cels]}]
-                               {:file-content (canvas/to-base64 canvas "png") ;; todo: use arraybuffer?
+                               {:content (canvas/to-base64 canvas "png") ;; todo: use arraybuffer?
                                 :file-name (let [cel (first cels)
                                                  frame-idx (-> cel :pos :frame-idx inc)]
                                              (if (:split-layers settings)
@@ -271,15 +249,12 @@
                                   :on-finish [::download-generated-blob (:file-name settings)] ;; todo: fix
                                   }]]}))))))
 
-(defn canvas->blob-promise [canvas]
-  (js/Promise. (fn [resolve] (. canvas (toBlob resolve)))))
-
 (re-frame/reg-fx
  ::generate-zip
  (fn [{:keys [files-desc on-finish]}]
    (let [zip (jszip)]
-     (doseq [{:keys [file-name file-content]} files-desc]
-       (. zip (file file-name file-content #js {"base64" true})))
+     (doseq [{:keys [file-name content]} files-desc]
+       (. zip (file file-name content #js {"base64" true})))
      (.. zip
          (generateAsync #js {"type" "blob"})
          (then (fn [blob]
@@ -288,19 +263,11 @@
 (re-frame/reg-fx
  ::generate-plain-image ;; png, jpg and so on. todo: rename? 
  (fn [{:keys [canvas on-finish]}]
-   (.. (canvas->blob-promise canvas)
+   (.. (canvas/->blob-promise canvas)
        (then (fn [images]
                (re-frame/dispatch (conj on-finish images)))))))
 
-(re-frame/reg-fx
- ::generate-plain-images ;; png, jpg and so on. todo: rename? 
- (fn [{:keys [canvases on-finish]}]
-   (.. js/Promise
-       (all (map canvas->blob-promise canvases))
-       (then (fn [images]
-               (re-frame/dispatch (conj on-finish images)))))))
-
-(defn blob->base64 [blob]
+(defn- blob->base64 [blob]
   (js/Promise.
    (fn [resolve]
      (let [reader (js/FileReader.)]
@@ -344,3 +311,4 @@
 ;; 12) исп cond-> или as->
 ;; 13) export size export resulotion
 ;; 15) переименовать import-export помдуль
+;;  todo: нужен ли этот пайплайн? исп scale, transform

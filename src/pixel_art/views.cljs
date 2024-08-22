@@ -664,7 +664,10 @@
      "Type:" [select {:value (:file-type common-settings)
                       :options type-options
                       :onChange (fn [value]
-                                  (re-frame/dispatch [::export/set-common-settings-option :file-type value]))}]]))
+                                  (re-frame/dispatch [::export/set-common-settings-option :file-type value]))}]
+     "Split layers" [checkbox {:value (:split-layers common-settings)
+                               :onChange (fn [value]
+                                           (re-frame/dispatch [::export/set-common-settings-option :split-layers value]))}]]))
 
 (defn modal [props children]
   (let [{:keys [cancel-button ok-button]} props]
@@ -704,10 +707,7 @@
        [:<>
         "Never repeat" [checkbox {:value (not (:repeat image-settings))
                                   :onChange (fn [value]
-                                              (re-frame/dispatch [::export/set-image-settings-option :repeat (not value)]))}]])
-     "Split layers" [checkbox {:value (:split-layers image-settings)
-                               :onChange (fn [value]
-                                           (re-frame/dispatch [::export/set-image-settings-option :split-layers value]))}]]))
+                                              (re-frame/dispatch [::export/set-image-settings-option :repeat (not value)]))}]])]))
 
 (defn export-spritesheet-settings-form []
   (let [settings @(re-frame/subscribe [::subs/export-spritesheet-settings])]

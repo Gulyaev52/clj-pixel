@@ -542,9 +542,11 @@
      (re-frame/dispatch on-confirm))))
 
 (re-frame/reg-fx
- :download-file ;; todo: move to another place. todo: не универсальный
- (fn [{:keys [file-name content]}]
-   (let [data-blob (js/Blob. #js [content] #js {:type "application/json"})
+ :download-file
+ (fn [{:keys [file-name content content-type]}]
+   (let [data-blob (if (= content-type :json) ;; todo: remove json
+                     (js/Blob. #js [content] #js {:type "application/json"})
+                     content)
          link (.createElement js/document "a")]
      (set! (.-href link) (.createObjectURL js/URL data-blob))
      (.setAttribute link "download" file-name)

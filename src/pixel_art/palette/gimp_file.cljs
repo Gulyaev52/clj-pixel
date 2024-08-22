@@ -11,7 +11,8 @@
                                 (let [{:keys [r g b]} (js->clj (. (tinycolor color) toRgb) :keywordize-keys true)]
                                   (string/join " " [r g b "Untitled"])))
                               (:colors palette)))
-                 (string/join "\n"))})
+                 (string/join "\n"))
+   :content-type :json})
 
 (defn parse-content [content]
   (let [lines (string/split-lines content)

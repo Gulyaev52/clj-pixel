@@ -12,7 +12,8 @@
     {:file-name (str "pixel-project."  sprite-file-ext)
      :content (-> {:version "1" :sprite exported-sprite}
                   clj->js
-                  (#(. js/JSON stringify %)))}))
+                  (#(. js/JSON stringify %)))
+     :content-type :json}))
 
 (defn- parse-sprite [file-desc]
   (try
