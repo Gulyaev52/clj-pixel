@@ -33,11 +33,10 @@
 (re-frame/reg-event-fx
  ::initialize-db
  [(re-frame/inject-cofx ::local-storage/get-item palette/local-storage-key)]
- (fn [coeffects [_ {:keys [initial-pixels-map palettes sprite-size]}]]
+ (fn [coeffects [_ {:keys [sprite palettes]}]]
    {:db (db/get-default-db {:palettes (or palettes
                                           (get coeffects palette/local-storage-key))
-                            :initial-pixels-map initial-pixels-map
-                            :sprite-size sprite-size})
+                            :sprite sprite})
     :fx [[:dispatch [::rp/set-keydown-rules
                      {:event-keys (concat history.events/hotkeys
                                           rectangle-select/hotkeys

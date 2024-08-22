@@ -10,12 +10,12 @@
    :selected false})
 
 (defn remove-all-pixels [cel]
-  (update cel :pixels #(map (fn [_] transparent-color) %)))
+  (update cel :pixels #(mapv (fn [_] transparent-color) %)))
 
-(defn- pos->idx [{:keys [x y]} {:keys [width]}]
+(defn pos->idx [{:keys [x y]} {:keys [width]}]
   (+ x (* width y)))
 
-(defn- idx->pos [idx {:keys [width]}]
+(defn idx->pos [idx {:keys [width]}]
   {:x (rem idx width)
    :y (. js/Math (floor (/ idx width)))})
 

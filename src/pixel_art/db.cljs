@@ -54,29 +54,32 @@
          :palettes (palette/init palettes)
          :export (export/init)})))
 
-(defn get-default-db [{:keys [palettes initial-pixels-map sprite-size]}]
-  (let [sprite-size (or sprite-size {:width 8 :height 8})
+(defn get-default-db [{:keys [palettes sprite]}]
+  (let [sprite-size (or (when sprite
+                          (sprite/get-size sprite))
+                        {:width 8 :height 8})
         res-palettes (or palettes initial-palettes)
         primary-color (or (-> res-palettes first :colors first) "rgb(0,0,0)")
         secondary-color (or (-> res-palettes first :colors second) primary-color)]
     (get-db {:sprite
-             (sprite/create {:size sprite-size
-                             :layer (layer/create (get-layer-name :single 0) nil)
-                             :frame (frame/create initial-frame-duration)
-                             :cel (->> (cel/create sprite-size)
-                                       (cel/set-pixels (->> (for [x (range 0 (:width sprite-size))
-                                                                  y (range 0 (:height sprite-size))]
-                                                              [{:x x :y y} nil])
-                                                            (into {})))
-                                       (cel/set-pixels
-                                        (or initial-pixels-map
-                                            {{:x 0 :y 0} secondary-color
-                                             {:x 0 :y 1} transparent-color
-                                             {:x 1 :y 1} secondary-color
-                                             {:x 3 :y 3} secondary-color
-                                             {:x 3 :y 4} secondary-color
-                                             {:x 4 :y 3} secondary-color
-                                             {:x 4 :y 4} secondary-color})))})
+             (or
+              sprite
+              (sprite/create {:size sprite-size
+                              :layer (layer/create (get-layer-name :single 0) nil)
+                              :frame (frame/create initial-frame-duration)
+                              :cel (->> (cel/create sprite-size)
+                                        (cel/set-pixels (->> (for [x (range 0 (:width sprite-size))
+                                                                   y (range 0 (:height sprite-size))]
+                                                               [{:x x :y y} nil])
+                                                             (into {})))
+                                        (cel/set-pixels
+                                         {{:x 0 :y 0} secondary-color
+                                          {:x 0 :y 1} transparent-color
+                                          {:x 1 :y 1} secondary-color
+                                          {:x 3 :y 3} secondary-color
+                                          {:x 3 :y 4} secondary-color
+                                          {:x 4 :y 3} secondary-color
+                                          {:x 4 :y 4} secondary-color}))}))
              :palettes res-palettes
              :primary-color primary-color
              :secondary-color secondary-color})))
