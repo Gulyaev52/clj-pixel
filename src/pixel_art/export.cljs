@@ -13,8 +13,8 @@
 (defn init []
   {:opened false
    :current-tab :image
-   :preview nil
-   :preview-generation false
+   :preview {:data [] ;; coll of data-urls when :current-tab=:image; data-url when :current-tab=:spritesheet;
+             :generation false}
    :common-settings
    {:frames :all
     :layers {:type :visible}
@@ -23,7 +23,7 @@
     :file-type :png
     :scale min-scale}
    :image-settings
-   {:repeat true ;; todo: only when gif
+   {:repeat true ;; only when gif
     :split-layers false}
    :spritesheet-settings
    {:columns 1}
@@ -58,48 +58,34 @@
     (merge common-settings (-> db :export :image-settings))))
 
 (defn get-cels-for-rendering [settings sprite]
-  (let [cels (sprite/get-denormalized-cels sprite)
-        selected-poses (sprite/get-selected-cels-pos sprite)]
-    (->> (if (= (:frames settings) :selected)
-           (->> (sort-by :frame-idx (map :frame-idx selected-poses))
-                (map #(nth cels %)))
-           cels)
-         ((fn [cels]
-            (case (-> settings :layers :type)
-              :visible
-              (map (fn [frame-cels] (filter #(-> % :layer :visibile?) frame-cels)) cels)
+  (let [selected-poses (sprite/get-selected-cels-pos sprite)]
+    (as-> (sprite/get-denormalized-cels sprite) $
+      (if (= (:frames settings) :selected)
+        (->> (sort-by :frame-idx (map :frame-idx selected-poses))
+             (map #(nth $ %)))
+        $)
 
-              :selected
-              (let [selected-layers-idx (set (map :layer-idx selected-poses))]
-                (map (fn [frame-cels] (map #(nth frame-cels %) selected-layers-idx)) cels))
+      (case (-> settings :layers :type)
+        :visible
+        (map (fn [frame-cels] (filter #(-> % :layer :visibile?) frame-cels)) $)
 
-              :layer
-              (map (fn [frame-cels] [(nth frame-cels (-> settings :layers :idx))]) cels))))
-         (#(if (:split-layers settings)
-             (map vector (flatten %))
-             %))
-         (#(if (= (:direction settings) :backwards)
-             (reverse %)
-             %)))))
+        :selected
+        (let [selected-layers-idx (set (map :layer-idx selected-poses))]
+          (map (fn [frame-cels] (map #(nth frame-cels %) selected-layers-idx)) $))
 
-;; todo: rename
-(defn merge-canvases [canvas-size spritesheet-size columns canvases]
-  (let [canvas-rows (partition-all columns canvases)
-        spritesheet-canvas (canvas/create-canvas spritesheet-size)
-        spritesheet-canvas-ctx (. spritesheet-canvas (getContext "2d"))]
-    (doseq [[row-idx row] (map-indexed vector canvas-rows)
-            [column-idx canvas] (map-indexed vector row)]
-      (. spritesheet-canvas-ctx (drawImage canvas
-                                           0 0
-                                           (:width canvas-size) (:height canvas-size)
-                                           (* column-idx (:width canvas-size))
-                                           (* row-idx (:height canvas-size))
-                                           (:width canvas-size)
-                                           (:height canvas-size))))
-    spritesheet-canvas))
+        :layer
+        (map (fn [frame-cels] [(nth frame-cels (-> settings :layers :idx))]) $))
+
+      (if (:split-layers settings)
+        (map vector (flatten $))
+        $)
+
+      (if (= (:direction settings) :backwards)
+        (reverse $)
+        $))))
 
 (defn generate-preview [db]
-  (let [db (assoc-in db [:export :preview-generation] true)
+  (let [db (assoc-in db [:export :preview :generation] true)
         {:keys [sprite export]} db]
     (case (:current-tab export)
       :spritesheet
@@ -113,12 +99,10 @@
                         (->> (canvas/create-canvas size)
                              (canvas/draw-cels-on-single-canvas cels) ;; убираем scale
                              ))))
-            res-canvas (merge-canvases size spritesheet-size (:columns settings) canvas-frames)
-            preview-image (canvas/to-data-url res-canvas "png") ;; todo: нам не нужно генерить blob. мб и там генерить base64. это зависит от того как будет работать с большим кол-вом ?
+            res-canvas (canvas/combine size spritesheet-size (:columns settings) canvas-frames)
+            img (canvas/to-data-url res-canvas "png") ;; todo: нам не нужно генерить blob. мб и там генерить base64. это зависит от того как будет работать с большим кол-вом ?
             ]
-        {:db (-> db
-                 (assoc-in [:export :preview] [preview-image])
-                 (assoc-in [:export :preview-generation] false))})
+        {:db (assoc-in db [:export :preview] {:data img :generation false})})
 
       :image
       (let [settings (get-image-settings db)
@@ -133,9 +117,8 @@
                          :cels cels})))]
         (case (:file-type settings)
           :png
-          {:db (-> db
-                   (assoc-in [:export :preview] (map #(canvas/to-data-url (:canvas %) "png") rendered-frames))
-                   (assoc-in [:export :preview-generation] false))}
+          {:db (assoc-in db [:export :preview] {:data (map #(canvas/to-data-url (:canvas %) "png") rendered-frames)
+                                                :generation false})}
 
           :gif
           {:db db
@@ -201,15 +184,6 @@
  (fn [{:keys [db]} [_ exporting]]
    {:db (assoc-in db [:export :exporting] exporting)}))
 
-(defn scale-canvas [size new-size canvas]
-  (if (= size new-size)
-    canvas
-    (let [new-canvas (canvas/create-canvas new-size)
-          new-canvas-ctx (. new-canvas (getContext "2d"))]
-      (set! (. new-canvas-ctx -imageSmoothingEnabled) false)
-      (. new-canvas-ctx (drawImage canvas 0 0 (:width size) (:height size) 0 0 (:width new-size) (:height new-size)))
-      new-canvas)))
-
 (defn download-file [file-name content-blob]
   (let [link (.createElement js/document "a")]
     (set! (.-href link) (.createObjectURL js/URL content-blob))
@@ -234,9 +208,7 @@
 (re-frame/reg-event-fx
  ::generate-gif-preview-success
  (fn [{:keys [db]} [_ gif]]
-   {:db (-> db
-            (assoc-in [:export :preview] [gif])
-            (assoc-in [:export :preview-generation] false))}))
+   {:db (assoc-in db [:export :preview] {:data [gif] :generation false})}))
 
 (re-frame/reg-event-fx
  ::export
@@ -254,8 +226,8 @@
                                  ;;  todo: нужен ли этот пайплайн? исп scale, transform
                          (->> (canvas/create-canvas size)
                               (canvas/draw-cels-on-single-canvas cels)
-                              (scale-canvas size frame-size)))))
-             res-canvas (merge-canvases frame-size (:spritesheet-size settings) (:columns settings) canvas-frames)]
+                              (canvas/scale size frame-size)))))
+             res-canvas (canvas/combine frame-size (:spritesheet-size settings) (:columns settings) canvas-frames)]
          {:db db
           :fx [[::generate-plain-image {:canvas res-canvas
                                         :on-finish [::download-generated-blob (:file-name settings)]}]]})
@@ -270,7 +242,7 @@
                                 ;;  todo: нужен ли этот пайплайн? исп scale, transform
                          {:canvas (->> (canvas/create-canvas size)
                                        (canvas/draw-cels-on-single-canvas cels)
-                                       (scale-canvas size frame-size))
+                                       (canvas/scale size frame-size))
                           :cels cels})))]
          (case (:file-type settings)
            :png

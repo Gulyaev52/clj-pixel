@@ -885,11 +885,11 @@
 
            (wait-for done
                      (fn []
-                       (not (:preview-generation @(rf/subscribe [::subs/export-preview]))))
+                       (not (:generation @(rf/subscribe [::subs/export-preview]))))
                      (fn []
-                       (let [preview (:preview @(rf/subscribe [::subs/export-preview]))]
+                       (let [data (:data @(rf/subscribe [::subs/export-preview]))]
                          (.. js/Promise
-                             (all (map data-url->pixels preview))
+                             (all (map data-url->pixels data))
                              (then js->clj)
                              (then (fn [actual-previews-pixels]
                                      (is (= [(get-cel-pixels-with-pos {:frame-idx 0 :layer-idx 0} sprite-for-export)
@@ -937,12 +937,11 @@
 
            (wait-for done
                      (fn []
-                       (not (:preview-generation @(rf/subscribe [::subs/export-preview]))))
+                       (not (:generation @(rf/subscribe [::subs/export-preview]))))
                      (fn []
-                       (let [preview (-> @(rf/subscribe [::subs/export-preview])
-                                         :preview)]
-                         (is (= 1 (count preview)) "preview size is 1")
-                         (.. (js/fetch (first preview))
+                       (let [data (:data @(rf/subscribe [::subs/export-preview]))]
+                         (is (= 1 (count data)))
+                         (.. (js/fetch (first data))
                              (then (fn [res] (.. res blob)))
                              (then (fn [res] (.. res arrayBuffer)))
                              (then (fn [array-buffer]
@@ -990,10 +989,10 @@
 
            (wait-for done
                      (fn []
-                       (not (:preview-generation @(rf/subscribe [::subs/export-preview]))))
+                       (not (:generation @(rf/subscribe [::subs/export-preview]))))
                      (fn []
-                       (let [preview (:preview @(rf/subscribe [::subs/export-preview]))]
-                         (.. (data-url->pixels (first preview))
+                       (let [data (:data @(rf/subscribe [::subs/export-preview]))]
+                         (.. (data-url->pixels data)
                              (then (fn [actual-previews-pixels]
                                      (is (= (concat (get-cel-pixels-with-pos {:frame-idx 0 :layer-idx 0} sprite-for-export)
                                                     (map (fn [[[x y] b]]

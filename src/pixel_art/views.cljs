@@ -763,23 +763,23 @@
                        :border "1px solid black"
                        :padding "2px"
                        :overflow "auto"
-                       :opacity (when (:preview-generation preview) "0.6")
+                       :opacity (when (:generation preview) "0.6")
                        :background-image "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABlBMVEVMTExVVVUnhsEkAAAAHUlEQVR4AWOAAUYoQOePEAUj3v9oYDQ9gMBoegAAJFwCAbLaTIMAAAAASUVORK5CYII=)"}}
          (cond
            (= current-tab :spritesheet)
-           [:img {:src (-> preview :preview first)
+           [:img {:src (:data preview)
                   :style {:height (* (:rows spritesheet-settings) 70)
                           :width (* (:columns spritesheet-settings) 70)
                           :image-rendering "pixelated"
                           :margin "auto"}}]
 
-           (= (count (:preview preview)) 1)
-           [:img {:src (-> preview :preview first)
+           (= (count (:data preview)) 1) ;; todo: do we need this cond?
+           [:img {:src (-> preview :data first)
                   :style {:height "100%"
                           :min-height "70px"
                           :image-rendering "pixelated"}}]
 
-           :else (for [[idx data-url] (map-indexed vector (:preview preview))]
+           :else (for [[idx data-url] (map-indexed vector (:data preview))]
                    ^{:key (str data-url "-" idx)}
                    [:div {:style {:display :flex
                                   :flex-direction :column

@@ -70,3 +70,27 @@
     (set! (. canvas -width) width)
     (set! (. canvas -height) height)
     canvas))
+
+(defn combine [canvas-size res-canvas-size columns canvases]
+  (let [canvas-rows (partition-all columns canvases)
+        res-canvas (create-canvas res-canvas-size)
+        spritesheet-canvas-ctx (. res-canvas (getContext "2d"))]
+    (doseq [[row-idx row] (map-indexed vector canvas-rows)
+            [column-idx canvas] (map-indexed vector row)]
+      (. spritesheet-canvas-ctx (drawImage canvas
+                                           0 0
+                                           (:width canvas-size) (:height canvas-size)
+                                           (* column-idx (:width canvas-size))
+                                           (* row-idx (:height canvas-size))
+                                           (:width canvas-size)
+                                           (:height canvas-size))))
+    res-canvas))
+
+(defn scale [size new-size canvas]
+  (if (= size new-size)
+    canvas
+    (let [new-canvas (create-canvas new-size)
+          new-canvas-ctx (. new-canvas (getContext "2d"))]
+      (set! (. new-canvas-ctx -imageSmoothingEnabled) false)
+      (. new-canvas-ctx (drawImage canvas 0 0 (:width size) (:height size) 0 0 (:width new-size) (:height new-size)))
+      new-canvas)))

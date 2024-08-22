@@ -28,7 +28,7 @@
 (re-frame/reg-sub
  ::export-preview
  (fn [db]
-   (-> db :export (select-keys [:preview :preview-generation]))))
+   (-> db :export :preview)))
 
 (re-frame/reg-sub
  ::exporting
