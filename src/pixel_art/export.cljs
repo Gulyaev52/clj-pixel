@@ -94,14 +94,10 @@
             size (sprite/get-size sprite)
             spritesheet-size {:width (* (:width size) (:columns settings))
                               :height (* (:width size) (:rows settings))}
-            canvas-frames
-            (->> (get-cels-for-rendering settings sprite)
-                 (map (fn [cels]
-                        (->> (canvas/create-canvas size)
-                             (canvas/draw-cels-on-single-canvas cels)))))
-            res-canvas (canvas/combine size spritesheet-size (:columns settings) canvas-frames)
-            img (canvas/to-data-url res-canvas "png") ;; todo: нам не нужно генерить blob. мб и там генерить base64. это зависит от того как будет работать с большим кол-вом ?
-            ]
+            img (->> (get-cels-for-rendering settings sprite)
+                     (map #(canvas/draw-cels-on-single-canvas % (canvas/create-canvas size)))
+                     (canvas/combine size spritesheet-size (:columns settings))
+                     (#(canvas/to-data-url % "png")))]
         {:db (assoc-in db [:export :preview] {:data img :generation false})})
 
       :image
@@ -110,21 +106,19 @@
             rendered-frames
             (->> (get-cels-for-rendering settings sprite)
                  (map (fn [cels]
-                        {:canvas (->> (canvas/create-canvas size)
-                                      (canvas/draw-cels-on-single-canvas cels))
+                        {:canvas (canvas/draw-cels-on-single-canvas cels (canvas/create-canvas size))
                          :cels cels})))]
         (case (:file-type settings)
           :png
-          {:db (assoc-in db [:export :preview] {:data (map #(canvas/to-data-url (:canvas %) "png") rendered-frames)
-                                                :generation false})}
+          (let [data (map #(canvas/to-data-url (:canvas %) "png") rendered-frames)]
+            {:db (assoc-in db [:export :preview] {:data data :generation false})})
 
           :gif
           {:db db
            :fx [[::generate-gif {:rendered-frames rendered-frames
                                  :repeat (:repeat settings)
                                  :base64 true
-                                 :on-finish [::generate-gif-preview-success] ;; todo: fix
-                                 }]]})))))
+                                 :on-finish [::generate-gif-preview-success]}]]})))))
 
 (re-frame/reg-event-fx
  ::set-opened
@@ -178,17 +172,6 @@
        generate-preview)))
 
 (re-frame/reg-event-fx
- ::download-generated-blob
- (fn [{:keys [db]} [_ file-name blob]]
-   {:db (assoc-in db [:export :exporting] false)
-    :fx [[:download-file {:file-name file-name :content blob}]]}))
-
-(re-frame/reg-event-fx
- ::generate-gif-preview-success
- (fn [{:keys [db]} [_ gif]]
-   {:db (assoc-in db [:export :preview] {:data [gif] :generation false})}))
-
-(re-frame/reg-event-fx
  ::export
  (fn [{:keys [db]}]
    (let [db (assoc-in db [:export :exporting] true)
@@ -198,16 +181,14 @@
        (let [settings (get-spritesheet-settings db)
              size (sprite/get-size sprite)
              frame-size (:frame-size settings)
-             canvas-frames
-             (->> (get-cels-for-rendering settings sprite)
-                  (map (fn [cels]
-                                 ;;  todo: нужен ли этот пайплайн? исп scale, transform
-                         (->> (canvas/create-canvas size)
-                              (canvas/draw-cels-on-single-canvas cels)
-                              (canvas/scale size frame-size)))))
-             res-canvas (canvas/combine frame-size (:spritesheet-size settings) (:columns settings) canvas-frames)]
+             image-canvas (->> (get-cels-for-rendering settings sprite)
+                               (map (fn [cels]
+                                      (->> (canvas/create-canvas size)
+                                           (canvas/draw-cels-on-single-canvas cels)
+                                           (canvas/scale size frame-size))))
+                               (canvas/combine frame-size (:spritesheet-size settings) (:columns settings)))]
          {:db db
-          :fx [[::generate-plain-image {:canvas res-canvas
+          :fx [[::generate-plain-image {:canvas image-canvas
                                         :on-finish [::download-generated-blob (:file-name settings)]}]]})
 
        :image
@@ -217,7 +198,6 @@
              rendered-frames
              (->> (get-cels-for-rendering settings sprite)
                   (map (fn [cels]
-                                ;;  todo: нужен ли этот пайплайн? исп scale, transform
                          {:canvas (->> (canvas/create-canvas size)
                                        (canvas/draw-cels-on-single-canvas cels)
                                        (canvas/scale size frame-size))
@@ -231,7 +211,7 @@
              (let [files-desc
                    (->> rendered-frames
                         (map (fn [{:keys [canvas cels]}]
-                               {:content (canvas/to-base64 canvas "png") ;; todo: use arraybuffer?
+                               {:content (canvas/to-base64 canvas "png")
                                 :file-name (let [cel (first cels)
                                                  frame-idx (-> cel :pos :frame-idx inc)]
                                              (if (:split-layers settings)
@@ -248,6 +228,17 @@
                                   :repeat (:repeat settings)
                                   :on-finish [::download-generated-blob (:file-name settings)] ;; todo: fix
                                   }]]}))))))
+
+(re-frame/reg-event-fx
+ ::download-generated-blob
+ (fn [{:keys [db]} [_ file-name blob]]
+   {:db (assoc-in db [:export :exporting] false)
+    :fx [[:download-file {:file-name file-name :content blob}]]}))
+
+(re-frame/reg-event-fx
+ ::generate-gif-preview-success
+ (fn [{:keys [db]} [_ gif]]
+   {:db (assoc-in db [:export :preview] {:data [gif] :generation false})}))
 
 (re-frame/reg-fx
  ::generate-zip
@@ -301,9 +292,6 @@
 ;; 11) мб скейла достаточно
 ;; 12) исп blob vs base64. нужно смотреть большое кол-во больших элементов
 ;; 13) оптимизация для слинкованых ячеек
-;; 15) цвет фона
-;; 16) preview obj
-;; 17) generate-preview не имеет смысл всегда запускать
 ;; 13) тесты
 ;; 14) отрефакторить
 ;; 5) избавиться от повторения упоминаний :image, :spritesheet(кнопки, сеттинги)
