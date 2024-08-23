@@ -16,7 +16,7 @@
             [sc.api]
             [clojure.string :as string]
             [pixel-art.model.cel :as cel]
-            [pixel-art.sprite-import-export :as sprite-import-export]
+            [pixel-art.project-save-load :as project-save-load]
             [pixel-art.utils.coll :as coll]))
 
 (def !last-mouse-pos (atom nil))
@@ -787,14 +787,14 @@
            :image [export-image-settings-form]
            :spritesheet [export-spritesheet-settings-form])]]])))
 
-(defn import-export-section []
+(defn project-manage-section []
   [:<>
    [export-modal]
    [:div
-    [:button {:onClick (fn [] (re-frame/dispatch [::sprite-import-export/export-sprite-as-file]))}
+    [:button {:onClick (fn [] (re-frame/dispatch [::project-save-load/save-as-file]))}
      "save as file"]
     [file-uploader {:onUpload (fn [file-desc]
-                                (re-frame/dispatch [::sprite-import-export/import-sprite-from-file file-desc]))}
+                                (re-frame/dispatch [::project-save-load/load-from-file file-desc]))}
      "load from file"]
     [:button {:onClick (fn [] (re-frame/dispatch [::export/set-opened true]))}
      "open export panel"]]])
@@ -818,7 +818,7 @@
       [onion-skin-section]
       [palettes-section]
       [current-colors-selection]
-      [import-export-section]]
+      [project-manage-section]]
      [canvases-section]]))
 
 (defn mount-root []

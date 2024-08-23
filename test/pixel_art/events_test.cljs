@@ -15,7 +15,7 @@
             [pixel-art.model.layer :as layer]
             [pixel-art.model.sprite :as sprite]
             [pixel-art.palette :as palette]
-            [pixel-art.sprite-import-export :as sprite-import-export]
+            [pixel-art.project-save-load :as project-save-load]
             [pixel-art.subs :as subs]
             [pixel-art.utils.coll :as coll]
             [re-frame.core :as rf]
@@ -607,13 +607,13 @@
     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
     (rf/dispatch-sync [::events/merge-layer-with-below])))
 
-(deftest test-import-export-sprite-as-file
+(deftest test-project-save-load-as-file
   (do
     (initialize-db)
     (let [initial-db @(rf/subscribe [:db])]
-      (rf/dispatch-sync [::sprite-import-export/export-sprite-as-file])
+      (rf/dispatch-sync [::project-save-load/save-as-file])
       (apply-current-tool [{:x 0 :y 0} {:x 1 :y 0} {:x 2 :y 0} {:x 3 :y 0}])
-      (rf/dispatch-sync [::sprite-import-export/import-sprite-from-file @!last-download-file])
+      (rf/dispatch-sync [::project-save-load/load-from-file @!last-download-file])
 
       (is (= initial-db (dissoc @(rf/subscribe [:db]) :user-is-drawing :mouse-pos))))))
 
@@ -1031,23 +1031,23 @@
     (rf/dispatch-sync [::export/set-settings-option :scale 4])
     (is (= {:scale 4 :scaled-frame-size {:width 8 :height 8}}
            (select-keys @(rf/subscribe [::subs/export-spritesheet-settings]) [:scale :scaled-frame-size]))))
-  
+
   (testing "spritesheet settings columns depends on frames and layers selectors"
     (initialize-db-for-export :spritesheet)
-    
+
     (rf/dispatch-sync [::export/set-settings-option :frames :selected])
-    
+
     (rf/dispatch-sync [::export/set-settings-option :columns 3])
     (is (= {:columns 1 :rows 1}
            (select-keys @(rf/subscribe [::subs/export-spritesheet-settings])
                         [:columns :rows]))))
-  
+
   (testing "spritesheet settings columns recalc when frames and layers selector is changed"
     (initialize-db-for-export :spritesheet)
-    (rf/dispatch-sync [::export/set-settings-option :columns 2]) 
-    
+    (rf/dispatch-sync [::export/set-settings-option :columns 2])
+
     (rf/dispatch-sync [::export/set-settings-option :frames :selected])
-    
+
     (is (= {:columns 1 :rows 1}
            (select-keys @(rf/subscribe [::subs/export-spritesheet-settings])
                         [:columns :rows])))))

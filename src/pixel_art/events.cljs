@@ -1,8 +1,7 @@
 (ns pixel-art.events
   (:require ["tinycolor2" :as tinycolor]
             [pixel-art.canvas :as canvas]
-            [pixel-art.db :as db :refer [get-layer-name initial-frame-duration
-                                         max-scale]]
+            [pixel-art.db :as db :refer [get-layer-name max-scale]]
             [pixel-art.history :as history]
             [pixel-art.history.events :as history.events]
             [pixel-art.local-storage :as local-storage]
@@ -13,7 +12,7 @@
             [pixel-art.model.sprite :as sprite]
             [pixel-art.palette :as palette]
             [pixel-art.tool.core :as tool]
-            [pixel-art.sprite-import-export]
+            [pixel-art.project-save-load]
             [pixel-art.tool.rectangle-select :as rectangle-select]
             [pixel-art.tool.shape-select :as shape-select]
             [pixel-art.tool.utils :refer [commit-changes-and-init-tool

@@ -1,4 +1,4 @@
-(ns pixel-art.sprite-import-export ;; todo: project instead of sprite?
+(ns pixel-art.project-save-load
   (:require [pixel-art.db :refer [get-db]]
             [pixel-art.utils.coll :as coll]
             [re-frame.core :as re-frame]))
@@ -30,13 +30,13 @@
       {:error "invalid format of file"})))
 
 (re-frame/reg-event-fx
- ::export-sprite-as-file
+ ::save-as-file
  (fn [{:keys [db]}]
    (let [file-desc (sprite->file-desc (:sprite db))]
      {:fx [[:download-file file-desc]]})))
 
 (re-frame/reg-event-fx
- ::import-sprite-from-file
+ ::load-from-file
  (fn [{:keys [db]} [_ file-desc]]
    (let [parse-result (parse-sprite file-desc)]
      (if-let [sprite (:ok parse-result)]
