@@ -30,32 +30,6 @@
    {:columns 1}
    :exporting false})
 
-(defn adjust-columns-if-need [columns frames]
-  (min (max 1 columns) (count frames)))
-
-(defn calc-export-rows [columns frames]
-  (count (partition-all columns frames)))
-
-(defn get-common-settings-res [db]
-  (let [common-settings (-> db :export :common-settings)
-        sprite-size (-> db :sprite sprite/get-size)
-        scaled-frame-size (update-vals sprite-size #(. js/Math (round (* (:scale common-settings) %))))]
-    (assoc common-settings :scaled-frame-size scaled-frame-size)))
-
-(defn get-spritesheet-settings [db]
-  (let [common-settings (get-common-settings-res db)
-        spritesheet-settings (-> db :export :spritesheet-settings)
-        columns (:columns spritesheet-settings)
-        frames (-> db :sprite :frames)
-        rows (calc-export-rows columns frames)]
-    (-> spritesheet-settings
-        (assoc :rows rows)
-        (merge common-settings))))
-
-(defn get-image-settings [db]
-  (let [common-settings (get-common-settings-res db)]
-    (merge common-settings (-> db :export :image-settings))))
-
 (defn get-cels-for-rendering [settings sprite]
   (let [selected-poses (sprite/get-selected-cels-pos sprite)]
     (as-> (sprite/get-denormalized-cels sprite) $
@@ -82,6 +56,30 @@
       (if (= (:direction settings) :backwards)
         (reverse $)
         $))))
+
+(defn adjust-columns-if-need [columns db]
+  (let [cels-for-rendering (get-cels-for-rendering (-> db :export :common-settings) (-> db :sprite))]
+    (min (max 1 columns) (count cels-for-rendering))))
+
+(defn get-common-settings-res [db]
+  (let [common-settings (-> db :export :common-settings)
+        sprite-size (-> db :sprite sprite/get-size)
+        scaled-frame-size (update-vals sprite-size #(. js/Math (round (* (:scale common-settings) %))))]
+    (assoc common-settings :scaled-frame-size scaled-frame-size)))
+
+(defn get-spritesheet-settings [db]
+  (let [common-settings (get-common-settings-res db)
+        spritesheet-settings (-> db :export :spritesheet-settings)
+        rows (->> (get-cels-for-rendering common-settings (-> db :sprite)) ;; todo: pass it as arg?
+                  (partition-all (:columns spritesheet-settings))
+                  count)]
+    (-> spritesheet-settings
+        (assoc :rows rows)
+        (merge common-settings))))
+
+(defn get-image-settings [db]
+  (let [common-settings (get-common-settings-res db)]
+    (merge common-settings (-> db :export :image-settings))))
 
 (defn generate-preview [db]
   (let [db (assoc-in db [:export :preview :generation] true)
@@ -125,7 +123,7 @@
      (-> db
          (assoc-in [:export :opened] opened)
          (update-in [:export :spritesheet-settings :columns]
-                    #(adjust-columns-if-need % (-> db :sprite :frames)))
+                    #(adjust-columns-if-need % db))
          generate-preview)
      {:db (assoc-in db [:export :opened] opened)})))
 
@@ -141,19 +139,20 @@
 (re-frame/reg-event-fx
  ::set-settings-option
  (fn [{:keys [db]} [_ option-key value]]
-   (case option-key
-     :columns (-> db
-                  (assoc-in [:export :spritesheet-settings option-key]
-                            (adjust-columns-if-need value (-> db :sprite :frames)))
-                  generate-preview)
-     :repeat (-> db
-                 (assoc-in [:export :image-settings option-key] value)
-                 generate-preview)
-     (-> db
-         (assoc-in [:export :common-settings option-key] value)
-         (#(if-not (some #{option-key} [:file-name :scale])
-             (generate-preview %)
-             {:db %}))))))
+   (-> (case option-key
+         :columns (-> db
+                      (assoc-in [:export :spritesheet-settings option-key] value))
+         :repeat (-> db
+                     (assoc-in [:export :image-settings option-key] value))
+         (-> db
+             (assoc-in [:export :common-settings option-key] value)))
+       (#(if (some #{option-key} [:columns :frames :layers :split-layers])
+           (update-in % [:export :spritesheet-settings :columns]
+                      (fn [value] (adjust-columns-if-need value %)))
+           %))
+       (#(if-not (some #{option-key} [:file-name :scale])
+           (generate-preview %)
+           {:db %})))))
 
 (re-frame/reg-event-fx
  ::export
@@ -257,8 +256,8 @@
  (fn [{:keys [rendered-frames base64 repeat on-finish]}]
    (let [gif (create-gif (clj->js {"workers" 2
                                    "quality" 1
+                                   "preserveColors" true
                                    "transparent" "rgba(0,0,0,0)"
-                                   "background" "#000"
                                    "repeat" (if repeat 0 -1)}))]
      (doseq [{:keys [canvas cels]} rendered-frames]
        (let [cel (first cels)] ;; todo: refactor?
@@ -271,9 +270,9 @@
                                (re-frame/dispatch (conj on-finish blob))))))
      (. gif (render)))))
 
+;; todo
 ;; баги
 ;; 1) чёрный цвет в гифке
-;; 14) в spritesheet считать строки только по выбранным
 
 ;; 13) оптимизация для слинкованых ячеек
 ;; 5) избавиться от повторения упоминаний :image, :spritesheet(кнопки, сеттинги)

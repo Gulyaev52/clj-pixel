@@ -895,7 +895,7 @@
          (do
            (initialize-db-for-export :image)
 
-           (rf/dispatch-sync [::export/set-common-settings-option :file-type :gif])
+           (rf/dispatch-sync [::export/set-settings-option :file-type :gif])
            (rf/dispatch-sync [::export/export])
 
            (wait-for-event done
@@ -926,7 +926,7 @@
   (async done
          (do
            (initialize-db-for-export :image)
-           (rf/dispatch-sync [::export/set-common-settings-option :file-type :gif])
+           (rf/dispatch-sync [::export/set-settings-option :file-type :gif])
 
            (wait-for done
                      (fn []
@@ -1018,6 +1018,11 @@
   (testing "spritesheet settings"
     (initialize-db-for-export :spritesheet)
 
+    (rf/dispatch-sync [::export/set-settings-option :columns 3])
+    (is (= {:columns 2 :rows 1}
+           (select-keys @(rf/subscribe [::subs/export-spritesheet-settings])
+                        [:columns :rows])))
+
     (rf/dispatch-sync [::export/set-settings-option :frames :selected])
     (is (= :selected (:frames @(rf/subscribe [::subs/export-spritesheet-settings]))))
 
@@ -1025,16 +1030,32 @@
            (select-keys @(rf/subscribe [::subs/export-spritesheet-settings]) [:scale :scaled-frame-size])))
     (rf/dispatch-sync [::export/set-settings-option :scale 4])
     (is (= {:scale 4 :scaled-frame-size {:width 8 :height 8}}
-           (select-keys @(rf/subscribe [::subs/export-spritesheet-settings]) [:scale :scaled-frame-size])))
-
+           (select-keys @(rf/subscribe [::subs/export-spritesheet-settings]) [:scale :scaled-frame-size]))))
+  
+  (testing "spritesheet settings columns depends on frames and layers selectors"
+    (initialize-db-for-export :spritesheet)
+    
+    (rf/dispatch-sync [::export/set-settings-option :frames :selected])
+    
     (rf/dispatch-sync [::export/set-settings-option :columns 3])
-    (is (= {:columns 2 :rows 1}
+    (is (= {:columns 1 :rows 1}
+           (select-keys @(rf/subscribe [::subs/export-spritesheet-settings])
+                        [:columns :rows]))))
+  
+  (testing "spritesheet settings columns recalc when frames and layers selector is changed"
+    (initialize-db-for-export :spritesheet)
+    (rf/dispatch-sync [::export/set-settings-option :columns 2]) 
+    
+    (rf/dispatch-sync [::export/set-settings-option :frames :selected])
+    
+    (is (= {:columns 1 :rows 1}
            (select-keys @(rf/subscribe [::subs/export-spritesheet-settings])
                         [:columns :rows])))))
 
 #_(enable-console-print!)
 #_(run-tests)
 
+;; todo
 ;; имя файла формировать
 ;; у gif протестить repeat
 ;; у image когда 1 картинка то загружаться должна только 1 картинка
