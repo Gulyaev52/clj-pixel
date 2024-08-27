@@ -13,10 +13,6 @@
     :min 1
     :max 64}
    {:type :checkbox
-    :field :pixel-perfect
-    :initial-value false
-    :label "Pixel perfect"}
-   {:type :checkbox
     :field :mirror-x
     :initial-value false
     :label "Mirror-x"}])

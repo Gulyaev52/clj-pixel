@@ -84,11 +84,11 @@
         mouse-move-poses (when (> (count poses) 1)
                            (subvec poses 1 (dec (count poses))))
         mouse-up-pos (last poses)]
-    (rf/dispatch-sync [::events/handle-mouse-event :mouse-down mouse-down-pos false])
+    (rf/dispatch-sync [::events/handle-mouse-event :mouse-down mouse-down-pos (:right-button mouse-down-pos)])
     (when (seq mouse-move-poses)
       (doseq [pos mouse-move-poses]
-        (rf/dispatch-sync [::events/handle-mouse-event :mouse-move pos false])))
-    (rf/dispatch-sync [::events/handle-mouse-event :mouse-up mouse-up-pos false])))
+        (rf/dispatch-sync [::events/handle-mouse-event :mouse-move pos (:right-button pos)])))
+    (rf/dispatch-sync [::events/handle-mouse-event :mouse-up mouse-up-pos (:right-button mouse-up-pos)])))
 
 (deftest test-add-frame
   (rf-test/run-test-sync
@@ -1051,6 +1051,46 @@
     (is (= {:columns 1 :rows 1}
            (select-keys @(rf/subscribe [::subs/export-spritesheet-settings])
                         [:columns :rows])))))
+
+(def empty-sprite
+  (let [sprite-size {:width 2 :height 2}]
+    (sprite/create {:size sprite-size
+                    :layer (layer/create "Layer 1" nil)
+                    :frame (frame/create 100)
+                    :cel (->> (cel/create sprite-size))})))
+
+(defn get-current-cel-pixels []
+  (->> @(rf/subscribe [::subs/sprite])
+       (sprite/get-cel {:frame-idx 0 :layer-idx 0})
+       :pixels))
+
+(def eraser-sprite
+  (->> empty-sprite
+       (sprite/set-current-cel-pixels {{:x 0 :y 0} "rgb(0, 0, 0)"
+                                       {:x 1 :y 0} "rgb(0, 0, 255)"})))
+(deftest test-eraser-tool
+  (testing "should remove color"
+    (initialize-db {:sprite eraser-sprite})
+    (rf/dispatch-sync [::events/select-tool :eraser])
+
+    (apply-current-tool [{:x 0 :y 0}])
+    (is (= [nil "rgb(0, 0, 255)" nil nil] (get-current-cel-pixels)))))
+
+(deftest test-color-picker-tool
+  (initialize-db {:sprite (->> empty-sprite
+                               (sprite/set-current-cel-pixels {{:x 0 :y 0} "rgb(0,0,0)"
+                                                               {:x 1 :y 0} "rgb(0,0,255)"}))})
+  (rf/dispatch-sync [::events/set-current-color :primary-color "yellow"])
+  (rf/dispatch-sync [::events/set-current-color :secondary-color "yellow"])
+  (rf/dispatch-sync [::events/select-tool :color-picker])
+
+  (apply-current-tool [{:x 0 :y 0}])
+  (is (= "rgb(0,0,0)" @(rf/subscribe [::subs/primary-color])))
+  (is (= "yellow" @(rf/subscribe [::subs/secondary-color])))
+
+  (apply-current-tool [{:x 1 :y 0 :right-button true}])
+  (is (= "rgb(0,0,0)" @(rf/subscribe [::subs/primary-color])))
+  (is (= "rgb(0,0,255)" @(rf/subscribe [::subs/secondary-color]))))
 
 #_(enable-console-print!)
 #_(run-tests)
