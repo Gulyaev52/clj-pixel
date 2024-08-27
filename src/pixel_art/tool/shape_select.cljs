@@ -39,30 +39,6 @@
     [{:keyCode 88 ;; x
       }]]])
 
-(defn- flood-fill [start-point size pred]
-  (let [!fill-stack (atom [start-point])
-        !visited-points (atom #{})]
-    (while (> (count @!fill-stack) 0)
-      (let [point (first @!fill-stack)]
-        (swap! !fill-stack #(drop 1 %))
-        (when (and (geometry/valid-point? point size)
-                   (not (@!visited-points point))
-                   (pred point))
-          (swap! !visited-points conj point)
-          (swap! !fill-stack concat [{:x (inc (:x point))
-                                      :y (:y point)}
-                                     {:x (dec (:x point))
-                                      :y (:y point)}
-                                     {:x (:x point)
-                                      :y (inc (:y point))}
-                                     {:x (:x point)
-                                      :y (dec (:y point))}]))))
-    @!visited-points))
-(comment
-  (def matrix {{:x 0 :y 0} "black" {:x 1 :y 0} "black" {:x 2 :y 0} "white"
-               {:x 0 :y 1} "white" {:x 1 :y 1} "white" {:x 2 :y 1} "white"})
-  (flood-fill {:x 0 :y 0} {:width 8 :height 8} #(= (get matrix %) "black")))
-
 (defn commit-moved-selection [db]
   (let [changes (-> db :tool :state :changes)]
     (commit-changes-and-init-tool db changes (init))))
@@ -75,9 +51,9 @@
         (= (:type event) :mouse-down)
         (let [current-cel (get-current-cel db)
               color-under-mouse (cel/get-pixel (:pos event) current-cel)
-              selection-points (flood-fill (:pos event)
-                                           (cel/get-size current-cel)
-                                           #(= (cel/get-pixel % current-cel) color-under-mouse))
+              selection-points (geometry/flood-fill (:pos event)
+                                                    (cel/get-size current-cel)
+                                                    #(= (cel/get-pixel % current-cel) color-under-mouse))
               selection-image (->> selection-points
                                    (map (fn [p] [p (cel/get-pixel p current-cel)]))
                                    (into {}))

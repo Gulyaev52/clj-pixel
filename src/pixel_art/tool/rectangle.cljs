@@ -4,7 +4,7 @@
                                           resize-pixel]]
             [pixel-art.utils.geometry :as geometry]))
 
-(defn init [] {:type :rectangle :state {:visited-pixels {}}})
+(defn init [] {:type :rectangle})
 
 (def options-spec
   [{:type :slider

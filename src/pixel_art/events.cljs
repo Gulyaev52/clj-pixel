@@ -82,7 +82,7 @@
                                    tool))))
 
 (re-frame/reg-event-fx
- ::change-tool-option
+ ::change-tool-option ;; todo: set
  (fn [{:keys [db]} [_ field value]]
    (let [tool-type (-> db :tool :type)]
      {:db (assoc-in db [:tools-options tool-type field] value)})))

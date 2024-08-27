@@ -1,5 +1,6 @@
 (ns pixel-art.tool.core
-  (:require [pixel-art.tool.color-picker :as color-picker]
+  (:require [pixel-art.tool.circle :as circle]
+            [pixel-art.tool.color-picker :as color-picker]
             [pixel-art.tool.eraser :as eraser]
             [pixel-art.tool.pen :as pen]
             [pixel-art.tool.rectangle :as rectangle]
@@ -9,7 +10,7 @@
 ;; todo: исп полиморфизм?
 
 (def types
-  [:pen :eraser :color-picker :rectangle :rectangle-select :shape-select])
+  [:pen :eraser :color-picker :rectangle :circle :rectangle-select :shape-select])
 
 (defn init [tool-type]
   ((case tool-type
@@ -17,6 +18,7 @@
      :eraser eraser/init
      :color-picker color-picker/init
      :rectangle rectangle/init
+     :circle circle/init
      :rectangle-select rectangle-select/init
      :shape-select shape-select/init)))
 
@@ -25,6 +27,7 @@
    :eraser eraser/options-spec
    :color-picker color-picker/options-spec
    :rectangle rectangle/options-spec
+   :circle circle/options-spec
    :rectangle-select rectangle-select/options-spec
    :shape-select shape-select/options-spec})
 
@@ -34,6 +37,7 @@
      :eraser eraser/handle-mouse-event
      :color-picker color-picker/handle-mouse-event
      :rectangle rectangle/handle-mouse-event
+     :circle circle/handle-mouse-event
      :rectangle-select rectangle-select/handle-mouse-event
      :shape-select shape-select/handle-mouse-event)
    db event))

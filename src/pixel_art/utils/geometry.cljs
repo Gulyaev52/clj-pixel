@@ -46,3 +46,27 @@
 (defn valid-point? [{:keys [x y]} {:keys [width height]}]
   (and (and (>= x 0) (< x width))
        (and (>= y 0) (< y height))))
+
+(defn flood-fill [start-point size pred]
+  (let [!fill-stack (atom [start-point])
+        !visited-points (atom #{})]
+    (while (> (count @!fill-stack) 0)
+      (let [point (first @!fill-stack)]
+        (swap! !fill-stack #(drop 1 %))
+        (when (and (valid-point? point size)
+                   (not (@!visited-points point))
+                   (pred point))
+          (swap! !visited-points conj point)
+          (swap! !fill-stack concat [{:x (inc (:x point))
+                                      :y (:y point)}
+                                     {:x (dec (:x point))
+                                      :y (:y point)}
+                                     {:x (:x point)
+                                      :y (inc (:y point))}
+                                     {:x (:x point)
+                                      :y (dec (:y point))}]))))
+    @!visited-points))
+(comment
+  (def matrix {{:x 0 :y 0} "black" {:x 1 :y 0} "black" {:x 2 :y 0} "white"
+               {:x 0 :y 1} "white" {:x 1 :y 1} "white" {:x 2 :y 1} "white"})
+  (flood-fill {:x 0 :y 0} {:width 8 :height 8} #(= (get matrix %) "black")))
