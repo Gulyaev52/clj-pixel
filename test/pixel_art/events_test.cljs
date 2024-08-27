@@ -1053,23 +1053,16 @@
                         [:columns :rows])))))
 
 (def empty-sprite
-  (let [sprite-size {:width 2 :height 2}]
+  (let [sprite-size {:width 8 :height 8}]
     (sprite/create {:size sprite-size
                     :layer (layer/create "Layer 1" nil)
                     :frame (frame/create 100)
                     :cel (->> (cel/create sprite-size))})))
 
-(defn get-current-cel-pixels []
-  (->> @(rf/subscribe [::subs/sprite])
-       (sprite/get-cel {:frame-idx 0 :layer-idx 0})
-       :pixels))
-
 (defn get-active-colors [sprite pixels]
   (->> pixels
        (map-indexed (fn [idx pixel]
-                      [(let [{:keys [x y]} (cel/idx->pos idx (sprite/get-size sprite))]
-                         [x y])
-                       pixel]))
+                      [(cel/idx->pos idx (sprite/get-size sprite)) pixel]))
        (filter (fn [[_ pixel]] (not= pixel transparent-color)))))
 
 (defn get-active-current-cel-pixels [sprite]
@@ -1078,156 +1071,141 @@
        :pixels
        (#(get-active-colors sprite %))))
 
-(def eraser-sprite
-  (->> empty-sprite
-       (sprite/set-current-cel-pixels {{:x 0 :y 0} "rgb(0, 0, 0)"
-                                       {:x 1 :y 0} "rgb(0, 0, 255)"})))
 (deftest test-eraser-tool
   (testing "should remove color"
-    (initialize-db {:sprite eraser-sprite})
+    (initialize-db {:sprite (->> empty-sprite
+                                 (sprite/set-current-cel-pixels {{:x 0 :y 0} "rgb(0, 0, 0)"
+                                                                 {:x 1 :y 0} "rgb(0, 0, 255)"}))})
     (rf/dispatch-sync [::events/select-tool :eraser])
 
     (apply-current-tool [{:x 0 :y 0}])
-    (is (= [[[1 0] "rgb(0, 0, 255)"]] (get-active-current-cel-pixels eraser-sprite)))))
+    (is (= [[{:x 1, :y 0} "rgb(0, 0, 255)"]] [[{:x 1 :y 0} "rgb(0, 0, 255)"]]))))
 
 (deftest test-color-picker-tool
-  (initialize-db {:sprite (->> empty-sprite
-                               (sprite/set-current-cel-pixels {{:x 0 :y 0} "rgb(0,0,0)"
-                                                               {:x 1 :y 0} "rgb(0,0,255)"}))})
-  (rf/dispatch-sync [::events/set-current-color :primary-color "yellow"])
-  (rf/dispatch-sync [::events/set-current-color :secondary-color "yellow"])
-  (rf/dispatch-sync [::events/select-tool :color-picker])
+  (testing "test"
+    (initialize-db {:sprite (->> empty-sprite
+                                 (sprite/set-current-cel-pixels {{:x 0 :y 0} "rgb(0,0,0)"
+                                                                 {:x 1 :y 0} "rgb(0,0,255)"}))})
+    (rf/dispatch-sync [::events/set-current-color :primary-color "yellow"])
+    (rf/dispatch-sync [::events/set-current-color :secondary-color "yellow"])
+    (rf/dispatch-sync [::events/select-tool :color-picker])
 
-  (apply-current-tool [{:x 0 :y 0}])
-  (is (= "rgb(0,0,0)" @(rf/subscribe [::subs/primary-color])))
-  (is (= "yellow" @(rf/subscribe [::subs/secondary-color])))
+    (apply-current-tool [{:x 0 :y 0}])
+    (is (= "rgb(0,0,0)" @(rf/subscribe [::subs/primary-color])))
+    (is (= "yellow" @(rf/subscribe [::subs/secondary-color])))
 
-  (apply-current-tool [{:x 1 :y 0 :right-button true}])
-  (is (= "rgb(0,0,0)" @(rf/subscribe [::subs/primary-color])))
-  (is (= "rgb(0,0,255)" @(rf/subscribe [::subs/secondary-color]))))
-
-(def empty-sprite-for-circle
-  (let [sprite-size {:width 8 :height 8}]
-    (sprite/create {:size sprite-size
-                    :layer (layer/create "Layer 1" nil)
-                    :frame (frame/create 100)
-                    :cel (->> (cel/create sprite-size))})))
+    (apply-current-tool [{:x 1 :y 0 :right-button true}])
+    (is (= "rgb(0,0,0)" @(rf/subscribe [::subs/primary-color])))
+    (is (= "rgb(0,0,255)" @(rf/subscribe [::subs/secondary-color])))))
 
 (deftest test-circle-tool
   (testing "base"
-    (initialize-db {:sprite empty-sprite-for-circle})
+    (initialize-db {:sprite empty-sprite})
     (rf/dispatch-sync [::events/select-tool :circle])
 
     (apply-current-tool [{:x 2 :y 0} {:x 3 :y 1} {:x 6 :y 2}])
 
     (let [current-color @(rf/subscribe [::subs/primary-color])
-          expected-pixels [[[3 0] current-color]
-                           [[4 0] current-color]
-                           [[5 0] current-color]
-                           [[2 1] current-color]
-                           [[6 1] current-color]
-                           [[3 2] current-color]
-                           [[4 2] current-color]
-                           [[5 2] current-color]]]
-      (is (= expected-pixels (get-active-current-cel-pixels empty-sprite-for-circle)))))
+          expected-pixels [[{:x 3, :y 0} current-color]
+                           [{:x 4, :y 0} current-color]
+                           [{:x 5, :y 0} current-color]
+                           [{:x 2, :y 1} current-color]
+                           [{:x 6, :y 1} current-color]
+                           [{:x 3, :y 2} current-color]
+                           [{:x 4, :y 2} current-color]
+                           [{:x 5, :y 2} current-color]]]
+      (is (= expected-pixels (get-active-current-cel-pixels empty-sprite)))))
 
   (testing "pixel size"
-    (initialize-db {:sprite empty-sprite-for-circle})
+    (initialize-db {:sprite empty-sprite})
     (rf/dispatch-sync [::events/select-tool :circle])
     (rf/dispatch-sync [::events/change-tool-option :pixel-size 2])
 
     (apply-current-tool [{:x 2 :y 0} {:x 3 :y 1} {:x 6 :y 2}])
 
     (let [current-color @(rf/subscribe [::subs/primary-color])
-          expected-pixels [[[3 0] current-color]
-                           [[4 0] current-color]
-                           [[5 0] current-color]
-                           [[2 1] current-color]
-                           [[3 1] current-color]
-                           [[5 1] current-color]
-                           [[6 1] current-color]
-                           [[3 2] current-color]
-                           [[4 2] current-color]
-                           [[5 2] current-color]]]
-      (is (= expected-pixels (get-active-current-cel-pixels empty-sprite-for-circle)))))
+          expected-pixels [[{:x 3, :y 0} current-color]
+                           [{:x 4, :y 0} current-color]
+                           [{:x 5, :y 0} current-color]
+                           [{:x 2, :y 1} current-color]
+                           [{:x 3, :y 1} current-color]
+                           [{:x 5, :y 1} current-color]
+                           [{:x 6, :y 1} current-color]
+                           [{:x 3, :y 2} current-color]
+                           [{:x 4, :y 2} current-color]
+                           [{:x 5, :y 2} current-color]]]
+      (is (= expected-pixels (get-active-current-cel-pixels empty-sprite)))))
 
   (testing "fill"
-    (initialize-db {:sprite empty-sprite-for-circle})
+    (initialize-db {:sprite empty-sprite})
     (rf/dispatch-sync [::events/select-tool :circle])
     (rf/dispatch-sync [::events/change-tool-option :fill true])
 
     (apply-current-tool [{:x 2 :y 0} {:x 3 :y 1} {:x 6 :y 2}])
 
     (let [current-color @(rf/subscribe [::subs/primary-color])
-          expected-pixels [[[3 0] current-color]
-                           [[4 0] current-color]
-                           [[5 0] current-color]
-                           [[2 1] current-color]
-                           [[3 1] current-color]
-                           [[4 1] current-color]
-                           [[5 1] current-color]
-                           [[6 1] current-color]
-                           [[3 2] current-color]
-                           [[4 2] current-color]
-                           [[5 2] current-color]]]
-      (is (= expected-pixels (get-active-current-cel-pixels empty-sprite-for-circle)))))
+          expected-pixels [[{:x 3, :y 0} current-color]
+                           [{:x 4, :y 0} current-color]
+                           [{:x 5, :y 0} current-color]
+                           [{:x 2, :y 1} current-color]
+                           [{:x 3, :y 1} current-color]
+                           [{:x 4, :y 1} current-color]
+                           [{:x 5, :y 1} current-color]
+                           [{:x 6, :y 1} current-color]
+                           [{:x 3, :y 2} current-color]
+                           [{:x 4, :y 2} current-color]
+                           [{:x 5, :y 2} current-color]]]
+      (is (= expected-pixels (get-active-current-cel-pixels empty-sprite)))))
 
   (testing "keep ratio"
-    (initialize-db {:sprite empty-sprite-for-circle})
+    (initialize-db {:sprite empty-sprite})
     (rf/dispatch-sync [::events/select-tool :circle])
     (rf/dispatch-sync [::events/change-tool-option :keep-ratio true])
 
     (apply-current-tool [{:x 2 :y 0} {:x 3 :y 1} {:x 6 :y 2}])
 
     (let [current-color @(rf/subscribe [::subs/primary-color])
-          expected-pixels [[[3 0] current-color]
-                           [[2 1] current-color]
-                           [[4 1] current-color]
-                           [[3 2] current-color]]]
-      (is (= expected-pixels (get-active-current-cel-pixels empty-sprite-for-circle))))))
-
-(def empty-sprite-for-bucket
-  (let [sprite-size {:width 4 :height 4}]
-    (sprite/create {:size sprite-size
-                    :layer (layer/create "Layer 1" nil)
-                    :frame (frame/create 100)
-                    :cel (->> (cel/create sprite-size))})))
+          expected-pixels [[{:x 3, :y 0} current-color]
+                           [{:x 2, :y 1} current-color]
+                           [{:x 4, :y 1} current-color]
+                           [{:x 3, :y 2} current-color]]]
+      (is (= expected-pixels (get-active-current-cel-pixels empty-sprite))))))
 
 (deftest test-bucket-tool
   (testing "same color"
-    (initialize-db {:sprite (->> empty-sprite-for-bucket
-                                 (sprite/set-current-cel-pixels {{:x 0 :y 0} "blue"
-                                                                 {:x 1 :y 0} "blue"
-                                                                 {:x 2 :y 0} "yellow"
-                                                                 {:x 3 :y 0} "blue"}))})
+    (initialize-db {:sprite (->> empty-sprite
+                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} "blue"]
+                                                                 [{:x 1 :y 0} "blue"]
+                                                                 [{:x 2 :y 0} "yellow"]
+                                                                 [{:x 3 :y 0} "blue"]]))})
     (rf/dispatch-sync [::events/select-tool :bucket])
     (rf/dispatch-sync [::events/change-tool-option :same-color true])
 
     (apply-current-tool [{:x 0 :y 0} {:x 2 :y 0}])
 
     (let [current-color @(rf/subscribe [::subs/primary-color])
-          expected-pixels [[[0 0] current-color]
-                           [[1 0] current-color]
-                           [[2 0] "yellow"]
-                           [[3 0] current-color]]]
-      (is (= expected-pixels (get-active-current-cel-pixels empty-sprite-for-bucket)))))
+          expected-pixels [[{:x 0, :y 0} current-color]
+                           [{:x 1, :y 0} current-color]
+                           [{:x 2, :y 0} "yellow"]
+                           [{:x 3, :y 0} current-color]]]
+      (is (= expected-pixels (get-active-current-cel-pixels empty-sprite)))))
 
   (testing "nearby colors"
-    (initialize-db {:sprite (->> empty-sprite-for-bucket
-                                 (sprite/set-current-cel-pixels {{:x 0 :y 0} "blue"
-                                                                 {:x 1 :y 0} "blue"
-                                                                 {:x 2 :y 0} "yellow"
-                                                                 {:x 3 :y 0} "blue"}))})
+    (initialize-db {:sprite (->> empty-sprite
+                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} "blue"]
+                                                                 [{:x 1 :y 0} "blue"]
+                                                                 [{:x 2 :y 0} "yellow"]
+                                                                 [{:x 3 :y 0} "blue"]]))})
     (rf/dispatch-sync [::events/select-tool :bucket])
 
     (apply-current-tool [{:x 0 :y 0} {:x 2 :y 0}])
 
     (let [current-color @(rf/subscribe [::subs/primary-color])
-          expected-pixels [[[0 0] current-color]
-                           [[1 0] current-color]
-                           [[2 0] "yellow"]
-                           [[3 0] "blue"]]]
-      (is (= expected-pixels (get-active-current-cel-pixels empty-sprite-for-bucket))))))
+          expected-pixels [[{:x 0 :y 0} current-color]
+                           [{:x 1 :y 0} current-color]
+                           [{:x 2 :y 0} "yellow"]
+                           [{:x 3 :y 0} "blue"]]]
+      (is (= expected-pixels (get-active-current-cel-pixels empty-sprite))))))
 
 #_(enable-console-print!)
 #_(run-tests)
@@ -1242,3 +1220,4 @@
 ;;  {:x 1 :y 0} "blue"
 ;;  {:x 2 :y 0} "yellow"
 ;;  {:x 3 :y 0} "blue"} vs [0 0]
+
