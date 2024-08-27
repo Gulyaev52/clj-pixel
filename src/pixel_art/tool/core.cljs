@@ -1,5 +1,6 @@
 (ns pixel-art.tool.core
-  (:require [pixel-art.tool.circle :as circle]
+  (:require [pixel-art.tool.bucket :as bucket]
+            [pixel-art.tool.circle :as circle]
             [pixel-art.tool.color-picker :as color-picker]
             [pixel-art.tool.eraser :as eraser]
             [pixel-art.tool.pen :as pen]
@@ -10,7 +11,7 @@
 ;; todo: исп полиморфизм?
 
 (def types
-  [:pen :eraser :color-picker :rectangle :circle :rectangle-select :shape-select])
+  [:pen :bucket :eraser :color-picker :rectangle :circle :rectangle-select :shape-select])
 
 (defn init [tool-type]
   ((case tool-type
@@ -20,7 +21,8 @@
      :rectangle rectangle/init
      :circle circle/init
      :rectangle-select rectangle-select/init
-     :shape-select shape-select/init)))
+     :shape-select shape-select/init
+     :bucket bucket/init)))
 
 (def options-specs
   {:pen pen/options-spec
@@ -29,7 +31,8 @@
    :rectangle rectangle/options-spec
    :circle circle/options-spec
    :rectangle-select rectangle-select/options-spec
-   :shape-select shape-select/options-spec})
+   :shape-select shape-select/options-spec
+   :bucket bucket/options-spec})
 
 (defn handle-mouse-event [db event]
   ((case (-> db :tool :type)
@@ -39,5 +42,6 @@
      :rectangle rectangle/handle-mouse-event
      :circle circle/handle-mouse-event
      :rectangle-select rectangle-select/handle-mouse-event
-     :shape-select shape-select/handle-mouse-event)
+     :shape-select shape-select/handle-mouse-event
+     :bucket bucket/handle-mouse-event)
    db event))

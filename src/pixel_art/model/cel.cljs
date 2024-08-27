@@ -59,3 +59,7 @@
 (defn get-pixel [pos cel]
   (let [{:keys [pixels size]} cel]
     (nth pixels (pos->idx pos size) transparent-color)))
+
+(defn pixels->coll [cel]
+  (map-indexed (fn [idx pixel] [(idx->pos idx (:size cel)) pixel])
+               (:pixels cel)))

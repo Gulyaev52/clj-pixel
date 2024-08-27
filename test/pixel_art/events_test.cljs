@@ -1088,7 +1088,7 @@
     (rf/dispatch-sync [::events/select-tool :eraser])
 
     (apply-current-tool [{:x 0 :y 0}])
-    (is (= [nil "rgb(0, 0, 255)" nil nil] (get-current-cel-pixels)))))
+    (is (= [[[1 0] "rgb(0, 0, 255)"]] (get-active-current-cel-pixels eraser-sprite)))))
 
 (deftest test-color-picker-tool
   (initialize-db {:sprite (->> empty-sprite
@@ -1135,9 +1135,9 @@
     (initialize-db {:sprite empty-sprite-for-circle})
     (rf/dispatch-sync [::events/select-tool :circle])
     (rf/dispatch-sync [::events/change-tool-option :pixel-size 2])
-    
+
     (apply-current-tool [{:x 2 :y 0} {:x 3 :y 1} {:x 6 :y 2}])
-    
+
     (let [current-color @(rf/subscribe [::subs/primary-color])
           expected-pixels [[[3 0] current-color]
                            [[4 0] current-color]
@@ -1155,9 +1155,9 @@
     (initialize-db {:sprite empty-sprite-for-circle})
     (rf/dispatch-sync [::events/select-tool :circle])
     (rf/dispatch-sync [::events/change-tool-option :fill true])
-    
+
     (apply-current-tool [{:x 2 :y 0} {:x 3 :y 1} {:x 6 :y 2}])
-    
+
     (let [current-color @(rf/subscribe [::subs/primary-color])
           expected-pixels [[[3 0] current-color]
                            [[4 0] current-color]
@@ -1186,6 +1186,49 @@
                            [[3 2] current-color]]]
       (is (= expected-pixels (get-active-current-cel-pixels empty-sprite-for-circle))))))
 
+(def empty-sprite-for-bucket
+  (let [sprite-size {:width 4 :height 4}]
+    (sprite/create {:size sprite-size
+                    :layer (layer/create "Layer 1" nil)
+                    :frame (frame/create 100)
+                    :cel (->> (cel/create sprite-size))})))
+
+(deftest test-bucket-tool
+  (testing "same color"
+    (initialize-db {:sprite (->> empty-sprite-for-bucket
+                                 (sprite/set-current-cel-pixels {{:x 0 :y 0} "blue"
+                                                                 {:x 1 :y 0} "blue"
+                                                                 {:x 2 :y 0} "yellow"
+                                                                 {:x 3 :y 0} "blue"}))})
+    (rf/dispatch-sync [::events/select-tool :bucket])
+    (rf/dispatch-sync [::events/change-tool-option :same-color true])
+
+    (apply-current-tool [{:x 0 :y 0} {:x 2 :y 0}])
+
+    (let [current-color @(rf/subscribe [::subs/primary-color])
+          expected-pixels [[[0 0] current-color]
+                           [[1 0] current-color]
+                           [[2 0] "yellow"]
+                           [[3 0] current-color]]]
+      (is (= expected-pixels (get-active-current-cel-pixels empty-sprite-for-bucket)))))
+
+  (testing "nearby colors"
+    (initialize-db {:sprite (->> empty-sprite-for-bucket
+                                 (sprite/set-current-cel-pixels {{:x 0 :y 0} "blue"
+                                                                 {:x 1 :y 0} "blue"
+                                                                 {:x 2 :y 0} "yellow"
+                                                                 {:x 3 :y 0} "blue"}))})
+    (rf/dispatch-sync [::events/select-tool :bucket])
+
+    (apply-current-tool [{:x 0 :y 0} {:x 2 :y 0}])
+
+    (let [current-color @(rf/subscribe [::subs/primary-color])
+          expected-pixels [[[0 0] current-color]
+                           [[1 0] current-color]
+                           [[2 0] "yellow"]
+                           [[3 0] "blue"]]]
+      (is (= expected-pixels (get-active-current-cel-pixels empty-sprite-for-bucket))))))
+
 #_(enable-console-print!)
 #_(run-tests)
 
@@ -1194,3 +1237,8 @@
 ;; у gif протестить repeat
 ;; у image когда 1 картинка то загружаться должна только 1 картинка
 ;; preview
+
+;; {{:x 0 :y 0} "blue"
+;;  {:x 1 :y 0} "blue"
+;;  {:x 2 :y 0} "yellow"
+;;  {:x 3 :y 0} "blue"} vs [0 0]

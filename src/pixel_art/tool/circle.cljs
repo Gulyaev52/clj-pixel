@@ -3,8 +3,7 @@
             [pixel-art.tool.utils :refer [commit-changes-and-init-tool
                                           get-current-color get-tool-options
                                           resize-pixel]]
-            [pixel-art.utils.geometry :as geometry]
-            [sc.api :as api]))
+            [pixel-art.utils.geometry :as geometry]))
 
 (defn init [] {:type :circle})
 
