@@ -1207,6 +1207,49 @@
                            [{:x 3 :y 0} "blue"]]]
       (is (= expected-pixels (get-active-current-cel-pixels empty-sprite))))))
 
+(deftest test-shading-tool
+  (testing "lighten trans"
+    (initialize-db {:sprite (->> empty-sprite
+                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} "blue"]
+                                                                 [{:x 1 :y 0} "yellow"]
+                                                                 [{:x 2 :y 0} "red"]]))})
+    (rf/dispatch-sync [::events/select-tool :shading])
+
+    (apply-current-tool [{:x 0 :y 0} {:x 1 :y 0} {:x 0 :y 0} {:x 1 :y 0}]) ;; applied only once
+    (is (= [[{:x 0, :y 0} "rgb(31, 31, 255)"]
+            [{:x 1, :y 0} "rgb(255, 255, 31)"]
+            [{:x 2, :y 0} "red"]]
+           (get-active-current-cel-pixels empty-sprite))))
+
+  (testing "darken trans"
+    (initialize-db {:sprite (->> empty-sprite
+                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} "blue"]
+                                                                 [{:x 1 :y 0} "yellow"]
+                                                                 [{:x 2 :y 0} "red"]]))})
+    (rf/dispatch-sync [::events/select-tool :shading])
+    (rf/dispatch-sync [::events/change-tool-option :lighten false])
+
+    (apply-current-tool [{:x 0 :y 0} {:x 1 :y 0} {:x 0 :y 0} {:x 1 :y 0}]) ;; applied only once
+    (is (= [[{:x 0, :y 0} "rgb(0, 0, 224)"]
+            [{:x 1, :y 0} "rgb(224, 224, 0)"]
+            [{:x 2, :y 0} "red"]]
+           (get-active-current-cel-pixels empty-sprite))))
+
+  (testing "pixel size and amount"
+    (initialize-db {:sprite (->> empty-sprite
+                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} "blue"]
+                                                                 [{:x 1 :y 0} "yellow"]
+                                                                 [{:x 2 :y 0} "red"]]))})
+    (rf/dispatch-sync [::events/select-tool :shading])
+    (rf/dispatch-sync [::events/change-tool-option :pixel-size 2])
+    (rf/dispatch-sync [::events/change-tool-option :amount 20])
+
+    (apply-current-tool [{:x 1 :y 1}])
+    (is (= [[{:x 0, :y 0} "rgb(102, 102, 255)"]
+            [{:x 1, :y 0} "rgb(255, 255, 102)"]
+            [{:x 2, :y 0} "red"]]
+           (get-active-current-cel-pixels empty-sprite)))))
+
 #_(enable-console-print!)
 #_(run-tests)
 
