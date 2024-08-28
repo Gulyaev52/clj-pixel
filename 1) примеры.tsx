@@ -2,8 +2,6 @@ dithering
 mirror
 crop(resize)
 
-shape-tool -> geometry
-
 19) трансформации?
 13) shading clear-preview draw-preview
 14) transparent цвет можно выбрать как цвет/

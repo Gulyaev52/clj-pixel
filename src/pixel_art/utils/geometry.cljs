@@ -81,3 +81,17 @@
   (-> (shape-tool/getUniformLinePixels (:x p1) (:x p2) (:y p1) (:y p2))
       (js->clj :keywordize-keys true)
       (#(map (fn [{:keys [col row]}] {:x col :y row}) %))))
+
+(defn get-scaled-points
+  "Transform the coordinates to preserve a square 1:1 ratio from the origin of the shape"
+  [initial-pos pos]
+  (-> (shape-tool/getScaledCoords (:x initial-pos) (:y initial-pos)
+                                  (:x pos) (:y pos))
+      (js->clj :keywordize-keys true)
+      ((fn [{:keys [col row]}] {:x col :y row}))))
+(comment (get-scaled-points {:x 0 :y 0} {:x 2 :y 2}))
+
+(defn get-circle-pixels [p1 p2 pixel-size]
+  (->> (shape-tool/getCirclePixels (:x p1) (:y p1) (:x p2) (:y p2) pixel-size)
+       js->clj
+       (map (fn [[x y]] {:x x :y y}))))
