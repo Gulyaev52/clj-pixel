@@ -1,3 +1,11 @@
+dithering
+mirror
+crop(resize)
+
+shape-tool -> geometry
+
+19) трансформации?
+13) shading clear-preview draw-preview
 14) transparent цвет можно выбрать как цвет/
 15) зум
 17) доделать остальные инструменты
@@ -55,10 +63,13 @@
 10) переделать sprite preview
 11) pixel perfect(aseprite pen)
 12) bucket. pattern
+13) изменения на все выдел ячейки
+https://www.aseprite.org/docs/move-tool/
 
 рефакторинг
 10) в тулах эксп объект или полиморфизм?
 11) исп id?
+13) есть опции настройки которых повторяются
 10) рендерить фреймы во вьюхе
   cel-imgs
 6) место sprite в арг функций

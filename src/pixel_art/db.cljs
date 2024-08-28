@@ -57,7 +57,7 @@
 (defn get-default-db [{:keys [palettes sprite]}]
   (let [sprite-size (or (when sprite
                           (sprite/get-size sprite))
-                        {:width 8 :height 8})
+                        {:width 16 :height 16})
         res-palettes (or palettes initial-palettes)
         primary-color (or (-> res-palettes first :colors first) "rgb(0,0,0)")
         secondary-color (or (-> res-palettes first :colors second) primary-color)]

@@ -1250,6 +1250,85 @@
             [{:x 2, :y 0} "red"]]
            (get-active-current-cel-pixels empty-sprite)))))
 
+(deftest test-line-tool
+  (testing "simple line"
+    (initialize-db {:sprite empty-sprite})
+    (rf/dispatch-sync [::events/select-tool :line])
+
+    (apply-current-tool [{:x 2 :y 2} {:x 6 :y 3}])
+
+    (let [current-color @(rf/subscribe [::subs/primary-color])]
+      (is (= [[{:x 2, :y 2} current-color]
+              [{:x 3, :y 2} current-color]
+              [{:x 4, :y 2} current-color]
+              [{:x 5, :y 3} current-color]
+              [{:x 6, :y 3} current-color]]
+             (get-active-current-cel-pixels empty-sprite)))))
+
+  (testing "simple line + pixel-size"
+    (initialize-db {:sprite empty-sprite})
+    (rf/dispatch-sync [::events/select-tool :line])
+    (rf/dispatch-sync [::events/change-tool-option :pixel-size 2])
+
+    (apply-current-tool [{:x 2 :y 2} {:x 6 :y 3}])
+
+    (let [current-color @(rf/subscribe [::subs/primary-color])]
+      (is (= [[{:x 1, :y 1} current-color]
+              [{:x 2, :y 1} current-color]
+              [{:x 3, :y 1} current-color]
+              [{:x 4, :y 1} current-color]
+              [{:x 1, :y 2} current-color]
+              [{:x 2, :y 2} current-color]
+              [{:x 3, :y 2} current-color]
+              [{:x 4, :y 2} current-color]
+              [{:x 5, :y 2} current-color]
+              [{:x 6, :y 2} current-color]
+              [{:x 4, :y 3} current-color]
+              [{:x 5, :y 3} current-color]
+              [{:x 6, :y 3} current-color]]
+             (get-active-current-cel-pixels empty-sprite)))))
+
+  (testing "straight line"
+    (initialize-db {:sprite empty-sprite})
+    (rf/dispatch-sync [::events/select-tool :line])
+    (rf/dispatch-sync [::events/change-tool-option :straight true])
+
+    (apply-current-tool [{:x 2 :y 2} {:x 6 :y 3}])
+
+    (let [current-color @(rf/subscribe [::subs/primary-color])]
+      (is (= [[{:x 2, :y 2} current-color]
+              [{:x 3, :y 2} current-color]
+              [{:x 4, :y 2} current-color]
+              [{:x 5, :y 2} current-color]
+              [{:x 6, :y 2} current-color]
+              [{:x 7, :y 2} current-color]]
+             (get-active-current-cel-pixels empty-sprite)))))
+
+  (testing "simple line + pixel-size"
+    (initialize-db {:sprite empty-sprite})
+    (rf/dispatch-sync [::events/select-tool :line])
+    (rf/dispatch-sync [::events/change-tool-option :straight true])
+    (rf/dispatch-sync [::events/change-tool-option :pixel-size 2])
+
+    (apply-current-tool [{:x 2 :y 2} {:x 6 :y 3}])
+
+    (let [current-color @(rf/subscribe [::subs/primary-color])]
+      (is (= [[{:x 1, :y 1} current-color]
+              [{:x 2, :y 1} current-color]
+              [{:x 3, :y 1} current-color]
+              [{:x 4, :y 1} current-color]
+              [{:x 5, :y 1} current-color]
+              [{:x 6, :y 1} current-color]
+              [{:x 7, :y 1} current-color]
+              [{:x 1, :y 2} current-color]
+              [{:x 2, :y 2} current-color]
+              [{:x 3, :y 2} current-color]
+              [{:x 4, :y 2} current-color]
+              [{:x 5, :y 2} current-color]
+              [{:x 6, :y 2} current-color]
+              [{:x 7, :y 2} current-color]]
+             (get-active-current-cel-pixels empty-sprite))))))
+
 #_(enable-console-print!)
 #_(run-tests)
 

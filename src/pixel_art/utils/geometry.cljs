@@ -1,5 +1,6 @@
 (ns pixel-art.utils.geometry
-  (:require [clojure.string :as string]))
+  (:require ["../shapeTool.js" :as shape-tool]
+            [clojure.string :as string]))
 
 ;; todo: pixels?
 
@@ -70,3 +71,13 @@
   (def matrix {{:x 0 :y 0} "black" {:x 1 :y 0} "black" {:x 2 :y 0} "white"
                {:x 0 :y 1} "white" {:x 1 :y 1} "white" {:x 2 :y 1} "white"})
   (flood-fill {:x 0 :y 0} {:width 8 :height 8} #(= (get matrix %) "black")))
+
+(defn get-line-pixels [p1 p2]
+  (-> (shape-tool/getLinePixels (:x p1) (:x p2) (:y p1) (:y p2))
+      (js->clj :keywordize-keys true)
+      (#(map (fn [{:keys [col row]}] {:x col :y row}) %))))
+
+(defn get-uniform-line-pixels [p1 p2]
+  (-> (shape-tool/getUniformLinePixels (:x p1) (:x p2) (:y p1) (:y p2))
+      (js->clj :keywordize-keys true)
+      (#(map (fn [{:keys [col row]}] {:x col :y row}) %))))
