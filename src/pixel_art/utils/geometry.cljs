@@ -1,5 +1,5 @@
 (ns pixel-art.utils.geometry
-  (:require ["../shapeTool.js" :as shape-tool]
+  (:require ["./shapeTool.js" :as shape-tool]
             [clojure.string :as string]))
 
 ;; todo: pixels?

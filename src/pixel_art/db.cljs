@@ -11,7 +11,8 @@
             [pixel-art.palette :as palette]
             [pixel-art.sprite-preview :as preview]
             [pixel-art.tool.core :as tool]
-            [sc.api]))
+            [sc.api]
+            [pixel-art.sprite-resizer :as sprite-resizer]))
 
 (def max-scale 80)
 
@@ -52,7 +53,8 @@
          :sprite-preview (preview/init)
          :pixels-grid-enabled true
          :palettes (palette/init palettes)
-         :export (export/init)})))
+         :export (export/init)
+         :sprite-resizer (sprite-resizer/init)})))
 
 (defn get-default-db [{:keys [palettes sprite]}]
   (let [sprite-size (or (when sprite

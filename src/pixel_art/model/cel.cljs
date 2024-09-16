@@ -2,12 +2,15 @@
   (:require [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.utils.geometry :as geometry]))
 
-(defn create [size]
-  {:pixels (vec (repeat (* (:width size) (:height size)) transparent-color))
-   :size size
-   :opacity 1
-   :current false
-   :selected false})
+(defn create
+  ([size]
+   (create size (vec (repeat (* (:width size) (:height size)) transparent-color))))
+  ([size pixels]
+   {:pixels pixels
+    :size size
+    :opacity 1
+    :current false
+    :selected false}))
 
 (defn remove-all-pixels [cel]
   (update cel :pixels #(mapv (fn [_] transparent-color) %)))

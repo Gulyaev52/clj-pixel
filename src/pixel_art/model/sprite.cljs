@@ -11,8 +11,6 @@
                   :selected true)]]
    :layers [layer]})
 
-(defn resize [sprite])
-
 (defn- update-cel [f pos sprite]
   (update-in sprite [:cels (:frame-idx pos) (:layer-idx pos)] f))
 

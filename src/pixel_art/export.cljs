@@ -81,7 +81,7 @@
   (let [common-settings (get-common-settings-res db)]
     (merge common-settings (-> db :export :image-settings))))
 
-(defn generate-preview [db]
+(defn generate-preview [db] ;; todo: вынести эти в подписку?
   (let [db (assoc-in db [:export :preview :generation] true)
         {:keys [sprite export]} db]
     (case (:current-tab export)

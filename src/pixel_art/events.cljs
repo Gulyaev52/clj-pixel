@@ -62,7 +62,7 @@
 ;; todo: fix performance; если позиция ячейки изменяется то тут ошибка; если удаляется
 (re-frame/reg-global-interceptor
  (on-changes
-  :generate-cel-imgs
+  :generate-cel-imgs ;; todo: в подписку?
   #(-> % :sprite :cels)
   (fn [{:keys [db]}]
     (let [cel-imgs (->> (-> db :sprite)

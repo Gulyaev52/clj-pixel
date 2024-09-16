@@ -1,33 +1,54 @@
-; This is the Calva evaluation results output window.
-; TIPS: The keyboard shortcut `ctrl+alt+o o` shows and focuses this window
-;   when connected to a REPL session.
-; Please see https://calva.io/output/ for more info.
+; This is the Calva REPL Window.
+; It's just a file, really, with some special treatment from Calva.
+; Use it as a REPL input prompt if you like. (When the REPL is connected.)
+; TIPS: The keyboard shortcut `ctrl+alt+o r` shows and focuses this window
+; Please see https://calva.io/repl-window/ for more info.
 ; Happy coding! ♥️
+
+; TIPS: As with any Clojure file when the REPL is connected:
+; - `alt+enter` evaluates the current top level form.
+; - `ctrl+enter` evaluates the current form.
+; Special for this file:
+; - `alt+up` and `alt+down` traverse up and down the REPL command history
+;    when the cursor is after the last contents at the prompt
+; 
+; See also the Calva Inspector: https://calva.io/inspector/
+
+PLEASE NOTE
+We will update the default location of this file.
+The new default location will be
+  "<projectRootPath>/.calva/repl.calva-repl"
+For now the legacy path is used by default.
+To give yourself a smooth transition, you can opt in
+to the change, by configuring this setting as false:
+  "calva.useLegacyReplWindowPath"
+and then add "**/.calva/repl.calva-repl" to your ".gitignore" file.
+
+
+This file is configured as the output destination for all REPL output.
+You can configure this with the setting:
+  "calva.outputDestinations"
+
 
 ; Jacking in...
 ; Connecting using "shadow-cljs" project type.
 ; You can make Calva auto-select this.
 ;   - See https://calva.io/connect-sequences/
 ; 
-; Starting Jack-in Terminal: pushd /home/kirill/projects/pixel-art ; npx shadow-cljs -d cider/cider-nrepl:0.28.5 watch :app ; popd
+
+; Starting Jack-in Terminal: (cd /home/kirill/projects/pixel-art; npx shadow-cljs -d cider/cider-nrepl:0.47.1 watch :app)
 ; Using host:port localhost:8777 ...
 ; Hooking up nREPL sessions ...
 ; Connected session: clj
-; TIPS:
-;   - You can edit the contents here. Use it as a REPL if you like.
-;   - `alt+enter` evaluates the current top level form.
-;   - `ctrl+enter` evaluates the current form.
-;   - `alt+up` and `alt+down` traverse up and down the REPL command history
-;      when the cursor is after the last contents at the prompt
-;   - Clojure lines in stack traces are peekable and clickable.
 ; Evaluating code from settings: 'calva.autoEvaluateCode.onConnect.clj'
 nil
-clj꞉shadow.user꞉>  ; Use `alt+enter` to evaluate
 clj꞉shadow.user꞉> 
 ; Creating cljs repl session...
 ; Connecting cljs repl: shadow-cljs...
-;   The Calva Connection Log might have more connection progress information.
 ; Please start your ClojureScript app (load it in the browser, or whatever is appropriate) so that Calva can connect to its REPL...
+; Waiting for Shadow CLJS runtimes, start your CLJS app...
+; Waiting for Shadow CLJS runtimes, start your CLJS app...
+; Waiting for Shadow CLJS runtimes, start your CLJS app...
 ; Waiting for Shadow CLJS runtimes, start your CLJS app...
 ; Connected session: cljs, repl: :app
 ; TIPS: You can choose which REPL to use (clj or cljs):
@@ -35,155 +56,2789 @@ clj꞉shadow.user꞉> 
 ;    (There is a button in the status bar for this)
 ; Evaluating code from settings: 'calva.autoEvaluateCode.onConnect.cljs'
 nil
+"Please see https://calva.io/output/#about-stdout-in-the-repl-window
+about why stdout printed to this file is prepended with `;` to be line comments."
 clj꞉user꞉> 
 ; Jack-in done.
 clj꞉user꞉> 
+-1
+clj꞉pixel-art.canvas꞉> 
+#'pixel-art.canvas/resize
+clj꞉pixel-art.canvas꞉> 
 nil
-cljs꞉pixel-art.core-test꞉>  ; Use `alt+enter` to evaluate
-nil
+; 
 ; ------ WARNING - :undeclared-var -----------------------------------------------
 ;  Resource: <eval>:1:2
-;  Use of undeclared Var pjstadig.humane-test-output/activate!
+;  Use of undeclared Var pixel-art.canvas/getElementById
 ; --------------------------------------------------------------------------------
 ; 
-cljs꞉pixel-art.core-test꞉> 
-(require 'cljs.test)
-nil
-cljs꞉pixel-art.core-test꞉> 
-(cljs.test/run-tests 'pixel-art.model.frame-test)
-
-Testing pixel-art.model.frame-test
-
-Ran 0 tests containing 0 assertions.
-0 failures, 0 errors.
-nil
-cljs꞉pixel-art.core-test꞉> 
-; Evaluating file: frame_test.cljs
-#'pixel-art.model.frame-test/get-pixel-test
-cljs꞉pixel-art.model.frame-test꞉> 
-(cljs.test/run-tests 'pixel-art.model.frame-test)
-
-Testing pixel-art.model.frame-test
-
-ERROR in (set-pixels-test) (Error:NaN:NaN)
-Uncaught exception, not in assertion.
-expected: nil
-  actual: #object[Error Error: Index 15 out of bounds  [0,6]]
-
-Ran 3 tests containing 5 assertions.
-0 failures, 1 errors.
-nil
-cljs꞉pixel-art.model.frame-test꞉> 
-21
-cljs꞉pixel-art.model.frame꞉> 
-(cljs.test/run-tests 'pixel-art.model.frame-test)
-
-Testing pixel-art.model.frame-test
-
-ERROR in (set-pixels-test) (Error:NaN:NaN)
-Uncaught exception, not in assertion.
-expected: nil
-  actual: #object[Error Error: Index 15 out of bounds  [0,6]]
-
-Ran 3 tests containing 5 assertions.
-0 failures, 1 errors.
-nil
-cljs꞉pixel-art.model.frame꞉> 
-21
-cljs꞉pixel-art.model.frame꞉> 
-#'pixel-art.model.frame/pos->idx
-cljs꞉pixel-art.model.frame꞉> 
-(cljs.test/run-tests 'pixel-art.model.frame-test)
-
-Testing pixel-art.model.frame-test
-
-ERROR in (set-pixels-test) (Error:NaN:NaN)
-Uncaught exception, not in assertion.
-expected: nil
-  actual: #object[Error Error: Index 15 out of bounds  [0,6]]
-
-Ran 3 tests containing 5 assertions.
-0 failures, 1 errors.
-nil
-cljs꞉pixel-art.model.frame꞉> 
-false
-cljs꞉pixel-art.model.frame꞉> 
-true
-cljs꞉pixel-art.model.frame꞉> 
-#'pixel-art.model.frame/set-pixels
-cljs꞉pixel-art.model.frame꞉> 
-(cljs.test/run-tests 'pixel-art.model.frame-test)
-
-Testing pixel-art.model.frame-test
-
-Ran 3 tests containing 5 assertions.
-0 failures, 0 errors.
-nil
-cljs꞉pixel-art.model.frame꞉> 
-#'pixel-art.model.frame/valid-pos?
-cljs꞉pixel-art.model.frame꞉> 
-#'pixel-art.model.frame/set-pixels
-cljs꞉pixel-art.model.frame꞉> 
-(cljs.test/run-tests 'pixel-art.model.frame-test)
-
-Testing pixel-art.model.frame-test
-
-Ran 3 tests containing 5 assertions.
-0 failures, 0 errors.
-nil
-cljs꞉pixel-art.model.frame꞉> 
-#'pixel-art.model.frame/set-pixels
-cljs꞉pixel-art.model.frame꞉> 
-(cljs.test/run-tests 'pixel-art.model.frame-test)
-
-Testing pixel-art.model.frame-test
-
-FAIL in (set-pixels-test) (:16:11)
-
-expected: {:pixels [nil nil nil nil nil nil],
-           :size {:width 2, :height 3}}
-  actual: {:pixels ["black" nil nil "red" "yellow" nil],
-           :size {:width 2, :height 3}}
-    diff: - {:pixels [nil nil nil nil nil]}
-          + {:pixels ["black" nil nil "red" "yellow"]}
-
-FAIL in (get-pixel-test) (:24:11)
-
-expected: "black"
-  actual: nil
-
-FAIL in (get-pixel-test) (:26:11)
-
-expected: "red"
-  actual: nil
-
-Ran 3 tests containing 5 assertions.
-3 failures, 0 errors.
-nil
-cljs꞉pixel-art.model.frame꞉> 
-#'pixel-art.model.frame/set-pixels
-cljs꞉pixel-art.model.frame꞉> 
-(cljs.test/run-tests 'pixel-art.model.frame-test)
-
-Testing pixel-art.model.frame-test
-
-Ran 3 tests containing 5 assertions.
-0 failures, 0 errors.
-nil
-cljs꞉pixel-art.model.frame꞉> 
-#'pixel-art.model.frame/valid-pos?
-cljs꞉pixel-art.model.frame꞉> 
-#'pixel-art.model.frame/set-pixels
-cljs꞉pixel-art.model.frame꞉> 
-(cljs.test/run-tests 'pixel-art.model.frame-test)
-
-Testing pixel-art.model.frame-test
-
-Ran 3 tests containing 5 assertions.
-0 failures, 0 errors.
-nil
-cljs꞉pixel-art.model.frame꞉> 
-#'pixel-art.model.frame/pos->idx
-cljs꞉pixel-art.model.frame꞉> 
+clj꞉pixel-art.canvas꞉> 
+#object[HTMLCanvasElement [object HTMLCanvasElement]]
+clj꞉pixel-art.canvas꞉> 
+#object[HTMLCanvasElement [object HTMLCanvasElement]]
+clj꞉pixel-art.canvas꞉> 
+#object[HTMLBodyElement [object HTMLBodyElement]]
+clj꞉pixel-art.canvas꞉> 
+#object[HTMLCanvasElement [object HTMLCanvasElement]]
+clj꞉pixel-art.canvas꞉> 
+#object[HTMLCanvasElement [object HTMLCanvasElement]]
+clj꞉pixel-art.canvas꞉> 
+#'pixel-art.canvas/resize
+clj꞉pixel-art.canvas꞉> 
+#'pixel-art.canvas/resize
+clj꞉pixel-art.canvas꞉> 
+#object[HTMLCanvasElement [object HTMLCanvasElement]]
+clj꞉pixel-art.canvas꞉> 
+#'pixel-art.canvas/resize
+clj꞉pixel-art.canvas꞉> 
+#object[HTMLCanvasElement [object HTMLCanvasElement]]
+clj꞉pixel-art.canvas꞉> 
 ; [:app] Compiling ...
-; [:app] Build completed. (763 files, 2 compiled, 0 warnings, 0,65s)
+; [:app] Build completed. (650 files, 6 compiled, 0 warnings, 0,49s)
+; [:app] Compiling ...
+; [:app] Build completed. (654 files, 12 compiled, 0 warnings, 0,73s)
+; [:app] Compiling ...
+; [:app] Build completed. (654 files, 6 compiled, 0 warnings, 0,37s)
+; [:app] Compiling ...
+; [:app] Build completed. (654 files, 13 compiled, 0 warnings, 0,49s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 3 compiled, 0 warnings, 0,39s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 4 compiled, 0 warnings, 0,39s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 3 compiled, 0 warnings, 0,45s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,21s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,18s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,32s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,33s)
+:repl/exception!
+; 
+; 
+; Execution error (Error) at (<cljs repl>:1).
+; Index argument to nth must be a number
+clj꞉pixel-art.views꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,35s)
+:repl/exception!
+; 
+; 
+; Execution error (Error) at (<cljs repl>:1).
+; Index argument to nth must be a number
+clj꞉pixel-art.views꞉> 
+nil
+clj꞉pixel-art.views꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 3 compiled, 0 warnings, 0,27s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,34s)
+nil
+clj꞉pixel-art.views꞉> 
+:repl/exception!
+; 
+; 
+; Execution error (Error) at (<cljs repl>:1).
+; Index argument to nth must be a number
+clj꞉pixel-art.views꞉> 
+:repl/exception!
+; 
+; 
+; Execution error (Error) at (<cljs repl>:1).
+; Index argument to nth must be a number
+clj꞉pixel-art.views꞉> 
+{:target-size nil,
+ :resize-content false,
+ :anchor {:x :center, :y :center}}
+clj꞉pixel-art.views꞉> 
+:repl/exception!
+; 
+; 
+; Execution error (Error) at (<cljs repl>:1).
+; Index argument to nth must be a number
+clj꞉pixel-art.views꞉> 
+{:sprite-resizer
+ {:opened false,
+  :settings
+  {:target-size nil,
+   :resize-content false,
+   :anchor {:x :center, :y :center}}},
+ :tools-options
+ {:circle
+  {:pixel-size 1,
+   :fill false,
+   :keep-ratio false},
+  :color-picker {},
+  :shading
+  {:lighten true,
+   :pixel-size 1,
+   :amount 6},
+  :shape-select {},
+  :line
+  {:pixel-size 1, :straight false},
+  :pen
+  {:pixel-size 1, :mirror-x false},
+  :eraser
+  {:pixel-size 1, :mirror-x false},
+  :rectangle-select {},
+  :rectangle
+  {:pixel-size 1,
+   :fill false,
+   :keep-ratio false},
+  :bucket {:same-color false}},
+ :palettes
+ [{:name "default",
+   :current true,
+   :colors
+   ["rgb(0, 0, 0)"
+    "rgb(255, 0, 0)"
+    "rgb(0, 128, 0)"
+    "rgb(0, 0, 255)"
+    "rgb(255, 255, 0)"
+    "rgb(128, 128, 128)"
+    "rgb(128, 0, 128)"
+    "rgb(106, 13, 13)"
+    "rgb(124, 99, 99)"]}],
+ :onion-skin
+ {:enabled false,
+  :position :front,
+  :opacity 0.3,
+  :frames-count {:prev 1, :next 1}},
+ :scale 80,
+ :drawing-container-size
+ {:width 2780, :height 2780},
+ :user-is-drawing nil,
+ :mouse-pos {:x -1, :y 2},
+ :pixels-grid-enabled true,
+ :tool
+ {:type :pen, :state {:changes {}}},
+ :re-pressed.core/keydown
+ {:keys nil,
+  :event-keys
+  ([[:pixel-art.history.events/undo]
+    [{:keyCode 90, :ctrlKey true}]]
+   [[:pixel-art.history.events/redo]
+    [{:keyCode 89, :ctrlKey true}]]
+   [[:pixel-art.tool.rectangle-select/cancel-selection]
+    [{:keyCode 27}]]
+   [[:pixel-art.tool.rectangle-select/copy-selection]
+    [{:keyCode 67, :ctrlKey true}]]
+   [[:pixel-art.tool.rectangle-select/past-selection]
+    [{:keyCode 86, :ctrlKey true}]]
+   [[:pixel-art.tool.rectangle-select/delete-selection]
+    [{:keyCode 46}]
+    [{:keyCode 8}]]
+   [[:pixel-art.tool.rectangle-select/cut-selection]
+    [{:keyCode 88}]]
+   [[:pixel-art.tool.shape-select/cancel-selection]
+    [{:keyCode 27}]]
+   [[:pixel-art.tool.shape-select/copy-selection]
+    [{:keyCode 67, :ctrlKey true}]]
+   [[:pixel-art.tool.shape-select/past-selection]
+    [{:keyCode 86, :ctrlKey true}]]
+   [[:pixel-art.tool.shape-select/delete-selection]
+    [{:keyCode 46}]
+    [{:keyCode 8}]]
+   [[:pixel-art.tool.shape-select/cut-selection]
+    [{:keyCode 88}]]),
+  :clear-keys nil,
+  :always-listen-keys nil,
+  :prevent-default-keys nil},
+ :history
+ {:current-idx 0,
+  :stack
+  [{:sprite
+    {:size {:width 16, :height 16},
+     :frames [{:duration 100}],
+     :cels
+     [[{:pixels
+        ["rgb(255, 0, 0)"
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         "rgb(255, 0, 0)"
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         "rgb(255, 0, 0)"
+         "rgb(255, 0, 0)"
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         "rgb(255, 0, 0)"
+         "rgb(255, 0, 0)"
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         ...],
+        :size {:width 16, :height 16},
+        :opacity 1,
+        :current true,
+        :selected true}]],
+     :layers
+     [{:visibile? true,
+       :locked? false,
+       :automatic-linking? false,
+       :name "Layer 1",
+       :children nil}]}}]},
+ :export
+ {:opened false,
+  :current-tab :image,
+  :preview
+  {:data [], :generation false},
+  :common-settings
+  {:frames :all,
+   :layers {:type :visible},
+   :direction :forward,
+   :file-name "untitled",
+   :file-type :png,
+   :scale 1,
+   :split-layers false},
+  :image-settings {:repeat true},
+  :spritesheet-settings {:columns 1},
+  :exporting false},
+ :size {:width 16, :height 16},
+ :sprite
+ {:size {:width 16, :height 16},
+  :frames [{:duration 100}],
+  :cels
+  [[{:pixels
+     ["rgb(255, 0, 0)"
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      "rgb(255, 0, 0)"
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      "rgb(255, 0, 0)"
+      "rgb(255, 0, 0)"
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      "rgb(255, 0, 0)"
+      "rgb(255, 0, 0)"
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      nil
+      ...],
+     :size {:width 16, :height 16},
+     :opacity 1,
+     :current true,
+     :selected true}]],
+  :layers
+  [{:visibile? true,
+    :locked? false,
+    :automatic-linking? false,
+    :name "Layer 1",
+    :children nil}]},
+ :secondary-color "rgb(255, 0, 0)",
+ :cel-imgs
+ {{:frame-idx 0, :layer-idx 0}
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAD9JREFUOE9j/M/A8J+RgYGRgUwA1kiJIWTbDHMwigEgl4AkSPESdQ0gJxypGwajLiAnBCjIA1hTIjluGPh0AABMDAgRXPy8tQAAAABJRU5ErkJggg=="},
+ :viewport-size
+ {:width 900, :height 700},
+ :selection-manager {},
+ :viewport-scroll {:x 700, :y 700},
+ :sprite-preview
+ {:size :default,
+  :opened false,
+  :displayed-frame-idx 0,
+  :frame-imgs {}},
+ :primary-color "rgb(0, 0, 0)"}
+clj꞉pixel-art.subs꞉> 
+:repl/exception!
+; 
+; 
+; Execution error (Error) at (<cljs repl>:1).
+; Index argument to nth must be a number
+clj꞉pixel-art.subs꞉> 
+#'pixel-art.subs/settings
+clj꞉pixel-art.subs꞉> 
+#'pixel-art.subs/resized-sprite
+clj꞉pixel-art.subs꞉> 
+{:size nil,
+ :frames [{:duration 100}],
+ :cels
+ ({:pixels [],
+   :size nil,
+   :opacity 1,
+   :current false,
+   :selected false}),
+ :layers
+ [{:visibile? true,
+   :locked? false,
+   :automatic-linking? false,
+   :name "Layer 1",
+   :children nil}]}
+clj꞉pixel-art.subs꞉> 
+{:pixels
+ ["rgb(255, 0, 0)"
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  "rgb(255, 0, 0)"
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  "rgb(255, 0, 0)"
+  "rgb(255, 0, 0)"
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  "rgb(255, 0, 0)"
+  "rgb(255, 0, 0)"
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  ...],
+ :size {:width 16, :height 16},
+ :opacity 1,
+ :current true,
+ :selected true}
+clj꞉pixel-art.subs꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,39s)
+:repl/exception!
+; 
+; 
+; Execution error (Error) at (<cljs repl>:1).
+; Vector's key for assoc must be a number.
+clj꞉pixel-art.views꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,38s)
+true
+clj꞉pixel-art.views꞉> 
+:repl/exception!
+; 
+; 
+; Execution error (Error) at (<cljs repl>:1).
+; Vector's key for assoc must be a number.
+clj꞉pixel-art.views꞉> 
+#'pixel-art.subs/resized-sprite
+clj꞉pixel-art.subs꞉> 
+{:size {:width 16, :height 16},
+ :frames [{:duration 100}],
+ :cels
+ ({:pixels
+   [nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    ...],
+   :size {:width 16, :height 16},
+   :opacity 1,
+   :current false,
+   :selected false}),
+ :layers
+ [{:visibile? true,
+   :locked? false,
+   :automatic-linking? false,
+   :name "Layer 1",
+   :children nil}]}
+clj꞉pixel-art.subs꞉> 
+:repl/exception!
+; 
+; 
+; Execution error (Error) at (<cljs repl>:1).
+; Vector's key for assoc must be a number.
+clj꞉pixel-art.subs꞉> 
+{:frame-idx 0, :layer-idx 0}
+clj꞉pixel-art.subs꞉> 
+0
+clj꞉pixel-art.subs꞉> 
+; INTERNAL REPL ERROR: Got an unexpected reply from relay, check Inspect
+clj꞉pixel-art.subs꞉> 
+{:size {:width 16, :height 16},
+ :frames [{:duration 100}],
+ :cels
+ ({:pixels
+   [nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    ...],
+   :size {:width 16, :height 16},
+   :opacity 1,
+   :current false,
+   :selected false}),
+ :layers
+ [{:visibile? true,
+   :locked? false,
+   :automatic-linking? false,
+   :name "Layer 1",
+   :children nil}]}
+clj꞉pixel-art.subs꞉> 
+; Timeout while waiting for result.
+#'pixel-art.model.sprite/get-frame-cels-with-layers
+clj꞉pixel-art.model.sprite꞉> 
+; SPY [1 -1] :5 
+;   At Execution Point 1 of Code Site -1, saved scope with locals [frame-idx sprite map__38152 layers idx cel]
+; SPY [2 -1] :5 
+;   At Execution Point 2 of Code Site -1, saved scope with locals [frame-idx sprite map__38152 layers idx cel]
+; SPY [3 -1] :5 
+;   At Execution Point 3 of Code Site -1, saved scope with locals [frame-idx sprite map__38152 layers idx cel]
+clj꞉pixel-art.model.sprite꞉> 
+; INTERNAL REPL ERROR: Got an unexpected reply from relay, check Inspect
+clj꞉pixel-art.subs꞉> 
+[#'pixel-art.model.sprite/frame-idx #'pixel-art.model.sprite/sprite #'pixel-art.model.sprite/map__38152 #'pixel-art.model.sprite/layers #'pixel-art.model.sprite/idx #'pixel-art.model.sprite/cel]
+clj꞉pixel-art.model.sprite꞉> 
+[:pixels
+ [nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  ...]]
+clj꞉pixel-art.model.sprite꞉> 
+0
+clj꞉pixel-art.model.sprite꞉> 
+0
+clj꞉pixel-art.model.sprite꞉> 
+[{:visibile? true,
+  :locked? false,
+  :automatic-linking? false,
+  :name "Layer 1",
+  :children nil}]
+clj꞉pixel-art.model.sprite꞉> 
+{:visibile? true,
+ :locked? false,
+ :automatic-linking? false,
+ :name "Layer 1",
+ :children nil}
+clj꞉pixel-art.model.sprite꞉> 
+:repl/exception!
+; 
+; 
+; Execution error (Error) at (<cljs repl>:1).
+; Vector's key for assoc must be a number.
+clj꞉pixel-art.model.sprite꞉> 
+[:pixels
+ [nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  ...]]
+clj꞉pixel-art.model.sprite꞉> 
+; Timeout while waiting for result.
+{:size {:width 16, :height 16},
+ :frames [{:duration 100}],
+ :cels
+ ({:pixels
+   [nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    ...],
+   :size {:width 16, :height 16},
+   :opacity 1,
+   :current false,
+   :selected false}),
+ :layers
+ [{:visibile? true,
+   :locked? false,
+   :automatic-linking? false,
+   :name "Layer 1",
+   :children nil}]}
+clj꞉pixel-art.model.sprite꞉> 
+{:pixels
+ [nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  ...],
+ :size {:width 16, :height 16},
+ :opacity 1,
+ :current false,
+ :selected false}
+clj꞉pixel-art.model.sprite꞉> 
+[:pixels
+ [nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  ...]]
+clj꞉pixel-art.model.sprite꞉> 
+{:pixels
+ [nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  ...],
+ :size {:width 16, :height 16},
+ :opacity 1,
+ :current false,
+ :selected false}
+clj꞉pixel-art.model.sprite꞉> 
+{:size {:width 16, :height 16},
+ :frames [{:duration 100}],
+ :cels
+ ({:pixels
+   [nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    ...],
+   :size {:width 16, :height 16},
+   :opacity 1,
+   :current false,
+   :selected false}),
+ :layers
+ [{:visibile? true,
+   :locked? false,
+   :automatic-linking? false,
+   :name "Layer 1",
+   :children nil}]}
+clj꞉pixel-art.model.sprite꞉> 
+{:pixels
+ [nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  ...],
+ :size {:width 16, :height 16},
+ :opacity 1,
+ :current false,
+ :selected false}
+clj꞉pixel-art.model.sprite꞉> 
+5
+clj꞉pixel-art.model.sprite꞉> 
+{:size {:width 16, :height 16},
+ :frames [{:duration 100}],
+ :cels
+ ({:pixels
+   [nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    nil
+    ...],
+   :size {:width 16, :height 16},
+   :opacity 1,
+   :current false,
+   :selected false}),
+ :layers
+ [{:visibile? true,
+   :locked? false,
+   :automatic-linking? false,
+   :name "Layer 1",
+   :children nil}]}
+clj꞉pixel-art.model.sprite꞉> 
+({:pixels
+  [nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   nil
+   ...],
+  :size {:width 16, :height 16},
+  :opacity 1,
+  :current false,
+  :selected false})
+clj꞉pixel-art.model.sprite꞉> 
+1
+clj꞉pixel-art.model.sprite꞉> 
+nil
+; 
+; ------ WARNING - :undeclared-var -----------------------------------------------
+;  Resource: <eval>:1:8
+;  Use of undeclared Var pixel-art.sprite-resizer/sprite
+; --------------------------------------------------------------------------------
+; 
+clj꞉pixel-art.sprite-resizer꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 4 compiled, 0 warnings, 0,42s)
+#'pixel-art.sprite-resizer/resize-sprite
+clj꞉pixel-art.sprite-resizer꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,37s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,39s)
+:repl/exception!
+; 
+; 
+; Execution error (Error) at (<cljs repl>:1).
+; No matching clause: 
+clj꞉pixel-art.subs꞉> 
+:repl/exception!
+; 
+; 
+; Execution error (Error) at (<cljs repl>:1).
+; No matching clause: 
+clj꞉pixel-art.subs꞉> 
+#'pixel-art.subs/settings
+clj꞉pixel-art.subs꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 4 compiled, 0 warnings, 0,38s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 4 compiled, 0 warnings, 0,40s)
+{:target-size {:width 16, :height 16},
+ :resize-content false,
+ :anchor {:x :center, :y :center}}
+clj꞉pixel-art.sprite-resizer꞉> 
+:repl/exception!
+; 
+; 
+; Execution error (Error) at (<cljs repl>:1).
+; No matching clause: 
+clj꞉pixel-art.sprite-resizer꞉> 
+#'pixel-art.sprite-resizer/resize-cel
+clj꞉pixel-art.sprite-resizer꞉> 
+nil
+clj꞉pixel-art.sprite-resizer꞉> 
+#'pixel-art.sprite-resizer/resize-cel
+clj꞉pixel-art.sprite-resizer꞉> 
+#'pixel-art.sprite-resizer/resize-sprite
+clj꞉pixel-art.sprite-resizer꞉> 
+; SPY [1 -3] :2 
+;   At Execution Point 1 of Code Site -3, saved scope with locals [cel p__38941 map__38942 target-size resize-content anchor]
+:repl/exception!
+; 
+; 
+; Execution error (Error) at (<cljs repl>:1).
+; No matching clause: 
+clj꞉pixel-art.sprite-resizer꞉> 
+[#'pixel-art.sprite-resizer/cel #'pixel-art.sprite-resizer/p__38941 #'pixel-art.sprite-resizer/map__38942 #'pixel-art.sprite-resizer/target-size #'pixel-art.sprite-resizer/resize-content #'pixel-art.sprite-resizer/anchor]
+clj꞉pixel-art.sprite-resizer꞉> 
+nil
+; 
+; ------ WARNING - :undeclared-var -----------------------------------------------
+;  Resource: <eval>:1:1
+;  Use of undeclared Var pixel-art.sprite-resizer/translated-pixels-map
+; --------------------------------------------------------------------------------
+; 
+clj꞉pixel-art.sprite-resizer꞉> 
+false
+clj꞉pixel-art.sprite-resizer꞉> 
+{:x :center, :y :center}
+clj꞉pixel-art.sprite-resizer꞉> 
+#'pixel-art.sprite-resizer/translate-pos
+clj꞉pixel-art.sprite-resizer꞉> 
+{:pixels
+ ["rgb(255, 0, 0)"
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  "rgb(255, 0, 0)"
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  "rgb(255, 0, 0)"
+  "rgb(255, 0, 0)"
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  "rgb(255, 0, 0)"
+  "rgb(255, 0, 0)"
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  nil
+  ...],
+ :size {:width 16, :height 16},
+ :opacity 1,
+ :current false,
+ :selected false}
+clj꞉pixel-art.sprite-resizer꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 4 compiled, 0 warnings, 0,39s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 13 compiled, 0 warnings, 0,50s)
+nil
+clj꞉pixel-art.views꞉> 
+{:target-size {:width 16, :height 16},
+ :resize-content false,
+ :anchor {:x :center, :y :center}}
+clj꞉pixel-art.views꞉> 
+nil
+clj꞉pixel-art.subs꞉> 
+#'pixel-art.subs/resized-sprite
+clj꞉pixel-art.subs꞉> 
+{:size {:width 16, :height 16},
+ :frames [{:duration 100}],
+ :cels
+ [[{:pixels
+    ["rgb(255, 0, 0)"
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     "rgb(255, 0, 0)"
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     "rgb(255, 0, 0)"
+     "rgb(255, 0, 0)"
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     "rgb(255, 0, 0)"
+     "rgb(255, 0, 0)"
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     ...],
+    :size {:width 16, :height 16},
+    :opacity 1,
+    :current false,
+    :selected false}]],
+ :layers
+ [{:visibile? true,
+   :locked? false,
+   :automatic-linking? false,
+   :name "Layer 1",
+   :children nil}]}
+clj꞉pixel-art.subs꞉> 
+nil
+clj꞉pixel-art.subs꞉> 
+#'pixel-art.canvas/draw-frame-on-single-canvas
+clj꞉pixel-art.canvas꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 8 compiled, 0 warnings, 0,42s)
+#object[re_frame$subs$subs_handler_fn]
+clj꞉pixel-art.subs꞉> 
+#object[HTMLCanvasElement [object HTMLCanvasElement]]
+clj꞉pixel-art.views꞉> 
+{:target-size {:width 16, :height 16},
+ :resize-content false,
+ :anchor {:x :center, :y :center}}
+clj꞉pixel-art.views꞉> 
+#'pixel-art.views/settings
+clj꞉pixel-art.views꞉> 
+{:target-size {:width 16, :height 16},
+ :resize-content false,
+ :anchor {:x :center, :y :center}}
+clj꞉pixel-art.views꞉> 
+nil
+clj꞉pixel-art.views꞉> 
+{:target-size {:width 16, :height 16},
+ :resize-content false,
+ :anchor {:x :center, :y :center}}
+clj꞉pixel-art.views꞉> 
+16
+clj꞉pixel-art.views꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,32s)
+#'pixel-art.views/sprite-resizer-modal
+clj꞉pixel-art.views꞉> 
+nil
+clj꞉pixel-art.views꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,36s)
+#object[SyntheticBaseEvent [object Object]]
+clj꞉pixel-art.views꞉> 
+"16"
+clj꞉pixel-art.views꞉> 
+16
+clj꞉pixel-art.views꞉> 
+nil
+; 
+; ------ WARNING - :undeclared-var -----------------------------------------------
+;  Resource: <eval>:3:80
+;  Use of undeclared Var pixel-art.views/settings
+; --------------------------------------------------------------------------------
+; 
+clj꞉pixel-art.views꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,36s)
+nil
+clj꞉pixel-art.views꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,38s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,32s)
+nil
+; 
+; ------ WARNING - :undeclared-var -----------------------------------------------
+;  Resource: <eval>:1:1
+;  Use of undeclared Var pixel-art.views/settings
+; --------------------------------------------------------------------------------
+; 
+clj꞉pixel-art.views꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,38s)
+{:target-size {:width 23, :height 16},
+ :resize-content false,
+ :anchor {:x :center, :y :center},
+ :target-width {:width 163, :height 16}}
+clj꞉pixel-art.views꞉> 
+false
+clj꞉pixel-art.views꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,36s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,36s)
+#object[HTMLCanvasElement [object HTMLCanvasElement]]
+clj꞉pixel-art.views꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,33s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,36s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,35s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,37s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,34s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,40s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,40s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,41s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,38s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,39s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,37s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,40s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,37s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 4 compiled, 0 warnings, 0,44s)
+nil
+; 
+; ------ WARNING - :undeclared-var -----------------------------------------------
+;  Resource: <eval>:1:1
+;  Use of undeclared Var pixel-art.sprite-resizer/anchor
+; --------------------------------------------------------------------------------
+; 
+clj꞉pixel-art.sprite-resizer꞉> 
+nil
+; 
+; ------ WARNING - :undeclared-var -----------------------------------------------
+;  Resource: <eval>:1:1
+;  Use of undeclared Var pixel-art.sprite-resizer/resize-content
+; --------------------------------------------------------------------------------
+; 
+clj꞉pixel-art.sprite-resizer꞉> 
+nil
+; 
+; ------ WARNING - :undeclared-var -----------------------------------------------
+;  Resource: <eval>:1:1
+;  Use of undeclared Var pixel-art.sprite-resizer/target-size
+; --------------------------------------------------------------------------------
+; 
+clj꞉pixel-art.sprite-resizer꞉> 
+[#'pixel-art.sprite-resizer/cel #'pixel-art.sprite-resizer/p__43370 #'pixel-art.sprite-resizer/map__43371 #'pixel-art.sprite-resizer/target-size #'pixel-art.sprite-resizer/resize-content #'pixel-art.sprite-resizer/anchor]
+clj꞉pixel-art.sprite-resizer꞉> 
+{:x :center, :y :center}
+clj꞉pixel-art.sprite-resizer꞉> 
+false
+clj꞉pixel-art.sprite-resizer꞉> 
+{:width 16, :height 16}
+clj꞉pixel-art.sprite-resizer꞉> 
+#object[HTMLCanvasElement [object HTMLCanvasElement]]
+clj꞉pixel-art.sprite-resizer꞉> 
+{:pixels ("rgb(,,)"),
+ :size {:width 16, :height 16},
+ :opacity 1,
+ :current false,
+ :selected false}
+clj꞉pixel-art.sprite-resizer꞉> 
+#object[pixel_art$sprite_resizer$canvas__GT_cel]
+clj꞉pixel-art.sprite-resizer꞉> 
+#'pixel-art.sprite-resizer/canvas
+clj꞉pixel-art.sprite-resizer꞉> 
+{:width nil, :height nil}
+clj꞉pixel-art.sprite-resizer꞉> 
+nil
+clj꞉pixel-art.sprite-resizer꞉> 
+{:pixels ("rgb(,,)"),
+ :size {:width 16, :height 16},
+ :opacity 1,
+ :current false,
+ :selected false}
+clj꞉pixel-art.sprite-resizer꞉> 
+#object[HTMLCanvasElement [object HTMLCanvasElement]]
+clj꞉pixel-art.sprite-resizer꞉> 
+#'pixel-art.sprite-resizer/canvas
+clj꞉pixel-art.sprite-resizer꞉> 
+{:width 16, :height 16}
+clj꞉pixel-art.sprite-resizer꞉> 
+#'pixel-art.sprite-resizer/size
+clj꞉pixel-art.sprite-resizer꞉> 
+#object[ImageData [object ImageData]]
+clj꞉pixel-art.sprite-resizer꞉> 
+#'pixel-art.sprite-resizer/image-data
+clj꞉pixel-art.sprite-resizer꞉> 
+{:pixels ("rgb(,,)"),
+ :size {:width 16, :height 16},
+ :opacity 1,
+ :current false,
+ :selected false}
+clj꞉pixel-art.sprite-resizer꞉> 
+("rgb(,,)")
+clj꞉pixel-art.sprite-resizer꞉> 
+{:width 16, :height 16}
+clj꞉pixel-art.sprite-resizer꞉> 
+#object[ImageData [object ImageData]]
+clj꞉pixel-art.sprite-resizer꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 4 compiled, 0 warnings, 0,38s)
+#'pixel-art.sprite-resizer/canvas->cel
+clj꞉pixel-art.sprite-resizer꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 4 compiled, 0 warnings, 0,43s)
+[#'pixel-art.sprite-resizer/canvas #'pixel-art.sprite-resizer/size #'pixel-art.sprite-resizer/image-data]
+clj꞉pixel-art.sprite-resizer꞉> 
+#object[Uint8ClampedArray 255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+clj꞉pixel-art.sprite-resizer꞉> 
+("rgb(,,)")
+clj꞉pixel-art.sprite-resizer꞉> 
+#object[Uint8ClampedArray 255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+clj꞉pixel-art.sprite-resizer꞉> 
+{:width 16, :height 16}
+clj꞉pixel-art.sprite-resizer꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 4 compiled, 0 warnings, 0,40s)
+#'pixel-art.sprite-resizer/array-data->pixels
+clj꞉pixel-art.sprite-resizer꞉> 
+#object[Uint8ClampedArray 255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+clj꞉pixel-art.sprite-resizer꞉> 
+#'pixel-art.sprite-resizer/size
+clj꞉pixel-art.sprite-resizer꞉> 
+("rgb(255,0,0)"
+ "rgb(255,0,0)"
+ "rgb(255,0,0)"
+ "rgb(255,0,0)"
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ "rgb(255,0,0)"
+ "rgb(255,0,0)"
+ "rgb(255,0,0)"
+ "rgb(255,0,0)"
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ nil
+ ...)
+clj꞉pixel-art.sprite-resizer꞉> 
+"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAOlJREFUeF7tmDkOwzAQxKT/P9ppDcWAwdJcpkqQaYbLlY99rXWt22evte+/7d93ADJg+AqcOz5tJf4OvAAMOxMywH6df+s36qbnCUYA3hSx/48NOC+TJ6CvPUsEgCqeAceNUitwEOgM+NgLlQ7BDkFKQJbHKyDrP+sNcA9DDwRaAdtO0z4ZQInZ8hlgmyjtkwGUmC2fAbaJ0j4ZQInZ8hlgmyjtkwGUmC2fAbaJ0j4ZQInZ8hlgmyjtkwGUmC2fAbaJ0j4ZQInZ8hlgmyjtkwGUmC2fAbaJ0j4ZQInZ8hlgmyjtkwGUmC3/A8w1IEG4kgGBAAAAAElFTkSuQmCC"
+clj꞉pixel-art.subs꞉> 
+nil
+; 
+; ------ WARNING - :undeclared-var -----------------------------------------------
+;  Resource: <eval>:1:31
+;  Use of undeclared Var pixel-art.subs/sprite
+; --------------------------------------------------------------------------------
+; 
+; 
+; ------ WARNING - :undeclared-var -----------------------------------------------
+;  Resource: <eval>:1:38
+;  Use of undeclared Var pixel-art.subs/settings
+; --------------------------------------------------------------------------------
+; 
+clj꞉pixel-art.subs꞉> 
+#'pixel-art.subs/settings
+clj꞉pixel-art.subs꞉> 
+{:size {:width 64, :height 64},
+ :frames [{:duration 100}],
+ :cels
+ [[{:pixels
+    ("rgb(255,0,0)"
+     "rgb(255,0,0)"
+     "rgb(255,0,0)"
+     "rgb(255,0,0)"
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     "rgb(255,0,0)"
+     "rgb(255,0,0)"
+     "rgb(255,0,0)"
+     "rgb(255,0,0)"
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     ...),
+    :size {:width 64, :height 64},
+    :opacity 1,
+    :current false,
+    :selected false}]],
+ :layers
+ [{:visibile? true,
+   :locked? false,
+   :automatic-linking? false,
+   :name "Layer 1",
+   :children nil}]}
+clj꞉pixel-art.subs꞉> 
+nil
+; 
+; ------ WARNING - :undeclared-var -----------------------------------------------
+;  Resource: <eval>:2:54
+;  Use of undeclared Var pixel-art.subs/resized-sprite
+; --------------------------------------------------------------------------------
+; 
+; 
+; ------ WARNING - :undeclared-var -----------------------------------------------
+;  Resource: <eval>:3:83
+;  Use of undeclared Var pixel-art.subs/resized-sprite
+; --------------------------------------------------------------------------------
+; 
+clj꞉pixel-art.subs꞉> 
+#'pixel-art.subs/resized-sprite
+clj꞉pixel-art.subs꞉> 
+#object[HTMLCanvasElement [object HTMLCanvasElement]]
+clj꞉pixel-art.subs꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 4 compiled, 0 warnings, 0,43s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 8 compiled, 0 warnings, 0,36s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 8 compiled, 0 warnings, 0,36s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,39s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,38s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,40s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,35s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,35s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,34s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,39s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,35s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,34s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,36s)
+; [:app] Compiling ...
+; [:app] Build completed. (655 files, 2 compiled, 0 warnings, 0,36s)
+; nREPL Connection was closed

@@ -1,45 +1,40 @@
-dithering
-mirror
-crop(resize)
-
+2) очень долго рисует 64 на 64. исп array-data?
 19) трансформации?
 13) shading clear-preview draw-preview
 14) transparent цвет можно выбрать как цвет/
 15) зум
-17) доделать остальные инструменты
-  eraser
-    opacity ????
-      1) The eraser erases pixels by simply subtracting their color RGBA value by the given opacity value. If the opacity value is 255 then the color RGBA value becomes (0, 0, 0 ,0), which is equivalent to black that is completely transparent.
-      2) не применять повторно к тем к которым уже было применено пока не поднимется
-  mirror x?
+65) canvas/draw-frame-on-single-canvas
 16) блокировать редактирования на lock
-17) подсветка под курсором?
 12) хоткеи
-  13) history что-то странное
+13) history что-то странное
   14) esc актив rectangle-tool
-166) разные размеры + ресайз
-189) нужен ли nul? мб просто прозрачный цвет
-18) черный цвет в гифке. иногда работает а иногда нет
+  166) разные размеры + ресайз
+  189) нужен ли nul? мб просто прозрачный цвет
+  18) черный цвет в гифке. иногда работает а иногда нет
 17) пофиксить грид
-13) применить изменения на действия (удаление копирование и прочее)
+13) применить изменения(selection) на действия (удаление копирование и прочее)
 9) опасити у слоя
 8) отображение transparent color в ui(color picker например)
 4) view для переноса
-  1) нужно обновить картинки
-  2) когда переносишь со слоя на слой и оно залинковано
+1) нужно обновить картинки
+2) когда переносишь со слоя на слой и оно залинковано
 12) eraser.
   сейчас eraser просто закрашивает белым. на самом верхнем слое
   11) нужно ли preview
-15) дизейблинг действий типо на remove
-5) при создание выбирать background как в aseprite
+  15) дизейблинг действий типо на remove
+  5) при создание выбирать background как в aseprite
   background. отдельный слой? 
   можно просто сделать background как отдельный слой(скорее всего недоступный в ui) 
-8) сделать норм подсветку для активной ячейки
+  8) сделать норм подсветку для активной ячейки
 17) дизайн
 20) сохранение проекта в локал сторадж
-  выбранные цвета, текущая палетка и прочее
+выбранные цвета, текущая палетка и прочее
 
 улучшения:
+12) импорт из картинки
+19) mirror
+18) dithering ?
+17) подсветка под курсором?
 15) bucket, magic tool tolerance https://community.aseprite.org/t/tolerance-in-aseprite/3567
 14) resize
 65) рисовать на всех выбранных
@@ -61,6 +56,7 @@ crop(resize)
 10) переделать sprite preview
 11) pixel perfect(aseprite pen)
 12) bucket. pattern
+16) eraser opacity
 13) изменения на все выдел ячейки
 https://www.aseprite.org/docs/move-tool/
 

@@ -1,23 +1,24 @@
 (ns pixel-art.views
-  (:require ["tinycolor2" :as tinycolor]
-            ["./colorPicker$default" :as color-picker-js]
-            ["./gif$default" :as create-gif]
+  (:require ["./colorPicker$default" :as color-picker-js]
+            ["tinycolor2" :as tinycolor]
+            [clojure.string :as string]
             [pixel-art.events :as events]
+            [pixel-art.export :as export]
+            [pixel-art.model.cel :as cel]
             [pixel-art.onion-skin :as onion-skin]
             [pixel-art.palette :as palette :refer [deletable-palette?]]
+            [pixel-art.project-save-load :as project-save-load]
             [pixel-art.sprite-preview :as sprite-preview]
+            [pixel-art.sprite-resizer :as sprite-resizer]
             [pixel-art.subs :as subs]
             [pixel-art.tool.core :as tool]
-            [pixel-art.export :as export]
+            [pixel-art.utils.coll :as coll]
             [re-frame.core :as re-frame]
             [react :as react]
             [reagent.core :as r]
             [reagent.dom :as rdom]
             [sc.api]
-            [clojure.string :as string]
-            [pixel-art.model.cel :as cel]
-            [pixel-art.project-save-load :as project-save-load]
-            [pixel-art.utils.coll :as coll]))
+            [re-frame.core :as rf]))
 
 (def !last-mouse-pos (atom nil))
 
@@ -799,6 +800,73 @@
     [:button {:onClick (fn [] (re-frame/dispatch [::export/set-opened true]))}
      "open export panel"]]])
 
+;; -----------------
+
+(defn sprite-resizer-modal []
+  (when @(rf/subscribe [::subs/sprite-resizer-opened])
+    (let [preview @(rf/subscribe [::subs/sprite-resizer-preview])
+          settings @(rf/subscribe [::subs/sprite-resizer-settings])]
+      (def settings settings)
+      [modal {:cancel-button {:text "Cancel"
+                              :onClick (fn []
+                                         (re-frame/dispatch [::sprite-resizer/set-opened false]))}
+              :ok-button {:text "Ok"
+                          :onClick (fn []
+                                     (re-frame/dispatch [::sprite-resizer/resize]))}}
+       [:div
+        [:div {:style {:display :grid}}
+         "Width:" [:input {:value (-> settings :target-size :width)
+                           :type "number"
+                           :onChange (fn [e]
+                                       (re-frame/dispatch [::sprite-resizer/set-settings-option
+                                                           :target-size
+                                                           (assoc (:target-size settings)
+                                                                  :width
+                                                                  (or (parse-double (.. e -target -value)) 1))]))}]
+         "Height:" [:input {:value (-> settings :target-size :height)
+                            :type "number"
+                            :onChange (fn [e]
+                                        (re-frame/dispatch [::sprite-resizer/set-settings-option
+                                                            :target-size
+                                                            (assoc (:target-size settings)
+                                                                   :height
+                                                                   (or (parse-double (.. e -target -value)) 1))]))}]
+         "Resize contents:" [:input {:type "checkbox"
+                                     :checked (:resize-content settings)
+                                     :onChange (fn [e]
+                                                 (re-frame/dispatch [::sprite-resizer/set-settings-option :resize-content (.. e -target -checked)]))}]]
+        [:<>
+         "Anchor: "
+         [:div {:style {:display :grid
+                        :grid-template-columns "min-content min-content min-content"
+                        :gap "1px"
+                        :opacity (when (:resize-content settings) "0.6")}}
+          (for [y [:top :center :bottom]
+                x [:left :center :right]]
+            [:div {:title (str (name y) "/" (name x))
+                   :style {:border-radius "4px"
+                           :width "24px"
+                           :height "24px"
+                           :background-color (if (and (not (:resize-content settings))
+                                                      (= {:x x :y y} (:anchor settings)))
+                                               "#2979ff"
+                                               "#444")}
+                   :onClick (fn []
+                              (re-frame/dispatch [::sprite-resizer/set-settings-option :anchor {:x x :y y}]))}])]]
+        [:div {:style {:display :flex :align-items :center :justify-content :center}}
+         [:img {:src preview
+                :style {:width "180px"
+                        :height "180px"
+                        :image-rendering "pixelated"
+                        :background-image "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABlBMVEVMTExVVVUnhsEkAAAAHUlEQVR4AWOAAUYoQOePEAUj3v9oYDQ9gMBoegAAJFwCAbLaTIMAAAAASUVORK5CYII=)"}}]]]])))
+
+(defn sprite-resizer-manager-section []
+  [:<>
+   [sprite-resizer-modal]
+   [:button {:onClick (fn [] (re-frame/dispatch [::sprite-resizer/set-opened true]))} "resize"]])
+
+;; -----------------
+
 (defn main-panel []
   (let [tool @(re-frame/subscribe [::subs/tool])
         pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])]
@@ -818,7 +886,8 @@
       [onion-skin-section]
       [palettes-section]
       [current-colors-selection]
-      [project-manage-section]]
+      [project-manage-section]
+      [sprite-resizer-manager-section]]
      [canvases-section]]))
 
 (defn mount-root []

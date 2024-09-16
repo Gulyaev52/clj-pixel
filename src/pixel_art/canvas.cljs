@@ -38,7 +38,8 @@
   (let [cels (sprite/get-frame-cels-with-layers frame-idx sprite)]
     (doseq [cel (reverse cels)]
       (when (-> cel :layer :visibile?)
-        (draw-cel cel canvas)))))
+        (draw-cel cel canvas))))
+  canvas)
 
 ;; todo: refactore above
 (defn draw-cels-on-single-canvas [cels canvas]
@@ -97,3 +98,19 @@
 
 (defn ->blob-promise [canvas]
   (js/Promise. (fn [resolve] (. canvas (toBlob resolve)))))
+
+;; todo: scale fn above?
+(defn resize [target-size image]
+  (let [target-canvas (create-canvas target-size)
+        target-canvas-ctx (. target-canvas (getContext "2d"))]
+    (. target-canvas-ctx save)
+    (set! (. target-canvas-ctx -imageSmoothingEnabled) false)
+    (. target-canvas-ctx (translate (/ (. target-canvas -width) 2)
+                                    (/ (. target-canvas -height) 2)))
+    (. target-canvas-ctx (scale (/ (:width target-size) (. image -width))
+                                (/ (:height target-size) (. image -height))))
+    (. target-canvas-ctx (drawImage image
+                                    (/ (- (. image -width)) 2)
+                                    (/ (- (. image -height)) 2)))
+    (. target-canvas-ctx restore)
+    target-canvas))

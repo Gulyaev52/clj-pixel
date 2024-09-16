@@ -1,16 +1,37 @@
 (ns pixel-art.subs
-  (:require [pixel-art.model.cel :as cel]
+  (:require [pixel-art.export :as export]
+            [pixel-art.model.cel :as cel]
             [pixel-art.model.sprite :as sprite]
+            [pixel-art.sprite-resizer :as sprite-resizer]
             [pixel-art.tool.utils :refer [get-tool-options]]
             [pixel-art.utils.coll :as coll]
             [re-frame.core :as re-frame]
-            [sc.api :as api]
-            [pixel-art.export :as export]))
+            [pixel-art.canvas :as canvas]))
 
 (re-frame/reg-sub
  ::layers
  (fn [db]
    (-> db :sprite :layers)))
+
+(re-frame/reg-sub
+ ::sprite-resizer-preview
+ (fn [db]
+   (let [{:keys [sprite] {:keys [settings]} :sprite-resizer} db
+         resized-sprite (sprite-resizer/resize-sprite sprite settings)
+         preview (canvas/draw-frame-on-single-canvas (:frame-idx (sprite/get-current-cel-pos sprite))
+                                                     resized-sprite
+                                                     (canvas/create-canvas (:size resized-sprite)))]
+     (canvas/to-data-url preview "png"))))
+
+(re-frame/reg-sub
+ ::sprite-resizer-settings
+ (fn [db]
+   (-> db :sprite-resizer :settings)))
+
+(re-frame/reg-sub
+ ::sprite-resizer-opened
+ (fn [db]
+   (-> db :sprite-resizer :opened)))
 
 (re-frame/reg-sub
  ::export-spritesheet-settings
