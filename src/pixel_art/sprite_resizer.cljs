@@ -3,8 +3,7 @@
             [pixel-art.model.cel :as cel]
             [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.utils.coll :as coll]
-            [re-frame.core :as re-frame]
-            [sc.api :as api]))
+            [re-frame.core :as re-frame]))
 
 (defn init []
   {:opened false

@@ -716,6 +716,45 @@
       {:common-settings settings
        :type-options [{:label "png" :value :png}]}]]))
 
+(defn preview-image [src style]
+  [:img {:src src
+         :style (merge style
+                       {:image-rendering "pixelated"
+                        :background-image "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABlBMVEVMTExVVVUnhsEkAAAAHUlEQVR4AWOAAUYoQOePEAUj3v9oYDQ9gMBoegAAJFwCAbLaTIMAAAAASUVORK5CYII=)"})}])
+
+(defn previews-container [{:keys [loading]} items]
+  [:div {:style {:display :flex
+                 :flex-wrap "wrap"
+                 :justify-content "center"
+                 :justify-items "center"
+                 :width "100%"
+                 :height "200px"
+                 :border "1px solid black"
+                 :padding "2px"
+                 :overflow "auto"
+                 :opacity (when loading "0.6")}}
+   items])
+
+(defn previews-grid-items [previews]
+  (if (= (count previews) 1)
+    [preview-image (first previews)
+     {:height "100%"
+      :min-height "70px"}]
+
+    [:<>
+     (for [[idx data-url] (map-indexed vector previews)]
+       ^{:key (str data-url "-" idx)}
+       [:div {:style {:display :flex
+                      :flex-direction :column
+                      :height "100%"
+                      :align-items "center"
+                      :min-width 0}}
+        [preview-image (first previews)
+         {:height "100%"
+          :min-height "70px"}]
+        [:div {:style {:padding "5px" :color "black"}}
+         (inc idx)]])]))
+
 (defn export-modal []
   (let [current-tab @(re-frame/subscribe [::subs/export-current-tab])
         opened @(re-frame/subscribe [::subs/export-modal-opened])
@@ -745,43 +784,12 @@
                               (re-frame/dispatch [::export/select-tab :spritesheet]))}
           "spritesheet"]]
 
-        [:div {:style {:display :grid
-                       :grid-template-columns "repeat(auto-fit, minmax(150px, 1fr))"
-                       :justify-content "center"
-                       :justify-items "center"
-                       :width "100%"
-                       :height "200px"
-                       :border "1px solid black"
-                       :padding "2px"
-                       :overflow "auto"
-                       :opacity (when (:generation preview) "0.6")
-                       :background-image "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABlBMVEVMTExVVVUnhsEkAAAAHUlEQVR4AWOAAUYoQOePEAUj3v9oYDQ9gMBoegAAJFwCAbLaTIMAAAAASUVORK5CYII=)"}}
-         (cond
-           (= current-tab :spritesheet)
-           [:img {:src (:data preview)
-                  :style {:height (* (:rows spritesheet-settings) 70)
-                          :width (* (:columns spritesheet-settings) 70)
-                          :image-rendering "pixelated"
-                          :margin "auto"}}]
-
-           (= (count (:data preview)) 1) ;; todo: do we need this cond?
-           [:img {:src (-> preview :data first)
-                  :style {:height "100%"
-                          :min-height "70px"
-                          :image-rendering "pixelated"}}]
-
-           :else (for [[idx data-url] (map-indexed vector (:data preview))]
-                   ^{:key (str data-url "-" idx)}
-                   [:div {:style {:display :flex
-                                  :flex-direction :column
-                                  :height "100%"
-                                  :align-items "center"}}
-                    [:img {:src data-url
-                           :style {:height "100%"
-                                   :min-height "70px"
-                                   :image-rendering "pixelated"}}]
-                    [:div {:style {:padding "5px" :color "white"}}
-                     (inc idx)]]))]
+        [previews-container {:loading (:generation preview)}
+         (case current-tab
+           :spritesheet [preview-image (:data preview) {:height (* (:rows spritesheet-settings) 70)
+                                                        :width (* (:columns spritesheet-settings) 70)
+                                                        :margin "auto"}]
+           :image [previews-grid-items (:data preview)])]
 
         [:div {:style {:display :grid}}
          (case current-tab
@@ -804,9 +812,8 @@
 
 (defn sprite-resizer-modal []
   (when @(rf/subscribe [::subs/sprite-resizer-opened])
-    (let [preview @(rf/subscribe [::subs/sprite-resizer-preview])
+    (let [previews @(rf/subscribe [::subs/sprite-resizer-previews])
           settings @(rf/subscribe [::subs/sprite-resizer-settings])]
-      (def settings settings)
       [modal {:cancel-button {:text "Cancel"
                               :onClick (fn []
                                          (re-frame/dispatch [::sprite-resizer/set-opened false]))}
@@ -853,12 +860,8 @@
                                                "#444")}
                    :onClick (fn []
                               (re-frame/dispatch [::sprite-resizer/set-settings-option :anchor {:x x :y y}]))}])]]
-        [:div {:style {:display :flex :align-items :center :justify-content :center}}
-         [:img {:src preview
-                :style {:width "180px"
-                        :height "180px"
-                        :image-rendering "pixelated"
-                        :background-image "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABlBMVEVMTExVVVUnhsEkAAAAHUlEQVR4AWOAAUYoQOePEAUj3v9oYDQ9gMBoegAAJFwCAbLaTIMAAAAASUVORK5CYII=)"}}]]]])))
+        [previews-container {}
+         [previews-grid-items previews]]]])))
 
 (defn sprite-resizer-manager-section []
   [:<>

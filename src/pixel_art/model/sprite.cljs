@@ -123,6 +123,7 @@
                         (assoc cel :layer (nth layers idx)))))))
 
 ;; todo: rename; do we need get-frame-cels-with-layers, get-frame-cels?
+;; todo: они сгруппированы по фреймам а в назв не отражено
 (defn get-denormalized-cels [sprite]
   (let [{:keys [cels layers frames]} sprite]
     (->> cels

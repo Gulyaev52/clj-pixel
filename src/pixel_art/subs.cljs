@@ -14,14 +14,15 @@
    (-> db :sprite :layers)))
 
 (re-frame/reg-sub
- ::sprite-resizer-preview
+ ::sprite-resizer-previews
  (fn [db]
    (let [{:keys [sprite] {:keys [settings]} :sprite-resizer} db
          resized-sprite (sprite-resizer/resize-sprite sprite settings)
-         preview (canvas/draw-frame-on-single-canvas (:frame-idx (sprite/get-current-cel-pos sprite))
-                                                     resized-sprite
-                                                     (canvas/create-canvas (:size resized-sprite)))]
-     (canvas/to-data-url preview "png"))))
+         previews (for [frame-idx (range 0 (count (:frames sprite)))]
+                    (->> (canvas/create-canvas (:size resized-sprite))
+                         (canvas/draw-frame-on-single-canvas frame-idx resized-sprite)
+                         (#(canvas/to-data-url % "png"))))]
+     previews)))
 
 (re-frame/reg-sub
  ::sprite-resizer-settings

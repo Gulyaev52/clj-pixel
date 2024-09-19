@@ -1,7 +1,5 @@
 (ns pixel-art.canvas
-  (:require ["tinycolor2" :as tinycolor]
-            [pixel-art.model.cel :as cel]
-            [pixel-art.model.sprite :as sprite]
+  (:require [pixel-art.model.sprite :as sprite]
             [sc.api]))
 
 (defn generate-img [draw size]
@@ -11,16 +9,30 @@
     (draw canvas-elem)
     (. canvas-elem (toDataURL "image/png"))))
 
+(defn scale-number [n [old-min old-max] [new-min new-max]]
+  (+ (* (/ (- n old-min)
+           (- old-max old-min))
+        (- new-max new-min))
+     new-min))
+
+(defn cel-pixels->image-data [{:keys [pixels opacity size]}]
+  (let [image-data (js/ImageData. (:width size) (:height size))]
+    (doseq [[rgb-str i] (map vector
+                             pixels
+                             (range 0 (.. image-data -data -length) 4))]
+      (let [[r g b a] (when rgb-str (re-seq #"\d+" rgb-str))]
+        (aset (. image-data -data) i r)
+        (aset (. image-data -data) (+ i 1) g)
+        (aset (. image-data -data) (+ i 2) b)
+        (aset (. image-data -data) (+ i 3) (if rgb-str
+                                             (scale-number (or a opacity) [0 1] [0 255])
+                                             0))))
+    image-data))
+
 (defn draw-cel [cel canvas]
   (let [ctx (. canvas (getContext "2d"))
-        size (cel/get-size cel)]
-    (doseq [x (range 0 (:width size))
-            y (range 0 (:height size))]
-      (when-let [color (cel/get-pixel {:x x :y y} cel)]
-        (set! (. ctx -fillStyle) (.. (tinycolor color)
-                                     (setAlpha (:opacity cel))
-                                     (toRgbString)))
-        (. ctx (fillRect x y 1 1))))
+        image-data (time (cel-pixels->image-data cel))]
+    (. ctx (putImageData image-data 0 0))
     canvas))
 
 (defn draw-frame [frame-idx sprite]
