@@ -3,7 +3,8 @@
             [pixel-art.model.cel :as cel]
             [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.utils.coll :as coll]
-            [re-frame.core :as re-frame]))
+            [re-frame.core :as re-frame]
+            [sc.api :as api]))
 
 (defn init []
   {:opened false
@@ -24,11 +25,6 @@
               (str "rgb(" r "," g "," b ")"))]))
        (sort-by #(-> % first second))
        (map second)))
-
-(defn canvas->cel [canvas]
-  (let [size {:width (. canvas -width) :height (. canvas -height)}
-        image-data (.. canvas (getContext "2d") (getImageData 0 0 (:width size) (:height size)))]
-    (cel/create size (array-data->pixels (.. image-data -data) size))))
 
 (defn translate-x [x width resized-width anchor-x]
   (case anchor-x
@@ -51,15 +47,22 @@
     (->> (canvas/create-canvas (:size cel))
          (canvas/draw-cel cel)
          (canvas/resize target-size)
-         canvas->cel)
+         ((fn [canvas]
+            (let [image-data (.. canvas (getContext "2d") (getImageData 0 0 (:width target-size) (:height target-size)))]
+              (assoc cel
+                     :size target-size
+                     :pixels (array-data->pixels (.. image-data -data) target-size))))))
     (let [translated-pixels-map
           (->> (cel/pixels->coll cel)
                (keep (fn [[pos color]]
                        (when (not= color transparent-color)
                          [(translate-pos pos (:size cel) target-size anchor)
-                          color]))))]
-      (->> (cel/create target-size)
-           (cel/set-pixels translated-pixels-map)))))
+                          color]))))
+          new-pixels (->> (cel/create-pixels-coll target-size)
+                          (cel/update-pixels-coll translated-pixels-map target-size))]
+      (assoc cel
+             :size target-size
+             :pixels new-pixels))))
 
 (defn resize-sprite [sprite settings]
   (let [resized-cels (coll/map-matrix #(resize-cel %1 settings) (:cels sprite))]
@@ -84,4 +87,8 @@
  (fn [{:keys [db]}]
    (let [{:keys [sprite] {:keys [settings]} :sprite-resizer} db
          resized-sprite (resize-sprite sprite settings)]
-     {:db (assoc db :sprite resized-sprite)})))
+     {:db (-> db
+              (assoc :sprite resized-sprite)
+              (assoc-in [:sprite-resizer :opened] false))})))
+
+;; todo: выше не меняется размер слоеёв

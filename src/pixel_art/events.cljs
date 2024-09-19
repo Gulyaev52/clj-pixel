@@ -49,6 +49,48 @@
          [:draw-pixels-grid]
          [:zoom]]}))
 
+(re-frame/reg-fx
+ :init-canvases
+ (fn []
+   (let [preview-canvas (. js/document (getElementById "preview"))
+         layers-below-canvas (. js/document (getElementById "layers-below"))
+         layers-above-canvas (. js/document (getElementById "layers-above"))
+         current-layer (. js/document (getElementById "current-layer"))
+         onion-skin-canvas (. js/document (getElementById "onion-skin"))
+
+         drawing-container-size (:drawing-container-size @re-frame.db/app-db)
+         sprite-size (-> @re-frame.db/app-db :sprite sprite/get-size)
+         scale (-> @re-frame.db/app-db :scale)
+         drawing-canvas-container (.. js/document (getElementById "drawing-canvas-container"))
+         canvas-layers (.. js/document (getElementById "canvas-layers"))]
+     (doseq [canvas [preview-canvas onion-skin-canvas layers-below-canvas layers-above-canvas current-layer]]
+       (set! (. canvas -width) (:width sprite-size))
+       (set! (. canvas -height) (:height sprite-size)))
+     (set! (.. canvas-layers -style -width) (str (* (:width sprite-size) scale) "px"))
+     (set! (.. canvas-layers -style -height) (str (* (:height sprite-size) scale) "px"))
+
+     (let [grid-canvas (.. js/document (getElementById "grid"))]
+       (set! (.. grid-canvas -width) (* (:width sprite-size) scale))
+       (set! (.. grid-canvas -height) (* (:height sprite-size) scale)))
+
+     (set! (.. drawing-canvas-container -style -width) (str (:width drawing-container-size) "px"))
+     (set! (.. drawing-canvas-container -style -height) (str (:height drawing-container-size) "px")))))
+
+(re-frame/reg-global-interceptor
+ (on-changes
+  :resize-canvases
+  #(-> % :sprite sprite/get-size)
+  (fn [{:keys [db]}]
+    (let [pixels-grid-enabled (:pixels-grid-enabled @re-frame.db/app-db)
+          onion-skin-enabled (-> @re-frame.db/app-db :onion-skin :enabled)]
+      {:db db
+       :fx [[:init-canvases]
+            [:draw-current-frame]
+            (when pixels-grid-enabled
+              [:draw-pixels-grid])
+            (when onion-skin-enabled
+              [:draw-onion-skin {:sprite (:sprite db) :opacity (-> db :onion-skin :opacity)}])]}))))
+
 (re-frame/reg-global-interceptor
  (on-changes
   :redraw-current-cel ;; это также нужно и на изменения слоя. например прозрачности или видимости
@@ -381,33 +423,6 @@
                   :mouse-pos (:pos event))
            (tool/handle-mouse-event event)
            (assoc-in [:db :initial-mouse-down-pos] nil))))))
-
-(re-frame/reg-fx
- :init-canvases
- (fn []
-   (let [preview-canvas (. js/document (getElementById "preview"))
-         layers-below-canvas (. js/document (getElementById "layers-below"))
-         layers-above-canvas (. js/document (getElementById "layers-above"))
-         current-layer (. js/document (getElementById "current-layer"))
-         onion-skin-canvas (. js/document (getElementById "onion-skin"))
-
-         drawing-container-size (:drawing-container-size @re-frame.db/app-db)
-         sprite-size (-> @re-frame.db/app-db :sprite sprite/get-size)
-         scale (-> @re-frame.db/app-db :scale)
-         drawing-canvas-container (.. js/document (getElementById "drawing-canvas-container"))
-         canvas-layers (.. js/document (getElementById "canvas-layers"))]
-     (doseq [canvas [preview-canvas onion-skin-canvas layers-below-canvas layers-above-canvas current-layer]]
-       (set! (. canvas -width) (:width sprite-size))
-       (set! (. canvas -height) (:height sprite-size)))
-     (set! (.. canvas-layers -style -width) (str (* (:width sprite-size) scale) "px"))
-     (set! (.. canvas-layers -style -height) (str (* (:height sprite-size) scale) "px"))
-
-     (let [grid-canvas (.. js/document (getElementById "grid"))]
-       (set! (.. grid-canvas -width) (* (:width sprite-size) scale))
-       (set! (.. grid-canvas -height) (* (:height sprite-size) scale)))
-
-     (set! (.. drawing-canvas-container -style -width) (str (:width drawing-container-size) "px"))
-     (set! (.. drawing-canvas-container -style -height) (str (:height drawing-container-size) "px")))))
 
 (defn- update-viewport-scroll []
   (let [viewport (.. js/document (getElementById "viewport"))

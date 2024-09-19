@@ -100,17 +100,17 @@
   (js/Promise. (fn [resolve] (. canvas (toBlob resolve)))))
 
 ;; todo: scale fn above?
-(defn resize [target-size image]
+(defn resize [target-size canvas]
   (let [target-canvas (create-canvas target-size)
         target-canvas-ctx (. target-canvas (getContext "2d"))]
     (. target-canvas-ctx save)
     (set! (. target-canvas-ctx -imageSmoothingEnabled) false)
     (. target-canvas-ctx (translate (/ (. target-canvas -width) 2)
                                     (/ (. target-canvas -height) 2)))
-    (. target-canvas-ctx (scale (/ (:width target-size) (. image -width))
-                                (/ (:height target-size) (. image -height))))
-    (. target-canvas-ctx (drawImage image
-                                    (/ (- (. image -width)) 2)
-                                    (/ (- (. image -height)) 2)))
+    (. target-canvas-ctx (scale (/ (:width target-size) (. canvas -width))
+                                (/ (:height target-size) (. canvas -height))))
+    (. target-canvas-ctx (drawImage canvas
+                                    (/ (- (. canvas -width)) 2)
+                                    (/ (- (. canvas -height)) 2)))
     (. target-canvas-ctx restore)
     target-canvas))

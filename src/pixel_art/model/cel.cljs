@@ -2,18 +2,8 @@
   (:require [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.utils.geometry :as geometry]))
 
-(defn create
-  ([size]
-   (create size (vec (repeat (* (:width size) (:height size)) transparent-color))))
-  ([size pixels]
-   {:pixels pixels
-    :size size
-    :opacity 1
-    :current false
-    :selected false}))
-
-(defn remove-all-pixels [cel]
-  (update cel :pixels #(mapv (fn [_] transparent-color) %)))
+(defn create-pixels-coll [size]
+  (vec (repeat (* (:width size) (:height size)) transparent-color)))
 
 (defn pos->idx [{:keys [x y]} {:keys [width]}]
   (+ x (* width y)))
@@ -22,9 +12,7 @@
   {:x (rem idx width)
    :y (. js/Math (floor (/ idx width)))})
 
-(defn resize [size cel])
-
-(defn- update-pixels-coll [pixels-map size pixels]
+(defn update-pixels-coll [pixels-map size pixels]
   (reduce (fn [res-pixels [pos color]]
             (if (geometry/valid-point? pos size)
               (assoc res-pixels (pos->idx pos size) color)
@@ -32,6 +20,20 @@
           pixels
           pixels-map))
 
+(defn create
+  ([size]
+   (create size (create-pixels-coll size)))
+  ([size pixels]
+   {:pixels pixels ;; todo: везде работает с pixels-map а тут нет
+    :size size
+    :opacity 1
+    :current false
+    :selected false}))
+
+(defn remove-all-pixels [cel]
+  (update cel :pixels #(mapv (fn [_] transparent-color) %)))
+
+;; todo: rename
 (defn set-pixels [pixels-map cel]
   (update cel :pixels #(update-pixels-coll pixels-map (:size cel) %)))
 
