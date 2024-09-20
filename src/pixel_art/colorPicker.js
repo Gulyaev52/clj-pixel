@@ -112,7 +112,6 @@ const Sketch = /*#__PURE__*/ React.forwardRef((props, ref) => {
     borderRadius: 3,
     boxShadow: "var(--sketch-swatch-box-shadow)"
   };
-  console.log("preset", presetColors);
   return /*#__PURE__*/ _jsxs("div", {
     ...other,
     className: `${prefixCls} ${className || ""}`,

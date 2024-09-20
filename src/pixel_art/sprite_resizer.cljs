@@ -1,5 +1,6 @@
 (ns pixel-art.sprite-resizer
   (:require [pixel-art.canvas :as canvas]
+            [pixel-art.history :as history]
             [pixel-art.model.cel :as cel]
             [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.utils.coll :as coll]
@@ -88,6 +89,7 @@
          resized-sprite (resize-sprite sprite settings)]
      {:db (-> db
               (assoc :sprite resized-sprite)
-              (assoc-in [:sprite-resizer :opened] false))})))
+              (assoc-in [:sprite-resizer :opened] false)
+              history/save-sprite)})))
 
 ;; todo: выше не меняется размер слоеёв
