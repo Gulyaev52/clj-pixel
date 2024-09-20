@@ -44,7 +44,7 @@
 (def initial-sprite
   (let [sprite-size {:width 8 :height 8}]
     (sprite/create {:size sprite-size
-                    :layer (layer/create "Layer 1" nil)
+                    :layer (layer/create "Layer 1")
                     :frame (frame/create 100)
                     :cel (->> (cel/create sprite-size)
                               (cel/set-pixels (->> (for [x (range 0 (:width sprite-size))
@@ -130,24 +130,18 @@
      (def timeline @(rf/subscribe [::subs/timeline]))
      (is (= (:frames initial-timeline) (:frames initial-timeline)) "frames should not be changes")
      (is (= [{:visibile? true,
-              :locked? false,
               :automatic-linking? false,
               :name "Layer 1",
-              :children nil,
               :current false,
               :idx 0}
              {:visibile? true,
-              :locked? false,
               :automatic-linking? false,
               :name "Layer 2",
-              :children nil,
               :current false,
               :idx 1}
              {:visibile? true,
-              :locked? false,
               :automatic-linking? false,
               :name "Layer 3",
-              :children nil,
               :current true,
               :idx 2}]
             (:layers timeline))
@@ -181,17 +175,13 @@
            {:duration 100, :current true, :idx 1}]
           (:frames timeline)))
    (is (= [{:visibile? true,
-            :locked? false,
             :automatic-linking? false,
             :name "Layer 1",
-            :children nil,
             :current false,
             :idx 0}
            {:visibile? true,
-            :locked? false,
             :automatic-linking? false,
             :name "Layer 2",
-            :children nil,
             :current true,
             :idx 1}]
           (:layers timeline)))
@@ -824,7 +814,7 @@
 (def sprite-for-export
   (let [sprite-size {:width 2 :height 2}]
     (->> (sprite/create {:size sprite-size
-                         :layer (layer/create "Layer 1" nil)
+                         :layer (layer/create "Layer 1")
                          :frame (frame/create 200)
                          :cel (->> (cel/create sprite-size)
                                    (cel/set-pixels
@@ -1055,7 +1045,7 @@
 (def empty-sprite
   (let [sprite-size {:width 8 :height 8}]
     (sprite/create {:size sprite-size
-                    :layer (layer/create "Layer 1" nil)
+                    :layer (layer/create "Layer 1")
                     :frame (frame/create 100)
                     :cel (->> (cel/create sprite-size))})))
 

@@ -179,7 +179,7 @@
  ::add-layer
  (fn [{:keys [db]}]
    (let [layer-name (get-layer-name :single (-> db :sprite :layers count))
-         layer (layer/create layer-name nil)]
+         layer (layer/create layer-name)]
      (-> db
          (commit-changes-and-init-tool (get-in db [:tool :state :changes])
                                        (tool/init (-> db :tool :type)))
