@@ -62,7 +62,7 @@
                         {:width 16 :height 16})
         res-palettes (or palettes initial-palettes)
         primary-color (or (-> res-palettes first :colors first) "rgb(0,0,0)")
-        secondary-color (or (-> res-palettes first :colors second) primary-color)]
+        secondary-color "rgb(255,0,0)"]
     (get-db {:sprite
              (or
               sprite
@@ -72,7 +72,7 @@
                               :cel (->> (cel/create sprite-size)
                                         (cel/set-pixels (->> (for [x (range 0 (:width sprite-size))
                                                                    y (range 0 (:height sprite-size))]
-                                                               [{:x x :y y} nil])
+                                                               [{:x x :y y} transparent-color])
                                                              (into {})))
                                         (cel/set-pixels
                                          {{:x 0 :y 0} secondary-color

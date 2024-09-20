@@ -29,9 +29,10 @@
                                              0))))
     image-data))
 
+;; не должны лежать здесь с остальными утилитами
 (defn draw-cel [cel canvas]
   (let [ctx (. canvas (getContext "2d"))
-        image-data (time (cel-pixels->image-data cel))]
+        image-data (cel-pixels->image-data cel)]
     (. ctx (putImageData image-data 0 0))
     canvas))
 

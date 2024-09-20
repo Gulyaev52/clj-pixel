@@ -49,11 +49,11 @@
                                (:pixels below-cel)))))
 (comment
   (def above-cel (->> (create {:width 2 :height 2})
-                      (set-pixels {{:x 0 :y 0} "black"
-                                   {:x 1 :y 1} "black"})))
+                      (set-pixels {{:x 0 :y 0} "rgb(0,0,0)"
+                                   {:x 1 :y 1} "rgb(0,0,0)"})))
   (def below-cel (->> (create {:width 2 :height 2})
-                      (set-pixels {{:x 0 :y 0} "red"
-                                   {:x 0 :y 1} "green"})))
+                      (set-pixels {{:x 0 :y 0} "rgb(255,0,0)"
+                                   {:x 0 :y 1} "rgb(0,255,0)"})))
   (merge-cels below-cel above-cel))
 
 (defn emptyy? [cel]

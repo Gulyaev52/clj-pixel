@@ -21,8 +21,9 @@
                b (aget array-data (+ index 2))
                a (aget array-data (+ index 3))]
            [[x y] ;; todo: remove it
-            (when (not= [r g b a] [0 0 0 0])
-              (str "rgb(" r "," g "," b ")"))]))
+            (if (not= [r g b a] [0 0 0 0])
+              (str "rgb(" r "," g "," b ")")
+              "rgba(0,0,0,0)")]))
        (sort-by #(-> % first second))
        (map second)))
 
@@ -91,5 +92,3 @@
               (assoc :sprite resized-sprite)
               (assoc-in [:sprite-resizer :opened] false)
               history/save-sprite)})))
-
-;; todo: выше не меняется размер слоеёв
