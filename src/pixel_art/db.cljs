@@ -41,7 +41,7 @@
          :sprite sprite
          :tool (tool/init :pen)
          :tools-options (get-initial-options tool/options-specs)
-         :primary-color primary-color ;; todo: а тут точно так а не индексами? на инит может быть ерунда
+         :primary-color transparent-color ;; todo: а тут точно так а не индексами? на инит может быть ерунда
          :secondary-color secondary-color ;; todo: а тут точно так а не индексами? на инит может быть ерунда
          :selection-manager {}
          :scale scale

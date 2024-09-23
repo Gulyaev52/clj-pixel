@@ -5,6 +5,7 @@
             [pixel-art.events :as events]
             [pixel-art.export :as export]
             [pixel-art.model.cel :as cel]
+            [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.onion-skin :as onion-skin]
             [pixel-art.palette :as palette :refer [deletable-palette?]]
             [pixel-art.project-save-load :as project-save-load]
@@ -14,11 +15,13 @@
             [pixel-art.tool.core :as tool]
             [pixel-art.utils.coll :as coll]
             [re-frame.core :as re-frame]
+            [re-frame.core :as rf]
             [react :as react]
             [reagent.core :as r]
             [reagent.dom :as rdom]
-            [sc.api]
-            [re-frame.core :as rf]))
+            [sc.api]))
+
+(def transparent-color-img "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAGUlEQVQYV2M4gwH+YwCGIasIUwhT25BVBADtzYNYrHvv4gAAAABJRU5ErkJggg==)")
 
 (def !last-mouse-pos (atom nil))
 
@@ -258,12 +261,10 @@
 (defn color-picker [{:keys [value presetColors actions onChange]}]
   [:> color-picker-js
    {:color value
-    :disableAlpha true
-    :presetColors (clj->js (map (fn [obj] (update obj :color #(. (tinycolor %) toHexString)))
-                                presetColors))
+    :presetColors (clj->js presetColors)
     :actions (clj->js (map #(reagent.core/as-element %) actions))
-    :onChange (fn [e] (let [rgb (. e -rgb)]
-                        (onChange (str "rgb(" (. rgb -r) ", " (. rgb -g) ", " (. rgb -b) ")"))))}])
+    :onChange (fn [e] (let [rgba (. e -rgba)]
+                        (onChange (str "rgba(" (. rgba -r) "," (. rgba -g) "," (. rgba -b) "," (. rgba -a) ")"))))}])
 
 (defn popper []
   (let [!opened (r/atom false)]
@@ -305,22 +306,32 @@
 (defn file-uploader [props label]
   [:f> file-uploader-comp props label])
 
+(defn- replace-transparent-color [color]
+  (if (= color transparent-color)
+    "rgba(0,0,0,1)"
+    color))
+
+(defn distinct-by [f coll]
+  (let [groups (group-by f coll)]
+    (map #(first (groups %)) (distinct (map f coll)))))
+
 (defn add-new-color-picker []
-  (let [primary-color @(re-frame/subscribe [::subs/primary-color])
-        secondary-color @(re-frame/subscribe [::subs/secondary-color])
-        last-color (last (:colors @(re-frame/subscribe [::subs/current-palette])))
+  (let [primary-color (replace-transparent-color @(re-frame/subscribe [::subs/primary-color]))
+        secondary-color (replace-transparent-color @(re-frame/subscribe [::subs/secondary-color]))
+        last-color (replace-transparent-color (last (:colors @(re-frame/subscribe [::subs/current-palette]))))
         !temp-new-value (r/atom primary-color)]
     (fn [{:keys [onClose]}]
       [color-picker {:value @!temp-new-value
-                     :onChange (fn [new-value] (reset! !temp-new-value new-value))
+                     :onChange (fn [new-value]
+                                 (reset! !temp-new-value new-value))
                      :actions [[:button
                                 {:onClick (fn []
                                             (re-frame/dispatch [::palette/add-color @!temp-new-value])
                                             (onClose))}
                                 "add"]]
-                     :presetColors [{:color primary-color :title "primary"}
-                                    {:color secondary-color :title "secondary"}
-                                    {:color last-color}]
+                     :presetColors (distinct-by :color [{:color primary-color}
+                                                        {:color secondary-color}
+                                                        {:color last-color}])
                      :onCancel (fn []
                                  (onClose))}])))
 
@@ -587,22 +598,30 @@
 (defn canvases-section []
   [:f> canvases-section-component])
 
-(defn- current-color-selection [initial-props]
-  (let [initial-value (:value initial-props)]
-    (fn [{:keys [value onChange]}]
-      [popper
-       (fn [close]
-         [:div {:style {:width "45px"
-                        :height "45px"
-                        :border-radius "5px"
-                        :background-color value
-                        :border "thin solid black"}
-                :onClick close}])
-       (fn [close]
-         [color-picker {:value value
-                        :onChange onChange
-                        :presetColors [{:color initial-value}]
-                        :onCancel close}])])))
+(defn- current-color-selection-color-picker [{:keys [value]}]
+  (let [initial-value value]
+    (fn [{:keys [value onChange]} close]
+      [color-picker {:value value
+                     :onChange onChange
+                     :presetColors (if (= initial-value transparent-color)
+                                     [{:color initial-value}]
+                                     [{:color initial-value}
+                                      {:color transparent-color :title "transparent color"}])
+                     :onCancel close}])))
+
+(defn- current-color-selection [{:keys [value onChange]}]
+  [popper
+   (fn [close]
+     [:div {:style {:width "45px"
+                    :height "45px"
+                    :border-radius "5px"
+                    :background (if (= value transparent-color)
+                                  transparent-color-img
+                                  value)
+                    :border "thin solid black"}
+            :onClick close}])
+   (fn [close]
+     [current-color-selection-color-picker {:value value :onChange onChange} close])])
 
 (defn current-colors-selection []
   (let [primary-color @(re-frame/subscribe [::subs/primary-color])
@@ -720,7 +739,7 @@
   [:img {:src src
          :style (merge style
                        {:image-rendering "pixelated"
-                        :background-image "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABlBMVEVMTExVVVUnhsEkAAAAHUlEQVR4AWOAAUYoQOePEAUj3v9oYDQ9gMBoegAAJFwCAbLaTIMAAAAASUVORK5CYII=)"})}])
+                        :background-image transparent-color-img})}])
 
 (defn previews-container [{:keys [loading]} items]
   [:div {:style {:display :flex
