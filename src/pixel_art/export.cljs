@@ -4,8 +4,7 @@
             [clojure.string :as string]
             [pixel-art.canvas :as canvas]
             [pixel-art.model.sprite :as sprite]
-            [re-frame.core :as re-frame]
-            [sc.api]))
+            [re-frame.core :as re-frame]))
 
 (def max-scale 32)
 (def min-scale 1)
@@ -257,7 +256,7 @@
    (let [gif (create-gif (clj->js {"workers" 2
                                    "quality" 1
                                    "preserveColors" true
-                                   "transparent" "rgba(0,0,0,0)"
+                                   "transparent" "rgba(0, 0, 0, 0)"
                                    "repeat" (if repeat 0 -1)}))]
      (doseq [{:keys [canvas cels]} rendered-frames]
        (let [cel (first cels)] ;; todo: refactor?

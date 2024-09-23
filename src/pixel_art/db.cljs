@@ -1,18 +1,17 @@
 (ns pixel-art.db
-  (:require ["tinycolor2" :as tinycolor]
-            [pixel-art.export :as export]
+  (:require [pixel-art.export :as export]
             [pixel-art.history :as history]
             [pixel-art.model.cel :as cel]
-            [pixel-art.model.color :refer [transparent-color]]
+            [pixel-art.model.color :as color]
             [pixel-art.model.frame :as frame]
             [pixel-art.model.layer :as layer]
             [pixel-art.model.sprite :as sprite]
             [pixel-art.onion-skin :as onion-skin]
             [pixel-art.palette :as palette]
             [pixel-art.sprite-preview :as preview]
+            [pixel-art.sprite-resizer :as sprite-resizer]
             [pixel-art.tool.core :as tool]
-            [sc.api]
-            [pixel-art.sprite-resizer :as sprite-resizer]))
+            [sc.api]))
 
 (def max-scale 80)
 
@@ -30,7 +29,7 @@
 (def initial-palettes
   [{:name "default"
     :current true
-    :colors (map #(. (tinycolor %) toRgbString) ["black" "red" "green" "blue" "yellow" "gray" "purple"])}])
+    :colors (map color/rgba ["black" "red" "green" "blue" "yellow" "gray" "purple"])}])
 
 (defn get-db [{:keys [sprite palettes primary-color secondary-color]}]
   (let [viewport-size {:width 900 :height 700}
@@ -41,7 +40,7 @@
          :sprite sprite
          :tool (tool/init :pen)
          :tools-options (get-initial-options tool/options-specs)
-         :primary-color transparent-color ;; todo: а тут точно так а не индексами? на инит может быть ерунда
+         :primary-color primary-color ;; todo: а тут точно так а не индексами? на инит может быть ерунда
          :secondary-color secondary-color ;; todo: а тут точно так а не индексами? на инит может быть ерунда
          :selection-manager {}
          :scale scale
@@ -61,8 +60,8 @@
                           (sprite/get-size sprite))
                         {:width 16 :height 16})
         res-palettes (or palettes initial-palettes)
-        primary-color (or (-> res-palettes first :colors first) "rgb(0,0,0)")
-        secondary-color "rgb(255,0,0)"]
+        primary-color (or (-> res-palettes first :colors first) (color/rgba 0 0 0))
+        secondary-color (color/rgba 255 0 0)]
     (get-db {:sprite
              (or
               sprite
@@ -72,11 +71,11 @@
                               :cel (->> (cel/create sprite-size)
                                         (cel/set-pixels (->> (for [x (range 0 (:width sprite-size))
                                                                    y (range 0 (:height sprite-size))]
-                                                               [{:x x :y y} transparent-color])
+                                                               [{:x x :y y} color/transparent-color])
                                                              (into {})))
                                         (cel/set-pixels
                                          {{:x 0 :y 0} secondary-color
-                                          {:x 0 :y 1} transparent-color
+                                          {:x 0 :y 1} color/transparent-color
                                           {:x 1 :y 1} secondary-color
                                           {:x 3 :y 3} secondary-color
                                           {:x 3 :y 4} secondary-color

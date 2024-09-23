@@ -2,7 +2,7 @@
   (:require [pixel-art.canvas :as canvas]
             [pixel-art.history :as history]
             [pixel-art.model.cel :as cel]
-            [pixel-art.model.color :refer [transparent-color]]
+            [pixel-art.model.color :refer [rgba transparent-color]]
             [pixel-art.utils.coll :as coll]
             [re-frame.core :as re-frame]))
 
@@ -20,10 +20,7 @@
                g (aget array-data (+ index 1))
                b (aget array-data (+ index 2))
                a (aget array-data (+ index 3))]
-           [[x y] ;; todo: remove it
-            (if (not= [r g b a] [0 0 0 0])
-              (str "rgb(" r "," g "," b ")")
-              "rgba(0,0,0,0)")]))
+           [[x y] (rgba r g b a)]))
        (sort-by #(-> % first second))
        (map second)))
 

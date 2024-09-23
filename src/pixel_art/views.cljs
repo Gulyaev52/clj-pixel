@@ -19,7 +19,8 @@
             [react :as react]
             [reagent.core :as r]
             [reagent.dom :as rdom]
-            [sc.api]))
+            [sc.api]
+            [pixel-art.model.color :as color]))
 
 (def transparent-color-img "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAGUlEQVQYV2M4gwH+YwCGIasIUwhT25BVBADtzYNYrHvv4gAAAABJRU5ErkJggg==)")
 
@@ -248,7 +249,7 @@
                    :right 0
                    :bottom 0
                    :top 0
-                   :backgroundColor "rgba(37,37,37,.9)"}}
+                   :backgroundColor "rgba(37, 37, 37, 0.9)"}}
      [:div {:style {:backgroundImage (str "url(" frame-img ")")
                     :imageRendering "pixelated"
                     :backgroundSize "contain"
@@ -264,7 +265,7 @@
     :presetColors (clj->js presetColors)
     :actions (clj->js (map #(reagent.core/as-element %) actions))
     :onChange (fn [e] (let [rgba (. e -rgba)]
-                        (onChange (str "rgba(" (. rgba -r) "," (. rgba -g) "," (. rgba -b) "," (. rgba -a) ")"))))}])
+                        (onChange (color/rgba (. rgba -r) (. rgba -g) (. rgba -b) (. rgba -a)))))}])
 
 (defn popper []
   (let [!opened (r/atom false)]
@@ -308,7 +309,7 @@
 
 (defn- replace-transparent-color [color]
   (if (= color transparent-color)
-    "rgba(0,0,0,1)"
+    (color/rgba 0 0 0)
     color))
 
 (defn distinct-by [f coll]
@@ -694,7 +695,7 @@
                    :right 0
                    :bottom 0
                    :top 0
-                   :backgroundColor "rgba(37,37,37,.9)"}}
+                   :backgroundColor "rgba(37, 37, 37, .9)"}}
      [:div {:style {:position :absolute
                     :display :flex
                     :flex-direction :column

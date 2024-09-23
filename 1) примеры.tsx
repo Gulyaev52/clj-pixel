@@ -65,6 +65,7 @@ background. отдельный слой?
 https://www.aseprite.org/docs/move-tool/
 
 рефакторинг
+14) объекты для цветов
 13) tinycolor -> только в toRgbString везде использовать rgba?
 12) хранить цвета как объекты?
 11) нужно ли preview

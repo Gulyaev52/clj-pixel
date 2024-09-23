@@ -1,9 +1,9 @@
 (ns pixel-art.model.cel
-  (:require [pixel-art.model.color :refer [transparent-color]]
-            [pixel-art.utils.geometry :as geometry]))
+  (:require [pixel-art.utils.geometry :as geometry]
+            [pixel-art.model.color :as color]))
 
 (defn create-pixels-coll [size]
-  (vec (repeat (* (:width size) (:height size)) transparent-color)))
+  (vec (repeat (* (:width size) (:height size)) color/transparent-color)))
 
 (defn pos->idx [{:keys [x y]} {:keys [width]}]
   (+ x (* width y)))
@@ -31,7 +31,7 @@
     :selected false}))
 
 (defn remove-all-pixels [cel]
-  (update cel :pixels #(mapv (fn [_] transparent-color) %)))
+  (update cel :pixels #(mapv (fn [_] color/transparent-color) %)))
 
 ;; todo: rename
 (defn set-pixels [pixels-map cel]
@@ -41,7 +41,7 @@
   (let [above-cel-pixels-map (->> (:pixels above-cel)
                                   (map-indexed (fn [idx color]
                                                  [(idx->pos idx (:size above-cel)) color]))
-                                  (remove #(= (second %) transparent-color)))]
+                                  (remove #(= (second %) color/transparent-color)))]
     (assoc above-cel
            :pixels
            (update-pixels-coll above-cel-pixels-map
@@ -49,21 +49,21 @@
                                (:pixels below-cel)))))
 (comment
   (def above-cel (->> (create {:width 2 :height 2})
-                      (set-pixels {{:x 0 :y 0} "rgb(0,0,0)"
-                                   {:x 1 :y 1} "rgb(0,0,0)"})))
+                      (set-pixels {{:x 0 :y 0} (color/rgba 0 0 0)
+                                   {:x 1 :y 1} (color/rgba 0 0 0)})))
   (def below-cel (->> (create {:width 2 :height 2})
-                      (set-pixels {{:x 0 :y 0} "rgb(255,0,0)"
-                                   {:x 0 :y 1} "rgb(0,255,0)"})))
+                      (set-pixels {{:x 0 :y 0} (color/rgba 255 0 0)
+                                   {:x 0 :y 1} (color/rgba 0 255 0)})))
   (merge-cels below-cel above-cel))
 
 (defn emptyy? [cel]
-  (every? #(= % transparent-color) (:pixels cel)))
+  (every? #(= % color/transparent-color) (:pixels cel)))
 
 (def get-size :size)
 
 (defn get-pixel [pos cel]
   (let [{:keys [pixels size]} cel]
-    (nth pixels (pos->idx pos size) transparent-color)))
+    (nth pixels (pos->idx pos size) color/transparent-color)))
 
 (defn pixels->coll [cel]
   (map-indexed (fn [idx pixel] [(idx->pos idx (:size cel)) pixel])

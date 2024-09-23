@@ -4,13 +4,12 @@
             [cljs.test :refer-macros [deftest testing is run-tests] :refer [async]]
             [day8.re-frame.test :as rf-test]
             [pixel-art.canvas :as canvas]
-            [pjstadig.humane-test-output]
             [pixel-art.events :as events]
             [pixel-art.events.event-collector :as event-collector]
             [pixel-art.export :as export]
             [pixel-art.local-storage :as local-storage]
             [pixel-art.model.cel :as cel]
-            [pixel-art.model.color :refer [transparent-color]]
+            [pixel-art.model.color :as color]
             [pixel-art.model.frame :as frame]
             [pixel-art.model.layer :as layer]
             [pixel-art.model.sprite :as sprite]
@@ -18,6 +17,7 @@
             [pixel-art.project-save-load :as project-save-load]
             [pixel-art.subs :as subs]
             [pixel-art.utils.coll :as coll]
+            [pjstadig.humane-test-output]
             [re-frame.core :as rf]
             [sc.api]))
 
@@ -39,7 +39,7 @@
    (reset! !local-storage (assoc @!local-storage key value))))
 
 (defn create-pixels [size]
-  (vec (repeat (* (:width size) (:height size)) transparent-color)))
+  (vec (repeat (* (:width size) (:height size)) color/transparent-color)))
 
 (def initial-sprite
   (let [sprite-size {:width 8 :height 8}]
@@ -49,28 +49,28 @@
                     :cel (->> (cel/create sprite-size)
                               (cel/set-pixels (->> (for [x (range 0 (:width sprite-size))
                                                          y (range 0 (:height sprite-size))]
-                                                     [{:x x :y y} transparent-color])
+                                                     [{:x x :y y} color/transparent-color])
                                                    (into {})))
                               (cel/set-pixels
-                               {{:x 0 :y 0} "rgb(255,0,0)"
-                                {:x 0 :y 1} transparent-color
-                                {:x 1 :y 1} "rgb(255,0,0)"
-                                {:x 3 :y 3} "rgb(255,0,0)"
-                                {:x 3 :y 4} "rgb(255,0,0)"
-                                {:x 4 :y 3} "rgb(255,0,0)"
-                                {:x 4 :y 4} "rgb(255,0,0)"}))})))
+                               {{:x 0 :y 0} (color/rgba 255 0 0)
+                                {:x 0 :y 1} color/transparent-color
+                                {:x 1 :y 1} (color/rgba 255 0 0)
+                                {:x 3 :y 3} (color/rgba 255 0 0)
+                                {:x 3 :y 4} (color/rgba 255 0 0)
+                                {:x 4 :y 3} (color/rgba 255 0 0)
+                                {:x 4 :y 4} (color/rgba 255 0 0)}))})))
 (def initial-cel-pixels (-> initial-sprite :cels ffirst :pixels))
 
 (def initial-palettes
   [{:name "default"
     :current true
-    :colors ["rgb(0,0,0)" "rgb(255,0,0)" "rgb(0,0,255)" "rgb(0,128,0)"]}
+    :colors [(color/rgba 0 0 0) (color/rgba 255 0 0) (color/rgba 0 0 255) (color/rgba 0 128 0)]}
    {:name "palette1"
     :current false
-    :colors ["rgb(0, 0, 0)"
-             "rgb(255, 0, 0)"
-             "rgb(0, 0, 255)"
-             "rgb(0, 128, 0)"]}])
+    :colors [(color/rgba 0 0 0)
+             (color/rgba 255 0 0)
+             (color/rgba 0 0 255)
+             (color/rgba 0 128 0)]}])
 (def initial-current-palette (first initial-palettes))
 
 (defn initialize-db
@@ -111,7 +111,7 @@
             (map #(select-keys % [:current :selected :pos :pixels]) (:cels timeline))))
 
      (apply-current-tool [{:x 0 :y 0}])
-     (is (= (assoc (create-pixels (sprite/get-size initial-sprite)) 0 "rgb(0,0,0)")
+     (is (= (assoc (create-pixels (sprite/get-size initial-sprite)) 0 (color/rgba 0 0 0))
             (->> @(rf/subscribe [::subs/timeline])
                  :cels
                  (coll/find-first :current)
@@ -152,7 +152,7 @@
             (map #(select-keys % [:current :selected :pos :pixels]) (:cels timeline))))
 
      (apply-current-tool [{:x 0 :y 0}])
-     (is (= (assoc (create-pixels (sprite/get-size initial-sprite)) 0 "rgb(0,0,0)")
+     (is (= (assoc (create-pixels (sprite/get-size initial-sprite)) 0 (color/rgba 0 0 0))
             (->> @(rf/subscribe [::subs/timeline])
                  :cels
                  (coll/find-first :current)
@@ -539,9 +539,9 @@
     (apply-current-tool [{:x 0 :y 0}])
 
     (is (= [{:pos {:frame-idx 0 :layer-idx 0} :pixels (-> (create-pixels (sprite/get-size initial-sprite))
-                                                          (assoc 0 "rgb(0,0,0)"))}
+                                                          (assoc 0 (color/rgba 0 0 0)))}
             {:pos {:frame-idx 1 :layer-idx 0} :pixels (-> (create-pixels (sprite/get-size initial-sprite))
-                                                          (assoc 0 "rgb(0,0,0)"))}]
+                                                          (assoc 0 (color/rgba 0 0 0)))}]
            (->> (:cels @(rf/subscribe [::subs/timeline]))
                 (filter :group-number)
                 (map #(select-keys % [:pos :pixels]))))))
@@ -583,9 +583,9 @@
   (testing "when linked")
   (testing "should merge current layer with layer below"
     (initialize-db {:sprite (->> (sprite/clear-cel initial-sprite)
-                                 (sprite/set-current-cel-pixels {{:x 0 :y 0} "rgb(0,0,255)"
-                                                                 {:x 0 :y 1} "rgb(0,0,255)"
-                                                                 {:x 1 :y 0} "rgb(0,0,255)"}))})
+                                 (sprite/set-current-cel-pixels {{:x 0 :y 0} (color/rgba 0 0 255)
+                                                                 {:x 0 :y 1} (color/rgba 0 0 255)
+                                                                 {:x 1 :y 0} (color/rgba 0 0 255)}))})
 
     (rf/dispatch-sync [::events/add-frame])
     (apply-current-tool [{:x 0 :y 0}])
@@ -626,7 +626,7 @@
   (testing "add color"
     (testing "add new color"
       (initialize-db)
-      (let [new-color "rgb(100, 100, 0)"]
+      (let [new-color (color/rgba 100 100 0)]
         (rf/dispatch-sync [::palette/add-color new-color])
         (is (= new-color (last (:colors @(rf/subscribe [::subs/current-palette]))))))
       (check-current-palettes-info-saved-in-local-storage))
@@ -634,7 +634,7 @@
     (testing "colors are unique"
       (initialize-db)
       (let [initial-selected-palette @(rf/subscribe [::subs/current-palette])
-            new-color "rgb(0,0,0)"]
+            new-color (color/rgba 0 0 0)]
         (rf/dispatch-sync [::palette/add-color new-color])
         (is (= new-color @(rf/subscribe [::subs/primary-color])))
         (is (= initial-selected-palette @(rf/subscribe [::subs/current-palette]))))
@@ -693,7 +693,13 @@
       (rf/dispatch-sync [::palette/download-palette])
       (is (= {:file-name "palette1.gpl",
               :content
-              "GIMP Palette\nName: palette1\nColumns: 0\n0 0 0 Untitled\n255 0 0 Untitled\n0 0 255 Untitled\n0 128 0 Untitled"
+              "GIMP Palette
+Name: palette1
+Columns: 0
+0 0 0 Untitled
+255 0 0 Untitled
+0 0 255 Untitled
+0 128 0 Untitled"
               :content-type :json}
              @!last-download-file))
 
@@ -711,15 +717,15 @@
     (initialize-db)
 
     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
-    (rf/dispatch-sync [::events/set-current-color :primary-color "rgb(90, 44, 44)"])
+    (rf/dispatch-sync [::events/set-current-color :primary-color (color/rgba 90 44 44)])
     (apply-current-tool [{:x 0 :y 0} {:x 1 :y 0} {:x 2 :y 0}])
     (rf/dispatch-sync [::events/add-layer])
-    (rf/dispatch-sync [::events/set-current-color :primary-color "rgb(167, 46, 46)"])
+    (rf/dispatch-sync [::events/set-current-color :primary-color (color/rgba 167 46 46)])
     (apply-current-tool [{:x 5 :y 0} {:x 6 :y 0} {:x 7 :y 0}])
 
     (rf/dispatch-sync [::palette/add-colors-from-frame])
     (let [current-palette @(rf/subscribe [::subs/current-palette])]
-      (is (= (into (:colors initial-current-palette) ["rgb(90, 44, 44)" "rgb(167, 46, 46)"])
+      (is (= (into (:colors initial-current-palette) [(color/rgba 90 44 44) (color/rgba 167 46 46)])
              (:colors current-palette))))))
 
 (deftest test-export
@@ -773,15 +779,14 @@
 (defn array-data->pixels [array-data size]
   (->> (for [x (range 0 (. size -width))
              y (range 0 (. size -height))]
-         (let [index (* (+ x (* y (. size -width))) 4)]
-           (let [r (aget array-data index)
-                 g (aget array-data (+ index 1))
-                 b (aget array-data (+ index 2))
-                 a (aget array-data (+ index 3))]
-             [[x y]
-              (if (not= [r g b a] [0 0 0 0])
-                (str "rgb(" r "," g "," b ")")
-                "rgba(0,0,0,0)")])))
+         (let [index (* (+ x (* y (. size -width))) 4)
+               r (aget array-data index)
+               g (aget array-data (+ index 1))
+               b (aget array-data (+ index 2))
+               a (aget array-data (+ index 3))]
+           [[x y] (if (not= [r g b a] [0 0 0 0])
+                    (color/rgba r g b)
+                    color/transparent-color)]))
        (sort-by #(-> % first second)) ;; что бы был такой же порядок как и cel:pixels
        ))
 
@@ -819,15 +824,15 @@
                          :frame (frame/create 200)
                          :cel (->> (cel/create sprite-size)
                                    (cel/set-pixels
-                                    {{:x 0 :y 0} "rgb(255,0,0)"
-                                     {:x 1 :y 0} transparent-color
-                                     {:x 0 :y 1} "rgb(255,0,0)"
-                                     {:x 1 :y 1} "rgb(0,0,0)"}))})
+                                    {{:x 0 :y 0} (color/rgba 255 0 0)
+                                     {:x 1 :y 0} color/transparent-color
+                                     {:x 0 :y 1} (color/rgba 255 0 0)
+                                     {:x 1 :y 1} (color/rgba 0 0 0)}))})
          (sprite/add-frame (frame/create 100))
-         (sprite/set-current-cel-pixels {{:x 0 :y 0} "rgb(0,0,255)"
-                                         {:x 1 :y 0} transparent-color
-                                         {:x 0 :y 1} "rgb(0,0,255)"
-                                         {:x 1 :y 1} "rgb(0,0,0)"}) ;; todo: pass cell-pos?
+         (sprite/set-current-cel-pixels {{:x 0 :y 0} (color/rgba 0 0 255)
+                                         {:x 1 :y 0} color/transparent-color
+                                         {:x 0 :y 1} (color/rgba 0 0 255)
+                                         {:x 1 :y 1} (color/rgba 0 0 0)}) ;; todo: pass cell-pos?
          )))
 
 (defn get-cel-pixels-with-pos [pos sprite]
@@ -905,11 +910,11 @@
                                            (is (= [{:duration 200
                                                     :pixels (-> (get-cel-pixels-with-pos {:frame-idx 0 :layer-idx 0} sprite-for-export)
                                                                 vec
-                                                                (assoc-in [3 1] transparent-color))}
+                                                                (assoc-in [3 1] color/transparent-color))}
                                                    {:duration 100
                                                     :pixels (-> (get-cel-pixels-with-pos {:frame-idx 1 :layer-idx 0} sprite-for-export)
                                                                 vec
-                                                                (assoc-in [3 1] transparent-color))}]
+                                                                (assoc-in [3 1] color/transparent-color))}]
                                                   gif-frames)))))
                                  (finally done)))))))
 
@@ -938,11 +943,11 @@
                                        (is (= [{:duration 200
                                                 :pixels (-> (get-cel-pixels-with-pos {:frame-idx 0 :layer-idx 0} sprite-for-export)
                                                             vec
-                                                            (assoc-in [3 1] transparent-color))}
+                                                            (assoc-in [3 1] color/transparent-color))}
                                                {:duration 100
                                                 :pixels (-> (get-cel-pixels-with-pos {:frame-idx 1 :layer-idx 0} sprite-for-export)
                                                             vec
-                                                            (assoc-in [3 1] transparent-color))}]
+                                                            (assoc-in [3 1] color/transparent-color))}]
                                               gif-frames)))))
                              (finally done))))))))
 
@@ -1054,7 +1059,7 @@
   (->> pixels
        (map-indexed (fn [idx pixel]
                       [(cel/idx->pos idx (sprite/get-size sprite)) pixel]))
-       (filter (fn [[_ pixel]] (not= pixel transparent-color)))))
+       (filter (fn [[_ pixel]] (not= pixel color/transparent-color)))))
 
 (defn get-active-current-cel-pixels [sprite]
   (->> @(rf/subscribe [::subs/sprite])
@@ -1065,29 +1070,29 @@
 (deftest test-eraser-tool
   (testing "should remove color"
     (initialize-db {:sprite (->> empty-sprite
-                                 (sprite/set-current-cel-pixels {{:x 0 :y 0} "rgb(0, 0, 0)"
-                                                                 {:x 1 :y 0} "rgb(0, 0, 255)"}))})
+                                 (sprite/set-current-cel-pixels {{:x 0 :y 0} (color/rgba 0 0 0)
+                                                                 {:x 1 :y 0} (color/rgba 0 0 255)}))})
     (rf/dispatch-sync [::events/select-tool :eraser])
 
     (apply-current-tool [{:x 0 :y 0}])
-    (is (= [[{:x 1, :y 0} "rgb(0, 0, 255)"]] [[{:x 1 :y 0} "rgb(0, 0, 255)"]]))))
+    (is (= [[{:x 1, :y 0} (color/rgba 0 0 255)]] [[{:x 1 :y 0} (color/rgba 0 0 255)]]))))
 
 (deftest test-color-picker-tool
   (testing "test"
     (initialize-db {:sprite (->> empty-sprite
-                                 (sprite/set-current-cel-pixels {{:x 0 :y 0} "rgb(0,0,0)"
-                                                                 {:x 1 :y 0} "rgb(0,0,255)"}))})
-    (rf/dispatch-sync [::events/set-current-color :primary-color "rgb(255,255,0)"])
-    (rf/dispatch-sync [::events/set-current-color :secondary-color "rgb(255,255,0)"])
+                                 (sprite/set-current-cel-pixels {{:x 0 :y 0} (color/rgba 0 0 0)
+                                                                 {:x 1 :y 0} (color/rgba 0 0 255)}))})
+    (rf/dispatch-sync [::events/set-current-color :primary-color (color/rgba 255 255 0)])
+    (rf/dispatch-sync [::events/set-current-color :secondary-color (color/rgba 255 255 0)])
     (rf/dispatch-sync [::events/select-tool :color-picker])
 
     (apply-current-tool [{:x 0 :y 0}])
-    (is (= "rgb(0,0,0)" @(rf/subscribe [::subs/primary-color])))
-    (is (= "rgb(255,255,0)" @(rf/subscribe [::subs/secondary-color])))
+    (is (= (color/rgba 0 0 0) @(rf/subscribe [::subs/primary-color])))
+    (is (= (color/rgba 255 255 0) @(rf/subscribe [::subs/secondary-color])))
 
     (apply-current-tool [{:x 1 :y 0 :right-button true}])
-    (is (= "rgb(0,0,0)" @(rf/subscribe [::subs/primary-color])))
-    (is (= "rgb(0,0,255)" @(rf/subscribe [::subs/secondary-color])))))
+    (is (= (color/rgba 0 0 0) @(rf/subscribe [::subs/primary-color])))
+    (is (= (color/rgba 0 0 255) @(rf/subscribe [::subs/secondary-color])))))
 
 (deftest test-circle-tool
   (testing "base"
@@ -1165,10 +1170,10 @@
 (deftest test-bucket-tool
   (testing "same color"
     (initialize-db {:sprite (->> empty-sprite
-                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} "rgb(0,0,255)"]
-                                                                 [{:x 1 :y 0} "rgb(0,0,255)"]
-                                                                 [{:x 2 :y 0} "rgb(255,255,0)"]
-                                                                 [{:x 3 :y 0} "rgb(0,0,255)"]]))})
+                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} (color/rgba 0 0 255)]
+                                                                 [{:x 1 :y 0} (color/rgba 0 0 255)]
+                                                                 [{:x 2 :y 0} (color/rgba 255 255 0)]
+                                                                 [{:x 3 :y 0} (color/rgba 0 0 255)]]))})
     (rf/dispatch-sync [::events/select-tool :bucket])
     (rf/dispatch-sync [::events/change-tool-option :same-color true])
 
@@ -1177,16 +1182,16 @@
     (let [current-color @(rf/subscribe [::subs/primary-color])
           expected-pixels [[{:x 0, :y 0} current-color]
                            [{:x 1, :y 0} current-color]
-                           [{:x 2, :y 0} "rgb(255,255,0)"]
+                           [{:x 2, :y 0} (color/rgba 255 255 0)]
                            [{:x 3, :y 0} current-color]]]
       (is (= expected-pixels (get-active-current-cel-pixels empty-sprite)))))
 
   (testing "nearby colors"
     (initialize-db {:sprite (->> empty-sprite
-                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} "rgb(0,0,255)"]
-                                                                 [{:x 1 :y 0} "rgb(0,0,255)"]
-                                                                 [{:x 2 :y 0} "rgb(255,255,0)"]
-                                                                 [{:x 3 :y 0} "rgb(0,0,255)"]]))})
+                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} (color/rgba 0 0 255)]
+                                                                 [{:x 1 :y 0} (color/rgba 0 0 255)]
+                                                                 [{:x 2 :y 0} (color/rgba 255 255 0)]
+                                                                 [{:x 3 :y 0} (color/rgba 0 0 255)]]))})
     (rf/dispatch-sync [::events/select-tool :bucket])
 
     (apply-current-tool [{:x 0 :y 0} {:x 2 :y 0}])
@@ -1194,51 +1199,51 @@
     (let [current-color @(rf/subscribe [::subs/primary-color])
           expected-pixels [[{:x 0 :y 0} current-color]
                            [{:x 1 :y 0} current-color]
-                           [{:x 2 :y 0} "rgb(255,255,0)"]
-                           [{:x 3 :y 0} "rgb(0,0,255)"]]]
+                           [{:x 2 :y 0} (color/rgba 255 255 0)]
+                           [{:x 3 :y 0} (color/rgba 0 0 255)]]]
       (is (= expected-pixels (get-active-current-cel-pixels empty-sprite))))))
 
 (deftest test-shading-tool
   (testing "lighten trans"
     (initialize-db {:sprite (->> empty-sprite
-                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} "rgb(0,0,255)"]
-                                                                 [{:x 1 :y 0} "rgb(255,255,0)"]
-                                                                 [{:x 2 :y 0} "rgb(255,0,0)"]]))})
+                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} (color/rgba 0 0 255)]
+                                                                 [{:x 1 :y 0} (color/rgba 255 255 0)]
+                                                                 [{:x 2 :y 0} (color/rgba 255 0 0)]]))})
     (rf/dispatch-sync [::events/select-tool :shading])
 
     (apply-current-tool [{:x 0 :y 0} {:x 1 :y 0} {:x 0 :y 0} {:x 1 :y 0}]) ;; applied only once
-    (is (= [[{:x 0, :y 0} "rgb(31, 31, 255)"]
-            [{:x 1, :y 0} "rgb(255, 255, 31)"]
-            [{:x 2, :y 0} "rgb(255,0,0)"]]
+    (is (= [[{:x 0, :y 0} (color/rgba 31 31 255)]
+            [{:x 1, :y 0} (color/rgba 255 255 31)]
+            [{:x 2, :y 0} (color/rgba 255 0 0)]]
            (get-active-current-cel-pixels empty-sprite))))
 
   (testing "darken trans"
     (initialize-db {:sprite (->> empty-sprite
-                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} "rgb(0,0,255)"]
-                                                                 [{:x 1 :y 0} "rgb(255,255,0)"]
-                                                                 [{:x 2 :y 0} "rgb(255,0,0)"]]))})
+                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} (color/rgba 0 0 255)]
+                                                                 [{:x 1 :y 0} (color/rgba 255 255 0)]
+                                                                 [{:x 2 :y 0} (color/rgba 255 0 0)]]))})
     (rf/dispatch-sync [::events/select-tool :shading])
     (rf/dispatch-sync [::events/change-tool-option :lighten false])
 
     (apply-current-tool [{:x 0 :y 0} {:x 1 :y 0} {:x 0 :y 0} {:x 1 :y 0}]) ;; applied only once
-    (is (= [[{:x 0, :y 0} "rgb(0, 0, 224)"]
-            [{:x 1, :y 0} "rgb(224, 224, 0)"]
-            [{:x 2, :y 0} "rgb(255,0,0)"]]
+    (is (= [[{:x 0, :y 0} (color/rgba 0 0 224)]
+            [{:x 1, :y 0} (color/rgba 224 224 0)]
+            [{:x 2, :y 0} (color/rgba 255 0 0)]]
            (get-active-current-cel-pixels empty-sprite))))
 
   (testing "pixel size and amount"
     (initialize-db {:sprite (->> empty-sprite
-                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} "rgb(0,0,255)"]
-                                                                 [{:x 1 :y 0} "rgb(255,255,0)"]
-                                                                 [{:x 2 :y 0} "rgb(255,0,0)"]]))})
+                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} (color/rgba 0 0 255)]
+                                                                 [{:x 1 :y 0} (color/rgba 255 255 0)]
+                                                                 [{:x 2 :y 0} (color/rgba 255 0 0)]]))})
     (rf/dispatch-sync [::events/select-tool :shading])
     (rf/dispatch-sync [::events/change-tool-option :pixel-size 2])
     (rf/dispatch-sync [::events/change-tool-option :amount 20])
 
     (apply-current-tool [{:x 1 :y 1}])
-    (is (= [[{:x 0, :y 0} "rgb(102, 102, 255)"]
-            [{:x 1, :y 0} "rgb(255, 255, 102)"]
-            [{:x 2, :y 0} "rgb(255,0,0)"]]
+    (is (= [[{:x 0, :y 0} (color/rgba 102 102 255)]
+            [{:x 1, :y 0} (color/rgba 255 255 102)]
+            [{:x 2, :y 0} (color/rgba 255 0 0)]]
            (get-active-current-cel-pixels empty-sprite)))))
 
 (deftest test-line-tool

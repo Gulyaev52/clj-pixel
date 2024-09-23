@@ -1,6 +1,10 @@
-(ns pixel-art.model.color)
+(ns pixel-art.model.color
+  (:require ["tinycolor2" :as tinycolor]))
 
 (defn rgba
+  ([color]
+   (let [rgba-obj (. (tinycolor color) toRgb)]
+     (rgba (. rgba-obj -r) (. rgba-obj -g) (. rgba-obj -b) (. rgba-obj -a))))
   ([r g b]
    (rgba r g b 1))
   ([r g b a]

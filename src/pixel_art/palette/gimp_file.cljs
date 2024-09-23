@@ -1,6 +1,7 @@
 (ns pixel-art.palette.gimp-file
   (:require ["tinycolor2" :as tinycolor]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [pixel-art.model.color :as color]))
 
 (defn palette->file-desc [palette]
   {:file-name (str (:name palette) ".gpl")
@@ -30,12 +31,13 @@
                                (map string/trim))
               colors (->> color-lines
                           (keep (fn [line]
+                                  ;; todo: check rgba
                                   (when-let [[r-str g-str b-str] (rest (re-find #"^\s*(\d+)\s+(\d+)\s+(\d+)\s+" line))]
                                     (when-let [[r g b] (->> [r-str g-str b-str]
                                                             (map parse-double)
                                                             (filter #(and (>= % 0) (<= % 255)))
                                                             (#(when (= (count %) 3) %)))]
-                                      (str "rgb(" r ", " g ", " b ")")))))
+                                      (color/rgba r g b)))))
                           vec)]
           {:ok {:name name :colors colors}})
         {:error "Second line are invalid name line"})

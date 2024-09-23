@@ -204,13 +204,12 @@ const Sketch = /*#__PURE__*/React.forwardRef((props, ref) => {
         style: styleSwatchRect
       },
       rectRender: (props) => {
-        console.log("props.color", props.color );
         return (_jsxs("div", {
           title: props.title,
           onClick: props.onClick,
           style: {
             ...props.style,
-            background: props.color === "rgba(0,0,0,0)" ? "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAGUlEQVQYV2M4gwH+YwCGIasIUwhT25BVBADtzYNYrHvv4gAAAABJRU5ErkJggg==)" : props.color
+            background: props.color === "rgba(0, 0, 0, 0)" ? "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAGUlEQVQYV2M4gwH+YwCGIasIUwhT25BVBADtzYNYrHvv4gAAAABJRU5ErkJggg==)" : props.color
           },
           children: [_jsxs("div", {
             style: {
@@ -244,7 +243,7 @@ const CheckedSwatchColorPoint = (props) => {
       height: 5,
       width: 5,
       borderRadius: '50%',
-      backgroundColor: props.color === "rgba(0,0,0,0)" ? "black" : getContrastingColor(rgbaStringToHsva(props.color)),
+      backgroundColor: props.color === "rgba(0, 0, 0, 0)" ? "black" : getContrastingColor(rgbaStringToHsva(props.color)),
     }}
   );
 }

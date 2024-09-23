@@ -4,7 +4,8 @@
             [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.model.sprite :as sprite]
             [pixel-art.tool.utils :refer [commit-changes-and-init-tool
-                                          get-tool-options resize-pixel]]))
+                                          get-tool-options resize-pixel]]
+            [pixel-art.model.color :as color]))
 
 (defn init [] {:type :shading :state {:changes {}}})
 
@@ -42,7 +43,7 @@
                                           (if lighten
                                             (. tcolor (lighten amount))
                                             (. tcolor (darken amount)))
-                                          [pos (. tcolor toRgbString)]))))))]
+                                          [pos (color/rgba tcolor)]))))))]
         {:db (update-in db [:tool :state :changes] #(merge % new-pixels))
          :fx [[:draw-preview new-pixels]]})
 
