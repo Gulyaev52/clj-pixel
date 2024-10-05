@@ -9,36 +9,12 @@
                                           get-current-cel]]
             [pixel-art.utils.geometry :as geometry]
             [re-frame.core :as re-frame]))
-
-;; удалять хоткеи; нужно помнить о состояния превью; init
+;; init
 ;; todo: используем так как из selection-image удаляются прозр точки(не работает днд) и если проверять вхож
 ;; todo: а зачем поле state
 ;; ресайз
 
 (defn init [] {:type :rectangle-select :state {:mode :select}})
-
-(def hotkeys
-  [[[::cancel-selection]
-    [{:keyCode 27 ;; esc
-      }]]
-
-   [[::copy-selection]
-    [{:keyCode 67 ;; c
-      :ctrlKey true}]]
-
-   [[::past-selection]
-    [{:keyCode 86 ;; v
-      :ctrlKey true}]]
-
-   [[::delete-selection]
-    [{:keyCode 46 ;; delete
-      }]
-    [{:keyCode 8 ;; backspace
-      }]]
-
-   [[::cut-selection]
-    [{:keyCode 88 ;; x
-      }]]])
 
 (def options-spec
   [])
@@ -131,56 +107,71 @@
     (-> db
         (assoc
          :selection-manager
-         {:selection-image selection-image}))))
+         {:selection-image selection-image
+          :tool-type (-> db :tool :type)}))))
 
 (defn delete-selection-and-commit [db]
-  (let [{:keys [initial-selection-image pasted?]} (-> db :tool :state)
+  (let [tool-type (-> db :tool :type)
+        {:keys [initial-selection-image pasted?]} (-> db :tool :state)
         deleted-initial-selection (if pasted?
                                     {}
                                     (update-vals initial-selection-image (fn [_] transparent-color)))]
-    (commit-changes-and-init-tool db deleted-initial-selection (init))))
+    (commit-changes-and-init-tool db
+                                  deleted-initial-selection
+                                  {:type tool-type :state {:mode :select}})))
+
+(defn tool-has-selection? [db]
+  (-> db :tool :state :selection-image))
 
 (re-frame/reg-event-fx
  ::delete-selection
  (fn [{:keys [db]} _]
-   (delete-selection-and-commit db)))
+   (if (tool-has-selection? db)
+     (delete-selection-and-commit db)
+     {:db db})))
 
 (re-frame/reg-event-fx
  ::cut-selection
  (fn [{:keys [db]} _]
-   (-> (copy-selection db)
-       (delete-selection-and-commit))))
+   (if (tool-has-selection? db)
+     (-> (copy-selection db)
+         delete-selection-and-commit)
+     {:db db})))
 
 (re-frame/reg-event-fx
- ::cancel-selection
+ ::commit-selection
  (fn [{:keys [db]} _]
-   (commit-moved-selection db)))
+   (if (tool-has-selection? db)
+     (commit-moved-selection db)
+     {:db db})))
 
 (re-frame/reg-event-fx
  ::copy-selection
  (fn [{:keys [db]} _]
-   (-> db
-       copy-selection
-       commit-moved-selection)))
+   (if (tool-has-selection? db)
+     (-> (copy-selection db)
+         commit-moved-selection)
+     {:db db})))
 
 (re-frame/reg-event-fx
  ::past-selection
- ;; todo: нужно что бы это было возможно только после копирования
  (fn [{:keys [db]} _]
-   (let [{:keys [selection-image]} (:selection-manager db)
-         changes (remove-transparent-colors selection-image)
-         new-tool {:type :rectangle-select
-                   :state {:mode :move-selection
-                           :initial-selection-image selection-image
-                           :selection-image selection-image
-                           :changes (remove-transparent-colors selection-image)
-                           :pasted? true}}]
-     (-> db
-         commit-moved-selection
-         (assoc-in [:db :tool] new-tool)
-         (update :fx #(concat % [[:clear-preview]
-                                 [:draw-preview changes]
-                                 [:highlight-selection selection-image]]))))))
+   (if (-> db :selection-manager :selection-image) ;; todo: copied-selection? оно сущ только когда есть копирование
+     (let [{:keys [selection-image tool-type]} (:selection-manager db)
+           changes (remove-transparent-colors selection-image)
+           new-tool {:type tool-type
+                     :state {:mode :move-selection
+                             :initial-selection-image selection-image
+                             :selection-image selection-image
+                             :changes (remove-transparent-colors selection-image)
+                             :pasted? true}}]
+       (-> db
+           commit-moved-selection
+           (assoc-in [:db :tool] new-tool)
+           (update :fx #(concat % [[:clear-preview]
+                                   [:draw-preview changes]
+                                   [:highlight-selection selection-image]]))))
+     {:db db})))
 
 (defn- get-highlight-color [color]
   (let [dark-color "rgba(0, 0, 0, 0.2)"

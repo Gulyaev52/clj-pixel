@@ -9,6 +9,11 @@
             [pixel-art.canvas :as canvas]))
 
 (re-frame/reg-sub
+ ::keyboard-shortcuts-modal-opened
+ (fn [db]
+   (-> db :keyboard-shortcuts-modal-opened)))
+
+(re-frame/reg-sub
  ::layers
  (fn [db]
    (-> db :sprite :layers)))

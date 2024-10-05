@@ -52,6 +52,7 @@
          :sprite-preview (preview/init)
          :pixels-grid-enabled true
          :palettes (palette/init palettes)
+         :keyboard-shortcuts-modal-opened false
          :export (export/init)
          :sprite-resizer (sprite-resizer/init)})))
 

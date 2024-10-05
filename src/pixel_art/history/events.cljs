@@ -1,16 +1,7 @@
 (ns pixel-art.history.events
-  (:require [pixel-art.model.sprite :as sprite]
-            [pixel-art.tool.core :as tool]
+  (:require [pixel-art.tool.core :as tool]
             [re-frame.core :as re-frame]
             [pixel-art.history :as history]))
-
-(def hotkeys [[[::undo]
-               [{:keyCode 90 ;; z
-                 :ctrlKey true}]]
-
-              [[::redo]
-               [{:keyCode 89 ;; y
-                 :ctrlKey true}]]])
 
 (re-frame/reg-event-fx
  ::undo

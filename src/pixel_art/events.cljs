@@ -3,7 +3,6 @@
             [pixel-art.canvas :as canvas]
             [pixel-art.db :as db :refer [get-layer-name max-scale]]
             [pixel-art.history :as history]
-            [pixel-art.history.events :as history.events]
             [pixel-art.local-storage :as local-storage]
             [pixel-art.model.cel :as cel]
             [pixel-art.model.color :refer [transparent-color]]
@@ -13,10 +12,9 @@
             [pixel-art.palette :as palette]
             [pixel-art.tool.core :as tool]
             [pixel-art.project-save-load]
-            [pixel-art.tool.rectangle-select :as rectangle-select]
-            [pixel-art.tool.shape-select :as shape-select]
             [pixel-art.tool.utils :refer [commit-changes-and-init-tool
                                           get-current-cel]]
+            [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
             [pixel-art.utils.geometry :as geometry]
             [pixel-art.utils.interceptor :refer [on-changes]]
             [re-frame.core :as re-frame]
@@ -37,9 +35,17 @@
                                           (get coeffects palette/local-storage-key))
                             :sprite sprite})
     :fx [[:dispatch [::rp/set-keydown-rules
-                     {:event-keys (concat history.events/hotkeys
-                                          rectangle-select/hotkeys
-                                          shape-select/hotkeys)}]]]}))
+                     {:event-keys (->> keyboard-shortcuts/shortcuts-by-types
+                                       vals
+                                       flatten
+                                       ;; Order matters, and the first matching key combination will consume the event. So for example, if you want to listen for both forward arrow ({:keyCode 37}) and control + forward arrow ({:keyCode 37 :ctrlKey true}), then you must put the combination before the singleton. 
+                                       (sort-by (fn [{:keys [keys]}] (not (some :ctrlKey keys))))
+                                       (map (fn [{:keys [action keys]}]
+                                              (into [action] (->> keys
+                                                                  (map #(-> %
+                                                                            (assoc :keyCode (keyboard-shortcuts/key->code (:key %)))
+                                                                            (dissoc :key)))
+                                                                  (map vector))))))}]]]}))
 
 (re-frame/reg-event-fx
  ::initialize-canvas
@@ -122,6 +128,11 @@
      (commit-changes-and-init-tool db
                                    (get-in db [:tool :state :changes])
                                    tool))))
+
+(re-frame/reg-event-fx
+ ::set-keyboard-shortcuts-modal-opened
+ (fn [{:keys [db]} [_ opened]]
+   {:db (assoc db :keyboard-shortcuts-modal-opened opened)}))
 
 (re-frame/reg-event-fx
  ::change-tool-option ;; todo: set

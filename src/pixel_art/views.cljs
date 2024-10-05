@@ -5,7 +5,6 @@
             [pixel-art.events :as events]
             [pixel-art.export :as export]
             [pixel-art.model.cel :as cel]
-            [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.onion-skin :as onion-skin]
             [pixel-art.palette :as palette :refer [deletable-palette?]]
             [pixel-art.project-save-load :as project-save-load]
@@ -15,12 +14,12 @@
             [pixel-art.tool.core :as tool]
             [pixel-art.utils.coll :as coll]
             [re-frame.core :as re-frame]
-            [re-frame.core :as rf]
             [react :as react]
             [reagent.core :as r]
             [reagent.dom :as rdom]
             [sc.api]
-            [pixel-art.model.color :as color]))
+            [pixel-art.model.color :as color]
+            [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]))
 
 (def transparent-color-img "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAGUlEQVQYV2M4gwH+YwCGIasIUwhT25BVBADtzYNYrHvv4gAAAABJRU5ErkJggg==)")
 
@@ -308,7 +307,7 @@
   [:f> file-uploader-comp props label])
 
 (defn- replace-transparent-color [color]
-  (if (= color transparent-color)
+  (if (= color color/transparent-color)
     (color/rgba 0 0 0)
     color))
 
@@ -604,10 +603,10 @@
     (fn [{:keys [value onChange]} close]
       [color-picker {:value value
                      :onChange onChange
-                     :presetColors (if (= initial-value transparent-color)
+                     :presetColors (if (= initial-value color/transparent-color)
                                      [{:color initial-value}]
                                      [{:color initial-value}
-                                      {:color transparent-color :title "transparent color"}])
+                                      {:color color/transparent-color :title "transparent color"}])
                      :onCancel close}])))
 
 (defn- current-color-selection [{:keys [value onChange]}]
@@ -616,7 +615,7 @@
      [:div {:style {:width "45px"
                     :height "45px"
                     :border-radius "5px"
-                    :background (if (= value transparent-color)
+                    :background (if (= value color/transparent-color)
                                   transparent-color-img
                                   value)
                     :border "thin solid black"}
@@ -708,8 +707,10 @@
                      :gap "6px"
                      :margin-top :auto
                      :margin-left :auto}}
-       [:button {:onClick (:onClick cancel-button) :disabled (:disabled cancel-button)} (:text cancel-button)]
-       [:button {:onClick (:onClick ok-button) :disabled (:disabled ok-button)} (:text ok-button)]]]]))
+       (when cancel-button
+         [:button {:onClick (:onClick cancel-button) :disabled (:disabled cancel-button)} (:text cancel-button)])
+       (when ok-button
+         [:button {:onClick (:onClick ok-button) :disabled (:disabled ok-button)} (:text ok-button)])]]]))
 
 (defn export-image-settings-form []
   (let [image-settings @(re-frame/subscribe [::subs/export-image-settings])]
@@ -831,9 +832,9 @@
 ;; -----------------
 
 (defn sprite-resizer-modal []
-  (when @(rf/subscribe [::subs/sprite-resizer-opened])
-    (let [previews @(rf/subscribe [::subs/sprite-resizer-previews])
-          settings @(rf/subscribe [::subs/sprite-resizer-settings])]
+  (when @(re-frame/subscribe [::subs/sprite-resizer-opened])
+    (let [previews @(re-frame/subscribe [::subs/sprite-resizer-previews])
+          settings @(re-frame/subscribe [::subs/sprite-resizer-settings])]
       [modal {:cancel-button {:text "Cancel"
                               :onClick (fn []
                                          (re-frame/dispatch [::sprite-resizer/set-opened false]))}
@@ -890,6 +891,24 @@
 
 ;; -----------------
 
+(defn keyboard-shortcuts-modal []
+  (when @(re-frame/subscribe [::subs/keyboard-shortcuts-modal-opened])
+    [modal {:cancel-button {:text "Cancel"
+                            :onClick (fn []
+                                       (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened false]))}}
+     [:div {:style {:display :grid
+                    :grid-template-columns "repeat(auto-fit, minmax(200px,1fr))"}}
+      (for [[type shortcuts] keyboard-shortcuts/shortcuts-by-types]
+        [:div
+         [:h2 (str (name type) " shortcuts")]
+         [:div
+          (for [shortcut shortcuts]
+            [:div (:label shortcut)
+             " - "
+             (keyboard-shortcuts/keys->string (:keys shortcut))])]])]]))
+
+;; -----------------
+
 (defn main-panel []
   (let [tool @(re-frame/subscribe [::subs/tool])
         pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])]
@@ -910,7 +929,10 @@
       [palettes-section]
       [current-colors-selection]
       [project-manage-section]
-      [sprite-resizer-manager-section]]
+      [sprite-resizer-manager-section]
+      [:<>
+       [keyboard-shortcuts-modal]
+       [:button {:onClick (fn [] (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened true]))} "keyboard shortcuts"]]]
      [canvases-section]]))
 
 (defn mount-root []
