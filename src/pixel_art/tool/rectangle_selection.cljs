@@ -1,4 +1,4 @@
-(ns pixel-art.tool.rectangle-select
+(ns pixel-art.tool.rectangle-selection
   (:require ["tinycolor2" :as tinycolor]
             [clojure.set]
             [pixel-art.canvas :as canvas]
@@ -15,7 +15,7 @@
 ;; todo: а зачем поле state
 ;; ресайз
 
-(defn init [] {:type :rectangle-select :state {:mode :select}})
+(defn init [] {:type :rectangle-selection :state {:mode :select}})
 
 (def options-spec
   [])

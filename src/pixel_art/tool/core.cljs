@@ -6,14 +6,14 @@
             [pixel-art.tool.line :as line]
             [pixel-art.tool.pen :as pen]
             [pixel-art.tool.rectangle :as rectangle]
-            [pixel-art.tool.rectangle-select :as rectangle-select]
+            [pixel-art.tool.rectangle-selection :as rectangle-selection]
             [pixel-art.tool.shading :as shading]
-            [pixel-art.tool.shape-select :as shape-select]))
+            [pixel-art.tool.shape-selection :as shape-selection]))
 
 ;; todo: исп полиморфизм?
 
 (def types
-  [:pen :bucket :eraser :color-picker :rectangle :circle :line :rectangle-select :shape-select :shading])
+  [:pen :bucket :eraser :color-picker :rectangle :circle :line :rectangle-selection :shape-selection :shading])
 
 (defn init [tool-type]
   ((case tool-type
@@ -22,8 +22,8 @@
      :color-picker color-picker/init
      :rectangle rectangle/init
      :circle circle/init
-     :rectangle-select rectangle-select/init
-     :shape-select shape-select/init
+     :rectangle-selection rectangle-selection/init
+     :shape-selection shape-selection/init
      :bucket bucket/init
      :shading shading/init
      :line line/init)))
@@ -34,8 +34,8 @@
    :color-picker color-picker/options-spec
    :rectangle rectangle/options-spec
    :circle circle/options-spec
-   :rectangle-select rectangle-select/options-spec
-   :shape-select shape-select/options-spec
+   :rectangle-selection rectangle-selection/options-spec
+   :shape-selection shape-selection/options-spec
    :bucket bucket/options-spec
    :shading shading/options-spec
    :line line/options-spec})
@@ -47,8 +47,8 @@
      :color-picker color-picker/handle-mouse-event
      :rectangle rectangle/handle-mouse-event
      :circle circle/handle-mouse-event
-     :rectangle-select rectangle-select/handle-mouse-event
-     :shape-select shape-select/handle-mouse-event
+     :rectangle-selection rectangle-selection/handle-mouse-event
+     :shape-selection shape-selection/handle-mouse-event
      :bucket bucket/handle-mouse-event
      :shading shading/handle-mouse-event
      :line line/handle-mouse-event)

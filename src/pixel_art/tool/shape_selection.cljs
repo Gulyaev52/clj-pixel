@@ -1,13 +1,13 @@
-(ns pixel-art.tool.shape-select
+(ns pixel-art.tool.shape-selection
   (:require [pixel-art.model.cel :as cel]
-            [pixel-art.tool.rectangle-select :as rectangle-select :refer [move-selection]]
+            [pixel-art.tool.rectangle-selection :as rectangle-selection :refer [move-selection]]
             [pixel-art.tool.utils :refer [commit-changes-and-init-tool
                                           get-current-cel]]
             [pixel-art.utils.geometry :as geometry]))
 
 ;; подумать как работать с preview и canvas
 
-(defn init [] {:type :shape-select :state {:mode :select}})
+(defn init [] {:type :shape-selection :state {:mode :select}})
 
 (def options-spec
   [])

@@ -1,7 +1,7 @@
 (ns pixel-art.keyboard-shortcuts
   (:require [pixel-art.tool.core :as tool]
             [clojure.set :as set]
-            [pixel-art.tool.rectangle-select :as selection]
+            [pixel-art.tool.rectangle-selection :as rectangle-selection]
             [pixel-art.history.events :as history]
             [clojure.string :as string]))
 
@@ -14,8 +14,8 @@
                 [:rectangle {:key "r"}]
                 [:color-picker {:key "o"}]
                 [:shading {:key "u"}]
-                [:shape-select {:key "z"}]
-                [:rectangle-select {:key "s"}]]
+                [:shape-selection {:key "z"}]
+                [:rectangle-selection {:key "s"}]]
                (map (fn [[tool keys]]
                       {:label (string/replace (name tool) #"\-" " ")
                        :keys [keys]
@@ -31,22 +31,22 @@
            :action [::history/redo]}]
    :selection [{:label "cut selection"
                 :keys [{:key "x"}]
-                :action [::selection/cut-selection]}
+                :action [::rectangle-selection/cut-selection]}
                {:label "copy selection"
                 :keys [{:key "c"
                         :ctrlKey true}]
-                :action [::selection/copy-selection]}
+                :action [::rectangle-selection/copy-selection]}
                {:label "past selection"
                 :keys [{:key "v"
                         :ctrlKey true}]
-                :action [::selection/past-selection]}
+                :action [::rectangle-selection/past-selection]}
                {:label "delete selection"
                 :keys [{:key "delete"}
                        {:key "backspace"}]
-                :action [::selection/delete-selection]}
+                :action [::rectangle-selection/delete-selection]}
                {:label "commit selection"
                 :keys [{:key "enter"}]
-                :action [::selection/commit-selection]}]})
+                :action [::rectangle-selection/commit-selection]}]})
 (let [diff (set/difference (set tool/types) (set (map :tool (:tools shortcuts-by-types))))]
   (assert (= diff #{}) (str (vec diff) " don't have hotkeys")))
 
