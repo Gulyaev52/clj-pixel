@@ -8,7 +8,8 @@
             [pixel-art.tool.utils :refer [commit-changes-and-init-tool
                                           get-current-cel]]
             [pixel-art.utils.geometry :as geometry]
-            [re-frame.core :as re-frame]))
+            [re-frame.core :as re-frame]
+            [sc.api :as api]))
 ;; init
 ;; todo: используем так как из selection-image удаляются прозр точки(не работает днд) и если проверять вхож
 ;; todo: а зачем поле state
@@ -59,11 +60,6 @@
                                                                    (:pos event)
                                                                    (get-current-cel db))]]}
 
-        (and (= (:type event) :mouse-move) (not user-is-drawing))
-        {:db db
-         :fx [[:clear-preview]
-              [:highlight-pixels [(:pos event)]]]}
-
         (and (= :mouse-up (:type event)) (-> tool :state :user-is-making-selection))
         (let [selection-image (get-rectangle-selection-image initial-mouse-down-pos
                                                              (:pos event)
@@ -75,6 +71,11 @@
           {:db (assoc db :tool tool)
            :fx [[:clear-preview]
                 [:highlight-selection selection-image]]})
+
+        (and (= (:type event) :mouse-move) (not user-is-drawing))
+        {:db db
+         :fx [[:clear-preview]
+              [:highlight-pixels [(:pos event)]]]}
 
         :else {:db db})
 
@@ -163,7 +164,7 @@
                      :state {:mode :move-selection
                              :initial-selection-image selection-image
                              :selection-image selection-image
-                             :changes (remove-transparent-colors selection-image)
+                             :changes changes
                              :pasted? true}}]
        (-> db
            commit-moved-selection
@@ -175,7 +176,7 @@
 
 (defn- get-highlight-color [color]
   (let [dark-color "rgba(0, 0, 0, 0.2)"
-        light-color "rgba(255, 255, 255, 0.2)"]
+        light-color "rgba(255, 255, 255, 0.4)"]
     (if (= color transparent-color)
       dark-color
       (let [luminance (.. (tinycolor color) toHsl -l)]

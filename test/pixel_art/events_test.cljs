@@ -16,6 +16,7 @@
             [pixel-art.palette :as palette]
             [pixel-art.project-save-load :as project-save-load]
             [pixel-art.subs :as subs]
+            [pixel-art.tool.rectangle-select :as rectangle-select]
             [pixel-art.utils.coll :as coll]
             [pjstadig.humane-test-output]
             [re-frame.core :as rf]
@@ -79,6 +80,7 @@
   ([data]
    (rf/dispatch-sync [::events/initialize-db (merge {:palettes initial-palettes} data)])))
 
+;; mouse-down-move-up
 (defn apply-current-tool [poses]
   (let [mouse-down-pos (first poses)
         mouse-move-poses (when (> (count poses) 1)
@@ -785,7 +787,7 @@ Columns: 0
                b (aget array-data (+ index 2))
                a (aget array-data (+ index 3))]
            [[x y] (if (not= [r g b a] [0 0 0 0])
-                    (color/rgba r g b)
+                    (color/rgba r g b (/ a 255))
                     color/transparent-color)]))
        (sort-by #(-> % first second)) ;; что бы был такой же порядок как и cel:pixels
        ))
@@ -1324,6 +1326,221 @@ Columns: 0
               [{:x 6, :y 2} current-color]
               [{:x 7, :y 2} current-color]]
              (get-active-current-cel-pixels empty-sprite))))))
+
+(defn canvas->pixels-map [canvas-id]
+  (let [canvas (. js/document (getElementById canvas-id))
+        size (-> @re-frame.db/app-db :sprite :size)
+        image-data (.. canvas (getContext "2d") (getImageData 0 0 (:width size) (:height size)))]
+    (array-data->pixels (.. image-data -data) (clj->js size))))
+
+(defn mouse-down-and-move [poses]
+  (let [mouse-down-pos (first poses)
+        mouse-move-poses (drop 1 poses)]
+    (rf/dispatch-sync [::events/handle-mouse-event :mouse-down mouse-down-pos (:right-button mouse-down-pos)])
+    (doseq [pos mouse-move-poses]
+      (rf/dispatch-sync [::events/handle-mouse-event :mouse-move pos (:right-button pos)]))))
+
+(defn mouse-down [mouse-down-pos]
+  (rf/dispatch-sync [::events/handle-mouse-event :mouse-down mouse-down-pos (:right-button mouse-down-pos)]))
+
+(defn mouse-move [poses]
+  (doseq [pos poses]
+    (rf/dispatch-sync [::events/handle-mouse-event :mouse-move pos (:right-button pos)])))
+
+(defn mouse-up [mouse-up-pos]
+  (rf/dispatch-sync [::events/handle-mouse-event :mouse-up mouse-up-pos (:right-button mouse-up-pos)]))
+
+(defn click [mouse-pos]
+  (mouse-down mouse-pos)
+  (mouse-up mouse-pos))
+
+(defn initialize-db-and-clear-preview [initialize-db-data]
+  (initialize-db initialize-db-data)
+  (canvas/clear-canvas (. js/document (getElementById "preview"))))
+
+(def sprite-for-selection-pixels {[0 0] (color/rgba 255 0 0)
+                                  [1 0] (color/rgba 0 255 0)
+                                  [0 1] (color/rgba 0 0 255)
+                                  [1 1] (color/rgba 170 0 0)})
+(def sprite-for-selection
+  (let [sprite-size {:width 2 :height 2}]
+    (->> (sprite/create {:size sprite-size
+                         :layer (layer/create "Layer 1")
+                         :frame (frame/create 200)
+                         :cel (->> (cel/create sprite-size)
+                                   (cel/set-pixels
+                                    {{:x 0 :y 0} (color/rgba 255 0 0)
+                                     {:x 1 :y 0} (color/rgba 0 255 0)
+                                     {:x 0 :y 1} (color/rgba 0 0 255)
+                                     {:x 1 :y 1} (color/rgba 170 0 0)}))}))))
+
+(defn get-preview [pixels-map]
+  (for [pos [[0 0]
+             [1 0]
+             [0 1]
+             [1 1]]]
+    [pos (get pixels-map pos color/transparent-color)]))
+
+(def selection-color "rgba(255, 255, 255, 0.4)")
+
+(deftest apply-rectangle-selection
+  (testing "no selection"
+    (testing "when user mouse down, move it and up it should draw transparent selection on preview"
+      (initialize-db-and-clear-preview {:sprite sprite-for-selection})
+      (rf/dispatch-sync [::events/select-tool :rectangle-select])
+
+      (mouse-down {:x 0 :y 0})
+      (is (= (get-preview {[0 0] selection-color}) (canvas->pixels-map "preview"))
+          "draw selection on mouse down")
+      (mouse-move [{:x 1 :y 0}])
+      (is (= (get-preview {[0 0] selection-color
+                           [1 0] selection-color})
+             (canvas->pixels-map "preview"))
+          "draw selection on mouse move")
+      (mouse-up {:x 1 :y 0})
+      (is (= (get-preview {[0 0] selection-color
+                           [1 0] selection-color})
+             (canvas->pixels-map "preview"))
+          "draw selection on mouse up")))
+
+  (testing "selection"
+    (testing "when user mouse down outside selection should drop selection"
+      (initialize-db-and-clear-preview {:sprite sprite-for-selection})
+      (rf/dispatch-sync [::events/select-tool :rectangle-select])
+
+      (apply-current-tool [{:x 0 :y 0}])
+      (mouse-down {:x 1 :y 0})
+      (is (= (get-preview {}) (canvas->pixels-map "preview"))))
+
+    (testing "when user mouse down in selection should not drop selection"
+      (initialize-db-and-clear-preview {:sprite sprite-for-selection})
+      (rf/dispatch-sync [::events/select-tool :rectangle-select])
+
+      (apply-current-tool [{:x 0 :y 0}])
+      (mouse-down {:x 0 :y 0})
+      (is (= (get-preview {[0 0] selection-color}) (canvas->pixels-map "preview"))))
+    (testing "when user mouse down in selection and move it should hide selection and move selected pixels"
+      (initialize-db-and-clear-preview {:sprite sprite-for-selection})
+      (rf/dispatch-sync [::events/select-tool :rectangle-select])
+
+      (apply-current-tool [{:x 0 :y 0}])
+      (mouse-down {:x 0 :y 0})
+      (mouse-move [{:x 1 :y 0}])
+      (is (= (get-preview {[1 0] (color/rgba 255 0 0)}) (canvas->pixels-map "preview")))
+      (is (= (seq (assoc sprite-for-selection-pixels [0 0] "rgba(0, 0, 0, 0)"))
+             (canvas->pixels-map "current-layer")))
+      (is (= (-> @(rf/subscribe [::subs/sprite]) sprite/get-current-cel)
+             (sprite/get-current-cel sprite-for-selection))
+          "sprite should not be changed, only preview and current-layer"))
+    (testing "should draw selection after releasing moved selection"
+      (initialize-db-and-clear-preview {:sprite sprite-for-selection})
+      (rf/dispatch-sync [::events/select-tool :rectangle-select])
+
+      (apply-current-tool [{:x 0 :y 0}])
+      (apply-current-tool [{:x 0 :y 0} {:x 1 :y 0}])
+      (is (= (get-preview {[1 0] (color/rgba 255 102 102)}) (canvas->pixels-map "preview")))
+      (is (= (-> @(rf/subscribe [::subs/sprite]) sprite/get-current-cel)
+             (sprite/get-current-cel sprite-for-selection))
+          "sprite should not be changed, only preview and current-layer"))
+    (testing "should commit changes when click outside selection"
+      (initialize-db-and-clear-preview {:sprite sprite-for-selection})
+      (rf/dispatch-sync [::events/select-tool :rectangle-select])
+
+      (apply-current-tool [{:x 0 :y 0}])
+      (apply-current-tool [{:x 0 :y 0} {:x 1 :y 0}])
+      (click {:x 0 :y 1})
+      (is (= (get-preview {}) (canvas->pixels-map "preview")))
+      (is (= (seq (assoc sprite-for-selection-pixels
+                         [0 0] "rgba(0, 0, 0, 0)"
+                         [1 0] "rgba(255, 0, 0, 1)"))
+             (canvas->pixels-map "current-layer")))
+      (is (= (seq (assoc sprite-for-selection-pixels
+                         [0 0] "rgba(0, 0, 0, 0)"
+                         [1 0] "rgba(255, 0, 0, 1)"))
+             (->> @(rf/subscribe [::subs/sprite])
+                  sprite/get-current-cel
+                  cel/pixels->coll
+                  (map (fn [[pos color]] [[(:x pos) (:y pos)] color]))))))
+
+    (testing "copy+paste+move+commit"
+      (initialize-db-and-clear-preview {:sprite sprite-for-selection})
+      (rf/dispatch-sync [::events/select-tool :rectangle-select])
+
+      (apply-current-tool [{:x 0 :y 0}])
+      (rf/dispatch-sync [::rectangle-select/copy-selection])
+      (is (= (get-preview {}) (canvas->pixels-map "preview"))
+          "should remove selection after copy selection")
+      (rf/dispatch-sync [::rectangle-select/past-selection])
+
+      (is (= (get-preview {[0 0] "rgba(255, 102, 102, 1)"}) (canvas->pixels-map "preview"))
+          "should past selection")
+      (apply-current-tool [{:x 0 :y 0} {:x 1 :y 0}])
+      (is (= (seq (assoc sprite-for-selection-pixels
+                         [0 0] "rgba(255, 0, 0, 1)"))
+             (canvas->pixels-map "current-layer"))
+          "when move pasted selection should not cut underlayed pixels")
+      (is (= (get-preview {[0 0] "rgba(0, 0, 0, 0)"
+                           [1 0] "rgba(255, 102, 102, 1)"}) (canvas->pixels-map "preview")))
+
+      (click {:x 0 :y 0})
+      (is (= (get-preview {}) (canvas->pixels-map "preview"))
+          "preview after commit pasted selection")
+      (is (= (seq (assoc sprite-for-selection-pixels
+                         [0 0] "rgba(255, 0, 0, 1)"
+                         [1 0] "rgba(255, 0, 0, 1)"))
+             (canvas->pixels-map "current-layer"))
+          "current-layer after commit pasted selection")
+      (is (= (seq (assoc sprite-for-selection-pixels
+                         [0 0] "rgba(255, 0, 0, 1)"
+                         [1 0] "rgba(255, 0, 0, 1)"))
+             (->> @(rf/subscribe [::subs/sprite])
+                  sprite/get-current-cel
+                  cel/pixels->coll
+                  (map (fn [[pos color]] [[(:x pos) (:y pos)] color]))))
+          "current-cel changed after commit pasted selection"))
+
+    (testing "copy+paste+paste"
+      (initialize-db-and-clear-preview {:sprite sprite-for-selection})
+      (rf/dispatch-sync [::events/select-tool :rectangle-select])
+
+      (apply-current-tool [{:x 0 :y 0}])
+      (rf/dispatch-sync [::rectangle-select/copy-selection])
+      (rf/dispatch-sync [::rectangle-select/past-selection])
+      (rf/dispatch-sync [::rectangle-select/past-selection])
+      (is (= (get-preview {[0 0] "rgba(255, 102, 102, 1)"}) (canvas->pixels-map "preview"))))
+
+    (testing "delete selection"
+      (initialize-db-and-clear-preview {:sprite sprite-for-selection})
+      (rf/dispatch-sync [::events/select-tool :rectangle-select])
+
+      (apply-current-tool [{:x 0 :y 0}])
+      (rf/dispatch-sync [::rectangle-select/cut-selection])
+      (is (= (get-preview {}) (canvas->pixels-map "preview")))
+      (is (= (seq (assoc sprite-for-selection-pixels
+                         [0 0] "rgba(0, 0, 0, 0)"))
+             (canvas->pixels-map "current-layer")))
+      (is (= (seq (assoc sprite-for-selection-pixels
+                         [0 0] "rgba(0, 0, 0, 0)"))
+             (->> @(rf/subscribe [::subs/sprite])
+                  sprite/get-current-cel
+                  cel/pixels->coll
+                  (map (fn [[pos color]] [[(:x pos) (:y pos)] color]))))))
+
+    (testing "cut selection"
+      (initialize-db-and-clear-preview {:sprite sprite-for-selection})
+      (rf/dispatch-sync [::events/select-tool :rectangle-select])
+
+      (apply-current-tool [{:x 0 :y 0}])
+      (rf/dispatch-sync [::rectangle-select/cut-selection])
+      (is (= (get-preview {}) (canvas->pixels-map "preview")))
+      (is (= (seq (assoc sprite-for-selection-pixels
+                         [0 0] "rgba(0, 0, 0, 0)"))
+             (canvas->pixels-map "current-layer")))
+      (rf/dispatch-sync [::rectangle-select/past-selection])
+      (is (= (get-preview {[0 0] "rgba(255, 102, 102, 1)"})
+             (canvas->pixels-map "preview"))
+          "should past selection"))))
+
 
 #_(enable-console-print!)
 #_(run-tests)
