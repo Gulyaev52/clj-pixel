@@ -19,7 +19,7 @@
                r (aget array-data index)
                g (aget array-data (+ index 1))
                b (aget array-data (+ index 2))
-               a (aget array-data (+ index 3))]
+               a (aget array-data (+ index 3))] ;; todo: тут значения 0-255
            [[x y] (rgba r g b a)]))
        (sort-by #(-> % first second))
        (map second)))

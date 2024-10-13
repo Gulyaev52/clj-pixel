@@ -6,15 +6,19 @@
 (re-frame/reg-event-fx
  ::undo
  (fn [{:keys [db]} _]
-   {:db (-> db
-            (assoc :tool (tool/init (-> db :tool :type)))
-            history/undo)
-    :fx [[:clear-preview]]})) ;; todo: fix
+   (if (history/check-undo-available? db)
+     {:db (-> db
+              (assoc :tool (tool/init (-> db :tool :type)))
+              history/undo)
+      :fx [[:clear-preview]]}
+     {:db db})))
 
 (re-frame/reg-event-fx
  ::redo
  (fn [{:keys [db]} _]
-   {:db (-> db
-            (assoc :tool (tool/init (-> db :tool :type)))
-            history/redo)
-    :fx [[:clear-preview]]}))
+   (if (history/check-redo-available? db)
+     {:db (-> db
+              (assoc :tool (tool/init (-> db :tool :type)))
+              history/redo)
+      :fx [[:clear-preview]]}
+     {:db db})))

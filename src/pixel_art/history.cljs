@@ -32,19 +32,15 @@
   (> (get-in db [:history :current-idx]) 0))
 
 (defn undo [db]
-  (if (check-undo-available? db)
-    (-> db
-        (restore (dec (get-in db [:history :current-idx])))
-        (update-in [:history :current-idx] dec))
-    db))
+  (-> db
+      (restore (dec (get-in db [:history :current-idx])))
+      (update-in [:history :current-idx] dec)))
 
 (defn check-redo-available? [db]
   (< (inc (get-in db [:history :current-idx]))
      (count (get-in db [:history :stack]))))
 
 (defn redo [db]
-  (if (check-redo-available? db)
-    (-> db
-        (restore (inc (get-in db [:history :current-idx])))
-        (update-in [:history :current-idx] inc))
-    db))
+  (-> db
+      (restore (inc (get-in db [:history :current-idx])))
+      (update-in [:history :current-idx] inc)))

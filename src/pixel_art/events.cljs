@@ -5,7 +5,6 @@
             [pixel-art.history :as history]
             [pixel-art.local-storage :as local-storage]
             [pixel-art.model.cel :as cel]
-            [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.model.frame :as frame]
             [pixel-art.model.layer :as layer]
             [pixel-art.model.sprite :as sprite]
@@ -20,7 +19,8 @@
             [re-frame.core :as re-frame]
             [re-frame.db]
             [re-pressed.core :as rp]
-            [sc.api]))
+            [sc.api]
+            [pixel-art.model.color :as color]))
 
 ;; todo: remove
 (add-watch re-frame.db/app-db :def
@@ -103,8 +103,7 @@
   #(-> % :sprite)
   (fn [{:keys [db]}]
     {:db db
-     :fx [[:clear-preview]
-          [:clear-frame]
+     :fx [[:clear-frame]
           [:draw-current-frame]]})))
 
 ;; todo: fix performance; если позиция ячейки изменяется то тут ошибка; если удаляется
@@ -499,7 +498,7 @@
 (defn get-highlight-color [color]
   (let [dark-color "rgba(0, 0, 0, 0.2)"
         light-color "rgba(255, 255, 255, 0.2)"]
-    (if (= color transparent-color)
+    (if (= color color/transparent-color)
       dark-color
       (let [luminance (.. (tinycolor color) toHsl -l)]
         (if (> luminance 0.5)
@@ -527,11 +526,16 @@
  :draw-preview
  (fn [changes]
    (let [ctx (canvas/get-canvas-context "preview")
+         current-layer-ctx (canvas/get-canvas-context "current-layer")
          size (-> @re-frame.db/app-db :sprite sprite/get-size)]
      (doseq [[pos color] changes]
        (when (geometry/valid-point? pos size)
-         (set! (. ctx -fillStyle) (or color "white"))
-         (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))
+         (if (= color color/transparent-color)
+           (do
+             (. current-layer-ctx (clearRect (:x pos) (:y pos) 1 1))
+             (. ctx (clearRect (:x pos) (:y pos) 1 1)))
+           (do (set! (. ctx -fillStyle) color)
+               (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))))
 
 (re-frame/reg-fx
  :hide-pixels-grid
