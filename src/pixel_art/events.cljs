@@ -33,19 +33,24 @@
  ::initialize-db
  [(re-frame/inject-cofx ::local-storage/get-item saved-project-fields-key)]
  (fn [coeffects [_ test-data]]
-   {:db (db/get-default-db (or test-data (get coeffects saved-project-fields-key)))
-    :fx [[:dispatch [::rp/set-keydown-rules
-                     {:event-keys (->> keyboard-shortcuts/shortcuts-by-types
-                                       vals
-                                       flatten
+   (let [saved-project-fields (get coeffects saved-project-fields-key)
+         initial-db (cond
+                      test-data (db/get-db test-data)
+                      saved-project-fields (db/get-db saved-project-fields)
+                      :else (db/get-default-project-db))]
+     {:db initial-db
+      :fx [[:dispatch [::rp/set-keydown-rules
+                       {:event-keys (->> keyboard-shortcuts/shortcuts-by-types
+                                         vals
+                                         flatten
                                        ;; Order matters, and the first matching key combination will consume the event. So for example, if you want to listen for both forward arrow ({:keyCode 37}) and control + forward arrow ({:keyCode 37 :ctrlKey true}), then you must put the combination before the singleton. 
-                                       (sort-by (fn [{:keys [keys]}] (not (some :ctrlKey keys))))
-                                       (map (fn [{:keys [action keys]}]
-                                              (into [action] (->> keys
-                                                                  (map #(-> %
-                                                                            (assoc :keyCode (keyboard-shortcuts/key->code (:key %)))
-                                                                            (dissoc :key)))
-                                                                  (map vector))))))}]]]}))
+                                         (sort-by (fn [{:keys [keys]}] (not (some :ctrlKey keys))))
+                                         (map (fn [{:keys [action keys]}]
+                                                (into [action] (->> keys
+                                                                    (map #(-> %
+                                                                              (assoc :keyCode (keyboard-shortcuts/key->code (:key %)))
+                                                                              (dissoc :key)))
+                                                                    (map vector))))))}]]]})))
 
 (re-frame/reg-global-interceptor
  (on-paths-change

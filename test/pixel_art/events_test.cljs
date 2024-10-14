@@ -76,7 +76,10 @@
 
 (defn initialize-db
   ([]
-   (rf/dispatch-sync [::events/initialize-db {:sprite initial-sprite :palettes initial-palettes}]))
+   (rf/dispatch-sync [::events/initialize-db {:sprite initial-sprite
+                                              :palettes initial-palettes
+                                              :primary-color (color/rgba 0 0 0)
+                                              :secondary-color (color/rgba 255 0 0)}]))
   ([data]
    (rf/dispatch-sync [::events/initialize-db (merge {:palettes initial-palettes} data)])))
 

@@ -26,11 +26,6 @@
 
 (def initial-frame-duration 100)
 
-(def initial-palettes
-  [{:name "default"
-    :current true
-    :colors (map color/rgba ["black" "red" "green" "blue" "yellow" "gray" "purple"])}])
-
 (defn get-db [{:keys [sprite palettes primary-color secondary-color pixels-grid-enabled]}]
   (let [viewport-size {:width 900 :height 700}
         scale max-scale
@@ -57,33 +52,31 @@
          :sprite-resizer (sprite-resizer/init)})))
 
 ;; todo: separate logic in this fn
-(defn get-default-db [{:keys [palettes sprite primary-color secondary-color pixels-grid-enabled]}]
-  (let [sprite-size (or (when sprite
-                          (sprite/get-size sprite))
-                        {:width 16 :height 16})
-        res-palettes (or palettes initial-palettes)
-        primary-color (or primary-color (-> res-palettes first :colors first) (color/rgba 0 0 0))
-        secondary-color (or secondary-color (color/rgba 255 0 0))]
+(defn get-default-project-db []
+  (let [sprite-size {:width 16 :height 16}
+        initial-palettes
+        [{:name "default"
+          :current true
+          :colors (map color/rgba ["black" "red" "green" "blue" "yellow" "gray" "purple"])}]
+        primary-color (-> initial-palettes first :colors first)
+        secondary-color (color/rgba 255 0 0)]
     (get-db {:sprite
-             (or
-              sprite
-              (sprite/create {:size sprite-size
-                              :layer (layer/create (get-layer-name :single 0))
-                              :frame (frame/create initial-frame-duration)
-                              :cel (->> (cel/create sprite-size)
-                                        (cel/set-pixels (->> (for [x (range 0 (:width sprite-size))
-                                                                   y (range 0 (:height sprite-size))]
-                                                               [{:x x :y y} color/transparent-color])
-                                                             (into {})))
-                                        (cel/set-pixels
-                                         {{:x 0 :y 0} secondary-color
-                                          {:x 0 :y 1} color/transparent-color
-                                          {:x 1 :y 1} secondary-color
-                                          {:x 3 :y 3} secondary-color
-                                          {:x 3 :y 4} secondary-color
-                                          {:x 4 :y 3} secondary-color
-                                          {:x 4 :y 4} secondary-color}))}))
-             :palettes res-palettes
+             (sprite/create {:size sprite-size
+                             :layer (layer/create (get-layer-name :single 0))
+                             :frame (frame/create initial-frame-duration)
+                             :cel (->> (cel/create sprite-size)
+                                       (cel/set-pixels (->> (for [x (range 0 (:width sprite-size))
+                                                                  y (range 0 (:height sprite-size))]
+                                                              [{:x x :y y} color/transparent-color])
+                                                            (into {})))
+                                       (cel/set-pixels
+                                        {{:x 0 :y 0} secondary-color
+                                         {:x 0 :y 1} color/transparent-color
+                                         {:x 1 :y 1} secondary-color
+                                         {:x 3 :y 3} secondary-color
+                                         {:x 3 :y 4} secondary-color
+                                         {:x 4 :y 3} secondary-color
+                                         {:x 4 :y 4} secondary-color}))})
+             :palettes initial-palettes
              :primary-color primary-color
-             :secondary-color secondary-color
-             :pixels-grid-enabled pixels-grid-enabled})))
+             :secondary-color secondary-color})))
