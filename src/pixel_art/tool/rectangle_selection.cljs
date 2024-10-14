@@ -8,8 +8,7 @@
             [pixel-art.tool.utils :refer [commit-changes-and-init-tool
                                           get-current-cel]]
             [pixel-art.utils.geometry :as geometry]
-            [re-frame.core :as re-frame]
-            [sc.api :as api]))
+            [re-frame.core :as re-frame]))
 ;; init
 ;; todo: используем так как из selection-image удаляются прозр точки(не работает днд) и если проверять вхож
 ;; todo: а зачем поле state

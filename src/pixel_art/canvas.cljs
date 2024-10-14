@@ -20,12 +20,14 @@
     (doseq [[rgb-str i] (map vector
                              pixels
                              (range 0 (.. image-data -data -length) 4))]
-      (let [[r g b a] (when rgb-str (re-seq #"\d+" rgb-str))]
+      (let [[r g b a] (map parse-double (re-seq #"\d+" rgb-str))]
         (aset (. image-data -data) i r)
         (aset (. image-data -data) (+ i 1) g)
         (aset (. image-data -data) (+ i 2) b)
         (aset (. image-data -data) (+ i 3) (if rgb-str
-                                             (scale-number (or a opacity) [0 1] [0 255])
+                                             (scale-number (if-not (= a 1) a opacity) ;; todo: fix it
+                                                           [0 1]
+                                                           [0 255])
                                              0))))
     image-data))
 

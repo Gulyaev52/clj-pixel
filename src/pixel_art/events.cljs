@@ -534,8 +534,9 @@
            (do
              (. current-layer-ctx (clearRect (:x pos) (:y pos) 1 1))
              (. ctx (clearRect (:x pos) (:y pos) 1 1)))
-           (do (set! (. ctx -fillStyle) color)
-               (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))))
+           (do
+             (set! (. ctx -fillStyle) color)
+             (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))))
 
 (re-frame/reg-fx
  :hide-pixels-grid
