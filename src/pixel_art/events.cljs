@@ -3,37 +3,37 @@
             [pixel-art.canvas :as canvas]
             [pixel-art.db :as db :refer [get-layer-name max-scale]]
             [pixel-art.history :as history]
+            [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
             [pixel-art.local-storage :as local-storage]
             [pixel-art.model.cel :as cel]
+            [pixel-art.model.color :as color]
             [pixel-art.model.frame :as frame]
             [pixel-art.model.layer :as layer]
             [pixel-art.model.sprite :as sprite]
-            [pixel-art.palette :as palette]
-            [pixel-art.tool.core :as tool]
             [pixel-art.project-save-load]
+            [pixel-art.tool.core :as tool]
             [pixel-art.tool.utils :refer [commit-changes-and-init-tool
                                           get-current-cel]]
-            [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
             [pixel-art.utils.geometry :as geometry]
-            [pixel-art.utils.interceptor :refer [on-changes]]
+            [pixel-art.utils.interceptor :refer [on-changes on-paths-change]]
             [re-frame.core :as re-frame]
             [re-frame.db]
             [re-pressed.core :as rp]
             [sc.api]
-            [pixel-art.model.color :as color]))
+            [pixel-art.fx]))
 
 ;; todo: remove
 (add-watch re-frame.db/app-db :def
            (fn [_ _ _ new]
              (def db new)))
 
+(def saved-project-fields-key "saved-project-fields")
+
 (re-frame/reg-event-fx
  ::initialize-db
- [(re-frame/inject-cofx ::local-storage/get-item palette/local-storage-key)]
- (fn [coeffects [_ {:keys [sprite palettes]}]]
-   {:db (db/get-default-db {:palettes (or palettes
-                                          (get coeffects palette/local-storage-key))
-                            :sprite sprite})
+ [(re-frame/inject-cofx ::local-storage/get-item saved-project-fields-key)]
+ (fn [coeffects [_ test-data]]
+   {:db (db/get-default-db (or test-data (get coeffects saved-project-fields-key)))
     :fx [[:dispatch [::rp/set-keydown-rules
                      {:event-keys (->> keyboard-shortcuts/shortcuts-by-types
                                        vals
@@ -46,6 +46,17 @@
                                                                             (assoc :keyCode (keyboard-shortcuts/key->code (:key %)))
                                                                             (dissoc :key)))
                                                                   (map vector))))))}]]]}))
+
+(re-frame/reg-global-interceptor
+ (on-paths-change
+  :save-project-in-local-storage
+  [:primary-color :secondary-color :palettes :pixels-grid-enabled :sprite]
+  (fn [{:keys [db fields]}]
+    {:db db
+     :fx [[:dispatch-debounce {:key :save-project-in-local-storage
+                               :event [::local-storage/set-item {:key saved-project-fields-key
+                                                                 :value fields}]
+                               :delay 2000}]]})))
 
 (re-frame/reg-event-fx
  ::initialize-canvas
@@ -87,15 +98,22 @@
   :resize-canvases
   #(-> % :sprite sprite/get-size)
   (fn [{:keys [db]}]
-    (let [pixels-grid-enabled (:pixels-grid-enabled @re-frame.db/app-db)
-          onion-skin-enabled (-> @re-frame.db/app-db :onion-skin :enabled)]
-      {:db db
-       :fx [[:init-canvases]
-            [:draw-current-frame]
-            (when pixels-grid-enabled
-              [:draw-pixels-grid])
-            (when onion-skin-enabled
-              [:draw-onion-skin {:sprite (:sprite db) :opacity (-> db :onion-skin :opacity)}])]}))))
+    {:db db
+     :fx [[:init-canvases]
+          [:draw-current-frame]
+          [:draw-pixels-grid]
+          [:draw-onion-skin {:sprite (:sprite db) :opacity (-> db :onion-skin :opacity)}]]})))
+
+(re-frame/reg-global-interceptor
+ (on-changes
+  :resize-canvases
+  #(-> % :sprite sprite/get-size)
+  (fn [{:keys [db]}]
+    {:db db
+     :fx [[:init-canvases]
+          [:draw-current-frame]
+          [:draw-pixels-grid]
+          [:draw-onion-skin {:sprite (:sprite db) :opacity (-> db :onion-skin :opacity)}]]})))
 
 (re-frame/reg-global-interceptor
  (on-changes
@@ -544,8 +562,10 @@
    (canvas/clear-canvas (. js/document (getElementById "grid")))))
 
 (re-frame/reg-fx
- :draw-pixels-grid
- draw-pixels-grid)
+ :draw-pixels-grid ;; todo: draw-pixels-grid-when-enabled
+ (fn []
+   (when (:pixels-grid-enabled @re-frame.db/app-db)
+     (draw-pixels-grid))))
 
 ;; todo: rename
 (re-frame/reg-fx

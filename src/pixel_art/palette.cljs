@@ -1,11 +1,9 @@
 (ns pixel-art.palette
-  (:require [pixel-art.local-storage :as local-storage]
-            [pixel-art.model.color :refer [transparent-color]]
+  (:require [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.model.sprite :as sprite]
             [pixel-art.palette.gimp-file :as gimp-file]
             [pixel-art.tool.utils :refer [get-current-color-type]]
             [pixel-art.utils.coll :as coll]
-            [pixel-art.utils.interceptor :refer [on-changes]]
             [re-frame.core :as re-frame]
             [sc.api]))
 
@@ -23,17 +21,7 @@
 (defn get-current-palette [db]
   (nth (:palettes db) (get-current-palette-idx db)))
 
-(def local-storage-key :palettes)
 (defn init [palettes] palettes)
-
-(re-frame/reg-global-interceptor
- (on-changes
-  :save-palettes-in-local-storage-on-palettes-change
-  #(:palettes %)
-  (fn [{:keys [db]}]
-    {:db db
-     :fx [[::local-storage/set-item {:key local-storage-key
-                                     :value (:palettes db)}]]})))
 
 (re-frame/reg-event-fx
  ::select-palette

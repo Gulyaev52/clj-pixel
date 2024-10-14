@@ -1,13 +1,14 @@
 user-is-drawing -> mouse-is-down
 
-15) перенос прозрачного. когда рисуешь и под ним уже есть что-то
-13) выделения. отрефакторить
-15) resize preview. resize content. оптимизировать с помощью пропорций.
-20) сохранение проекта в локал сторадж?
-выбранные цвета, текущая палетка и прочее
 21) новый проект
   с отличным размером
-13) shading clear-preview draw-preview
+15) дизейблинг действий типо на remove
+
+15) перенос прозрачного.
+когда рисуешь и под ним уже есть что-то.
+при выборе прозрачного цвета и рисование
+16) undo, redo и контролы
+15) resize preview. resize content. оптимизировать с помощью пропорций.
 15) зум
   4) зум и большой размер (64)  
   3) на изменение размера нужно зумить что бы полностью был виден
@@ -17,9 +18,7 @@ user-is-drawing -> mouse-is-down
 17) пофиксить грид
 13) применить изменения(selection) на действия (удаление копирование и прочее)
 4) view для переноса
-1) нужно обновить картинки
 2) когда переносишь со слоя на слой и оно залинковано
-15) дизейблинг действий типо на remove
 5) при создание выбирать background как в aseprite
 background. отдельный слой? 
 можно просто сделать background как отдельный слой(скорее всего недоступный в ui) 
@@ -62,6 +61,7 @@ background. отдельный слой?
 16) eraser opacity
 13) изменения на все выдел ячейки
 https://www.aseprite.org/docs/move-tool/
+16) иметь сохранение на каждый проект в локал сторадже
 
 рефакторинг
 15) отдельный слой для визуальных эффектов(выделение)
@@ -200,17 +200,24 @@ rectangle-select. transpare-color
 
 
 
-
-
-(defn duplicate-frame [sprite]
-  (->> (get-selected-cels-pos sprite)
-       (sort-by :frame-idx)
-       (map (fn [{:keys [frame-idx]}]
-              [frame-idx (nth (:frames sprite) frame-idx)]))
-       (reduce (fn [res-sprite [frame-idx frame]]
-                 (add-frame frame
-                            (fn [pos] (get-cel {:frame-idx frame-idx
-                                                :layer-idx (:layer-idx pos)}
-                                               sprite))
-                            res-sprite))
-               sprite)))
+(re-frame/reg-fx
+  :draw-preview
+  (fn [changes]
+    (let [preview-ctx (canvas/get-canvas-context "preview")
+          current-layer-ctx (canvas/get-canvas-context "current-layer")
+          sprite (-> @re-frame.db/app-db :sprite)
+          cel-opacity (-> sprite sprite/get-current-cel :opacity)]
+      (doseq [[pos color] changes]
+        (when (geometry/valid-point? pos (sprite/get-size sprite))
+          (if (= color color/transparent-color)
+            (do
+              (. current-layer-ctx (clearRect (:x pos) (:y pos) 1 1))
+              (. preview-ctx (clearRect (:x pos) (:y pos) 1 1)))
+            (do
+              (. preview-ctx save)
+              (set! (. preview-ctx -globalAlpha) cel-opacity)
+              (set! (. preview-ctx -fillStyle) color)
+              (when (not= cel-opacity 1) ;; todo: fix
+                (. preview-ctx (clearRect (:x pos) (:y pos) 1 1)))
+              (. preview-ctx (fillRect (:x pos) (:y pos) 1 1))
+              (. preview-ctx restore))))))))

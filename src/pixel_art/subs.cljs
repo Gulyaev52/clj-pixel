@@ -103,11 +103,6 @@
    (get-tool-options db)))
 
 (re-frame/reg-sub
- ::cel-imgs
- (fn [db]
-   (:cel-imgs db)))
-
-(re-frame/reg-sub
  ::sprite-preview
  (fn [db]
    (:sprite-preview db)))

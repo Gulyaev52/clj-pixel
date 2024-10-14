@@ -25,8 +25,7 @@
  (fn [{:keys [db]} [_ frames-count]]
    (let [onion-skin (:onion-skin db)]
      {:db (assoc-in db [:onion-skin :frames-count] frames-count)
-      :fx (when (:enabled onion-skin)
-            [[:draw-onion-skin {:sprite (:sprite db) :opacity (:opacity onion-skin)}]])})))
+      :fx [[:draw-onion-skin {:sprite (:sprite db) :opacity (:opacity onion-skin)}]]})))
 
 (re-frame/reg-event-fx
  ::set-enabled
@@ -73,18 +72,19 @@
         {:db db})))))
 
 (re-frame/reg-fx
- :draw-onion-skin
+ :draw-onion-skin ;; todo: draw-onion-skin-when-enabled
  (fn [{:keys [sprite opacity]}]
-   (let [canvas (. js/document (getElementById "onion-skin"))
-         ctx (. canvas (getContext "2d"))
-         db @db/app-db
-         onion-frames-idx (get-onion-skin-frames-idx sprite (-> db :onion-skin :frames-count))]
-     (. ctx (clearRect 0 0 (. canvas -width) (. canvas -height)))
-     (.save ctx)
-     (set! (.-globalAlpha ctx) opacity)
-     (doseq [frame-idx onion-frames-idx]
-       (canvas/draw-frame-on-single-canvas frame-idx sprite canvas))
-     (.restore ctx))))
+   (when (:enabled (:onion-skin @db/app-db))
+     (let [canvas (. js/document (getElementById "onion-skin"))
+           ctx (. canvas (getContext "2d"))
+           db @db/app-db
+           onion-frames-idx (get-onion-skin-frames-idx sprite (-> db :onion-skin :frames-count))]
+       (. ctx (clearRect 0 0 (. canvas -width) (. canvas -height)))
+       (.save ctx)
+       (set! (.-globalAlpha ctx) opacity)
+       (doseq [frame-idx onion-frames-idx]
+         (canvas/draw-frame-on-single-canvas frame-idx sprite canvas))
+       (.restore ctx)))))
 
 (re-frame/reg-fx
  :hide-onion-skin

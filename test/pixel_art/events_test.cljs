@@ -609,10 +609,6 @@
 
       (is (= initial-db (dissoc @(rf/subscribe [:db]) :user-is-drawing :mouse-pos))))))
 
-(defn check-current-palettes-info-saved-in-local-storage []
-  (is (= (:palettes @(rf/subscribe [:db]))
-         (:palettes @!local-storage))))
-
 (deftest test-palettes
   (testing "select primary and secondary color"
     (initialize-db)
@@ -630,8 +626,7 @@
       (initialize-db)
       (let [new-color (color/rgba 100 100 0)]
         (rf/dispatch-sync [::palette/add-color new-color])
-        (is (= new-color (last (:colors @(rf/subscribe [::subs/current-palette]))))))
-      (check-current-palettes-info-saved-in-local-storage))
+        (is (= new-color (last (:colors @(rf/subscribe [::subs/current-palette])))))))
 
     (testing "colors are unique"
       (initialize-db)
@@ -639,24 +634,21 @@
             new-color (color/rgba 0 0 0)]
         (rf/dispatch-sync [::palette/add-color new-color])
         (is (= new-color @(rf/subscribe [::subs/primary-color])))
-        (is (= initial-selected-palette @(rf/subscribe [::subs/current-palette]))))
-      (check-current-palettes-info-saved-in-local-storage)))
+        (is (= initial-selected-palette @(rf/subscribe [::subs/current-palette]))))))
 
   (testing "remove color"
     (initialize-db)
     (let [initial-selected-palette @(rf/subscribe [::subs/current-palette])]
       (rf/dispatch-sync [::palette/remove-color 0])
       (is (= (rest (:colors initial-selected-palette))
-             (:colors @(rf/subscribe [::subs/current-palette]))))
-      (check-current-palettes-info-saved-in-local-storage)))
+             (:colors @(rf/subscribe [::subs/current-palette]))))))
 
   (testing "select palette"
     (initialize-db)
     (rf/dispatch-sync [::palette/select-palette 1])
     (is (= (assoc (nth initial-palettes 1)
                   :current true)
-           @(rf/subscribe [::subs/current-palette])))
-    (check-current-palettes-info-saved-in-local-storage))
+           @(rf/subscribe [::subs/current-palette]))))
 
   (testing "remove selected palette"
     (initialize-db)
@@ -665,8 +657,7 @@
       (is (= current-second-palette
              @(rf/subscribe [::subs/current-palette])))
       (is (= [current-second-palette]
-             @(rf/subscribe [::subs/palettes])))
-      (check-current-palettes-info-saved-in-local-storage)))
+             @(rf/subscribe [::subs/palettes])))))
 
   (testing "create palette"
     (initialize-db)
@@ -677,15 +668,13 @@
                   :colors []})
            @(rf/subscribe [::subs/palettes])))
     (is (= {:name "new-palette" :current true :colors []}
-           @(rf/subscribe [::subs/current-palette])))
-    (check-current-palettes-info-saved-in-local-storage))
+           @(rf/subscribe [::subs/current-palette]))))
 
   (testing "rename palette"
     (initialize-db)
     (rf/dispatch-sync [::palette/rename-selected-palette "renamed"])
     (is (= (assoc initial-current-palette :name "renamed")
-           @(rf/subscribe [::subs/current-palette])))
-    (check-current-palettes-info-saved-in-local-storage))
+           @(rf/subscribe [::subs/current-palette]))))
 
   (testing "load/download palette"
     (initialize-db)
@@ -712,8 +701,7 @@ Columns: 0
                  (assoc-in [0 :current] false)
                  (assoc-in [1 :current] true))
              @(rf/subscribe [::subs/palettes])))
-      (is (= (:name (nth initial-palettes 1)) (:name @(rf/subscribe [::subs/current-palette]))))
-      (check-current-palettes-info-saved-in-local-storage)))
+      (is (= (:name (nth initial-palettes 1)) (:name @(rf/subscribe [::subs/current-palette]))))))
 
   (testing "add current frame colors to current palette"
     (initialize-db)

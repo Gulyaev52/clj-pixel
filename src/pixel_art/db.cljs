@@ -31,7 +31,7 @@
     :current true
     :colors (map color/rgba ["black" "red" "green" "blue" "yellow" "gray" "purple"])}])
 
-(defn get-db [{:keys [sprite palettes primary-color secondary-color]}]
+(defn get-db [{:keys [sprite palettes primary-color secondary-color pixels-grid-enabled]}]
   (let [viewport-size {:width 900 :height 700}
         scale max-scale
         canvas-size (update-vals (sprite/get-size sprite) #(* % scale))
@@ -50,19 +50,20 @@
          :onion-skin (onion-skin/init)
          :history (history/init {:sprite sprite})
          :sprite-preview (preview/init)
-         :pixels-grid-enabled true
+         :pixels-grid-enabled (if (some? pixels-grid-enabled) pixels-grid-enabled true)
          :palettes (palette/init palettes)
          :keyboard-shortcuts-modal-opened false
          :export (export/init)
          :sprite-resizer (sprite-resizer/init)})))
 
-(defn get-default-db [{:keys [palettes sprite]}]
+;; todo: separate logic in this fn
+(defn get-default-db [{:keys [palettes sprite primary-color secondary-color pixels-grid-enabled]}]
   (let [sprite-size (or (when sprite
                           (sprite/get-size sprite))
                         {:width 16 :height 16})
         res-palettes (or palettes initial-palettes)
-        primary-color (or (-> res-palettes first :colors first) (color/rgba 0 0 0))
-        secondary-color (color/rgba 255 0 0)]
+        primary-color (or primary-color (-> res-palettes first :colors first) (color/rgba 0 0 0))
+        secondary-color (or secondary-color (color/rgba 255 0 0))]
     (get-db {:sprite
              (or
               sprite
@@ -84,4 +85,5 @@
                                           {:x 4 :y 4} secondary-color}))}))
              :palettes res-palettes
              :primary-color primary-color
-             :secondary-color secondary-color})))
+             :secondary-color secondary-color
+             :pixels-grid-enabled pixels-grid-enabled})))

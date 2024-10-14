@@ -1,6 +1,12 @@
 (ns pixel-art.local-storage
   (:require [re-frame.core :as re-frame]))
 
+(re-frame/reg-event-fx
+ ::set-item
+ (fn [{:keys [db]} [_ params]]
+   {:db db
+    :fx [[::set-item params]]}))
+
 (re-frame/reg-fx
  ::set-item
  (fn [{:keys [key value]}]
