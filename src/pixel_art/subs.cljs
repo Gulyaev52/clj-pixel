@@ -9,6 +9,14 @@
             [pixel-art.canvas :as canvas]))
 
 (re-frame/reg-sub
+ ::new-project-modal-opened
+ (fn [db] (-> db :new-project-modal :opened)))
+
+(re-frame/reg-sub
+ ::new-project-modal-size
+ (fn [db] (-> db :new-project-modal :size)))
+
+(re-frame/reg-sub
  ::keyboard-shortcuts-modal-opened
  (fn [db]
    (-> db :keyboard-shortcuts-modal-opened)))

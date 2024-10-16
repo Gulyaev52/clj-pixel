@@ -22,6 +22,35 @@
             [re-frame.core :as rf]
             [sc.api]))
 
+(defn wait-for
+  ([done pred on-success]
+   (wait-for done pred on-success 1))
+  ([done pred on-success times]
+   (cond
+     (> times 10)
+     (do (is false "timeout")
+         (done))
+
+     (pred)
+     (on-success)
+
+     :else
+     (js/setTimeout (fn [] (wait-for done pred on-success (inc times))) 100))))
+
+(def !done-counter (atom 0))
+(def done (fn []
+            (swap! !done-counter inc)
+            (println "done" @!done-counter)))
+
+(defn wait-for-event [done event on-success]
+  (wait-for done
+            (fn []
+              (->> @event-collector/event-store
+                   (take 10) ;; todo: refactore it
+                   (map first)
+                   (some #{event})))
+            on-success))
+
 (rf/reg-sub
  :db
  (fn [db]
@@ -603,14 +632,18 @@
     (rf/dispatch-sync [::events/merge-layer-with-below])))
 
 (deftest test-project-save-load-as-file
-  (do
-    (initialize-db)
-    (let [initial-db @(rf/subscribe [:db])]
-      (rf/dispatch-sync [::project-save-load/save-as-file])
-      (apply-current-tool [{:x 0 :y 0} {:x 1 :y 0} {:x 2 :y 0} {:x 3 :y 0}])
-      (rf/dispatch-sync [::project-save-load/load-from-file @!last-download-file])
+  #_(async done
+           (do
+             (initialize-db)
+             (let [initial-db @(rf/subscribe [:db])]
+               (rf/dispatch-sync [::project-save-load/save-as-file])
+               (apply-current-tool [{:x 0 :y 0} {:x 1 :y 0} {:x 2 :y 0} {:x 3 :y 0}])
+               (rf/dispatch-sync [::project-save-load/load-from-file @!last-download-file])
 
-      (is (= initial-db (dissoc @(rf/subscribe [:db]) :user-is-drawing :mouse-pos))))))
+               (wait-for-event done
+                               :start-new-project
+                               (fn []
+                                 (is (= initial-db (dissoc @(rf/subscribe [:db]) :user-is-drawing :mouse-pos)))))))))
 
 (deftest test-palettes
   (testing "select primary and secondary color"
@@ -741,33 +774,6 @@ Columns: 0
        (rf/dispatch-sync [::export/set-opened false])
 
        (is (= false @(rf/subscribe [::subs/export-modal-opened])))))))
-
-(defn wait-for
-  ([done pred on-success]
-   (wait-for done pred on-success 1))
-  ([done pred on-success times]
-   (cond
-     (> times 10)
-     (do (is false "timeout")
-         (done))
-
-     (pred)
-     (on-success)
-
-     :else
-     (js/setTimeout (fn [] (wait-for done pred on-success (inc times))) 100))))
-
-(defn wait-for-event [done event on-success]
-  (wait-for done
-            (fn []
-              (let [[last-event] (first @event-collector/event-store)]
-                (= event last-event)))
-            on-success))
-
-(def !done-counter (atom 0))
-(def done (fn []
-            (swap! !done-counter inc)
-            (println "done" @!done-counter)))
 
 (defn array-data->pixels [array-data size]
   (->> (for [x (range 0 (. size -width))

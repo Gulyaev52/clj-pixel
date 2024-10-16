@@ -4,7 +4,10 @@
             [clojure.string :as string]
             [pixel-art.events :as events]
             [pixel-art.export :as export]
+            [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
             [pixel-art.model.cel :as cel]
+            [pixel-art.model.color :as color]
+            [pixel-art.new-project-modal :as new-project-modal]
             [pixel-art.onion-skin :as onion-skin]
             [pixel-art.palette :as palette :refer [deletable-palette?]]
             [pixel-art.project-save-load :as project-save-load]
@@ -17,9 +20,7 @@
             [react :as react]
             [reagent.core :as r]
             [reagent.dom :as rdom]
-            [sc.api]
-            [pixel-art.model.color :as color]
-            [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]))
+            [sc.api]))
 
 (def transparent-color-img "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAGUlEQVQYV2M4gwH+YwCGIasIUwhT25BVBADtzYNYrHvv4gAAAABJRU5ErkJggg==)")
 
@@ -298,7 +299,9 @@
                                 (set! (. file-reader -onload) (fn [e]
                                                                 (onUpload {:file-name (. file -name)
                                                                            :content (.. e -target -result)})))
-                                (. file-reader (readAsText file))))))}]
+                                (. file-reader (readAsText file)))))
+                          (set! (.. e -target -value) "") ;; without this line onChange is not triggered when the same file is choosen twice
+                          )}]
      [:button {:onClick (fn []
                           (.. input-ref -current click))}
       label]]))
@@ -909,6 +912,42 @@
 
 ;; -----------------
 
+(defn new-project-modal []
+  (when @(re-frame/subscribe [::subs/new-project-modal-opened])
+    (let [size @(re-frame/subscribe [::subs/new-project-modal-size])]
+      [modal {:cancel-button {:text "Cancel"
+                              :onClick (fn []
+                                         (re-frame/dispatch [::new-project-modal/set-opened false]))}
+              :ok-button {:text "Create"
+                          :onClick (fn []
+                                     (re-frame/dispatch [::new-project-modal/create]))}}
+       [:div
+        [:div
+         [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
+          [:span "Width:"]
+          [:input {:value (:width size)
+                   :type "number"
+                   :min 1
+                   :onChange (fn [e]
+                               (let [width (max (parse-double (.. e -target -value)) 1)]
+                                 (re-frame/dispatch [::new-project-modal/set-size (assoc size :width width)])))}]]
+
+         [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
+          [:span "Height:"]
+          [:input {:value (:height size)
+                   :onChange (fn [e]
+                               (let [height (max (parse-double (.. e -target -value)) 1)]
+                                 (re-frame/dispatch [::new-project-modal/set-size (assoc size :height height)])))}]]]
+
+        [file-uploader {:onUpload (fn [file-desc]
+                                    (re-frame/dispatch [::project-save-load/load-from-file file-desc]))}
+         "open project"]
+        [:button {:onClick (fn []
+                             (re-frame/dispatch [::new-project-modal/create-example-project]))}
+         "create example project"]]])))
+
+;; ----------------
+
 (defn main-panel []
   (let [tool @(re-frame/subscribe [::subs/tool])
         pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])]
@@ -932,8 +971,11 @@
       [sprite-resizer-manager-section]
       [:<>
        [keyboard-shortcuts-modal]
-       [:button {:onClick (fn [] (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened true]))} "keyboard shortcuts"]]]
-     [canvases-section]]))
+       [:button {:onClick (fn [] (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened true]))} "keyboard shortcuts"]
+       [:button {:onClick (fn [] (re-frame/dispatch [::new-project-modal/set-opened true]))}
+        "new project"]]]
+     [canvases-section]
+     [new-project-modal]]))
 
 (defn mount-root []
   (let [root-el (.getElementById js/document "app")]

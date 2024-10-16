@@ -1,7 +1,9 @@
 (ns pixel-art.events
   (:require ["tinycolor2" :as tinycolor]
             [pixel-art.canvas :as canvas]
-            [pixel-art.db :as db :refer [get-layer-name max-scale]]
+            [pixel-art.db :as db :refer [max-scale]]
+            [pixel-art.default-project :as default-project]
+            [pixel-art.fx]
             [pixel-art.history :as history]
             [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
             [pixel-art.local-storage :as local-storage]
@@ -19,38 +21,48 @@
             [re-frame.core :as re-frame]
             [re-frame.db]
             [re-pressed.core :as rp]
-            [sc.api]
-            [pixel-art.fx]))
+            [sc.api]))
 
 ;; todo: remove
 (add-watch re-frame.db/app-db :def
            (fn [_ _ _ new]
              (def db new)))
 
-(def saved-project-fields-key "saved-project-fields")
+(def saved-project-key "saved-project")
+
+(def dispatch-set-keydown-rules
+  [:dispatch [::rp/set-keydown-rules
+              {:event-keys (->> keyboard-shortcuts/shortcuts-by-types
+                                vals
+                                flatten
+                                                                       ;; Order matters, and the first matching key combination will consume the event. So for example, if you want to listen for both forward arrow ({:keyCode 37}) and control + forward arrow ({:keyCode 37 :ctrlKey true}), then you must put the combination before the singleton. 
+                                (sort-by (fn [{:keys [keys]}] (not (some :ctrlKey keys))))
+                                (map (fn [{:keys [action keys]}]
+                                       (into [action] (->> keys
+                                                           (map #(-> %
+                                                                     (assoc :keyCode (keyboard-shortcuts/key->code (:key %)))
+                                                                     (dissoc :key)))
+                                                           (map vector))))))}]])
 
 (re-frame/reg-event-fx
  ::initialize-db
- [(re-frame/inject-cofx ::local-storage/get-item saved-project-fields-key)]
- (fn [coeffects [_ test-data]]
-   (let [saved-project-fields (get coeffects saved-project-fields-key)
+ [(re-frame/inject-cofx ::local-storage/get-item saved-project-key)]
+ (fn [coeffects [_ new-project]] ;; todo: create separated event to initialize tests?
+   (let [saved-project (get coeffects saved-project-key)
          initial-db (cond
-                      test-data (db/get-db test-data)
-                      saved-project-fields (db/get-db saved-project-fields)
-                      :else (db/get-default-project-db))]
+                      new-project (db/get-db new-project)
+                      saved-project (db/get-db saved-project)
+                      :else (db/get-db (assoc default-project/default-palettes-and-current-colors
+                                              :sprite (default-project/create-empty-sprite {:width 64 :height 64})
+                                              :new-project-modal-opened true)))]
      {:db initial-db
-      :fx [[:dispatch [::rp/set-keydown-rules
-                       {:event-keys (->> keyboard-shortcuts/shortcuts-by-types
-                                         vals
-                                         flatten
-                                       ;; Order matters, and the first matching key combination will consume the event. So for example, if you want to listen for both forward arrow ({:keyCode 37}) and control + forward arrow ({:keyCode 37 :ctrlKey true}), then you must put the combination before the singleton. 
-                                         (sort-by (fn [{:keys [keys]}] (not (some :ctrlKey keys))))
-                                         (map (fn [{:keys [action keys]}]
-                                                (into [action] (->> keys
-                                                                    (map #(-> %
-                                                                              (assoc :keyCode (keyboard-shortcuts/key->code (:key %)))
-                                                                              (dissoc :key)))
-                                                                    (map vector))))))}]]]})))
+      :fx [dispatch-set-keydown-rules]})))
+
+(re-frame/reg-event-fx
+ :start-new-project
+ (fn [_ [_ new-project]]
+   {:db (db/get-db new-project)
+    :fx [dispatch-set-keydown-rules]}))
 
 (re-frame/reg-global-interceptor
  (on-paths-change
@@ -59,7 +71,7 @@
   (fn [{:keys [db fields]}]
     {:db db
      :fx [[:dispatch-debounce {:key :save-project-in-local-storage
-                               :event [::local-storage/set-item {:key saved-project-fields-key
+                               :event [::local-storage/set-item {:key saved-project-key
                                                                  :value fields}]
                                :delay 2000}]]})))
 
@@ -211,7 +223,7 @@
 (re-frame/reg-event-fx
  ::add-layer
  (fn [{:keys [db]}]
-   (let [layer-name (get-layer-name :single (-> db :sprite :layers count))
+   (let [layer-name (default-project/get-layer-name :single (-> db :sprite :layers count))
          layer (layer/create layer-name)]
      (-> db
          (commit-changes-and-init-tool (get-in db [:tool :state :changes])

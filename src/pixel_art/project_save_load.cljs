@@ -1,6 +1,5 @@
 (ns pixel-art.project-save-load
-  (:require [pixel-art.db :refer [get-db]]
-            [pixel-art.utils.coll :as coll]
+  (:require [pixel-art.utils.coll :as coll]
             [re-frame.core :as re-frame]))
 
 (def sprite-file-ext "json")
@@ -40,6 +39,6 @@
  (fn [{:keys [db]} [_ file-desc]]
    (let [parse-result (parse-sprite file-desc)]
      (if-let [sprite (:ok parse-result)]
-       {:db (get-db (merge {:sprite sprite}
-                           (select-keys db [:palettes :primary-color :secondary-color])))}
+       {:fx [[:dispatch [:start-new-project (merge {:sprite sprite}
+                                                   (select-keys db [:palettes :primary-color :secondary-color]))]]]}
        {:fx [[:show-alert (:error parse-result)]]}))))

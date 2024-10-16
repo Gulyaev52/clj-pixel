@@ -1,11 +1,8 @@
 (ns pixel-art.db
   (:require [pixel-art.export :as export]
             [pixel-art.history :as history]
-            [pixel-art.model.cel :as cel]
-            [pixel-art.model.color :as color]
-            [pixel-art.model.frame :as frame]
-            [pixel-art.model.layer :as layer]
             [pixel-art.model.sprite :as sprite]
+            [pixel-art.new-project-modal :as new-project-modal]
             [pixel-art.onion-skin :as onion-skin]
             [pixel-art.palette :as palette]
             [pixel-art.sprite-preview :as preview]
@@ -21,22 +18,18 @@
                          (map (fn [{:keys [field initial-value]}] [field initial-value]))
                          (into {})))))
 
-(defn get-layer-name [type layers-count]
-  (str (if (= type :group) "Group " "Layer ") (inc layers-count)))
-
-(def initial-frame-duration 100)
-
-(defn get-db [{:keys [sprite palettes primary-color secondary-color pixels-grid-enabled]}]
+(defn get-db [{:keys [sprite palettes primary-color secondary-color pixels-grid-enabled new-project-modal-opened]}]
   (let [viewport-size {:width 900 :height 700}
         scale max-scale
         canvas-size (update-vals (sprite/get-size sprite) #(* % scale))
         drawing-container-size (update-vals canvas-size #(+ % 1500))]
-    (-> {:size (sprite/get-size sprite) ;; todo: size можно получить из спрайта
+    (-> {:size (sprite/get-size sprite)
+         :new-project-modal (new-project-modal/init new-project-modal-opened)
          :sprite sprite
          :tool (tool/init :pen)
          :tools-options (get-initial-options tool/options-specs)
-         :primary-color primary-color ;; todo: а тут точно так а не индексами? на инит может быть ерунда
-         :secondary-color secondary-color ;; todo: а тут точно так а не индексами? на инит может быть ерунда
+         :primary-color primary-color
+         :secondary-color secondary-color
          :selection-manager {}
          :scale scale
          :viewport-size viewport-size
@@ -50,33 +43,3 @@
          :keyboard-shortcuts-modal-opened false
          :export (export/init)
          :sprite-resizer (sprite-resizer/init)})))
-
-;; todo: separate logic in this fn
-(defn get-default-project-db []
-  (let [sprite-size {:width 16 :height 16}
-        initial-palettes
-        [{:name "default"
-          :current true
-          :colors (map color/rgba ["black" "red" "green" "blue" "yellow" "gray" "purple"])}]
-        primary-color (-> initial-palettes first :colors first)
-        secondary-color (color/rgba 255 0 0)]
-    (get-db {:sprite
-             (sprite/create {:size sprite-size
-                             :layer (layer/create (get-layer-name :single 0))
-                             :frame (frame/create initial-frame-duration)
-                             :cel (->> (cel/create sprite-size)
-                                       (cel/set-pixels (->> (for [x (range 0 (:width sprite-size))
-                                                                  y (range 0 (:height sprite-size))]
-                                                              [{:x x :y y} color/transparent-color])
-                                                            (into {})))
-                                       (cel/set-pixels
-                                        {{:x 0 :y 0} secondary-color
-                                         {:x 0 :y 1} color/transparent-color
-                                         {:x 1 :y 1} secondary-color
-                                         {:x 3 :y 3} secondary-color
-                                         {:x 3 :y 4} secondary-color
-                                         {:x 4 :y 3} secondary-color
-                                         {:x 4 :y 4} secondary-color}))})
-             :palettes initial-palettes
-             :primary-color primary-color
-             :secondary-color secondary-color})))
