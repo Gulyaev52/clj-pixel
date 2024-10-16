@@ -1,5 +1,5 @@
 (ns pixel-art.new-project-modal
-  (:require [pixel-art.default-project :as default-project]
+  (:require [pixel-art.project-settings :as project-settings]
             [re-frame.core :as re-frame]))
 
 (defn init [opened]
@@ -20,12 +20,12 @@
  ::create-example-project
  (fn []
    {:fx [[:dispatch
-          [:start-new-project default-project/example-project]]]}))
+          [:start-new-project project-settings/example-project]]]}))
 
 (re-frame/reg-event-fx
  ::create
  (fn [{:keys [db]}]
    {:fx [[:dispatch
           [:start-new-project
-           (assoc default-project/default-palettes-and-current-colors
-                  :sprite (default-project/create-empty-sprite (-> db :new-project-modal :size)))]]]}))
+           (assoc project-settings/default-palettes-and-current-colors
+                  :sprite (project-settings/create-empty-sprite (-> db :new-project-modal :size)))]]]}))

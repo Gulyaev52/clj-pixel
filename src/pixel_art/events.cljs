@@ -2,7 +2,7 @@
   (:require ["tinycolor2" :as tinycolor]
             [pixel-art.canvas :as canvas]
             [pixel-art.db :as db :refer [max-scale]]
-            [pixel-art.default-project :as default-project]
+            [pixel-art.project-settings :as project-settings]
             [pixel-art.fx]
             [pixel-art.history :as history]
             [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
@@ -52,8 +52,8 @@
          initial-db (cond
                       new-project (db/get-db new-project)
                       saved-project (db/get-db saved-project)
-                      :else (db/get-db (assoc default-project/default-palettes-and-current-colors
-                                              :sprite (default-project/create-empty-sprite {:width 64 :height 64})
+                      :else (db/get-db (assoc project-settings/default-palettes-and-current-colors
+                                              :sprite (project-settings/create-empty-sprite {:width 64 :height 64})
                                               :new-project-modal-opened true)))]
      {:db initial-db
       :fx [dispatch-set-keydown-rules]})))
@@ -223,7 +223,7 @@
 (re-frame/reg-event-fx
  ::add-layer
  (fn [{:keys [db]}]
-   (let [layer-name (default-project/get-layer-name :single (-> db :sprite :layers count))
+   (let [layer-name (project-settings/get-layer-name :single (-> db :sprite :layers count))
          layer (layer/create layer-name)]
      (-> db
          (commit-changes-and-init-tool (get-in db [:tool :state :changes])
