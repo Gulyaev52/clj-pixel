@@ -86,7 +86,7 @@
   (nth (cycle ["green" "pink" "yellow" "red" "blue" "purple"]) group-number))
 
 (defn timeline-panel []
-  (let [{:keys [cels layers frames current-cel-opacity]} @(re-frame/subscribe [::subs/timeline])
+  (let [{:keys [cels layers frames current-cel-opacity disabled-actions]} @(re-frame/subscribe [::subs/timeline])
         current-frame (coll/find-first :current frames) ;; todo: to subs?
         all-frames-duration (when (apply = (map :duration frames))
                               (-> frames first :duration))
@@ -96,9 +96,9 @@
     [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
      [:div
       [:div {:style {:display :flex}} "frames:"
-       [:button {:onClick (fn [] (re-frame/dispatch [::events/add-frame]))} "add"]
-       [:button {:onClick (fn [] (re-frame/dispatch [::events/remove-frame]))} "remove"]
-       [:button {:onClick (fn [] (re-frame/dispatch [::events/duplicate-frame]))} "duplicate"]
+       [:button {:disabled (:add-frame disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/add-frame]))} "add"]
+       [:button {:disabled (:remove-frame disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/remove-frame]))} "remove"]
+       [:button {:disabled (:duplicate-frame disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/duplicate-frame]))} "duplicate"]
        [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
         [:span "Duration (ms):"]
         [:input {:value (:duration current-frame)
@@ -111,12 +111,12 @@
                  :onChange (fn [e]
                              (re-frame/dispatch [::events/set-frame-duration-for-all (parse-double (.. e -target -value))]))}]]]
       [:div {:style {:display :flex}} "layers:"
-       [:button {:onClick (fn [] (re-frame/dispatch [::events/add-layer]))} "add"]
-       [:button {:onClick (fn [] (re-frame/dispatch [::events/remove-layer]))} "remove"]
-       [:button {:onClick (fn [] (re-frame/dispatch [::events/duplicate-layer]))} "duplicate"]
-       [:button {:onClick (fn [] (re-frame/dispatch [::events/merge-layer-with-below]))} "merge"]
-       [:button {:onClick (fn [] (re-frame/dispatch [::events/move-layer-up]))} "move up"]
-       [:button {:onClick (fn [] (re-frame/dispatch [::events/move-layer-down]))} "move down"]]]
+       [:button {:disabled (:add-layer disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/add-layer]))} "add"]
+       [:button {:disabled (:remove-layer disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/remove-layer]))} "remove"]
+       [:button {:disabled (:duplicate-layer disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/duplicate-layer]))} "duplicate"]
+       [:button {:disabled (:merge-layer-with-below disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/merge-layer-with-below]))} "merge"]
+       [:button {:disabled (:move-layer-up disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/move-layer-up]))} "move up"]
+       [:button {:disabled (:move-layer-down disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/move-layer-down]))} "move down"]]]
      [:div
       [slider {:label "Cell opacity"
                :min 0

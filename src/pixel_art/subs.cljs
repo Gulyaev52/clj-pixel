@@ -170,6 +170,7 @@
          {:keys [layers frames]} sprite
          selected-cels-pos (sprite/get-selected-cels-pos sprite)
          current-cel (sprite/get-current-cel sprite)
+         current-cel-pos (sprite/get-current-cel-pos sprite)
          cels-coll (sprite/get-cels-with-pos-as-coll sprite)]
      {:cels (->> cels-coll
                  (map (fn [cel] (merge cel {:img (get cel-imgs (:pos cel))
@@ -182,4 +183,9 @@
                              (merge frame {:current (some? ((set (map :frame-idx selected-cels-pos)) idx))
                                            :idx idx}))
                            frames)
+      :disabled-actions {:remove-layer (not (sprite/remove-layer-available? sprite))
+                         :merge-layer-with-below (not (sprite/merge-layer-with-below-available? sprite))
+                         :move-layer-up (not (sprite/move-layer-up-available? (:layer-idx current-cel-pos) sprite))
+                         :move-layer-down (not (sprite/move-layer-down-available? (:layer-idx current-cel-pos) sprite))
+                         :remove-frame (not (sprite/remove-frame-available? sprite))}
       :current-cel-opacity (:opacity current-cel)})))

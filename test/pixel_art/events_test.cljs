@@ -37,6 +37,17 @@
      :else
      (js/setTimeout (fn [] (wait-for done pred on-success (inc times))) 100))))
 
+(defn get-active-cel-pixels-with-pos [cel-pos sprite]
+  (->> sprite
+       (sprite/get-cel cel-pos)
+       :pixels
+       (map-indexed (fn [idx pixel]
+                      (when (not= pixel color/transparent-color)
+                        [(let [{:keys [x y]} (cel/idx->pos idx (sprite/get-size sprite))]
+                           [x y])
+                         pixel])))
+       (filter some?)))
+
 (def !done-counter (atom 0))
 (def done (fn []
             (swap! !done-counter inc)
@@ -110,7 +121,11 @@
                                               :primary-color (color/rgba 0 0 0)
                                               :secondary-color (color/rgba 255 0 0)}]))
   ([data]
-   (rf/dispatch-sync [::events/initialize-db (merge {:palettes initial-palettes} data)])))
+   (rf/dispatch-sync [::events/initialize-db (merge {:sprite initial-sprite
+                                                     :palettes initial-palettes
+                                                     :primary-color (color/rgba 0 0 0)
+                                                     :secondary-color (color/rgba 255 0 0)}
+                                                    data)])))
 
 ;; mouse-down-move-up
 (defn apply-current-tool [poses]
@@ -257,9 +272,26 @@
      (def initial-db @(rf/subscribe [:db]))
 
      (rf/dispatch-sync [::events/add-layer])
-     (rf/dispatch-sync [::events/remove-layer 1])
+     (rf/dispatch-sync [::events/remove-layer])
 
-     (is (= (-> initial-db :sprite) (-> @!db :sprite))))))
+     (is (= (-> initial-db :sprite) (-> @!db :sprite)))))
+
+  (testing "remove first layer of 2"
+    (rf-test/run-test-sync
+     (let [sprite (->> initial-sprite
+                       (sprite/add-layer (layer/create "new-layer"))
+                       (sprite/select-layer 0))]
+       (initialize-db {:sprite sprite})
+
+       (rf/dispatch-sync [::events/remove-layer])
+
+       (let [actual-sprite (:sprite @(rf/subscribe [:db]))]
+         (is (= [{:visibile? true,
+                  :automatic-linking? false,
+                  :name "new-layer"}]
+                (:layers actual-sprite)))
+         (is (= (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 1} sprite))
+                (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 0} actual-sprite)))))))))
 
 (defn create-fixture []
   (initialize-db)
@@ -621,7 +653,7 @@
                                                                  {:x 0 :y 1} (color/rgba 0 0 255)
                                                                  {:x 1 :y 0} (color/rgba 0 0 255)}))})
 
-    (rf/dispatch-sync [::events/add-frame])
+    (rf/dispatch-sync [::events/add-frame]) ;; todo: а зачем нам так конструировать объект? сложнее же
     (apply-current-tool [{:x 0 :y 0}])
 
     (rf/dispatch-sync [::events/add-layer])
@@ -629,7 +661,54 @@
     (apply-current-tool [{:x 0 :y 0} {:x 0 :y 1} {:x 0 :y 2} {:x 1 :y 0} {:x 2 :y 0} {:x 3 :y 0}])
 
     (rf/dispatch-sync [::events/select-only-1-cel {:frame-idx 0 :layer-idx 0}])
-    (rf/dispatch-sync [::events/merge-layer-with-below])))
+    (rf/dispatch-sync [::events/merge-layer-with-below])
+
+    (let [sprite (:sprite @(rf/subscribe [:db]))]
+      (is (= [{:duration 100} {:duration 100}] (:frames sprite)))
+      (is (= [{:visibile? true,
+               :automatic-linking? false,
+               :name "Layer 1"}]
+             (:layers sprite)))
+      (is (= [[[0 0] "rgba(0, 0, 255, 1)"]
+              [[1 0] "rgba(0, 0, 255, 1)"]
+              [[2 0] "rgba(0, 0, 0, 1)"]
+              [[0 1] "rgba(0, 0, 255, 1)"]
+              [[0 2] "rgba(0, 0, 0, 1)"]]
+             (get-active-cel-pixels-with-pos {:frame-idx 0 :layer-idx 0} sprite)))
+      (is (= [[[0 0] "rgba(0, 0, 0, 1)"]]
+             (get-active-cel-pixels-with-pos {:frame-idx 1 :layer-idx 0} sprite))))))
+
+(deftest test-move-up
+  (let [sprite (->> initial-sprite
+                    (sprite/add-layer (layer/create "layer 2"))
+                    (sprite/select-layer 1))]
+    (initialize-db {:sprite sprite})
+    
+    (rf/dispatch-sync [::events/move-layer-up])
+    
+    (let [actual-sprite (:sprite @(rf/subscribe [:db]))]
+      (is (= (reverse (:layers sprite))
+             (:layers actual-sprite)))
+      (is (= (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 1} sprite))
+             (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 0} actual-sprite))))
+      (is (= (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 0} sprite))
+             (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 1} actual-sprite)))))))
+
+(deftest test-move-down
+  (let [sprite (->> initial-sprite
+                    (sprite/add-layer (layer/create "layer 2"))
+                    (sprite/select-layer 0))]
+    (initialize-db {:sprite sprite})
+
+    (rf/dispatch-sync [::events/move-layer-down])
+
+    (let [actual-sprite (:sprite @(rf/subscribe [:db]))]
+      (is (= (reverse (:layers sprite))
+             (:layers actual-sprite)))
+      (is (= (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 1} sprite))
+             (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 0} actual-sprite))))
+      (is (= (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 0} sprite))
+             (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 1} actual-sprite)))))))
 
 (deftest test-project-save-load-as-file
   #_(async done
@@ -1537,7 +1616,6 @@ Columns: 0
       (is (= (get-preview {[0 0] "rgba(255, 102, 102, 1)"})
              (canvas->pixels-map "preview"))
           "should past selection"))))
-
 
 #_(enable-console-print!)
 #_(run-tests)

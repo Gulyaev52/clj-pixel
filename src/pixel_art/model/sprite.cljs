@@ -214,16 +214,18 @@
          (assoc :cels new-cels)
          (#(select-layer new-current-layer-idx %))))))
 
+(defn remove-layer-available? [sprite]
+  (> (-> sprite :layers count) 1))
+
 (defn remove-layer [idx sprite]
   (let [new-layers (coll/removev idx (:layers sprite))
         current-cel-pos (get-current-cel-pos sprite)
         new-current-cel-pos (if (= idx (:layer-idx current-cel-pos))
                               {:frame-idx (:frame-idx current-cel-pos)
-                               :layer-idx (min (dec (:layer-idx current-cel-pos))
-                                               (- (count (:layers sprite)) 2))}
+                               :layer-idx (max (dec (:layer-idx current-cel-pos)) 0)}
                               current-cel-pos)
         new-cels (->> (:cels sprite)
-                      (mapv #(coll/removev (:layer-idx current-cel-pos) %)))]
+                      (mapv #(coll/removev idx %)))]
     (-> sprite
         (assoc :layers new-layers)
         (assoc :cels new-cels)
@@ -240,34 +242,37 @@
 
 (defn- move-layer [from-idx to-idx sprite]
   (let [new-layers (coll/swapv from-idx to-idx (:layers sprite))
-        new-cels (coll/update-byv #(= (-> :pos :layer-idx) from-idx)
-                                  ;; todo: ещё нужно поменять и для to?
-                                  (fn [cel] (assoc-in cel [:pos :layer-idx] to-idx))
-                                  (:cels sprite))]
+        new-cels (map (fn [cels] (coll/swapv from-idx to-idx cels)) (:cels sprite))]
     (-> sprite
         (assoc :layers new-layers)
         (assoc :cels new-cels)
         (#(select-layer to-idx %)))))
 
+(defn move-layer-up-available? [layer-idx sprite]
+  (> layer-idx 0))
+
 (defn move-layer-up [idx sprite]
   (move-layer idx (dec idx) sprite))
+
+(defn move-layer-down-available? [layer-idx sprite]
+  (<= layer-idx (- (count (:layers sprite)) 2)))
 
 (defn move-layer-down [idx sprite]
   (move-layer idx (inc idx) sprite))
 
+(defn merge-layer-with-below-available? [sprite]
+  (< (get-current-layer-idx sprite) (dec (count (:layers sprite)))))
+
 (defn merge-layer-with-below [sprite]
-  (if (and (< (get-current-layer-idx sprite) (count (:layers sprite)))
-           (> (count (:layers sprite)) 1))
-    (let [current-layer-idx (get-current-layer-idx sprite)
-          below-layer-idx (inc current-layer-idx)
-          new-cels (map (fn [cel-row]
-                          (update cel-row
-                                  current-layer-idx
-                                  #(cel/merge-cels (nth cel-row below-layer-idx) %)))
-                        (:cels sprite))]
-      (->> (assoc sprite :cels new-cels)
-           (remove-layer below-layer-idx)))
-    sprite))
+  (let [current-layer-idx (get-current-layer-idx sprite)
+        below-layer-idx (inc current-layer-idx)
+        new-cels (map (fn [cel-row]
+                        (update cel-row
+                                current-layer-idx
+                                #(cel/merge-cels (nth cel-row below-layer-idx) %)))
+                      (:cels sprite))]
+    (->> (assoc sprite :cels new-cels)
+         (remove-layer below-layer-idx))))
 
 (defn update-layer [idx f sprite]
   (update-in sprite [:layers idx] f))
@@ -305,12 +310,13 @@
                    %
                    layer-ids-with-auto-linking))))))
 
-;; todo: cannot be empty
+(defn remove-frame-available? [sprite]
+  (> (-> sprite :frames count) 1))
+
 (defn remove-frame [sprite]
   (let [current-cel-pos (get-current-cel-pos sprite)
         new-frames (coll/removev (:frame-idx current-cel-pos) (:frames sprite))
-        new-current-cel-pos {:frame-idx (min (dec (:frame-idx current-cel-pos))
-                                             (dec (count new-frames)))
+        new-current-cel-pos {:frame-idx (max (dec (:frame-idx current-cel-pos)) 0)
                              :layer-idx (:layer-idx current-cel-pos)}
         new-cels (->> (:cels sprite)
                       (coll/removev (:frame-idx current-cel-pos))
