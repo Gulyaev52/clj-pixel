@@ -8,6 +8,8 @@
 		"ci": "npx shadow-cljs compile karma-test && npx karma start --single-run --reporters junit,dots"
 	},
 	"dependencies": {
+		"@dnd-kit/core": "^6.1.0",
+		"@dnd-kit/utilities": "^3.2.2",
 		"@uiw/react-color": "^2.3.0",
 		"gifuct-js": "^2.1.2",
 		"jszip": "^3.10.1",

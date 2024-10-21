@@ -1,6 +1,7 @@
 (ns pixel-art.views
   (:require ["./colorPicker$default" :as color-picker-js]
             ["tinycolor2" :as tinycolor]
+            ["./dnd-kit$default" :as dnd-kit]
             [clojure.string :as string]
             [pixel-art.events :as events]
             [pixel-art.export :as export]
@@ -85,6 +86,72 @@
 (defn get-group-color [group-number]
   (nth (cycle ["green" "pink" "yellow" "red" "blue" "purple"]) group-number))
 
+(def cel-height "80px")
+
+(defn base-layer-view [props layer]
+  [:div (merge props
+               {:style (merge
+                        (:style props)
+                        {:display :flex
+                         :flex-direction :column
+                         :align-items "center"
+                         :justify-content "center"
+                         :height cel-height
+                         :border-style "solid"
+                         :border-color (if (:current layer)
+                                         "green"
+                                         "black")
+                         :border-width (if (:current layer)
+                                         "2px"
+                                         "1px")
+                         :cursor "pointer"
+                         :background-color "white"})})
+   [:div {:style {:display :flex}}
+    [:div
+     [:button {:onClick (fn [e]
+                          (. e stopPropagation)
+                          (re-frame/dispatch [::events/toggle-layer-visibility (:idx layer)]))}
+      (if (:visibile? layer) "v0" "v-")]]
+    [:div
+     [:button {:onClick (fn [e]
+                          (. e stopPropagation)
+                          (re-frame/dispatch [::events/toggle-layer-automatic-linking (:idx layer)]))}
+      (if (:automatic-linking? layer) "a+" "a-")]]
+    [:button {:onClick (fn [e]
+                         (. e stopPropagation)
+                         (let [new-name (js/prompt)]
+                           (when (seq (string/trim new-name))
+                             (re-frame/dispatch [::events/rename-layer (:idx layer) new-name]))))}
+     "re"]]
+   (:name layer)])
+
+(defn layer-view [layer]
+  (let [draggable-data (dnd-kit/useDraggable #js {"id" (str "layer-" (:idx layer))
+                                                  "data" layer})]
+    [base-layer-view
+     (merge {:ref (.. draggable-data -setNodeRef)
+             :onClick (fn [] (re-frame/dispatch [::events/select-layer (:idx layer)]))}
+            (js->clj (.. draggable-data -attributes))
+            (js->clj (.. draggable-data -listeners)))
+     layer]))
+
+(def layer-drag-overlay
+  (react/forwardRef
+   (fn layer-drag-overlay [layer-js ref]
+     (r/as-element [base-layer-view
+                    {:ref ref
+                     :style {:opacity 0.6}}
+                    (js->clj layer-js :keywordize-keys true)]))))
+
+(defn droppable [id accept-type styles]
+  (let [droppable-data (dnd-kit/useDroppable #js {"id" id})]
+    [:div {:ref (.. droppable-data -setNodeRef)
+           :style (merge {:height "20px"
+                          :width "100%"
+                          :background-color (when (.. droppable-data -isOver)
+                                              "blue")}
+                         styles)}]))
+
 (defn timeline-panel []
   (let [{:keys [cels layers frames current-cel-opacity disabled-actions]} @(re-frame/subscribe [::subs/timeline])
         current-frame (coll/find-first :current frames) ;; todo: to subs?
@@ -92,7 +159,8 @@
                               (-> frames first :duration))
         cels-by-layers (-> cels
                            (#(group-by (fn [c] (-> c :pos :layer-idx)) %))
-                           (update-vals (fn [cels] (sort-by #(-> % :pos :frame-idx) cels))))]
+                           (update-vals (fn [cels] (sort-by #(-> % :pos :frame-idx) cels))))
+        [dragging-data set-dragging-data] (react/useState nil)]
     [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
      [:div
       [:div {:style {:display :flex}} "frames:"
@@ -124,96 +192,84 @@
                :value current-cel-opacity
                :step 0.1
                :onChange (fn [v] (re-frame/dispatch [::events/set-cel-opacity v]))}]]
-     [:div {:style {:display :grid
-                    :grid-template-rows "15px"
-                    :grid-auto-rows "80px"
-                    :grid-template-columns (str "100px " (->> (repeat (count frames) "100px") (string/join " ")))
-                    :grid-column-gap "4px"
-                    :grid-row-gap "4px"}}
-      [:div "Layers"] (for [frame frames]
-                        ^{:key frame}
-                        [:div {:onClick (fn [] (re-frame/dispatch [::events/select-frame (:idx frame)]))
-                               :style {:border-style "solid"
-                                       :border-color (if (:current frame)
-                                                       "green"
-                                                       "black")
-                                       :border-width (if (:current frame)
-                                                       "2px"
-                                                       "1px")
-                                       :text-align "center"
-                                       :cursor "pointer"}} (inc (:idx frame))])
-      (for [layer layers]
-        ^{:key layer}
-        [:<>
-         [:div {:onClick (fn [] (re-frame/dispatch [::events/select-layer (:idx layer)]))
-                :style {:display :flex
-                        :flex-direction :column
-                        :align-items "center"
-                        :justify-content "center"
-                        :border-style "solid"
-                        :border-color (if (:current layer)
-                                        "green"
-                                        "black")
-                        :border-width (if (:current layer)
-                                        "2px"
-                                        "1px")
-                        :cursor "pointer"}}
-          [:div {:style {:display :flex}}
-           [:div
-            [:button {:onClick (fn [e]
-                                 (. e stopPropagation)
-                                 (re-frame/dispatch [::events/toggle-layer-visibility (:idx layer)]))}
-             (if (:visibile? layer) "v0" "v-")]]
-           [:div
-            [:button {:onClick (fn [e]
-                                 (. e stopPropagation)
-                                 (re-frame/dispatch [::events/toggle-layer-automatic-linking (:idx layer)]))}
-             (if (:automatic-linking? layer) "a+" "a-")]]
-           [:button {:onClick (fn [e]
-                                (. e stopPropagation)
-                                (let [new-name (js/prompt)]
-                                  (when (seq (string/trim new-name))
-                                    (re-frame/dispatch [::events/rename-layer (:idx layer) new-name]))))}
-            "re"]]
-          (:name layer)]
-         (for [cel (cels-by-layers (:idx layer))]
-           ^{:key cel}
-           [:div {:onClick (fn [e]
-                             (cond
-                               (.. e -shiftKey)
-                               (re-frame/dispatch [::events/add-cels-range-to-selection (:pos cel)])
-                               (.. e -ctrlKey)
-                               (re-frame/dispatch [::events/toggle-cel-to-selection (:pos cel)])
-                               :else (re-frame/dispatch [::events/select-only-1-cel (:pos cel)])))
-                  :style {:position "relative"
-                          :border-style "solid"
-                          :border-color (if (:selected cel)
-                                          "green"
-                                          "black")
-                          :border-width (if (:selected cel)
-                                          "2px"
-                                          "1px")
-                          :background-color (when (cel/emptyy? cel)
-                                              "rgba(0, 0, 0, 0.2)")
-                          :image-rendering "pixelated"
-                          :background-image (str "url(" (:img cel) ")")
-                          :background-size "100% 100%"
-                          :cursor "pointer"
-                          :font-weight "bold"
-                          :font-size 18
-                          :color (when-let [group-number (:group-number cel)]
-                                   (get-group-color group-number))}}
-            (when (:selected cel)
-              [:div
-               [:button {:onClick (fn [e]
-                                    (. e stopPropagation)
-                                    (re-frame/dispatch [::events/link-selected-cels (:pos cel)]))
-                         :style {:position :absolute :top 0 :right 0}} "l"]
-               [:button {:onClick (fn [e]
-                                    (. e stopPropagation)
-                                    (re-frame/dispatch [::events/unlink-selected-cels (:pos cel)]))
-                         :style {:position :absolute :top 25 :right 0}} "u"]])
-            (some-> (:group-number cel) inc)])])]]))
+     [:> dnd-kit/DndContext {:onDragStart (fn [e]
+                                            (set-dragging-data (.. e -active -data -current)))}
+      [:<>
+       [:> dnd-kit/DragOverlay {}
+        (when dragging-data
+          [:> layer-drag-overlay dragging-data])]
+       [:div {:style {:display :grid
+                      :grid-template-rows "15px"
+                      :grid-auto-rows "80px"
+                      :grid-template-columns (str "100px " (->> (repeat (count frames) "100px") (string/join " ")))
+                      :grid-column-gap "4px"
+                      :grid-row-gap "4px"}}
+        [:div "Layers"] (for [frame frames]
+                          ^{:key frame}
+                          [:div {:onClick (fn [] (re-frame/dispatch [::events/select-frame (:idx frame)]))
+                                 :style {:border-style "solid"
+                                         :border-color (if (:current frame)
+                                                         "green"
+                                                         "black")
+                                         :border-width (if (:current frame)
+                                                         "2px"
+                                                         "1px")
+                                         :text-align "center"
+                                         :cursor "pointer"}} (inc (:idx frame))])
+        (for [layer layers]
+          ^{:key layer}
+          [:<>
+           [:div {:style {:position "relative"}}
+            (when (= (:idx layer) 0)
+              [:f> droppable (:idx layer) :layer {:position "absolute"
+                                                  :top 0
+                                                  :transform "translateY(-50%)"
+                                                  :z-index 1
+                                                  :width "100%"}])
+            [:f> layer-view layer]
+            [:f> droppable (inc (:idx layer)) :layer {:position "absolute"
+                                                      :bottom 0
+                                                      :transform "translateY(50%)"
+                                                      :z-index 1
+                                                      :width "100%"}]]
+           (for [cel (cels-by-layers (:idx layer))]
+             ^{:key cel}
+             [:div {:onClick (fn [e]
+                               (cond
+                                 (.. e -shiftKey)
+                                 (re-frame/dispatch [::events/add-cels-range-to-selection (:pos cel)])
+                                 (.. e -ctrlKey)
+                                 (re-frame/dispatch [::events/toggle-cel-to-selection (:pos cel)])
+                                 :else (re-frame/dispatch [::events/select-only-1-cel (:pos cel)])))
+                    :style {:position "relative"
+                            :border-style "solid"
+                            :border-color (if (:selected cel)
+                                            "green"
+                                            "black")
+                            :border-width (if (:selected cel)
+                                            "2px"
+                                            "1px")
+                            :background-color (when (cel/emptyy? cel)
+                                                "rgba(0, 0, 0, 0.2)")
+                            :image-rendering "pixelated"
+                            :background-image (str "url(" (:img cel) ")")
+                            :background-size "100% 100%"
+                            :cursor "pointer"
+                            :font-weight "bold"
+                            :font-size 18
+                            :color (when-let [group-number (:group-number cel)]
+                                     (get-group-color group-number))}}
+              (when (:selected cel)
+                [:div
+                 [:button {:onClick (fn [e]
+                                      (. e stopPropagation)
+                                      (re-frame/dispatch [::events/link-selected-cels (:pos cel)]))
+                           :style {:position :absolute :top 0 :right 0}} "l"]
+                 [:button {:onClick (fn [e]
+                                      (. e stopPropagation)
+                                      (re-frame/dispatch [::events/unlink-selected-cels (:pos cel)]))
+                           :style {:position :absolute :top 25 :right 0}} "u"]])
+              (some-> (:group-number cel) inc)])])]]]]))
 
 (defn select [{:keys [value onChange options]}]
   (let [selected-option-idx (ffirst (filter #(= (:value (second %)) value) (map-indexed vector options)))]
@@ -962,7 +1018,7 @@
        [checkbox {:value pixels-grid-enabled
                   :label "grid"
                   :onChange (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]]
-      [:div [timeline-panel]]
+      [:div [:f> timeline-panel]]
       [sprite-preview-section]
       [onion-skin-section]
       [palettes-section]

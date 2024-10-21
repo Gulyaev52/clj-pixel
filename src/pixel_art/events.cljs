@@ -47,7 +47,7 @@
 (re-frame/reg-event-fx
  ::initialize-db
  [(re-frame/inject-cofx ::local-storage/get-item saved-project-key)]
- (fn [coeffects [_ new-project]] ;; todo: create separated event to initialize tests?
+ (fn [coeffects [_ new-project]] ;; todo: create separated event to initialize tests? 
    (let [saved-project (get coeffects saved-project-key)
          initial-db (cond
                       new-project (db/get-db new-project)
