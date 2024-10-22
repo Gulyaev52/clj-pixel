@@ -678,32 +678,50 @@
       (is (= [[[0 0] "rgba(0, 0, 0, 1)"]]
              (get-active-cel-pixels-with-pos {:frame-idx 1 :layer-idx 0} sprite))))))
 
-(deftest test-move-up
+(deftest test-move-layer-up
   (let [sprite (->> initial-sprite
                     (sprite/add-layer (layer/create "layer 2"))
-                    (sprite/select-layer 1))]
+                    (sprite/add-layer (layer/create "layer 3"))
+                    (sprite/select-layer 2))]
     (initialize-db {:sprite sprite})
-    
+
     (rf/dispatch-sync [::events/move-layer-up])
-    
+
     (let [actual-sprite (:sprite @(rf/subscribe [:db]))]
-      (is (= (reverse (:layers sprite))
+      (is (= [{:visibile? true,
+               :automatic-linking? false,
+               :name "Layer 1"}
+              {:visibile? true,
+               :automatic-linking? false,
+               :name "layer 3"}
+              {:visibile? true,
+               :automatic-linking? false,
+               :name "layer 2"}]
              (:layers actual-sprite)))
-      (is (= (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 1} sprite))
-             (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 0} actual-sprite))))
       (is (= (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 0} sprite))
+             (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 0} actual-sprite))))
+      (is (= (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 2} sprite))
              (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 1} actual-sprite)))))))
 
-(deftest test-move-down
+(deftest test-move-layer-down
   (let [sprite (->> initial-sprite
                     (sprite/add-layer (layer/create "layer 2"))
+                    (sprite/add-layer (layer/create "layer 3"))
                     (sprite/select-layer 0))]
     (initialize-db {:sprite sprite})
 
     (rf/dispatch-sync [::events/move-layer-down])
 
     (let [actual-sprite (:sprite @(rf/subscribe [:db]))]
-      (is (= (reverse (:layers sprite))
+      (is (= [{:visibile? true,
+               :automatic-linking? false,
+               :name "layer 2"}
+              {:visibile? true,
+               :automatic-linking? false,
+               :name "Layer 1"}
+              {:visibile? true,
+               :automatic-linking? false,
+               :name "layer 3"}]
              (:layers actual-sprite)))
       (is (= (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 1} sprite))
              (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 0} actual-sprite))))
@@ -1616,6 +1634,121 @@ Columns: 0
       (is (= (get-preview {[0 0] "rgba(255, 102, 102, 1)"})
              (canvas->pixels-map "preview"))
           "should past selection"))))
+
+(def sprite-for-test-move-cel ;; todo: refactor
+  (let [sprite-size {:width 1 :height 1}]
+    (->> (sprite/create {:size sprite-size
+                         :layer (layer/create "Layer 1")
+                         :frame (frame/create 200)
+                         :cel (->> (cel/create sprite-size)
+                                   (cel/set-pixels
+                                    {{:x 0 :y 0} (color/rgba 255 0 0)}))})
+         (sprite/add-frame (frame/create 100))
+         (sprite/add-layer (layer/create "Layer 2"))
+
+         (sprite/select-only-1-cel {:frame-idx 1 :layer-idx 0})
+         (sprite/set-current-cel-pixels {{:x 0 :y 0} (color/rgba 0 255 0)})
+
+         (sprite/select-only-1-cel {:frame-idx 0 :layer-idx 1})
+         (sprite/set-current-cel-pixels {{:x 0 :y 0} (color/rgba 0 0 255)})
+
+         (sprite/select-only-1-cel {:frame-idx 1 :layer-idx 1})
+         (sprite/set-current-cel-pixels {{:x 0 :y 0} (color/rgba 255 0 255)})
+
+         (sprite/select-only-1-cel {:frame-idx 0 :layer-idx 0}))))
+
+(deftest test-move-cel
+  (testing "move cel on different frame on the same layer"
+    (initialize-db {:sprite sprite-for-test-move-cel})
+
+    (rf/dispatch-sync [::events/move-cel {:frame-idx 0 :layer-idx 0} {:frame-idx 2 :layer-idx 0}])
+
+    (let [sprite (:sprite @(rf/subscribe [:db]))]
+      (is (= [[{:pixels ["rgba(0, 255, 0, 1)"],
+                :size {:width 1, :height 1},
+                :opacity 1,
+                :current false,
+                :selected false}
+               {:pixels ["rgba(0, 0, 255, 1)"],
+                :size {:width 1, :height 1},
+                :opacity 1,
+                :current false,
+                :selected false}]
+              [{:pixels ["rgba(255, 0, 0, 1)"],
+                :size {:width 1, :height 1},
+                :opacity 1,
+                :current true,
+                :selected true}
+               {:pixels ["rgba(255, 0, 255, 1)"],
+                :size {:width 1, :height 1},
+                :opacity 1,
+                :current false,
+                :selected false}]]
+             (:cels sprite)))))
+
+  (testing "move cel on different layer and different frame"
+    (initialize-db {:sprite sprite-for-test-move-cel})
+
+    (rf/dispatch-sync [::events/move-cel {:frame-idx 0 :layer-idx 0} {:frame-idx 1 :layer-idx 1}])
+
+    (let [sprite (:sprite @(rf/subscribe [:db]))]
+      (is (= [[{:pixels ["rgba(255, 0, 255, 1)"],
+                :size {:width 1, :height 1},
+                :opacity 1,
+                :current false,
+                :selected false}
+               {:pixels ["rgba(0, 0, 255, 1)"],
+                :size {:width 1, :height 1},
+                :opacity 1,
+                :current false,
+                :selected false}]
+              [{:pixels ["rgba(0, 255, 0, 1)"],
+                :size {:width 1, :height 1},
+                :opacity 1,
+                :current false,
+                :selected false}
+               {:pixels ["rgba(255, 0, 0, 1)"],
+                :size {:width 1, :height 1},
+                :opacity 1,
+                :current true,
+                :selected true}]]
+             (:cels sprite)))))
+
+  (testing "when cels are in groups and move cel on different layer and different frame, should remove cels from groups"
+    (initialize-db {:sprite (->> sprite-for-test-move-cel
+                                 (sprite/link-layer-cels [{:frame-idx 0 :layer-idx 0}
+                                                          {:frame-idx 1 :layer-idx 0}]
+                                                         {:frame-idx 0 :layer-idx 0})
+                                 (sprite/link-layer-cels [{:frame-idx 0 :layer-idx 1}
+                                                          {:frame-idx 1 :layer-idx 1}]
+                                                         {:frame-idx 0 :layer-idx 1}))})
+
+    (rf/dispatch-sync [::events/move-cel {:frame-idx 0 :layer-idx 0} {:frame-idx 1 :layer-idx 1}])
+
+    (let [sprite (:sprite @(rf/subscribe [:db]))]
+      (is (= [[{:pixels ["rgba(0, 0, 255, 1)"],
+                :size {:width 1, :height 1},
+                :opacity 1,
+                :current false,
+                :selected false}
+               {:pixels ["rgba(0, 0, 255, 1)"],
+                :size {:width 1, :height 1},
+                :opacity 1,
+                :current false,
+                :selected false,
+                :group-number 0}]
+              [{:pixels ["rgba(255, 0, 0, 1)"],
+                :size {:width 1, :height 1},
+                :opacity 1,
+                :current false,
+                :selected false,
+                :group-number 0}
+               {:pixels ["rgba(255, 0, 0, 1)"],
+                :size {:width 1, :height 1},
+                :opacity 1,
+                :current true,
+                :selected true}]]
+             (:cels sprite))))))
 
 #_(enable-console-print!)
 #_(run-tests)

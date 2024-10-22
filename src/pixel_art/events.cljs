@@ -221,6 +221,15 @@
        (update-in [:db :sprite] #(sprite/select-frame idx %)))))
 
 (re-frame/reg-event-fx
+ ::move-frame
+ (fn [{:keys [db]} [_ from-idx to-idx]]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] #(sprite/move-frame from-idx to-idx %))
+       (update-in [:db] history/save-sprite))))
+
+(re-frame/reg-event-fx
  ::add-layer
  (fn [{:keys [db]}]
    (let [layer-name (project-settings/get-layer-name :single (-> db :sprite :layers count))
@@ -269,15 +278,6 @@
        (update-in [:db] history/save-sprite))))
 
 (re-frame/reg-event-fx
- ::rename-layer
- (fn [{:keys [db]} [_ idx new-name]]
-   (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type))) ;; todo: нужно ли?
-       (update-in [:db :sprite] (fn [sprite]
-                                  (sprite/update-layer idx #(assoc % :name new-name) sprite))))))
-
-(re-frame/reg-event-fx
  ::move-layer-down
  (fn [{:keys [db]}]
    (-> db
@@ -285,6 +285,24 @@
                                      (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/move-layer-down (sprite/get-current-layer-idx %) %))
        (update-in [:db] history/save-sprite))))
+
+(re-frame/reg-event-fx
+ ::move-layer
+ (fn [{:keys [db]} [_ from-idx to-idx]]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] #(sprite/move-layer from-idx to-idx %))
+       (update-in [:db] history/save-sprite))))
+
+(re-frame/reg-event-fx
+ ::rename-layer
+ (fn [{:keys [db]} [_ idx new-name]]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type))) ;; todo: нужно ли?
+       (update-in [:db :sprite] (fn [sprite]
+                                  (sprite/update-layer idx #(assoc % :name new-name) sprite))))))
 
 (re-frame/reg-event-fx
  ::toggle-layer-visibility
@@ -311,6 +329,15 @@
        (commit-changes-and-init-tool (get-in db [:tool :state :changes])
                                      (tool/init (-> db :tool :type))) ;; todo: нужно ли?
        (update-in [:db :sprite] #(sprite/set-current-cel-opacity opacity %)))))
+
+(re-frame/reg-event-fx
+ ::move-cel
+ (fn [{:keys [db]} [_ from-pos to-pos]]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] #(sprite/move-cel from-pos to-pos %))
+       (update-in [:db] history/save-sprite))))
 
 (re-frame/reg-event-fx
  ::select-layer

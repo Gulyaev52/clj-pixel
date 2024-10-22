@@ -1,7 +1,8 @@
 (ns pixel-art.views
   (:require ["./colorPicker$default" :as color-picker-js]
             ["tinycolor2" :as tinycolor]
-            ["./dnd-kit$default" :as dnd-kit]
+            ["react-dnd" :as react-dnd]
+            ["react-dnd-html5-backend" :as react-dnd-html5-backend]
             [clojure.string :as string]
             [pixel-art.events :as events]
             [pixel-art.export :as export]
@@ -22,6 +23,8 @@
             [reagent.core :as r]
             [reagent.dom :as rdom]
             [sc.api]))
+
+(set! *warn-on-infer* false)
 
 (def transparent-color-img "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAGUlEQVQYV2M4gwH+YwCGIasIUwhT25BVBADtzYNYrHvv4gAAAABJRU5ErkJggg==)")
 
@@ -88,69 +91,181 @@
 
 (def cel-height "80px")
 
-(defn base-layer-view [props layer]
-  [:div (merge props
-               {:style (merge
-                        (:style props)
-                        {:display :flex
-                         :flex-direction :column
-                         :align-items "center"
-                         :justify-content "center"
-                         :height cel-height
-                         :border-style "solid"
-                         :border-color (if (:current layer)
-                                         "green"
-                                         "black")
-                         :border-width (if (:current layer)
-                                         "2px"
-                                         "1px")
-                         :cursor "pointer"
-                         :background-color "white"})})
-   [:div {:style {:display :flex}}
-    [:div
-     [:button {:onClick (fn [e]
-                          (. e stopPropagation)
-                          (re-frame/dispatch [::events/toggle-layer-visibility (:idx layer)]))}
-      (if (:visibile? layer) "v0" "v-")]]
-    [:div
-     [:button {:onClick (fn [e]
-                          (. e stopPropagation)
-                          (re-frame/dispatch [::events/toggle-layer-automatic-linking (:idx layer)]))}
-      (if (:automatic-linking? layer) "a+" "a-")]]
-    [:button {:onClick (fn [e]
-                         (. e stopPropagation)
-                         (let [new-name (js/prompt)]
-                           (when (seq (string/trim new-name))
-                             (re-frame/dispatch [::events/rename-layer (:idx layer) new-name]))))}
-     "re"]]
-   (:name layer)])
+(defn droppable-zone [{:keys [accept on-drop can-drop]} styles]
+  (let [[{:keys [over can-drop]}, ref] (react-dnd/useDrop
+                                        #js
+                                         {"accept" accept
+                                          "drop" on-drop
+                                          "canDrop" can-drop
+                                          "collect" (fn [monitor]
+                                                      {:over (.. monitor isOver)
+                                                       :can-drop (.. monitor canDrop)})})]
+    (when can-drop
+      [:div {:ref ref
+             :style (merge {:position "absolute"
+                            :z-index 1
+                            :width "100%"
+                            :background-color (when (and can-drop over) "blue")}
+                           styles)}])))
+
+(defn droppable-layer-zone [to-idx styles]
+  (droppable-zone {:accept "layer"
+                   :on-drop (fn [layer]
+                              (re-frame/dispatch [::events/move-layer (:idx layer) to-idx]))}
+                  (merge {:height "20px" :width "100%"} styles)))
 
 (defn layer-view [layer]
-  (let [draggable-data (dnd-kit/useDraggable #js {"id" (str "layer-" (:idx layer))
-                                                  "data" layer})]
-    [base-layer-view
-     (merge {:ref (.. draggable-data -setNodeRef)
-             :onClick (fn [] (re-frame/dispatch [::events/select-layer (:idx layer)]))}
-            (js->clj (.. draggable-data -attributes))
-            (js->clj (.. draggable-data -listeners)))
-     layer]))
+  (let [[_ ref] (react-dnd/useDrag (fn [] #js {"type" "layer" "item" layer}))]
+    [:div {:style {:position "relative"}}
+     (when (= (:idx layer) 0)
+       [:f> droppable-layer-zone (:idx layer) {:top 0 :transform "translateY(-50%)"}])
+     [:div {:ref ref
+            :onClick (fn [] (re-frame/dispatch [::events/select-layer (:idx layer)]))
+            :style {:display :flex
+                    :flex-direction :column
+                    :align-items "center"
+                    :justify-content "center"
+                    :height cel-height
+                    :border-style "solid"
+                    :border-color (if (:current layer)
+                                    "green"
+                                    "black")
+                    :border-width (if (:current layer)
+                                    "2px"
+                                    "1px")
+                    :cursor "pointer"
+                    :background-color "white"}}
+      [:div {:style {:display :flex}}
+       [:div
+        [:button {:onClick (fn [e]
+                             (. e stopPropagation)
+                             (re-frame/dispatch [::events/toggle-layer-visibility (:idx layer)]))}
+         (if (:visibile? layer) "v0" "v-")]]
+       [:div
+        [:button {:onClick (fn [e]
+                             (. e stopPropagation)
+                             (re-frame/dispatch [::events/toggle-layer-automatic-linking (:idx layer)]))}
+         (if (:automatic-linking? layer) "a+" "a-")]]
+       [:button {:onClick (fn [e]
+                            (. e stopPropagation)
+                            (let [new-name (js/prompt)]
+                              (when (seq (string/trim new-name))
+                                (re-frame/dispatch [::events/rename-layer (:idx layer) new-name]))))}
+        "re"]]
+      (:name layer)]
+     [:f> droppable-layer-zone (inc (:idx layer)) {:bottom 0 :transform "translateY(50%)"}]]))
 
-(def layer-drag-overlay
-  (react/forwardRef
-   (fn layer-drag-overlay [layer-js ref]
-     (r/as-element [base-layer-view
-                    {:ref ref
-                     :style {:opacity 0.6}}
-                    (js->clj layer-js :keywordize-keys true)]))))
+(defn droppable-frame-zone [idx styles]
+  (droppable-zone {:accept "frame"
+                   :on-drop (fn [frame]
+                              (re-frame/dispatch [::events/move-frame (:idx frame) idx]))}
+                  (merge {:width "30px" :height "20px"} styles)))
 
-(defn droppable [id accept-type styles]
-  (let [droppable-data (dnd-kit/useDroppable #js {"id" id})]
-    [:div {:ref (.. droppable-data -setNodeRef)
-           :style (merge {:height "20px"
-                          :width "100%"
-                          :background-color (when (.. droppable-data -isOver)
-                                              "blue")}
-                         styles)}]))
+(defn frame-view [frame]
+  (let [[_ ref] (react-dnd/useDrag (fn []
+                                     #js {"type" "frame"
+                                          "item" frame
+                                          "collect" (fn [monitor]
+                                                      {:dragging (.. monitor isDragging)})}))]
+    [:div {:style {:position "relative"}}
+     (when (= (:idx frame) 0)
+       [:f> droppable-frame-zone (:idx frame) {:left 0
+                                               :top 0
+                                               :transform "translateX(-50%)"}])
+     [:div {:onClick (fn [] (re-frame/dispatch [::events/select-frame (:idx frame)]))
+            :ref ref
+            :style {:border-style "solid"
+                    :border-color (if (:current frame)
+                                    "green"
+                                    "black")
+                    :border-width (if (:current frame)
+                                    "2px"
+                                    "1px")
+                    :text-align "center"
+                    :cursor "pointer"}} (inc (:idx frame))]
+     [:f> droppable-frame-zone (inc (:idx frame)) {:right 0
+                                                   :top 0
+                                                   :transform "translateX(50%)"}]]))
+
+(defn droppable-cel-zone [pos direction-type styles]
+  (droppable-zone {:accept "cel"
+                   :can-drop (fn [cel]
+                               (case direction-type
+                                 :frame true
+                                 :layer (not= (:layer-idx pos) (-> cel :pos :layer-idx))))
+                   :on-drop (fn [cel]
+                              (re-frame/dispatch [::events/move-cel (:pos cel) pos]))}
+                  styles))
+
+(defn cel-view [cel]
+  (let [[_ ref] (react-dnd/useDrag (fn []
+                                     #js {"type" "cel"
+                                          "item" cel
+                                          "collect" (fn [monitor]
+                                                      {:dragging (.. monitor isDragging)})}))]
+    [:div {:style {:position "relative"}}
+     (when (= (-> cel :pos :frame-idx) 0)
+       [:f> droppable-cel-zone
+        (:pos cel)
+        :frame
+        {:height "100%"
+         :width "20px"
+         :top 0
+         :left 0
+         :transform "translateX(-50%)"}])
+     [:div {:onClick (fn [e]
+                       (cond
+                         (.. e -shiftKey)
+                         (re-frame/dispatch [::events/add-cels-range-to-selection (:pos cel)])
+                         (.. e -ctrlKey)
+                         (re-frame/dispatch [::events/toggle-cel-to-selection (:pos cel)])
+                         :else (re-frame/dispatch [::events/select-only-1-cel (:pos cel)])))
+            :ref ref
+            :style {:position "relative"
+                    :height "100%"
+                    :border-style "solid"
+                    :border-color (if (:selected cel)
+                                    "green"
+                                    "black")
+                    :border-width (if (:selected cel)
+                                    "2px"
+                                    "1px")
+                    :background-color (when (cel/emptyy? cel)
+                                        "rgba(0, 0, 0, 0.2)")
+                    :image-rendering "pixelated"
+                    :background-image (str "url(" (:img cel) ")")
+                    :background-size "100% 100%"
+                    :cursor "pointer"
+                    :font-weight "bold"
+                    :font-size 18
+                    :color (when-let [group-number (:group-number cel)]
+                             (get-group-color group-number))}}
+      (when (:selected cel)
+        [:div
+         [:button {:onClick (fn [e]
+                              (. e stopPropagation)
+                              (re-frame/dispatch [::events/link-selected-cels (:pos cel)]))
+                   :style {:position :absolute :top 0 :right 0}} "l"]
+         [:button {:onClick (fn [e]
+                              (. e stopPropagation)
+                              (re-frame/dispatch [::events/unlink-selected-cels (:pos cel)]))
+                   :style {:position :absolute :top 25 :right 0}} "u"]])
+      (some-> (:group-number cel) inc)]
+     [:f> droppable-cel-zone
+      (:pos cel)
+      :layer
+      {:height "100%"
+       :width "100%"
+       :top 0
+       :left 0}]
+     [:f> droppable-cel-zone
+      (update (:pos cel) :frame-idx inc)
+      :frame
+      {:height "100%"
+       :width "20px"
+       :top 0
+       :right 0
+       :transform "translateX(50%)"}]]))
 
 (defn timeline-panel []
   (let [{:keys [cels layers frames current-cel-opacity disabled-actions]} @(re-frame/subscribe [::subs/timeline])
@@ -159,8 +274,7 @@
                               (-> frames first :duration))
         cels-by-layers (-> cels
                            (#(group-by (fn [c] (-> c :pos :layer-idx)) %))
-                           (update-vals (fn [cels] (sort-by #(-> % :pos :frame-idx) cels))))
-        [dragging-data set-dragging-data] (react/useState nil)]
+                           (update-vals (fn [cels] (sort-by #(-> % :pos :frame-idx) cels))))]
     [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
      [:div
       [:div {:style {:display :flex}} "frames:"
@@ -192,84 +306,21 @@
                :value current-cel-opacity
                :step 0.1
                :onChange (fn [v] (re-frame/dispatch [::events/set-cel-opacity v]))}]]
-     [:> dnd-kit/DndContext {:onDragStart (fn [e]
-                                            (set-dragging-data (.. e -active -data -current)))}
+     [:> react-dnd/DndProvider {"backend" react-dnd-html5-backend/HTML5Backend}
       [:<>
-       [:> dnd-kit/DragOverlay {}
-        (when dragging-data
-          [:> layer-drag-overlay dragging-data])]
        [:div {:style {:display :grid
                       :grid-template-rows "15px"
                       :grid-auto-rows "80px"
                       :grid-template-columns (str "100px " (->> (repeat (count frames) "100px") (string/join " ")))
                       :grid-column-gap "4px"
                       :grid-row-gap "4px"}}
-        [:div "Layers"] (for [frame frames]
-                          ^{:key frame}
-                          [:div {:onClick (fn [] (re-frame/dispatch [::events/select-frame (:idx frame)]))
-                                 :style {:border-style "solid"
-                                         :border-color (if (:current frame)
-                                                         "green"
-                                                         "black")
-                                         :border-width (if (:current frame)
-                                                         "2px"
-                                                         "1px")
-                                         :text-align "center"
-                                         :cursor "pointer"}} (inc (:idx frame))])
+        [:div "Layers"] (for [frame frames] ^{:key frame} [:f> frame-view frame])
         (for [layer layers]
           ^{:key layer}
-          [:<>
-           [:div {:style {:position "relative"}}
-            (when (= (:idx layer) 0)
-              [:f> droppable (:idx layer) :layer {:position "absolute"
-                                                  :top 0
-                                                  :transform "translateY(-50%)"
-                                                  :z-index 1
-                                                  :width "100%"}])
-            [:f> layer-view layer]
-            [:f> droppable (inc (:idx layer)) :layer {:position "absolute"
-                                                      :bottom 0
-                                                      :transform "translateY(50%)"
-                                                      :z-index 1
-                                                      :width "100%"}]]
+          [:<> [:f> layer-view layer]
            (for [cel (cels-by-layers (:idx layer))]
              ^{:key cel}
-             [:div {:onClick (fn [e]
-                               (cond
-                                 (.. e -shiftKey)
-                                 (re-frame/dispatch [::events/add-cels-range-to-selection (:pos cel)])
-                                 (.. e -ctrlKey)
-                                 (re-frame/dispatch [::events/toggle-cel-to-selection (:pos cel)])
-                                 :else (re-frame/dispatch [::events/select-only-1-cel (:pos cel)])))
-                    :style {:position "relative"
-                            :border-style "solid"
-                            :border-color (if (:selected cel)
-                                            "green"
-                                            "black")
-                            :border-width (if (:selected cel)
-                                            "2px"
-                                            "1px")
-                            :background-color (when (cel/emptyy? cel)
-                                                "rgba(0, 0, 0, 0.2)")
-                            :image-rendering "pixelated"
-                            :background-image (str "url(" (:img cel) ")")
-                            :background-size "100% 100%"
-                            :cursor "pointer"
-                            :font-weight "bold"
-                            :font-size 18
-                            :color (when-let [group-number (:group-number cel)]
-                                     (get-group-color group-number))}}
-              (when (:selected cel)
-                [:div
-                 [:button {:onClick (fn [e]
-                                      (. e stopPropagation)
-                                      (re-frame/dispatch [::events/link-selected-cels (:pos cel)]))
-                           :style {:position :absolute :top 0 :right 0}} "l"]
-                 [:button {:onClick (fn [e]
-                                      (. e stopPropagation)
-                                      (re-frame/dispatch [::events/unlink-selected-cels (:pos cel)]))
-                           :style {:position :absolute :top 25 :right 0}} "u"]])
-              (some-> (:group-number cel) inc)])])]]]]))
+             [:f> cel-view cel])])]]]]))
 
 (defn select [{:keys [value onChange options]}]
   (let [selected-option-idx (ffirst (filter #(= (:value (second %)) value) (map-indexed vector options)))]

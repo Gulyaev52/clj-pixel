@@ -35,3 +35,18 @@
                                           (f cel {:y y :x x}))
                                         layer-cels)))
                     matrix)))
+
+(defn movev [idx1 idx2 coll]
+  (let [idx1 (max 0 idx1)
+        item (nth coll idx1)]
+    (->> coll
+         (insertv idx2 item)
+         (removev (if (<= idx2 idx1) (inc idx1) idx1)))))
+(comment
+  (movev 0 3 [1 2 3 4])
+  (movev 3 0 [1 2 3 4])
+  (movev 0 -1 [1 2 3 4]))
+
+
+(defn transpose [m]
+  (apply mapv vector m))
