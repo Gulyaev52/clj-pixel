@@ -1,10 +1,12 @@
 (ns pixel-art.sprite-resizer
-  (:require [pixel-art.canvas :as canvas]
-            [pixel-art.history :as history]
-            [pixel-art.model.cel :as cel]
-            [pixel-art.model.color :refer [rgba transparent-color]]
-            [pixel-art.utils.coll :as coll]
-            [re-frame.core :as re-frame]))
+  (:require
+   [pixel-art.canvas :as canvas]
+   [pixel-art.history :as history]
+   [pixel-art.model.cel :as cel]
+   [pixel-art.model.color :refer [rgba transparent-color]]
+   [pixel-art.utils.coll :as coll]
+   [re-frame.core :as re-frame]
+   [sc.api :as api]))
 
 (defn init []
   {:opened false
@@ -36,10 +38,6 @@
     :bottom (- y (- height resized-height))
     :center (- y (. js/Math (round (/ (- height resized-height) 2))))))
 
-(defn translate-pos [pos size target-size anchor]
-  {:x (translate-x (:x pos) (:width size) (:width target-size) (:x anchor))
-   :y (translate-y (:y pos) (:height size) (:height target-size) (:y anchor))})
-
 (defn resize-cel [cel {:keys [target-size resize-content anchor]}]
   (if resize-content
     (->> (canvas/create-canvas (:size cel))
@@ -50,11 +48,13 @@
               (assoc cel
                      :size target-size
                      :pixels (array-data->pixels (.. image-data -data) target-size))))))
-    (let [translated-pixels-map
+    (let [cel-size (:size cel)
+          translated-pixels-map
           (->> (cel/pixels->coll cel)
                (keep (fn [[pos color]]
                        (when (not= color transparent-color)
-                         [(translate-pos pos (:size cel) target-size anchor)
+                         [{:x (translate-x (:x pos) (:width cel-size) (:width target-size) (:x anchor))
+                           :y (translate-y (:y pos) (:height cel-size) (:height target-size) (:y anchor))}
                           color]))))
           new-pixels (->> (cel/create-pixels-coll target-size)
                           (cel/update-pixels-coll translated-pixels-map target-size))]

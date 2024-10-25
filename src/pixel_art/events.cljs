@@ -123,17 +123,6 @@
 
 (re-frame/reg-global-interceptor
  (on-changes
-  :resize-canvases
-  #(-> % :sprite sprite/get-size)
-  (fn [{:keys [db]}]
-    {:db db
-     :fx [[:init-canvases]
-          [:draw-current-frame]
-          [:draw-pixels-grid]
-          [:draw-onion-skin {:sprite (:sprite db) :opacity (-> db :onion-skin :opacity)}]]})))
-
-(re-frame/reg-global-interceptor
- (on-changes
   :redraw-current-cel ;; это также нужно и на изменения слоя. например прозрачности или видимости
   #(-> % :sprite)
   (fn [{:keys [db]}]

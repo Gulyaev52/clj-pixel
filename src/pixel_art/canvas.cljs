@@ -1,6 +1,7 @@
 (ns pixel-art.canvas
   (:require [pixel-art.model.sprite :as sprite]
-            [sc.api]))
+            [sc.api]
+            [pixel-art.model.color :as color]))
 
 (defn generate-img [draw size]
   (let [canvas-elem (.. js/document (createElement "canvas"))]
@@ -15,20 +16,22 @@
         (- new-max new-min))
      new-min))
 
-(defn cel-pixels->image-data [{:keys [pixels opacity size]}]
+(defn parse-color [rgba]
+  ;; such approach is faster than usage of regexp
+  (-> rgba
+      (. (split "("))
+      second
+      (. (split ")"))
+      first
+      (. (split ","))))
+
+(defn cel-pixels->image-data [{:keys [pixels size]}]
   (let [image-data (js/ImageData. (:width size) (:height size))]
-    (doseq [[rgb-str i] (map vector
-                             pixels
-                             (range 0 (.. image-data -data -length) 4))]
-      (let [[r g b a] (map parse-double (re-seq #"\d+" rgb-str))]
-        (aset (. image-data -data) i r)
-        (aset (. image-data -data) (+ i 1) g)
-        (aset (. image-data -data) (+ i 2) b)
-        (aset (. image-data -data) (+ i 3) (if rgb-str
-                                             (scale-number (if-not (= a 1) a opacity) ;; todo: fix it
-                                                           [0 1]
-                                                           [0 255])
-                                             0))))
+    (doseq [pixel-idx (range 0 (count pixels))]
+      (let [rgb-str (nth pixels pixel-idx)]
+        (when (not= rgb-str color/transparent-color)
+          (let [[r g b] (parse-color rgb-str)]
+            (.. image-data -data (set #js [r g b 255] (* pixel-idx 4)))))))
     image-data))
 
 ;; не должны лежать здесь с остальными утилитами

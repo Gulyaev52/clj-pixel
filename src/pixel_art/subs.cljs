@@ -29,13 +29,14 @@
 (re-frame/reg-sub
  ::sprite-resizer-previews
  (fn [db]
-   (let [{:keys [sprite] {:keys [settings]} :sprite-resizer} db
-         resized-sprite (sprite-resizer/resize-sprite sprite settings)
-         previews (for [frame-idx (range 0 (count (:frames sprite)))]
-                    (->> (canvas/create-canvas (:size resized-sprite))
-                         (canvas/draw-frame-on-single-canvas frame-idx resized-sprite)
-                         (#(canvas/to-data-url % "png"))))]
-     previews)))
+   (when (= (-> db :sprite-resizer :opened) true)
+     (let [{:keys [sprite] {:keys [settings]} :sprite-resizer} db
+           resized-sprite (sprite-resizer/resize-sprite sprite settings)
+           previews (for [frame-idx (range 0 (count (:frames sprite)))]
+                      (->> (canvas/create-canvas (:size resized-sprite))
+                           (canvas/draw-frame-on-single-canvas frame-idx resized-sprite)
+                           (#(canvas/to-data-url % "png"))))]
+       previews))))
 
 (re-frame/reg-sub
  ::sprite-resizer-settings

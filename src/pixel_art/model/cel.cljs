@@ -13,12 +13,11 @@
    :y (. js/Math (floor (/ idx width)))})
 
 (defn update-pixels-coll [pixels-map size pixels]
-  (reduce (fn [res-pixels [pos color]]
-            (if (geometry/valid-point? pos size)
-              (assoc res-pixels (pos->idx pos size) color)
-              res-pixels))
-          pixels
-          pixels-map))
+  (let [pixels-t (transient pixels)]
+    (doseq [[pos color] pixels-map]
+      (when (geometry/valid-point? pos size)
+        (assoc! pixels-t (pos->idx pos size) color)))
+    (persistent! pixels-t)))
 
 (defn create
   ([size]
@@ -33,7 +32,6 @@
 (defn remove-all-pixels [cel]
   (update cel :pixels #(mapv (fn [_] color/transparent-color) %)))
 
-;; todo: rename
 (defn set-pixels [pixels-map cel]
   (update cel :pixels #(update-pixels-coll pixels-map (:size cel) %)))
 
