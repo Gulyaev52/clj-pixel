@@ -9,12 +9,19 @@
 (re-frame/reg-event-fx
  ::set-opened
  (fn [{:keys [db]} [_ opened]]
-   {:db (assoc-in db [:new-project-modal :opened] opened)}))
+   {:db (-> db
+            (assoc-in [:new-project-modal :opened] opened)
+            (assoc-in [:new-project-modal :size] (-> db :sprite :size)))}))
 
 (re-frame/reg-event-fx
- ::set-size
- (fn [{:keys [db]} [_ size]]
-   {:db (assoc-in db [:new-project-modal :size] size)}))
+ ::set-width
+ (fn [{:keys [db]} [_ width]]
+   {:db (assoc-in db [:new-project-modal :size :width] width)}))
+
+(re-frame/reg-event-fx
+ ::set-height
+ (fn [{:keys [db]} [_ height]]
+   {:db (assoc-in db [:new-project-modal :size :height] height)}))
 
 (re-frame/reg-event-fx
  ::create-example-project

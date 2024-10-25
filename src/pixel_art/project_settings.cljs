@@ -5,6 +5,8 @@
             [pixel-art.model.layer :as layer]
             [pixel-art.model.sprite :as sprite]))
 
+(def max-sprite-dim 512) ;; todo: check this value
+
 (defn get-layer-name [type layers-count]
   (str (if (= type :group) "Group " "Layer ") (inc layers-count)))
 
@@ -25,20 +27,12 @@
                   :cel (cel/create size)}))
 
 (def example-project
-  (let [sprite-size {:width 8 :height 8}
+  (let [sprite-size {:width 256 :height 256}
         secondary-color (:secondary-color default-palettes-and-current-colors)]
     (assoc
      default-palettes-and-current-colors
      :sprite
      (->> (create-empty-sprite sprite-size)
-          (sprite/set-current-cel-pixels (->> (for [x (range 0 (:width sprite-size))
-                                                    y (range 0 (:height sprite-size))]
-                                                [{:x x :y y} color/transparent-color])
-                                              (into {})))
-          (sprite/set-current-cel-pixels {{:x 0 :y 0} secondary-color
-                                          {:x 0 :y 1} color/transparent-color
-                                          {:x 1 :y 1} secondary-color
-                                          {:x 3 :y 3} secondary-color
-                                          {:x 3 :y 4} secondary-color
-                                          {:x 4 :y 3} secondary-color
-                                          {:x 4 :y 4} secondary-color})))))
+          (sprite/set-current-cel-pixels (for [x (range 0 (:width sprite-size))
+                                               y (range 0 (:height sprite-size))]
+                                           [{:x x :y y} (color/rgba 255 0 255)]))))))
