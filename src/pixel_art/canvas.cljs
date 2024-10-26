@@ -1,7 +1,8 @@
 (ns pixel-art.canvas
-  (:require [pixel-art.model.sprite :as sprite]
-            [sc.api]
-            [pixel-art.model.color :as color]))
+  (:require
+   [pixel-art.model.color :as color]
+   [pixel-art.model.sprite :as sprite]
+   [sc.api]))
 
 (defn generate-img [draw size]
   (let [canvas-elem (.. js/document (createElement "canvas"))]

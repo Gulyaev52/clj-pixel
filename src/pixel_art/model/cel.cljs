@@ -13,7 +13,7 @@
    :y (. js/Math (floor (/ idx width)))})
 
 (defn update-pixels-coll [pixels-map size pixels]
-  (let [pixels-t (transient pixels)]
+  (let [pixels-t (transient pixels)] ;; todo: тут возможно нужно юзать reduce
     (doseq [[pos color] pixels-map]
       (when (geometry/valid-point? pos size)
         (assoc! pixels-t (pos->idx pos size) color)))

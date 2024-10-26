@@ -5,8 +5,7 @@
    [pixel-art.model.cel :as cel]
    [pixel-art.model.color :refer [rgba transparent-color]]
    [pixel-art.utils.coll :as coll]
-   [re-frame.core :as re-frame]
-   [sc.api :as api]))
+   [re-frame.core :as re-frame]))
 
 (defn init []
   {:opened false
@@ -15,16 +14,15 @@
               :anchor {:x :center :y :center}}})
 
 (defn array-data->pixels [array-data size]
-  (->> (for [x (range 0 (:width size))
-             y (range 0 (:height size))]
-         (let [index (* (+ x (* y (:width size))) 4)
-               r (aget array-data index)
-               g (aget array-data (+ index 1))
-               b (aget array-data (+ index 2))
-               a (aget array-data (+ index 3))] ;; todo: тут значения 0-255
-           [[x y] (rgba r g b a)]))
-       (sort-by #(-> % first second))
-       (map second)))
+  (-> (for [y (range 0 (:height size))
+            x (range 0 (:width size))]
+        (let [index (* (+ x (* y (:width size))) 4)
+              r (aget array-data index)
+              g (aget array-data (+ index 1))
+              b (aget array-data (+ index 2))
+              a (aget array-data (+ index 3))] ;; todo: тут значения 0-255
+          (rgba r g b a)))
+      vec))
 
 (defn translate-x [x width resized-width anchor-x]
   (case anchor-x
