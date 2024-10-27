@@ -24,29 +24,36 @@
    :misc [{:label "undo"
            :keys [{:key "z"
                    :ctrlKey true}]
-           :action [::history/undo]}
+           :action [::history/undo]
+           :prevent-default-keys true}
           {:label "redo"
            :keys [{:key "y"
                    :ctrlKey true}]
-           :action [::history/redo]}]
+           :action [::history/redo]
+           :prevent-default-keys true}]
    :selection [{:label "cut selection"
-                :keys [{:key "x"}]
-                :action [::rectangle-selection/cut-selection]}
+                :keys [{:ctrlKey true :key "x"}]
+                :action [::rectangle-selection/cut-selection]
+                :prevent-default-keys true}
                {:label "copy selection"
                 :keys [{:key "c"
                         :ctrlKey true}]
-                :action [::rectangle-selection/copy-selection]}
+                :action [::rectangle-selection/copy-selection]
+                :prevent-default-keys true}
                {:label "past selection"
                 :keys [{:key "v"
                         :ctrlKey true}]
-                :action [::rectangle-selection/past-selection]}
+                :action [::rectangle-selection/past-selection]
+                :prevent-default-keys true}
                {:label "delete selection"
                 :keys [{:key "delete"}
                        {:key "backspace"}]
-                :action [::rectangle-selection/delete-selection]}
+                :action [::rectangle-selection/delete-selection]
+                :prevent-default-keys true}
                {:label "commit selection"
                 :keys [{:key "enter"}]
-                :action [::rectangle-selection/commit-selection]}]})
+                :action [::rectangle-selection/commit-selection]
+                :prevent-default-keys true}]})
 (let [diff (set/difference (set tool/types) (set (map :tool (:tools shortcuts-by-types))))]
   (assert (= diff #{}) (str (vec diff) " don't have hotkeys")))
 

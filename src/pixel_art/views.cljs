@@ -64,6 +64,7 @@
             :min min
             :max max
             :step step
+            :style {:user-select "none"}
             :onChange (fn [e]
                         (let [value (parse-double (.. e -target -value))]
                           (onChange value)))}]])
@@ -272,14 +273,14 @@
        :right 0
        :transform "translateX(50%)"}]]))
 
-(defn input-number-component [{:keys [value on-blur]}]
+(defn input-number-component [{:keys [value max on-blur]}]
   (let [[curr-value set-curr-value] (react/useState value)]
     (react/useEffect (fn [] (set-curr-value (str value))) #js [value])
     [:input {:value curr-value
              :type "number"
              :min 1
              :step 1
-             :max project-settings/max-sprite-dim
+             :max max
              :onChange (fn [e]
                          (set-curr-value (.. e -target -value)))
              :onBlur (fn []

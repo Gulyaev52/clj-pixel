@@ -1,7 +1,6 @@
-16) undo/redo
-
 13)  QuotaExceededError: Failed to execute 'setItem' on 'Storage': Setting the value of 'saved-project' exceeded the quota
 17) bucket too long for 256 grid
+
 15) исп объек для цветов вместо строк?
 
 13) на создание перерендер происходит 4 раза или же на открытие 2 раза
@@ -28,6 +27,7 @@ background. отдельный слой?
   8) сделать норм подсветку для активной ячейки
 
 улучшения:
+11) undo/redo срабатывает когда открыты модалки
 15) рисовать на превью сразу с опасити. но это сломает выделение в rectangle_selection. vfs layer?
 14) lasso tool
 13) ;; todo: поменять цвет выделений(может сделать как в aseprite) так как плохо видно. например на краснои

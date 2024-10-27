@@ -4,7 +4,7 @@
    [re-frame.core :as re-frame]
    [pixel-art.events :as events]
    [pixel-art.events.event-collector]
-   [re-pressed.core :as rp]
+   [pixel-art.re-pressed.core :as rp]
    [pixel-art.views :as views]
    [pixel-art.config :as config]))
 

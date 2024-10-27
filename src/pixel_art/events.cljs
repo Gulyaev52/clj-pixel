@@ -19,7 +19,7 @@
             [pixel-art.utils.interceptor :refer [on-changes on-paths-change]]
             [re-frame.core :as re-frame]
             [re-frame.db]
-            [re-pressed.core :as rp]
+            [pixel-art.re-pressed.core :as rp]
             [sc.api]))
 
 ;; todo: remove
@@ -30,18 +30,25 @@
 (def saved-project-key "saved-project")
 
 (def dispatch-set-keydown-rules
-  [:dispatch [::rp/set-keydown-rules
-              {:event-keys (->> keyboard-shortcuts/shortcuts-by-types
-                                vals
-                                flatten
-                                                                       ;; Order matters, and the first matching key combination will consume the event. So for example, if you want to listen for both forward arrow ({:keyCode 37}) and control + forward arrow ({:keyCode 37 :ctrlKey true}), then you must put the combination before the singleton. 
-                                (sort-by (fn [{:keys [keys]}] (not (some :ctrlKey keys))))
-                                (map (fn [{:keys [action keys]}]
-                                       (into [action] (->> keys
-                                                           (map #(-> %
-                                                                     (assoc :keyCode (keyboard-shortcuts/key->code (:key %)))
-                                                                     (dissoc :key)))
-                                                           (map vector))))))}]])
+  (let [convert-shortcut-keys #(-> %
+                                   (assoc :keyCode (keyboard-shortcuts/key->code (:key %)))
+                                   (dissoc :key))]
+    [:dispatch [::rp/set-keydown-rules
+                {:event-keys (->> keyboard-shortcuts/shortcuts-by-types
+                                  vals
+                                  flatten
+                                ;; Order matters, and the first matching key combination will consume the event. So for example, if you want to listen for both forward arrow ({:keyCode 37}) and control + forward arrow ({:keyCode 37 :ctrlKey true}), then you must put the combination before the singleton. 
+                                  (sort-by (fn [{:keys [keys]}] (not (some :ctrlKey keys))))
+                                  (map (fn [{:keys [action keys]}]
+                                         (into [action] (->> keys
+                                                             (map convert-shortcut-keys)
+                                                             (map vector))))))
+                 :prevent-default-keys (->> keyboard-shortcuts/shortcuts-by-types
+                                            vals
+                                            flatten
+                                            (filter :prevent-default-keys)
+                                            (mapcat (fn [{:keys [keys]}] keys))
+                                            (map convert-shortcut-keys))}]]))
 
 (re-frame/reg-event-fx
  ::initialize-db
