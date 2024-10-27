@@ -1,11 +1,9 @@
 (ns pixel-art.tool.shading
-  (:require ["tinycolor2" :as tinycolor]
-            [pixel-art.model.cel :as cel]
-            [pixel-art.model.color :refer [transparent-color]]
+  (:require [pixel-art.model.cel :as cel]
+            [pixel-art.model.color :as color]
             [pixel-art.model.sprite :as sprite]
             [pixel-art.tool.utils :refer [commit-changes-and-init-tool
-                                          get-tool-options resize-pixel]]
-            [pixel-art.model.color :as color]))
+                                          get-tool-options resize-pixel]]))
 
 (defn init [] {:type :shading :state {:changes {}}})
 
@@ -38,8 +36,8 @@
             new-pixels (->> (resize-pixel (:pos event) pixel-size)
                             (keep (fn [pos]
                                     (let [color (cel/get-pixel pos current-cel)]
-                                      (when-not (= color transparent-color)
-                                        (let [tcolor (tinycolor color)]
+                                      (when-not (= color color/transparent-color)
+                                        (let [tcolor (color/->tinycolor color)]
                                           (if lighten
                                             (. tcolor (lighten amount))
                                             (. tcolor (darken amount)))

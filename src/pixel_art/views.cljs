@@ -3,7 +3,6 @@
    ["./colorPicker$default" :as color-picker-js]
    ["react-dnd" :as react-dnd]
    ["react-dnd-html5-backend" :as react-dnd-html5-backend]
-   ["tinycolor2" :as tinycolor]
    [clojure.string :as string]
    [pixel-art.events :as events]
    [pixel-art.export :as export]
@@ -444,10 +443,6 @@
     (color/rgba 0 0 0)
     color))
 
-(defn distinct-by [f coll]
-  (let [groups (group-by f coll)]
-    (map #(first (groups %)) (distinct (map f coll)))))
-
 (defn add-new-color-picker []
   (let [primary-color (replace-transparent-color @(re-frame/subscribe [::subs/primary-color]))
         secondary-color (replace-transparent-color @(re-frame/subscribe [::subs/secondary-color]))
@@ -462,9 +457,9 @@
                                             (re-frame/dispatch [::palette/add-color @!temp-new-value])
                                             (onClose))}
                                 "add"]]
-                     :presetColors (distinct-by :color [{:color primary-color}
-                                                        {:color secondary-color}
-                                                        {:color last-color}])
+                     :presetColors (coll/distinct-by :color [{:color primary-color}
+                                                             {:color secondary-color}
+                                                             {:color last-color}])
                      :onCancel (fn []
                                  (onClose))}])))
 
@@ -512,7 +507,7 @@
                        :background-color color
                        :position "relative"
                        :cursor "pointer"
-                       :color (if (.. (tinycolor color) isDark)
+                       :color (if (.. (color/->tinycolor color) isDark)
                                 "white" "black")}}
          (when (= color primary-color) "L")
          (when (= color secondary-color) "R")

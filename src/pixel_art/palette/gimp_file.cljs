@@ -1,6 +1,5 @@
 (ns pixel-art.palette.gimp-file
-  (:require ["tinycolor2" :as tinycolor]
-            [clojure.string :as string]
+  (:require [clojure.string :as string]
             [pixel-art.model.color :as color]))
 
 (defn palette->file-desc [palette]
@@ -9,7 +8,7 @@
                           (str "Name: " (:name palette))
                           "Columns: 0"]
                          (map (fn [color]
-                                (let [{:keys [r g b]} (js->clj (. (tinycolor color) toRgb) :keywordize-keys true)]
+                                (let [{:keys [r g b]} (js->clj (. (color/->tinycolor color) toRgb) :keywordize-keys true)]
                                   (string/join " " [r g b "Untitled"])))
                               (:colors palette)))
                  (string/join "\n"))

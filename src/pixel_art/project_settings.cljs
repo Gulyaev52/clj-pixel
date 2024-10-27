@@ -27,7 +27,7 @@
                   :cel (cel/create size)}))
 
 (def example-project
-  (let [sprite-size {:width 256 :height 256}
+  (let [sprite-size {:width 512 :height 512}
         secondary-color (:secondary-color default-palettes-and-current-colors)]
     (assoc
      default-palettes-and-current-colors

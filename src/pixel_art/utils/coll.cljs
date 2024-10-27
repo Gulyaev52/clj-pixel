@@ -50,3 +50,7 @@
 
 (defn transpose [m]
   (apply mapv vector m))
+
+(defn distinct-by [f coll]
+  (let [groups (group-by f coll)]
+    (map #(first (groups %)) (distinct (map f coll)))))
