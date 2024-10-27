@@ -1,6 +1,5 @@
 (ns pixel-art.events
-  (:require ["tinycolor2" :as tinycolor]
-            [pixel-art.canvas :as canvas]
+  (:require [pixel-art.canvas :as canvas]
             [pixel-art.db :as db :refer [max-scale]]
             [pixel-art.project-settings :as project-settings]
             [pixel-art.fx]
@@ -551,7 +550,7 @@
         light-color "rgba(255, 255, 255, 0.2)"]
     (if (= color color/transparent-color)
       dark-color
-      (let [luminance (.. (tinycolor color) toHsl -l)]
+      (let [luminance (.. (color/->tinycolor color) toHsl -l)]
         (if (> luminance 0.5)
           dark-color
           light-color)))))

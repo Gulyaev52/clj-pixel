@@ -3,7 +3,6 @@
    ["./colorPicker$default" :as color-picker-js]
    ["react-dnd" :as react-dnd]
    ["react-dnd-html5-backend" :as react-dnd-html5-backend]
-   ["tinycolor2" :as tinycolor]
    [clojure.string :as string]
    [pixel-art.events :as events]
    [pixel-art.export :as export]
@@ -512,7 +511,7 @@
                        :background-color color
                        :position "relative"
                        :cursor "pointer"
-                       :color (if (.. (tinycolor color) isDark)
+                       :color (if (.. (color/->tinycolor color) isDark)
                                 "white" "black")}}
          (when (= color primary-color) "L")
          (when (= color secondary-color) "R")

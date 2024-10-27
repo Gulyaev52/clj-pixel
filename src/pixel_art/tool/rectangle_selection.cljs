@@ -1,14 +1,13 @@
 (ns pixel-art.tool.rectangle-selection
-  (:require ["tinycolor2" :as tinycolor]
-            [clojure.set]
+  (:require [clojure.set]
             [pixel-art.canvas :as canvas]
             [pixel-art.events.event-collector]
             [pixel-art.model.cel :as cel]
-            [pixel-art.model.color :refer [transparent-color]]
             [pixel-art.tool.utils :refer [commit-changes-and-init-tool
                                           get-current-cel]]
             [pixel-art.utils.geometry :as geometry]
-            [re-frame.core :as re-frame]))
+            [re-frame.core :as re-frame]
+            [pixel-art.model.color :as color]))
 ;; init
 ;; todo: используем так как из selection-image удаляются прозр точки(не работает днд) и если проверять вхож
 ;; todo: а зачем поле state
@@ -21,7 +20,7 @@
 
 (defn remove-transparent-colors [selection-image]
   (->> selection-image
-       (filter (fn [[_ color]] (not= color transparent-color)))
+       (filter (fn [[_ color]] (not= color color/transparent-color)))
        (into {})))
 
 (defn move-selection [tool initial-mouse-down-pos event]
@@ -29,7 +28,7 @@
         {:keys [initial-selection-image selection-image pasted?]} (:state tool)
 
         deleted-initial-selection (when (not pasted?)
-                                    (update-vals initial-selection-image (fn [_] transparent-color)))
+                                    (update-vals initial-selection-image (fn [_] color/transparent-color)))
         moved-selection-image (-> selection-image
                                   (update-keys #(merge-with + % offset-pos)))
         changes (merge deleted-initial-selection
@@ -115,7 +114,7 @@
         {:keys [initial-selection-image pasted?]} (-> db :tool :state)
         deleted-initial-selection (if pasted?
                                     {}
-                                    (update-vals initial-selection-image (fn [_] transparent-color)))]
+                                    (update-vals initial-selection-image (fn [_] color/transparent-color)))]
     (commit-changes-and-init-tool db
                                   deleted-initial-selection
                                   {:type tool-type :state {:mode :select}})))
@@ -176,9 +175,9 @@
 (defn- get-highlight-color [color]
   (let [dark-color "rgba(0, 0, 0, 0.2)"
         light-color "rgba(255, 255, 255, 0.4)"]
-    (if (= color transparent-color)
+    (if (= color color/transparent-color)
       dark-color
-      (let [luminance (.. (tinycolor color) toHsl -l)]
+      (let [luminance (.. (color/->tinycolor color) toHsl -l)]
         (if (> luminance 0.5)
           dark-color
           light-color)))))
