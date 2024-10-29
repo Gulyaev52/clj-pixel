@@ -1,21 +1,18 @@
 (ns pixel-art.project-save-load
   (:require [re-frame.core :as re-frame]
-            [pixel-art.project-serialization :as project-serialization]))
+            [pixel-art.sprite-serialization :as sprite-serialization]))
 
-(def sprite-file-ext "json")
-
-(defn- sprite->file-desc [sprite]
-  (let [exported-project (project-serialization/serialize {:sprite sprite})]
-    {:file-name (str "pixel-project."  sprite-file-ext)
-     :content (-> {:version "1" :project exported-project}
-                  clj->js
-                  (#(. js/JSON stringify %)))
-     :content-type :json}))
+(def file-ext "json")
 
 (re-frame/reg-event-fx
  ::save-as-file
  (fn [{:keys [db]}]
-   (let [file-desc (sprite->file-desc (:sprite db))]
+   (let [file-desc {:file-name (str "pixel-project." file-ext)
+                    :content (-> {:version "1"
+                                  :project {:sprite (sprite-serialization/serialize (:sprite db))}}
+                                 clj->js
+                                 (#(. js/JSON (stringify %))))
+                    :content-type :json}]
      {:fx [[:download-file file-desc]]})))
 
 (re-frame/reg-event-fx
@@ -43,7 +40,10 @@
                           (js->clj :keywordize-keys true)
                           :project
                           resolve)))
-       (then project-serialization/deserialize+)
+       (then (fn [project]
+               (. (sprite-serialization/deserialize+ (:sprite project))
+                  (then (fn [sprite]
+                          (assoc project :sprite sprite))))))
        (then (fn [res]
                (re-frame/dispatch [::deserialize-success (:sprite res)])))
        (catch (fn []

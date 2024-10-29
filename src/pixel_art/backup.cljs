@@ -1,6 +1,6 @@
 (ns pixel-art.backup
   (:require
-   [pixel-art.project-serialization :as project-serialization]
+   [pixel-art.sprite-serialization :as sprite-serialization]
    [pixel-art.utils.interceptor :refer [on-paths-change]]
    [re-frame.core :as re-frame]))
 
@@ -40,18 +40,21 @@
   (let [store (open-object-store db)]
     (.. (request->promise (. store (get "backup")))
         (then (fn [event]
-                (-> (.. event -target -result)
-                    (js->clj :keywordize-keys true)
-                    :serialized
-                    (project-serialization/deserialize+)))))))
+                (when-let [backup (-> (.. event -target -result)
+                                      (js->clj :keywordize-keys true)
+                                      :backup)]
+                  (. (sprite-serialization/deserialize+ (:sprite backup))
+                     (then (fn [sprite]
+                             (assoc backup :sprite sprite))))))))))
 
-(defn put-backup+ [db project]
+(defn put-backup+ [db backup]
   ;; update or create a new backup if not exists
   (let [store (open-object-store db)
-        project-serialized (project-serialization/serialize project)
-        backup (-> {:id "backup" :serialized project-serialized}
+        record (-> {:id "backup"
+                    :backup (-> backup
+                                (update :sprite sprite-serialization/serialize))}
                    clj->js)]
-    (request->promise (. store (put backup)))))
+    (request->promise (. store (put record)))))
 
 (re-frame/reg-global-interceptor
  (on-paths-change
@@ -65,10 +68,10 @@
 
 (re-frame/reg-event-fx
  ::backup
- (fn [_ [_ project]]
-   {:fx [[::backup project]]}))
+ (fn [_ [_ backup]]
+   {:fx [[::backup backup]]}))
 
 (re-frame/reg-fx
  ::backup
- (fn [project]
-   (put-backup+ @!db project)))
+ (fn [backup]
+   (put-backup+ @!db backup)))

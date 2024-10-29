@@ -38,8 +38,8 @@
  (fn []
    (.. (backup/init-db+)
        (then backup/get-backup+)
-       (then (fn [project]
-               (re-frame/dispatch [:initialize-db project])))
+       (then (fn [backup]
+               (re-frame/dispatch [:initialize-db backup])))
        (catch (fn []
                 (re-frame/dispatch [:initialize-db]))))))
 
