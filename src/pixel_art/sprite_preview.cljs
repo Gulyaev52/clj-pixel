@@ -26,7 +26,7 @@
          frames (:frames sprite)
          frame-imgs (->> (for [frame-idx (range 0 (count frames))]
                            [frame-idx
-                            (canvas/generate-img
+                            (canvas/generate-data-url
                              #(canvas/draw-frame-on-single-canvas frame-idx sprite %)
                              (sprite/get-size sprite))])
                          (into {}))]

@@ -4,7 +4,7 @@
    [pixel-art.model.sprite :as sprite]
    [sc.api]))
 
-(defn generate-img [draw size]
+(defn generate-data-url [draw size]
   (let [canvas-elem (.. js/document (createElement "canvas"))]
     (set! (. canvas-elem -width) (:width size))
     (set! (. canvas-elem -height) (:height size))

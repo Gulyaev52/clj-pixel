@@ -9,6 +9,10 @@
             [pixel-art.canvas :as canvas]))
 
 (re-frame/reg-sub
+ ::initial-loading
+ (fn [db] (-> db :initial-loading)))
+
+(re-frame/reg-sub
  ::new-project-modal-opened
  (fn [db] (-> db :new-project-modal :opened)))
 

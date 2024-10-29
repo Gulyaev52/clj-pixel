@@ -1131,6 +1131,8 @@
      [canvases-section]
      [new-project-modal]]))
 
-(defn mount-root []
-  (let [root-el (.getElementById js/document "app")]
-    (rdom/render [main-panel] root-el)))
+(defn app []
+  (if @(re-frame/subscribe [::subs/initial-loading])
+    [:div
+     "LOADING"]
+    [main-panel]))

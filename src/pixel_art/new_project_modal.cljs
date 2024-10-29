@@ -27,12 +27,12 @@
  ::create-example-project
  (fn []
    {:fx [[:dispatch
-          [:start-new-project project-settings/example-project]]]}))
+          [:pixel-art.events/initialize-db project-settings/example-project]]]}))
 
 (re-frame/reg-event-fx
  ::create
  (fn [{:keys [db]}]
    {:fx [[:dispatch
-          [:start-new-project
+          [:pixel-art.events/initialize-db
            (assoc project-settings/default-palettes-and-current-colors
                   :sprite (project-settings/create-empty-sprite (-> db :new-project-modal :size)))]]]}))

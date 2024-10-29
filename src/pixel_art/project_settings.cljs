@@ -35,4 +35,4 @@
      (->> (create-empty-sprite sprite-size)
           (sprite/set-current-cel-pixels (for [x (range 0 (:width sprite-size))
                                                y (range 0 (:height sprite-size))]
-                                           [{:x x :y y} (color/rgba (rand 255) (rand 255) (rand 255))]))))))
+                                           [{:x x :y y} (color/rgba 255 0 255)]))))))

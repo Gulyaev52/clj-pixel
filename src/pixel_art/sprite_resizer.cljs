@@ -24,6 +24,10 @@
           (rgba r g b a)))
       vec))
 
+(defn canvas->pixels [canvas size]
+  (let [image-data (.. canvas (getContext "2d") (getImageData 0 0 (:width size) (:height size)))]
+    (array-data->pixels (.. image-data -data) size)))
+
 (defn translate-x [x width resized-width anchor-x]
   (case anchor-x
     :left x

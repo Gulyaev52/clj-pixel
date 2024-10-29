@@ -7,14 +7,12 @@
             [pixel-art.events :as events]
             [pixel-art.events.event-collector :as event-collector]
             [pixel-art.export :as export]
-            [pixel-art.local-storage :as local-storage]
             [pixel-art.model.cel :as cel]
             [pixel-art.model.color :as color]
             [pixel-art.model.frame :as frame]
             [pixel-art.model.layer :as layer]
             [pixel-art.model.sprite :as sprite]
             [pixel-art.palette :as palette]
-            [pixel-art.project-save-load :as project-save-load]
             [pixel-art.subs :as subs]
             [pixel-art.tool.rectangle-selection :as rectangle-selection]
             [pixel-art.utils.coll :as coll]
@@ -72,12 +70,6 @@
  :download-file
  (fn [file-desc]
    (reset! !last-download-file file-desc)))
-
-(def !local-storage (atom {}))
-(rf/reg-fx
- ::local-storage/set-item
- (fn [{:keys [key value]}]
-   (reset! !local-storage (assoc @!local-storage key value))))
 
 (defn create-pixels [size]
   (vec (repeat (* (:width size) (:height size)) color/transparent-color)))

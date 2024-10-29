@@ -17,12 +17,14 @@
   (re-frame/clear-subscription-cache!)
   (let [root-el (.getElementById js/document "app")]
     (rdom/unmount-component-at-node root-el)
-    (rdom/render [views/main-panel]
-                 root-el
-                 (fn [] (re-frame/dispatch [::events/initialize-canvas])))))
+    (rdom/render [views/app]
+                 root-el)))
+
+(defn ^:dev/after-load update-canvas []
+  (re-frame/dispatch [::events/initialize-canvas]))
 
 (defn init []
-  (re-frame/dispatch-sync [::events/initialize-db])
+  (re-frame/dispatch-sync [::events/start-app])
   (re-frame/dispatch-sync [::rp/add-keyboard-event-listener "keydown"])
   (dev-setup)
   (mount-root))

@@ -1,33 +1,47 @@
 (ns pixel-art.events
-  (:require [pixel-art.canvas :as canvas]
-            [pixel-art.db :as db :refer [max-scale]]
-            [pixel-art.project-settings :as project-settings]
-            [pixel-art.fx]
-            [pixel-art.history :as history]
-            [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
-            [pixel-art.local-storage :as local-storage]
-            [pixel-art.model.cel :as cel]
-            [pixel-art.model.color :as color]
-            [pixel-art.model.frame :as frame]
-            [pixel-art.model.layer :as layer]
-            [pixel-art.model.sprite :as sprite]
-            [pixel-art.project-save-load]
-            [pixel-art.tool.core :as tool]
-            [pixel-art.tool.utils :refer [commit-changes-and-init-tool
-                                          get-current-cel]]
-            [pixel-art.utils.geometry :as geometry]
-            [pixel-art.utils.interceptor :refer [on-changes on-paths-change]]
-            [re-frame.core :as re-frame]
-            [re-frame.db]
-            [pixel-art.re-pressed.core :as rp]
-            [sc.api]))
+  (:require
+   [pixel-art.backup :as backup]
+   [pixel-art.canvas :as canvas]
+   [pixel-art.db :as db :refer [max-scale]]
+   [pixel-art.fx]
+   [pixel-art.history :as history]
+   [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
+   [pixel-art.model.cel :as cel]
+   [pixel-art.model.color :as color]
+   [pixel-art.model.frame :as frame]
+   [pixel-art.model.layer :as layer]
+   [pixel-art.model.sprite :as sprite]
+   [pixel-art.project-save-load]
+   [pixel-art.project-settings :as project-settings]
+   [pixel-art.re-pressed.core :as rp]
+   [pixel-art.tool.core :as tool]
+   [pixel-art.tool.utils :refer [commit-changes-and-init-tool get-current-cel]]
+   [pixel-art.utils.geometry :as geometry]
+   [pixel-art.utils.interceptor :refer [on-changes]]
+   [re-frame.core :as re-frame]
+   [re-frame.db]
+   [sc.api]))
 
 ;; todo: remove
 (add-watch re-frame.db/app-db :def
            (fn [_ _ _ new]
              (def db new)))
 
-(def saved-project-key "saved-project")
+(re-frame/reg-event-fx
+ ::start-app
+ (fn []
+   {:db {:initial-loading true}
+    :fx [[:load-initial-data]]}))
+
+(re-frame/reg-fx
+ :load-initial-data
+ (fn []
+   (.. (backup/init-db+)
+       (then backup/get-backup+)
+       (then (fn [project]
+               (re-frame/dispatch [::initialize-db project])))
+       (catch (fn []
+                (re-frame/dispatch [::initialize-db]))))))
 
 (def dispatch-set-keydown-rules
   (let [convert-shortcut-keys #(-> %
@@ -52,39 +66,22 @@
 
 (re-frame/reg-event-fx
  ::initialize-db
- [(re-frame/inject-cofx ::local-storage/get-item saved-project-key)]
- (fn [coeffects [_ new-project]] ;; todo: create separated event to initialize tests? 
-   (let [saved-project (get coeffects saved-project-key)
-         initial-db (cond
-                      new-project (db/get-db new-project)
-                      saved-project (db/get-db saved-project)
-                      :else (db/get-db (assoc project-settings/default-palettes-and-current-colors
-                                              :sprite (project-settings/create-empty-sprite {:width 64 :height 64})
-                                              :new-project-modal-opened true)))]
+ (fn [_ [_ settings]]
+   (let [initial-db (if settings
+                      (db/get-db settings)
+                      (db/get-db (assoc project-settings/default-palettes-and-current-colors
+                                        :sprite (project-settings/create-empty-sprite {:width 64 :height 64})
+                                        :new-project-modal-opened true)))]
      {:db initial-db
-      :fx [dispatch-set-keydown-rules]})))
-
-(re-frame/reg-event-fx
- :start-new-project
- (fn [_ [_ new-project]]
-   {:db (db/get-db new-project)
-    :fx [dispatch-set-keydown-rules]}))
-
-(re-frame/reg-global-interceptor
- (on-paths-change
-  :save-project-in-local-storage
-  [:primary-color :secondary-color :palettes :pixels-grid-enabled :sprite]
-  (fn [{:keys [db fields]}]
-    {:db db
-     :fx [[:dispatch-debounce {:key :save-project-in-local-storage
-                               :event [::local-storage/set-item {:key saved-project-key
-                                                                 :value fields}]
-                               :delay 2000}]]})))
+      :fx [dispatch-set-keydown-rules
+           ;; wait for rendering canvases. todo: refactoring
+           [:dispatch-later {:ms 1 :dispatch [::initialize-canvas]}]]})))
 
 (re-frame/reg-event-fx
  ::initialize-canvas
- (fn []
-   {:fx [[:init-canvases]
+ (fn [{:keys [db]}]
+   {:db (assoc db :canvas-initialized true)
+    :fx [[:init-canvases]
          [:draw-current-frame]
          [:draw-pixels-grid]
          [:zoom]]}))
@@ -122,19 +119,21 @@
   #(-> % :sprite sprite/get-size)
   (fn [{:keys [db]}]
     {:db db
-     :fx [[:init-canvases]
-          [:draw-current-frame]
-          [:draw-pixels-grid]
-          [:draw-onion-skin {:sprite (:sprite db) :opacity (-> db :onion-skin :opacity)}]]})))
+     :fx (when (and (not (:initial-loading db)) (:canvas-initialized db))
+           [[:init-canvases]
+            [:draw-current-frame]
+            [:draw-pixels-grid]
+            [:draw-onion-skin {:sprite (:sprite db) :opacity (-> db :onion-skin :opacity)}]])})))
 
 (re-frame/reg-global-interceptor
  (on-changes
   :redraw-current-cel ;; это также нужно и на изменения слоя. например прозрачности или видимости
   #(-> % :sprite)
   (fn [{:keys [db]}]
-    {:db db
-     :fx [[:clear-frame]
-          [:draw-current-frame]]})))
+    (when (and (not (:initial-loading db)) (:canvas-initialized db))
+      {:db db
+       :fx [[:clear-frame]
+            [:draw-current-frame]]}))))
 
 ;; todo: fix performance; если позиция ячейки изменяется то тут ошибка; если удаляется
 (re-frame/reg-global-interceptor
@@ -145,8 +144,8 @@
     (let [cel-imgs (->> (-> db :sprite)
                         sprite/get-cels-with-pos-as-coll
                         (map (fn [cel] [(:pos cel)
-                                        (canvas/generate-img #(canvas/draw-cel cel %)
-                                                             (cel/get-size cel))]))
+                                        (canvas/generate-data-url #(canvas/draw-cel cel %)
+                                                                  (cel/get-size cel))]))
                         (into {}))]
       {:db (assoc db :cel-imgs cel-imgs)}))))
 
