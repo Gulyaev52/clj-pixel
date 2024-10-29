@@ -39,9 +39,9 @@
    (.. (backup/init-db+)
        (then backup/get-backup+)
        (then (fn [project]
-               (re-frame/dispatch [::initialize-db project])))
+               (re-frame/dispatch [:initialize-db project])))
        (catch (fn []
-                (re-frame/dispatch [::initialize-db]))))))
+                (re-frame/dispatch [:initialize-db]))))))
 
 (def dispatch-set-keydown-rules
   (let [convert-shortcut-keys #(-> %
@@ -65,7 +65,7 @@
                                             (map convert-shortcut-keys))}]]))
 
 (re-frame/reg-event-fx
- ::initialize-db
+ :initialize-db
  (fn [_ [_ settings]]
    (let [initial-db (if settings
                       (db/get-db settings)

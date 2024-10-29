@@ -1,8 +1,6 @@
 13)  QuotaExceededError: Failed to execute 'setItem' on 'Storage': Setting the value of 'saved-project' exceeded the quota
   поправить тесты
-  поправить файлы
   в файле и в бд сохранять не как строку 
-  переименовать initialize-db
 
 оптимизация
   17) bucket too long for 256 grid

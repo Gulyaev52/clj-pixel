@@ -26,7 +26,7 @@
 (re-frame/reg-event-fx
  ::deserialize-success
  (fn [{:keys [db]} [_ sprite]]
-   {:fx [[:dispatch [:pixel-art.events/initialize-db
+   {:fx [[:dispatch [:initialize-db
                      (merge {:sprite sprite}
                             (select-keys db [:palettes :primary-color :secondary-color]))]]]}))
 
