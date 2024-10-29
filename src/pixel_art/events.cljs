@@ -317,14 +317,6 @@
                                   (sprite/update-layer idx #(update % :automatic-linking? not) sprite))))))
 
 (re-frame/reg-event-fx
- ::set-cel-opacity
- (fn [{:keys [db]} [_ opacity]]
-   (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type))) ;; todo: нужно ли?
-       (update-in [:db :sprite] #(sprite/set-current-cel-opacity opacity %)))))
-
-(re-frame/reg-event-fx
  ::move-cel
  (fn [{:keys [db]} [_ from-pos to-pos]]
    (-> db

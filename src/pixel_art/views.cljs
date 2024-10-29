@@ -291,7 +291,7 @@
 (defn input-number [props] [:f> input-number-component props])
 
 (defn timeline-panel []
-  (let [{:keys [cels layers frames current-cel-opacity disabled-actions]} @(re-frame/subscribe [::subs/timeline])
+  (let [{:keys [cels layers frames disabled-actions]} @(re-frame/subscribe [::subs/timeline])
         current-frame (coll/find-first :current frames) ;; todo: to subs?
         all-frames-duration (when (apply = (map :duration frames))
                               (-> frames first :duration))
@@ -322,13 +322,6 @@
        [:button {:disabled (:merge-layer-with-below disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/merge-layer-with-below]))} "merge"]
        [:button {:disabled (:move-layer-up disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/move-layer-up]))} "move up"]
        [:button {:disabled (:move-layer-down disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/move-layer-down]))} "move down"]]]
-     [:div
-      [slider {:label "Cell opacity"
-               :min 0
-               :max 1
-               :value current-cel-opacity
-               :step 0.1
-               :onChange (fn [v] (re-frame/dispatch [::events/set-cel-opacity v]))}]]
      [:> react-dnd/DndProvider {"backend" react-dnd-html5-backend/HTML5Backend}
       [:<>
        [:div {:style {:display :grid
@@ -392,6 +385,7 @@
 (defn color-picker [{:keys [value presetColors actions onChange]}]
   [:> color-picker-js
    {:color value
+    :disableAlpha true
     :presetColors (clj->js presetColors)
     :actions (clj->js (map #(reagent.core/as-element %) actions))
     :onChange (fn [e] (let [rgba (. e -rgba)]
@@ -439,6 +433,7 @@
 (defn file-uploader [props label]
   [:f> file-uploader-comp props label])
 
+;; todo: зачем-это?
 (defn- replace-transparent-color [color]
   (if (= color color/transparent-color)
     (color/rgba 0 0 0)

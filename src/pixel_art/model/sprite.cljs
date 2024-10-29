@@ -162,9 +162,6 @@
 (defn set-current-cel-pixels [pixels-map sprite]
   (update-current-cel-and-linked #(cel/set-pixels pixels-map %) sprite))
 
-(defn set-current-cel-opacity [opacity sprite]
-  (update-current-cel-and-linked #(assoc % :opacity opacity) sprite))
-
 (defn link-layer-cels [cels-pos main-cel-pos sprite]
   (let [group-number (or (:group-number (get-cel main-cel-pos sprite))
                          (some->> (:cels sprite)
@@ -175,7 +172,6 @@
                          0)
         main-cel (get-cel main-cel-pos sprite)]
     (update-cels (fn [cel] (assoc cel
-                                  :opacity (:opacity main-cel)
                                   :pixels (:pixels main-cel)
                                   :group-number group-number))
                  cels-pos

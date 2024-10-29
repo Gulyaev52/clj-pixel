@@ -192,5 +192,4 @@
                          :merge-layer-with-below (not (sprite/merge-layer-with-below-available? sprite))
                          :move-layer-up (not (sprite/move-layer-up-available? (:layer-idx current-cel-pos) sprite))
                          :move-layer-down (not (sprite/move-layer-down-available? (:layer-idx current-cel-pos) sprite))
-                         :remove-frame (not (sprite/remove-frame-available? sprite))}
-      :current-cel-opacity (:opacity current-cel)})))
+                         :remove-frame (not (sprite/remove-frame-available? sprite))}})))

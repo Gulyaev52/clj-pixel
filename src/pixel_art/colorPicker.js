@@ -52,6 +52,7 @@ const Sketch = /*#__PURE__*/React.forwardRef((props, ref) => {
   }, [color]);
   const handleChange = hsv => {
     setHsva(hsv);
+    console.log(hsv);
     onChange && onChange(handleColor(hsv));
   };
   const handleHex = (value, evn) => {
@@ -68,7 +69,7 @@ const Sketch = /*#__PURE__*/React.forwardRef((props, ref) => {
   const handleSaturationChange = newColor => handleChange({
     ...hsva,
     ...newColor,
-    a: hsva.a
+    a: disableAlpha ? 1 : hsva.a
   });
   const styleMain = {
     '--sketch-background': 'rgb(255, 255, 255)',

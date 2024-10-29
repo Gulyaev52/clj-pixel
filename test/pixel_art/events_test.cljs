@@ -1644,22 +1644,18 @@ Columns: 0
     (let [sprite (:sprite @(rf/subscribe [:db]))]
       (is (= [[{:pixels ["rgba(0, 255, 0, 1)"],
                 :size {:width 1, :height 1},
-                :opacity 1,
                 :current false,
                 :selected false}
                {:pixels ["rgba(0, 0, 255, 1)"],
                 :size {:width 1, :height 1},
-                :opacity 1,
                 :current false,
                 :selected false}]
               [{:pixels ["rgba(255, 0, 0, 1)"],
                 :size {:width 1, :height 1},
-                :opacity 1,
                 :current true,
                 :selected true}
                {:pixels ["rgba(255, 0, 255, 1)"],
                 :size {:width 1, :height 1},
-                :opacity 1,
                 :current false,
                 :selected false}]]
              (:cels sprite)))))
@@ -1672,22 +1668,18 @@ Columns: 0
     (let [sprite (:sprite @(rf/subscribe [:db]))]
       (is (= [[{:pixels ["rgba(255, 0, 255, 1)"],
                 :size {:width 1, :height 1},
-                :opacity 1,
                 :current false,
                 :selected false}
                {:pixels ["rgba(0, 0, 255, 1)"],
                 :size {:width 1, :height 1},
-                :opacity 1,
                 :current false,
                 :selected false}]
               [{:pixels ["rgba(0, 255, 0, 1)"],
                 :size {:width 1, :height 1},
-                :opacity 1,
                 :current false,
                 :selected false}
                {:pixels ["rgba(255, 0, 0, 1)"],
                 :size {:width 1, :height 1},
-                :opacity 1,
                 :current true,
                 :selected true}]]
              (:cels sprite)))))
@@ -1706,24 +1698,20 @@ Columns: 0
     (let [sprite (:sprite @(rf/subscribe [:db]))]
       (is (= [[{:pixels ["rgba(0, 0, 255, 1)"],
                 :size {:width 1, :height 1},
-                :opacity 1,
                 :current false,
                 :selected false}
                {:pixels ["rgba(0, 0, 255, 1)"],
                 :size {:width 1, :height 1},
-                :opacity 1,
                 :current false,
                 :selected false,
                 :group-number 0}]
               [{:pixels ["rgba(255, 0, 0, 1)"],
                 :size {:width 1, :height 1},
-                :opacity 1,
                 :current false,
                 :selected false,
                 :group-number 0}
                {:pixels ["rgba(255, 0, 0, 1)"],
                 :size {:width 1, :height 1},
-                :opacity 1,
                 :current true,
                 :selected true}]]
              (:cels sprite))))))

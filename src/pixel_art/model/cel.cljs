@@ -25,7 +25,6 @@
   ([size pixels]
    {:pixels pixels ;; todo: везде работает с pixels-map а тут нет
     :size size
-    :opacity 1
     :current false
     :selected false}))
 
