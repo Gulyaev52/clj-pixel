@@ -30,7 +30,6 @@
                                (map string/trim))
               colors (->> color-lines
                           (keep (fn [line]
-                                  ;; todo: check rgba
                                   (when-let [[r-str g-str b-str] (rest (re-find #"^\s*(\d+)\s+(\d+)\s+(\d+)\s+" line))]
                                     (when-let [[r g b] (->> [r-str g-str b-str]
                                                             (map parse-double)

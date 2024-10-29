@@ -80,7 +80,7 @@
 (re-frame/reg-event-fx
  ::initialize-canvas
  (fn [{:keys [db]}]
-   {:db (assoc db :canvas-initialized true)
+   {:db db
     :fx [[:init-canvases]
          [:draw-current-frame]
          [:draw-pixels-grid]
@@ -119,7 +119,7 @@
   #(-> % :sprite sprite/get-size)
   (fn [{:keys [db]}]
     {:db db
-     :fx (when (and (not (:initial-loading db)) (:canvas-initialized db))
+     :fx (when (not (:initial-loading db))
            [[:init-canvases]
             [:draw-current-frame]
             [:draw-pixels-grid]
@@ -130,7 +130,7 @@
   :redraw-current-cel ;; это также нужно и на изменения слоя. например прозрачности или видимости
   #(-> % :sprite)
   (fn [{:keys [db]}]
-    (when (and (not (:initial-loading db)) (:canvas-initialized db))
+    (when (not (:initial-loading db))
       {:db db
        :fx [[:clear-frame]
             [:draw-current-frame]]}))))

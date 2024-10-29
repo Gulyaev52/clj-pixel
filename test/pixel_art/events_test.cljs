@@ -1427,8 +1427,8 @@ Columns: 0
   (mouse-up mouse-pos))
 
 (defn initialize-db-and-clear-preview [initialize-db-data]
-  (initialize-db initialize-db-data)
-  (canvas/clear-canvas (. js/document (getElementById "preview"))))
+  (canvas/clear-canvas (. js/document (getElementById "preview")))
+  (initialize-db initialize-db-data))
 
 (def sprite-for-selection-pixels {[0 0] (color/rgba 255 0 0)
                                   [1 0] (color/rgba 0 255 0)
@@ -1604,10 +1604,11 @@ Columns: 0
 
       (apply-current-tool [{:x 0 :y 0}])
       (rf/dispatch-sync [::rectangle-selection/cut-selection])
-      (is (= (get-preview {}) (canvas->pixels-map "preview")))
+      (is (= (get-preview {}) (canvas->pixels-map "preview")) "preview")
       (is (= (seq (assoc sprite-for-selection-pixels
                          [0 0] "rgba(0, 0, 0, 0)"))
-             (canvas->pixels-map "current-layer")))
+             (canvas->pixels-map "current-layer"))
+          "current-layer")
       (rf/dispatch-sync [::rectangle-selection/past-selection])
       (is (= (get-preview {[0 0] "rgba(255, 102, 102, 1)"})
              (canvas->pixels-map "preview"))
