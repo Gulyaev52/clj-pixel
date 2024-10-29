@@ -284,7 +284,7 @@
              :onChange (fn [e]
                          (set-curr-value (.. e -target -value)))
              :onBlur (fn []
-                       (let [width (min (parse-int curr-value) project-settings/max-sprite-dim)]
+                       (let [width (parse-int curr-value)]
                          (set-curr-value (str width))
                          (on-blur width)))}]))
 

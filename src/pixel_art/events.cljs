@@ -395,12 +395,12 @@
 (re-frame/reg-event-fx
  ::set-frame-duration-for-all
  (fn [{:keys [db]} [_ duration]]
-   (let [valid-duration (max duration 1)]
+   (when duration
      {:db (-> db
               (update :sprite (fn [sprite]
                                 (->> (range 0 (count (:frames sprite)))
                                      (reduce (fn [res-sprite idx]
-                                               (sprite/update-frame idx #(assoc % :duration valid-duration) res-sprite))
+                                               (sprite/update-frame idx #(assoc % :duration duration) res-sprite))
                                              sprite))))
               history/save-sprite)})))
 

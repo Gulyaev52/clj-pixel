@@ -720,20 +720,6 @@
       (is (= (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 0} sprite))
              (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 1} actual-sprite)))))))
 
-(deftest test-project-save-load-as-file
-  #_(async done
-           (do
-             (initialize-db)
-             (let [initial-db @(rf/subscribe [:db])]
-               (rf/dispatch-sync [::project-save-load/save-as-file])
-               (apply-current-tool [{:x 0 :y 0} {:x 1 :y 0} {:x 2 :y 0} {:x 3 :y 0}])
-               (rf/dispatch-sync [::project-save-load/load-from-file @!last-download-file])
-
-               (wait-for-event done
-                               :start-new-project
-                               (fn []
-                                 (is (= initial-db (dissoc @(rf/subscribe [:db]) :user-is-drawing :mouse-pos)))))))))
-
 (deftest test-palettes
   (testing "select primary and secondary color"
     (initialize-db)
