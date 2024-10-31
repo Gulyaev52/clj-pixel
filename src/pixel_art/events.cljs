@@ -73,14 +73,15 @@
                                         :sprite (project-settings/create-empty-sprite {:width 64 :height 64})
                                         :new-project-modal-opened true)))]
      {:db initial-db
-      :fx [dispatch-set-keydown-rules
+      :fx [[:dispatch [::rp/add-keyboard-event-listener "keydown"]]
+           dispatch-set-keydown-rules
            ;; wait for rendering canvases. todo: refactoring
            [:dispatch-later {:ms 1 :dispatch [::initialize-canvas]}]]})))
 
 (re-frame/reg-event-fx
  ::initialize-canvas
  (fn [{:keys [db]}]
-   {:db db
+   {:db (assoc db :initialized-canvas true)
     :fx [[:init-canvases]
          [:draw-current-frame]
          [:draw-pixels-grid]
@@ -119,7 +120,7 @@
   #(-> % :sprite sprite/get-size)
   (fn [{:keys [db]}]
     {:db db
-     :fx (when (not (:initial-loading db))
+     :fx (when (and (not (:initial-loading db)) (:initialized-canvas db))
            [[:init-canvases]
             [:draw-current-frame]
             [:draw-pixels-grid]
@@ -130,7 +131,7 @@
   :redraw-current-cel ;; это также нужно и на изменения слоя. например прозрачности или видимости
   #(-> % :sprite)
   (fn [{:keys [db]}]
-    (when (not (:initial-loading db))
+    (when (and (not (:initial-loading db)) (:initialized-canvas db))
       {:db db
        :fx [[:clear-frame]
             [:draw-current-frame]]}))))

@@ -18,12 +18,13 @@
                          (map (fn [{:keys [field initial-value]}] [field initial-value]))
                          (into {})))))
 
-(defn get-db [{:keys [sprite palettes primary-color secondary-color pixels-grid-enabled new-project-modal-opened]}]
+(defn get-db [{:keys [sprite palettes primary-color initialized-canvas secondary-color pixels-grid-enabled new-project-modal-opened]}]
   (let [viewport-size {:width 900 :height 700}
         scale max-scale
         canvas-size (update-vals (sprite/get-size sprite) #(* % scale))
         drawing-container-size (update-vals canvas-size #(+ % 1500))]
-    (-> {:size (sprite/get-size sprite)
+    (-> {:initialized-canvas initialized-canvas
+         :size (sprite/get-size sprite)
          :new-project-modal (new-project-modal/init new-project-modal-opened)
          :sprite sprite
          :tool (tool/init :pen)

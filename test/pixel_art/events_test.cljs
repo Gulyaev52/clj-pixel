@@ -111,12 +111,14 @@
    (rf/dispatch-sync [:initialize-db {:sprite initial-sprite
                                       :palettes initial-palettes
                                       :primary-color (color/rgba 0 0 0)
-                                      :secondary-color (color/rgba 255 0 0)}]))
+                                      :secondary-color (color/rgba 255 0 0)
+                                      :initialized-canvas true}]))
   ([data]
    (rf/dispatch-sync [:initialize-db (merge {:sprite initial-sprite
                                              :palettes initial-palettes
                                              :primary-color (color/rgba 0 0 0)
-                                             :secondary-color (color/rgba 255 0 0)}
+                                             :secondary-color (color/rgba 255 0 0)
+                                             :initialized-canvas true}
                                             data)])))
 
 ;; mouse-down-move-up
