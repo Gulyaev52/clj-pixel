@@ -499,14 +499,14 @@
         canvas-size {:width (* scale (:width sprite-size))
                      :height (* scale (:height sprite-size))}]
     (.. ctx save)
-    (set! (. ctx -strokeStyle) (str "rgba(0, 0, 255, " (min (/ scale max-scale) 1) "")) ;;todo: не видно на голубом
-    (dotimes [y (:height sprite-size)]
+    (set! (. ctx -strokeStyle) (str "rgba(0, 0, 255, " (min (/ scale max-scale) 1) ""))
+    (dotimes [y (inc (:height sprite-size))]
       (doto ctx
         (.beginPath)
         (.moveTo 0 (* y scale))
         (.lineTo (:width canvas-size) (* y scale))
         (.stroke)))
-    (dotimes [x (:width sprite-size)]
+    (dotimes [x (inc (:width sprite-size))]
       (doto ctx
         (.beginPath)
         (.moveTo (* x scale) 0)
@@ -589,6 +589,7 @@
 (re-frame/reg-fx
  :hide-pixels-grid
  (fn [_]
+   (println "hide-pixels-grid")
    (canvas/clear-canvas (. js/document (getElementById "grid")))))
 
 (re-frame/reg-fx
