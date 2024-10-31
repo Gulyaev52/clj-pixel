@@ -11,12 +11,6 @@
     (draw canvas-elem)
     (. canvas-elem (toDataURL "image/png"))))
 
-(defn scale-number [n [old-min old-max] [new-min new-max]]
-  (+ (* (/ (- n old-min)
-           (- old-max old-min))
-        (- new-max new-min))
-     new-min))
-
 (defn parse-color [rgba]
   ;; such approach is faster than usage of regexp
   (-> rgba

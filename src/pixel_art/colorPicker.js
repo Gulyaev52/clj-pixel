@@ -210,7 +210,7 @@ const Sketch = /*#__PURE__*/React.forwardRef((props, ref) => {
           onClick: props.onClick,
           style: {
             ...props.style,
-            background: props.color === "rgba(0, 0, 0, 0)" ? "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAGUlEQVQYV2M4gwH+YwCGIasIUwhT25BVBADtzYNYrHvv4gAAAABJRU5ErkJggg==)" : props.color
+            background: props.color === "rgba(0, 0, 0, 0)" ? "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABlBMVEVMTExVVVUnhsEkAAAAHUlEQVR4AWOAAUYoQOePEAUj3v9oYDQ9gMBoegAAJFwCAbLaTIMAAAAASUVORK5CYII=')" : props.color
           },
           children: [_jsxs("div", {
             style: {

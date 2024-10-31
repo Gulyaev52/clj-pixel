@@ -7,7 +7,6 @@
    [pixel-art.events :as events]
    [pixel-art.export :as export]
    [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
-   [pixel-art.model.cel :as cel]
    [pixel-art.model.color :as color]
    [pixel-art.new-project-modal :as new-project-modal]
    [pixel-art.onion-skin :as onion-skin]
@@ -22,16 +21,61 @@
    [re-frame.core :as re-frame]
    [react :as react]
    [reagent.core :as r]
-   [reagent.dom :as rdom]
    [sc.api]))
 
 (set! *warn-on-infer* false)
 
+(def drawing-container-color "#A0A0A0")
+
+(def transparent-color-img "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABlBMVEVMTExVVVUnhsEkAAAAHUlEQVR4AWOAAUYoQOePEAUj3v9oYDQ9gMBoegAAJFwCAbLaTIMAAAAASUVORK5CYII=')")
+
+(def drawing-border "1px solid black")
+
+(defn preview-image [src style]
+  [:img {:src src
+         :style (merge style
+                       {:position "relative"
+                        :image-rendering "pixelated"
+                        :background-image transparent-color-img
+                        :border drawing-border})}])
+
+(defn previews-container [{:keys [loading]} items]
+  [:div {:style {:display :flex
+                 :flex-wrap "wrap"
+                 :justify-content "center"
+                 :justify-items "center"
+                 :width "100%"
+                 :height "200px"
+                 :border "1px solid black"
+                 :padding "2px"
+                 :overflow "auto"
+                 :background-color drawing-container-color
+                 :opacity (when loading "0.6")}}
+   items])
+
+(defn previews-grid-items [previews]
+  (if (= (count previews) 1)
+    [preview-image (first previews)
+     {:height "100%"
+      :min-height "70px"}]
+
+    [:<>
+     (for [[idx data-url] (map-indexed vector previews)]
+       ^{:key (str data-url "-" idx)}
+       [:div {:style {:display :flex
+                      :flex-direction :column
+                      :height "100%"
+                      :align-items "center"
+                      :min-width 0}}
+        [preview-image (first previews)
+         {:height "100%"
+          :min-height "70px"}]
+        [:div {:style {:padding "5px" :color "black"}}
+         (inc idx)]])]))
+
 (defn parse-int [n]
   (let [res (. js/Number (parseInt n))]
     (if (js/isNaN res) nil res)))
-
-(def transparent-color-img "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAGUlEQVQYV2M4gwH+YwCGIasIUwhT25BVBADtzYNYrHvv4gAAAABJRU5ErkJggg==)")
 
 (def !last-mouse-pos (atom nil))
 
@@ -236,16 +280,12 @@
                     :border-width (if (:selected cel)
                                     "2px"
                                     "1px")
-                    :background-color (when (cel/emptyy? cel)
-                                        "rgba(0, 0, 0, 0.2)")
-                    :image-rendering "pixelated"
-                    :background-image (str "url(" (:img cel) ")")
-                    :background-size "100% 100%"
                     :cursor "pointer"
                     :font-weight "bold"
                     :font-size 18
                     :color (when-let [group-number (:group-number cel)]
                              (get-group-color group-number))}}
+      [preview-image (:img cel) {:width "100%" :height "100%"}]
       (when (:selected cel)
         [:div
          [:button {:onClick (fn [e]
@@ -256,7 +296,8 @@
                               (. e stopPropagation)
                               (re-frame/dispatch [::events/unlink-selected-cels (:pos cel)]))
                    :style {:position :absolute :top 25 :right 0}} "u"]])
-      (some-> (:group-number cel) inc)]
+      [:div {:style {:position "absolute" :top 0}}
+       (some-> (:group-number cel) inc)]]
      [:f> droppable-cel-zone
       (:pos cel)
       :layer
@@ -611,8 +652,14 @@
         panning @(re-frame/subscribe [::subs/panning])
         user-is-drawing @(re-frame/subscribe [::subs/user-is-drawing])
         layers @(re-frame/subscribe [::subs/layers])]
-    [:div {:style {:display :flex :flex-direction :column :gap "10px" :align-items "center"}}
-     [:div {:style {:display :flex :justify-content :center :align-items "center"}}
+    [:div {:style {:display :flex
+                   :flex-direction
+                   :column :gap "10px"
+                   :align-items "center"}}
+     [:div {:style {:display :flex
+                    :justify-content :center
+                    :align-items "center"
+                    :background-color drawing-container-color}}
       [:div {:style {:position "relative"
                      :border "1px solid black"}
              :ref ref
@@ -665,7 +712,13 @@
                                   (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)])))))}
        [:div {:id "viewport" :ref viewport-ref :style {:overflow "auto" :width (:width viewport-size) :height (:height viewport-size)}}
         [:div {:id "drawing-canvas-container" :style {:position "relative"}}
-         [:div {:id "canvas-layers" :style {:position "relative" :left "50%" :top "50%" :transform "translate(-50%, -50%)"}}
+         [:div {:id "canvas-layers"
+                :style {:position "relative"
+                        :left "50%"
+                        :top "50%"
+                        :transform "translate(-50%, -50%)"
+                        :background-image transparent-color-img
+                        :border drawing-border}}
           [:canvas {:id "layers-below"
                     :className "layer"
                     :style {:position :absolute
@@ -860,45 +913,6 @@
      [export-common-settings-fields
       {:common-settings settings
        :type-options [{:label "png" :value :png}]}]]))
-
-(defn preview-image [src style]
-  [:img {:src src
-         :style (merge style
-                       {:image-rendering "pixelated"
-                        :background-image transparent-color-img})}])
-
-(defn previews-container [{:keys [loading]} items]
-  [:div {:style {:display :flex
-                 :flex-wrap "wrap"
-                 :justify-content "center"
-                 :justify-items "center"
-                 :width "100%"
-                 :height "200px"
-                 :border "1px solid black"
-                 :padding "2px"
-                 :overflow "auto"
-                 :opacity (when loading "0.6")}}
-   items])
-
-(defn previews-grid-items [previews]
-  (if (= (count previews) 1)
-    [preview-image (first previews)
-     {:height "100%"
-      :min-height "70px"}]
-
-    [:<>
-     (for [[idx data-url] (map-indexed vector previews)]
-       ^{:key (str data-url "-" idx)}
-       [:div {:style {:display :flex
-                      :flex-direction :column
-                      :height "100%"
-                      :align-items "center"
-                      :min-width 0}}
-        [preview-image (first previews)
-         {:height "100%"
-          :min-height "70px"}]
-        [:div {:style {:padding "5px" :color "black"}}
-         (inc idx)]])]))
 
 (defn export-modal []
   (let [current-tab @(re-frame/subscribe [::subs/export-current-tab])
