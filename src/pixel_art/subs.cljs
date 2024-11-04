@@ -176,11 +176,9 @@
 (re-frame/reg-sub
  ::timeline
  (fn [db]
-   (def db db)
    (let [{:keys [cel-imgs sprite]} db
          {:keys [layers frames]} sprite
          selected-cels-pos (sprite/get-selected-cels-pos sprite)
-         current-cel (sprite/get-current-cel sprite)
          current-cel-pos (sprite/get-current-cel-pos sprite)
          cels-coll (sprite/get-cels-with-pos-as-coll sprite)]
      {:cels (->> cels-coll

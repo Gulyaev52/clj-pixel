@@ -139,7 +139,7 @@
 (defn get-group-color [group-number]
   (nth (cycle ["green" "pink" "yellow" "red" "blue" "purple"]) group-number))
 
-(def cel-height "80px")
+(def cel-height "100px")
 
 (defn droppable-zone [{:keys [accept on-drop can-drop]} styles]
   (let [[{:keys [over can-drop]}, ref] (react-dnd/useDrop
@@ -272,6 +272,9 @@
                          :else (re-frame/dispatch [::events/select-only-1-cel (:pos cel)])))
             :ref ref
             :style {:position "relative"
+                    :display :flex
+                    :align-items :center
+                    :justify-content :center
                     :height "100%"
                     :border-style "solid"
                     :border-color (if (:selected cel)
@@ -280,12 +283,18 @@
                     :border-width (if (:selected cel)
                                     "2px"
                                     "1px")
+                    :background-color drawing-container-color
                     :cursor "pointer"
                     :font-weight "bold"
                     :font-size 18
                     :color (when-let [group-number (:group-number cel)]
                              (get-group-color group-number))}}
-      [preview-image (:img cel) {:width "100%" :height "100%"}]
+      [preview-image (:img cel) (merge {:max-width "100%"
+                                        :max-height "100%"}
+                                       (if (> (:width (:size cel))
+                                              (:height (:size cel)))
+                                         {:width "100%"}
+                                         {:height "100%"}))]
       (when (:selected cel)
         [:div
          [:button {:onClick (fn [e]
@@ -367,7 +376,7 @@
       [:<>
        [:div {:style {:display :grid
                       :grid-template-rows "15px"
-                      :grid-auto-rows "80px"
+                      :grid-auto-rows cel-height
                       :grid-template-columns (str "100px " (->> (repeat (count frames) "100px") (string/join " ")))
                       :grid-column-gap "4px"
                       :grid-row-gap "4px"}}
@@ -414,11 +423,7 @@
                    :bottom 0
                    :top 0
                    :backgroundColor "rgba(37, 37, 37, 0.9)"}}
-     [:div {:style {:backgroundImage (str "url(" frame-img ")")
-                    :imageRendering "pixelated"
-                    :backgroundSize "contain"
-                    :width (:width image-size)
-                    :height (:height image-size)}}]]))
+     [preview-image frame-img {:height (:height image-size)}]]))
 
 (defn sprite-preview-modal []
   [:f> sprite-preview-modal-component])
