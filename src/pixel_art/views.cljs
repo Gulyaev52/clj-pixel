@@ -953,8 +953,7 @@
 
         [previews-container {:loading (:generation preview)}
          (case current-tab
-           :spritesheet [preview-image (:data preview) {:height (* (:rows spritesheet-settings) 70)
-                                                        :width (* (:columns spritesheet-settings) 70)
+           :spritesheet [preview-image (:data preview) {:height (* (:rows spritesheet-settings) 100)
                                                         :margin "auto"}]
            :image [previews-grid-items (:data preview)])]
 

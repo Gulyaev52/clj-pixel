@@ -1,10 +1,12 @@
 (ns pixel-art.export
-  (:require ["./gif$default" :as create-gif]
-            ["./jszip$default" :as jszip]
-            [clojure.string :as string]
-            [pixel-art.canvas :as canvas]
-            [pixel-art.model.sprite :as sprite]
-            [re-frame.core :as re-frame]))
+  (:require
+   ["./gif$default" :as create-gif]
+   ["./jszip$default" :as jszip]
+   [clojure.string :as string]
+   [pixel-art.canvas :as canvas]
+   [pixel-art.model.sprite :as sprite]
+   [re-frame.core :as re-frame]
+   [sc.api :as api]))
 
 (def max-scale 32)
 (def min-scale 1)
@@ -88,7 +90,7 @@
       (let [settings (get-spritesheet-settings db)
             size (sprite/get-size sprite)
             spritesheet-size {:width (* (:width size) (:columns settings))
-                              :height (* (:width size) (:rows settings))}
+                              :height (* (:height size) (:rows settings))}
             img (->> (get-cels-for-rendering settings sprite)
                      (map #(canvas/draw-cels-on-single-canvas % (canvas/create-canvas size)))
                      (canvas/combine size spritesheet-size (:columns settings))
