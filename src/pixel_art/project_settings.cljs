@@ -4,8 +4,14 @@
             [pixel-art.model.frame :as frame]
             [pixel-art.model.layer :as layer]
             [pixel-art.model.sprite :as sprite]))
+;; todo: rename to config
 
 (def max-sprite-dim 512) ;; todo: check this value
+
+(def max-scale 80)
+(def min-scale 0.5)
+
+(def viewport-size {:width 900 :height 700})
 
 (defn get-layer-name [type layers-count]
   (str (if (= type :group) "Group " "Layer ") (inc layers-count)))
@@ -36,3 +42,31 @@
           (sprite/set-current-cel-pixels (for [x (range 0 (:width sprite-size))
                                                y (range 0 (:height sprite-size))]
                                            [{:x x :y y} (color/rgba 255 0 255)]))))))
+
+(defn get-viewport-scroll-pos-to-center [canvas-size drawing-container-size]
+  (let [scroll-dim 15
+        canvas-offset-y (/ (:height drawing-container-size) 2)
+        absolute-canvas-y (+ canvas-offset-y (/ (:height canvas-size) 2))
+        canvas-y-middle (- absolute-canvas-y
+                           (/ (- (:height viewport-size) scroll-dim) 2)
+                           (/ (:height canvas-size) 2))
+        canvas-offset-x (/ (:width drawing-container-size) 2)
+        absolute-canvas-x (+ canvas-offset-x (/ (:width canvas-size) 2))
+        canvas-x-middle (- absolute-canvas-x
+                           (/ (- (:width viewport-size) scroll-dim) 2)
+                           (/ (:width canvas-size) 2))]
+    {:x canvas-x-middle :y canvas-y-middle}))
+
+(defn get-initial-scale [sprite-size]
+  (let [[dim dim-value] (apply max-key second sprite-size)
+        offset 100]
+    (/ (- (dim viewport-size) offset) dim-value)))
+
+;; todo: rename
+(defn get-initial-drawing-settings [sprite]
+  (let [scale (get-initial-scale (:size sprite))
+        canvas-size (update-vals (:size sprite) #(* % scale))
+        empty-space-dim 1500
+        drawing-container-size (update-vals canvas-size #(+ % empty-space-dim))
+        viewport-scroll (get-viewport-scroll-pos-to-center canvas-size drawing-container-size)]
+    {:scale scale :drawing-container-size drawing-container-size :viewport-scroll viewport-scroll}))

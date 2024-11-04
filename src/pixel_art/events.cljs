@@ -2,7 +2,7 @@
   (:require
    [pixel-art.backup :as backup]
    [pixel-art.canvas :as canvas]
-   [pixel-art.db :as db :refer [max-scale]]
+   [pixel-art.db :as db]
    [pixel-art.fx]
    [pixel-art.history :as history]
    [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
@@ -84,7 +84,6 @@
    {:db (assoc db :initialized-canvas true)
     :fx [[:init-canvases]
          [:draw-current-frame]
-         [:draw-pixels-grid]
          [:zoom]]}))
 
 (re-frame/reg-fx
@@ -107,24 +106,22 @@
      (set! (.. canvas-layers -style -width) (str (* (:width sprite-size) scale) "px"))
      (set! (.. canvas-layers -style -height) (str (* (:height sprite-size) scale) "px"))
 
-     (let [grid-canvas (.. js/document (getElementById "grid"))]
-       (set! (.. grid-canvas -width) (* (:width sprite-size) scale))
-       (set! (.. grid-canvas -height) (* (:height sprite-size) scale)))
-
      (set! (.. drawing-canvas-container -style -width) (str (:width drawing-container-size) "px"))
      (set! (.. drawing-canvas-container -style -height) (str (:height drawing-container-size) "px")))))
 
 (re-frame/reg-global-interceptor
  (on-changes
-  :resize-canvases
+  :resize-canvases ;; todo: initialize-db?
   #(-> % :sprite sprite/get-size)
   (fn [{:keys [db]}]
-    {:db db
+    {:db (merge db
+                (project-settings/get-initial-drawing-settings (:sprite db)))
      :fx (when (and (not (:initial-loading db)) (:initialized-canvas db))
            [[:init-canvases]
+            [:zoom]
             [:draw-current-frame]
-            [:draw-pixels-grid]
-            [:draw-onion-skin {:sprite (:sprite db) :opacity (-> db :onion-skin :opacity)}]])})))
+            [:draw-onion-skin {:sprite (:sprite db) :opacity (-> db :onion-skin :opacity)}] ;; а оно тут точно надо?
+            ])})))
 
 (re-frame/reg-global-interceptor
  (on-changes
@@ -172,10 +169,7 @@
 (re-frame/reg-event-fx
  ::enable-pixels-grid
  (fn [{:keys [db]} [_ enabled]]
-   {:db (assoc db :pixels-grid-enabled enabled)
-    :fx [(if enabled
-           [:draw-pixels-grid]
-           [:hide-pixels-grid])]}))
+   {:db (assoc db :pixels-grid-enabled enabled)}))
 
 (re-frame/reg-event-fx
  ::add-frame
@@ -400,29 +394,37 @@
 (re-frame/reg-event-fx
  ::zoom
  (fn [{:keys [db]} [_ delta center-pos mouse-offset-pos]]
-   (let [new-scale (-> db :scale (* delta))
-         old-canvas-size (-> db :sprite sprite/get-size (update-vals #(* % (:scale db))))
-         new-canvas-size (-> db :sprite sprite/get-size (update-vals #(* % new-scale)))
-         canvas-size-diff (merge-with - new-canvas-size old-canvas-size)
-         drawing-container-size (:drawing-container-size db)
-         new-drawing-container-size (merge-with + drawing-container-size canvas-size-diff)
-         old-canvas-pos {:x (- (/ (:width drawing-container-size) 2)
-                               (/ (:width old-canvas-size) 2))
-                         :y (- (/ (:height drawing-container-size) 2)
-                               (/ (:height old-canvas-size) 2))}
-         new-canvas-pos {:x (- (/ (:width new-drawing-container-size) 2)
-                               (/ (:width new-canvas-size) 2))
-                         :y (- (/ (:height new-drawing-container-size) 2)
-                               (/ (:height new-canvas-size) 2))}
-         new-viewport-scroll {:x (- (+ (* (- (:x mouse-offset-pos) (:x old-canvas-pos)) delta) (:x new-canvas-pos))
-                                    (:x center-pos))
-                              :y (- (+ (* (- (:y mouse-offset-pos) (:y old-canvas-pos)) delta) (:y new-canvas-pos))
-                                    (:y center-pos))}]
-     {:db (-> db
-              (assoc :scale new-scale)
-              (assoc :viewport-scroll new-viewport-scroll)
-              (assoc :drawing-container-size new-drawing-container-size))
-      :fx [[:zoom]]})))
+   (let [prev-scale (:scale db)
+         new-scale (-> (-> db :scale (* delta))
+                       (min project-settings/max-scale)
+                       (max project-settings/min-scale))]
+     (if (not= prev-scale new-scale)
+       (let [delta (if (#{project-settings/max-scale project-settings/min-scale} new-scale)
+                     (/ new-scale prev-scale)
+                     delta)
+             old-canvas-size (-> db :sprite sprite/get-size (update-vals #(* % (:scale db))))
+             new-canvas-size (-> db :sprite sprite/get-size (update-vals #(* % new-scale)))
+             old-drawing-container-size (:drawing-container-size db)
+             canvas-size-diff (merge-with - new-canvas-size old-canvas-size)
+             new-drawing-container-size (merge-with + old-drawing-container-size canvas-size-diff)
+             old-canvas-pos {:x (- (/ (:width old-drawing-container-size) 2)
+                                   (/ (:width old-canvas-size) 2))
+                             :y (- (/ (:height old-drawing-container-size) 2)
+                                   (/ (:height old-canvas-size) 2))}
+             new-canvas-pos {:x (- (/ (:width new-drawing-container-size) 2)
+                                   (/ (:width new-canvas-size) 2))
+                             :y (- (/ (:height new-drawing-container-size) 2)
+                                   (/ (:height new-canvas-size) 2))}
+             new-viewport-scroll {:x (- (+ (* (- (:x mouse-offset-pos) (:x old-canvas-pos)) delta) (:x new-canvas-pos))
+                                        (:x center-pos))
+                                  :y (- (+ (* (- (:y mouse-offset-pos) (:y old-canvas-pos)) delta) (:y new-canvas-pos))
+                                        (:y center-pos))}]
+         {:db (-> db
+                  (assoc :scale new-scale)
+                  (assoc :viewport-scroll new-viewport-scroll)
+                  (assoc :drawing-container-size new-drawing-container-size))
+          :fx [[:zoom]]})
+       {:db db}))))
 
 (re-frame/reg-event-fx
  ::start-panning
@@ -489,32 +491,6 @@
     (set! (.. viewport -scrollTop) (:y viewport-scroll))
     (set! (.. viewport -scrollLeft) (:x viewport-scroll))))
 
-(defn- draw-pixels-grid []
-  (let [db @re-frame.db/app-db
-
-        canvas (. js/document (getElementById "grid"))
-        ctx (. canvas (getContext "2d"))
-
-        sprite-size (-> db :sprite sprite/get-size)
-        scale (:scale db)
-        canvas-size {:width (* scale (:width sprite-size))
-                     :height (* scale (:height sprite-size))}]
-    (.. ctx save)
-    (set! (. ctx -strokeStyle) (str "rgba(0, 0, 255, " (min (/ scale max-scale) 1) ""))
-    (dotimes [y (inc (:height sprite-size))]
-      (doto ctx
-        (.beginPath)
-        (.moveTo 0 (* y scale))
-        (.lineTo (:width canvas-size) (* y scale))
-        (.stroke)))
-    (dotimes [x (inc (:width sprite-size))]
-      (doto ctx
-        (.beginPath)
-        (.moveTo (* x scale) 0)
-        (.lineTo (* x scale) (:height canvas-size))
-        (.stroke)))
-    (.. ctx restore)))
-
 (re-frame/reg-fx
  :zoom
  (fn []
@@ -525,12 +501,6 @@
                           :height (* (:height sprite-size) scale)}]
      (set! (.. canvas-layers -style -width) (str (:width new-sprite-size) "px"))
      (set! (.. canvas-layers -style -height) (str (:height new-sprite-size) "px"))
-
-     (when (:pixels-grid-enabled @re-frame.db/app-db)
-       (let [grid-canvas (.. js/document (getElementById "grid"))]
-         (set! (.. grid-canvas -width) (:width new-sprite-size))
-         (set! (.. grid-canvas -height) (:height new-sprite-size))
-         (draw-pixels-grid)))
 
      (let [drawing-canvas-container (.. js/document (getElementById "drawing-canvas-container"))
            drawing-container-size (:drawing-container-size @re-frame.db/app-db)]
@@ -586,18 +556,6 @@
            (do
              (set! (. ctx -fillStyle) color)
              (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))))
-
-(re-frame/reg-fx
- :hide-pixels-grid
- (fn [_]
-   (println "hide-pixels-grid")
-   (canvas/clear-canvas (. js/document (getElementById "grid")))))
-
-(re-frame/reg-fx
- :draw-pixels-grid ;; todo: draw-pixels-grid-when-enabled
- (fn []
-   (when (:pixels-grid-enabled @re-frame.db/app-db)
-     (draw-pixels-grid))))
 
 ;; todo: rename
 (re-frame/reg-fx

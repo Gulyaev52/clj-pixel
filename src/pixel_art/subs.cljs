@@ -1,12 +1,22 @@
 (ns pixel-art.subs
-  (:require [pixel-art.export :as export]
-            [pixel-art.model.cel :as cel]
-            [pixel-art.model.sprite :as sprite]
-            [pixel-art.sprite-resizer :as sprite-resizer]
-            [pixel-art.tool.utils :refer [get-tool-options]]
-            [pixel-art.utils.coll :as coll]
-            [re-frame.core :as re-frame]
-            [pixel-art.canvas :as canvas]))
+  (:require
+   [pixel-art.canvas :as canvas]
+   [pixel-art.export :as export]
+   [pixel-art.model.cel :as cel]
+   [pixel-art.model.sprite :as sprite]
+   [pixel-art.project-settings :as project-settings]
+   [pixel-art.sprite-resizer :as sprite-resizer]
+   [pixel-art.tool.utils :refer [get-tool-options]]
+   [pixel-art.utils.coll :as coll]
+   [re-frame.core :as re-frame]))
+
+;; todo: добавить комментарий почему картинкой
+(re-frame/reg-sub
+ ::pixels-grid-cel-img
+ (fn [db]
+   (let [scale (:scale db)]
+     (when (:pixels-grid-enabled db)
+       (str "data:image/svg+xml,%3Csvg width='" scale "' height='" scale "' opacity='" (min (/ scale project-settings/max-scale) 1) "' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='" scale "' height='" scale "' vector-effect='non-scaling-stroke' fill='transparent' stroke='blue' /%3E%3C/svg%3E")))))
 
 (re-frame/reg-sub
  ::initial-loading
@@ -153,10 +163,6 @@
 (re-frame/reg-sub
  ::user-is-drawing
  (fn [db] (:user-is-drawing db)))
-
-(re-frame/reg-sub
- ::viewport-size
- (fn [db] (:viewport-size db)))
 
 (re-frame/reg-sub
  ::mouse-pos

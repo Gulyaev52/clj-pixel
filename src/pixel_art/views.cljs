@@ -622,7 +622,7 @@
     [:div {:style {:display :flex :gap "10px"}}
      [:div (str "[" (:width sprite-size) "x" (:height sprite-size) "]")]
      [:div (str (:x mouse-pos) ":" (:y mouse-pos))]
-     [:div (str "scale=" scale)]]))
+     [:div (str "scale=" (. scale (toFixed 2)))]]))
 
 (defn canvases-section-component []
   (let [ref (react/useRef)
@@ -640,18 +640,18 @@
                                                                      :y (+ (- (.. e -clientY) (.. viewport-rect -top))
                                                                            (.. viewport-ref -current -scrollTop))}]
                                                (re-frame/dispatch [::events/zoom
-                                                                   (if (< (. e -deltaY) 0) 1.4 (/ 1 1.4))
+                                                                   (if (< (. e -deltaY) 0) 1.1 (/ 1 1.1))
                                                                    center-pos
                                                                    mouse-offset-pos])))]
                                (.. ref -current (addEventListener "wheel" handler))
                                (fn []
                                  (.. ref -current (removeEventListener "wheel" handler)))))
                            (array ref viewport-ref scale))
-        viewport-size @(re-frame/subscribe [::subs/viewport-size])
         onion-skin @(re-frame/subscribe [::subs/onion-skin])
         panning @(re-frame/subscribe [::subs/panning])
         user-is-drawing @(re-frame/subscribe [::subs/user-is-drawing])
-        layers @(re-frame/subscribe [::subs/layers])]
+        layers @(re-frame/subscribe [::subs/layers])
+        pixels-grid-cel-img @(re-frame/subscribe [::subs/pixels-grid-cel-img])]
     [:div {:style {:display :flex
                    :flex-direction
                    :column :gap "10px"
@@ -710,7 +710,9 @@
                                 (when (not= mouse-pos @!last-mouse-pos)
                                   (reset! !last-mouse-pos mouse-pos)
                                   (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)])))))}
-       [:div {:id "viewport" :ref viewport-ref :style {:overflow "auto" :width (:width viewport-size) :height (:height viewport-size)}}
+       [:div {:id "viewport" :ref viewport-ref :style {:overflow "auto"
+                                                       :width (:width project-settings/viewport-size)
+                                                       :height (:height project-settings/viewport-size)}}
         [:div {:id "drawing-canvas-container" :style {:position "relative"}}
          [:div {:id "canvas-layers"
                 :style {:position "relative"
@@ -718,7 +720,8 @@
                         :top "50%"
                         :transform "translate(-50%, -50%)"
                         :background-image transparent-color-img
-                        :border drawing-border}}
+                        :outline drawing-border ;; todo: why not border
+                        }}
           [:canvas {:id "layers-below"
                     :className "layer"
                     :style {:position :absolute
@@ -763,13 +766,13 @@
                                       (count layers) 0);; todo: подумать тут
                             :width "100%"
                             :height "100%"}}]
-          [:canvas {:id "grid"
-                    :style {:position :absolute
-                            :left 0
-                            :top 0
-                            :zIndex (+ (count layers) 1)
-                            :width "100%"
-                            :height "100%"}}]]]]]]
+          (when pixels-grid-cel-img
+            [:div {:style {:background-image (str "url(\"" pixels-grid-cel-img "\")")
+                           :background-size scale
+                           :width "100%"
+                           :height "100%"
+                           :position "relative"
+                           :z-index 10}}])]]]]]
      [drawing-info]]))
 
 (defn canvases-section []
