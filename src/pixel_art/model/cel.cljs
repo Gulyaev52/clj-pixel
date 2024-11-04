@@ -53,9 +53,6 @@
                                    {:x 0 :y 1} (color/rgba 0 255 0)})))
   (merge-cels below-cel above-cel))
 
-(defn emptyy? [cel]
-  (every? #(= % color/transparent-color) (:pixels cel)))
-
 (def get-size :size)
 
 (defn get-pixel [pos cel]

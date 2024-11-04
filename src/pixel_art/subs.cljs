@@ -182,8 +182,7 @@
          current-cel-pos (sprite/get-current-cel-pos sprite)
          cels-coll (sprite/get-cels-with-pos-as-coll sprite)]
      {:cels (->> cels-coll
-                 (map (fn [cel] (merge cel {:img (get cel-imgs (:pos cel))
-                                            :empty (cel/emptyy? cel)}))))
+                 (map (fn [cel] (merge cel {:img (get cel-imgs (:pos cel))}))))
       :layers (map-indexed (fn [idx layer]
                              (merge layer {:current (some? ((set (map :layer-idx selected-cels-pos)) idx)) ;; todo: почему current
                                            :idx idx}))
