@@ -124,13 +124,13 @@
   (let [options @(re-frame/subscribe [::subs/tool-options])
         options-spec (tool/options-specs tool-type)]
     [:div {:style {:display :flex :align-items :center :gap "6px"}}
-     (for [option-spec options-spec]
+     (for [[idx option-spec] (map-indexed vector options-spec)]
        (let [value (get options (:field option-spec))
              onChange #(re-frame/dispatch [::events/change-tool-option (:field option-spec) %])
              props (assoc option-spec
                           :value value
                           :onChange onChange)]
-         ^{:key option-spec}
+         ^{:key idx}
          [:div
           (case (:type option-spec)
             :slider (slider props)
@@ -380,12 +380,14 @@
                       :grid-template-columns (str "100px " (->> (repeat (count frames) "100px") (string/join " ")))
                       :grid-column-gap "4px"
                       :grid-row-gap "4px"}}
-        [:div "Layers"] (for [frame frames] ^{:key frame} [:f> frame-view frame])
+        [:div "Layers"]
+        (for [frame frames] ^{:key (:idx frame)}
+             [:f> frame-view frame])
         (for [layer layers]
-          ^{:key layer}
+          ^{:key (:idx layer)}
           [:<> [:f> layer-view layer]
            (for [cel (cels-by-layers (:idx layer))]
-             ^{:key cel}
+             ^{:key (str (:frame-idx (:pos cel)) "-" (:layer-idx (:pos cel)))}
              [:f> cel-view cel])])]]]]))
 
 (defn select [{:keys [value onChange options]}]
