@@ -12,8 +12,5 @@
 
 (def transparent-color (rgba 0 0 0 0))
 
-#_(defn ->tinycolor [{:keys [r g b a]}]
-    (tinycolor #js {"r" r "g" g "b" b "a" a}))
-
 (defn ->tinycolor [color]
   (tinycolor color))
