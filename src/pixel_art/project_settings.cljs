@@ -32,9 +32,8 @@
                   :frame (frame/create initial-frame-duration)
                   :cel (cel/create size)}))
 
-(def example-project
-  (let [sprite-size {:width 512 :height 512}
-        secondary-color (:secondary-color default-palettes-and-current-colors)]
+(defn get-example-project []
+  (let [sprite-size {:width 512 :height 512}]
     (assoc
      default-palettes-and-current-colors
      :sprite

@@ -27,7 +27,7 @@
  ::create-example-project
  (fn []
    {:fx [[:dispatch
-          [:initialize-db project-settings/example-project]]]}))
+          [:initialize-db (project-settings/get-example-project)]]]}))
 
 (re-frame/reg-event-fx
  ::create
