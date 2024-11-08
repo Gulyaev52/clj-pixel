@@ -139,13 +139,14 @@
   :generate-cel-imgs ;; todo: в подписку?
   #(-> % :sprite :cels)
   (fn [{:keys [db]}]
-    (let [cel-imgs (->> (-> db :sprite)
-                        sprite/get-cels-with-pos-as-coll
-                        (map (fn [cel] [(:pos cel)
-                                        (canvas/generate-data-url #(canvas/draw-cel cel %)
-                                                                  (cel/get-size cel))]))
-                        (into {}))]
-      {:db (assoc db :cel-imgs cel-imgs)}))))
+    #_(let [cel-imgs (->> (-> db :sprite)
+                          sprite/get-cels-with-pos-as-coll
+                          (map (fn [cel] [(:pos cel)
+                                          (canvas/generate-data-url #(canvas/draw-cel cel %)
+                                                                    (cel/get-size cel))]))
+                          (into {}))]
+        {:db (assoc db :cel-imgs cel-imgs)})
+    {:db db})))
 
 (re-frame/reg-event-fx
  ::select-tool

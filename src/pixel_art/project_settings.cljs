@@ -33,14 +33,14 @@
                   :cel (cel/create size)}))
 
 (defn get-example-project []
-  (let [sprite-size {:width 512 :height 512}]
+  (let [sprite-size {:width 256 :height 256}]
     (assoc
      default-palettes-and-current-colors
      :sprite
      (->> (create-empty-sprite sprite-size)
           (sprite/set-current-cel-pixels (for [x (range 0 (:width sprite-size))
                                                y (range 0 (:height sprite-size))]
-                                           [{:x x :y y} (color/rgba 255 0 255)]))))))
+                                           [{:x x :y y} (color/rgba (rand-int 255) (rand-int 255) (rand-int 255))]))))))
 
 (defn get-viewport-scroll-pos-to-center [canvas-size drawing-container-size]
   (let [scroll-dim 15

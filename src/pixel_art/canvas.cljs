@@ -1,5 +1,6 @@
 (ns pixel-art.canvas
   (:require
+   [pixel-art.measure :refer [measure-fn]]
    [pixel-art.model.color :as color]
    [pixel-art.model.sprite :as sprite]
    [sc.api]))
@@ -21,13 +22,12 @@
       (. (split ","))))
 
 (defn cel-pixels->image-data [{:keys [pixels size]}]
-  (let [image-data (js/ImageData. (:width size) (:height size))]
-    (doseq [pixel-idx (range 0 (count pixels))]
-      (let [rgb-str (nth pixels pixel-idx)]
-        (when (not= rgb-str color/transparent-color)
-          (let [[r g b] (parse-color rgb-str)]
-            (.. image-data -data (set #js [r g b 255] (* pixel-idx 4)))))))
-    image-data))
+  (measure-fn "cel-pixels->image-data"
+              (fn []
+                (let [image-data (js/ImageData. (:width size) (:height size))]
+                  (.. image-data -data (set (js/Uint8ClampedArray. (. (js/Uint32Array. pixels) -buffer))))
+                  (. js/console (log "image-data" image-data))
+                  image-data))))
 
 ;; не должны лежать здесь с остальными утилитами
 (defn draw-cel [cel canvas]
