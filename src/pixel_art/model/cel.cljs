@@ -62,3 +62,7 @@
 (defn pixels->coll [cel]
   (map-indexed (fn [idx pixel] [(idx->pos idx (:size cel)) pixel])
                (:pixels cel)))
+
+(defn map-pixels [f cel]
+  (map-indexed (fn [idx pixel] (f (idx->pos idx (:size cel)) pixel))
+               (:pixels cel)))

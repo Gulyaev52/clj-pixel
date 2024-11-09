@@ -13,22 +13,6 @@
               :resize-content false
               :anchor {:x :center :y :center}}})
 
-(defn array-data->pixels [array-data size]
-  (-> (for [y (range 0 (:height size))
-            x (range 0 (:width size))]
-        (let [index (* (+ x (* y (:width size))) 4)
-              r (aget array-data index)
-              g (aget array-data (+ index 1))
-              b (aget array-data (+ index 2))
-              a (-> (aget array-data (+ index 3))
-                    (#(if (= % 255) 1 0)))]
-          (color/int r g b a)))
-      vec))
-
-(defn canvas->pixels [canvas size]
-  (let [image-data (.. canvas (getContext "2d") (getImageData 0 0 (:width size) (:height size)))]
-    (array-data->pixels (.. image-data -data) size)))
-
 (defn translate-x [x width resized-width anchor-x]
   (case anchor-x
     :left x
@@ -47,18 +31,17 @@
          (canvas/draw-cel cel)
          (canvas/resize target-size)
          ((fn [canvas]
-            (let [image-data (.. canvas (getContext "2d") (getImageData 0 0 (:width target-size) (:height target-size)))]
-              (assoc cel
-                     :size target-size
-                     :pixels (array-data->pixels (.. image-data -data) target-size))))))
+            (assoc cel
+                   :size target-size
+                   :pixels (canvas/canvas->pixels canvas target-size)))))
     (let [cel-size (:size cel)
           translated-pixels-map
-          (->> (cel/pixels->coll cel)
-               (keep (fn [[pos color]]
-                       (when (not= color color/transparent-color-int)
-                         [{:x (translate-x (:x pos) (:width cel-size) (:width target-size) (:x anchor))
-                           :y (translate-y (:y pos) (:height cel-size) (:height target-size) (:y anchor))}
-                          color]))))
+          (cel/map-pixels (fn [pos color]
+                            (when (not= color color/transparent-color-int)
+                              [{:x (translate-x (:x pos) (:width cel-size) (:width target-size) (:x anchor))
+                                :y (translate-y (:y pos) (:height cel-size) (:height target-size) (:y anchor))}
+                               color]))
+                          cel)
           new-pixels (->> (cel/create-pixels-coll target-size)
                           (cel/update-pixels-coll translated-pixels-map target-size))]
       (assoc cel

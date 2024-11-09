@@ -1,5 +1,6 @@
 (ns pixel-art.canvas
   (:require
+   [pixel-art.measure :refer [measure-fn]]
    [pixel-art.model.sprite :as sprite]
    [sc.api]))
 
@@ -114,3 +115,7 @@
                                     (/ (- (. canvas -height)) 2)))
     (. target-canvas-ctx restore)
     target-canvas))
+
+(defn canvas->pixels [canvas size]
+  (let [image-data (.. canvas (getContext "2d") (getImageData 0 0 (:width size) (:height size)))]
+    (vec (js/Uint32Array. (. (.. image-data -data) -buffer)))))

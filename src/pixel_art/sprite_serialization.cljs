@@ -1,7 +1,6 @@
 (ns pixel-art.sprite-serialization ;; todo: rename?
   (:require
    [pixel-art.canvas :as canvas]
-   [pixel-art.sprite-resizer :refer [canvas->pixels]]
    [pixel-art.utils.coll :as coll]))
 
 (defn serialize [sprite]
@@ -24,7 +23,7 @@
 (defn- img->pixels [img size]
   (let [canvas (canvas/create-canvas size)]
     (.. canvas (getContext "2d") (drawImage img 0 0))
-    (canvas->pixels canvas size)))
+    (canvas/canvas->pixels canvas size)))
 
 (defn deserialize+ [sprite]
   (.. js/Promise

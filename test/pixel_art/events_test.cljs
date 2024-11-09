@@ -852,6 +852,7 @@ Columns: 0
 
        (is (= false @(rf/subscribe [::subs/export-modal-opened])))))))
 
+;; todo: refactoring
 (defn array-data->pixels [array-data size]
   (->> (for [x (range 0 (. size -width))
              y (range 0 (. size -height))]
