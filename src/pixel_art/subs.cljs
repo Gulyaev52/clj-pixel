@@ -175,6 +175,7 @@
 (re-frame/reg-sub
  ::timeline
  (fn [db]
+   (def db db)
    (let [{:keys [cel-imgs sprite]} db
          {:keys [layers frames]} sprite
          selected-cels-pos (sprite/get-selected-cels-pos sprite)

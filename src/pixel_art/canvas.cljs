@@ -3,12 +3,16 @@
    [pixel-art.model.sprite :as sprite]
    [sc.api]))
 
+(defn create-canvas [{:keys [width height]}]
+  (let [canvas (.. js/document (createElement "canvas"))]
+    (set! (. canvas -width) width)
+    (set! (. canvas -height) height)
+    canvas))
+
 (defn generate-data-url [draw size]
-  (let [canvas-elem (.. js/document (createElement "canvas"))]
-    (set! (. canvas-elem -width) (:width size))
-    (set! (. canvas-elem -height) (:height size))
-    (draw canvas-elem)
-    (. canvas-elem (toDataURL "image/png"))))
+  (let [canvas (create-canvas size)]
+    (draw canvas)
+    (. canvas (toDataURL "image/png"))))
 
 (defn cel-pixels->image-data [{:keys [pixels size]}]
   (let [pixels-u32arr (js/Uint32Array. (* (:width size) (:height size)))]
@@ -67,12 +71,6 @@
 (defn to-base64 [canvas format]
   (let [data (. canvas (toDataURL (str "image/" format)))]
     (. data (substr (+ (. data (indexOf ",")) 1)))))
-
-(defn create-canvas [{:keys [width height]}]
-  (let [canvas (.. js/document (createElement "canvas"))]
-    (set! (. canvas -width) width)
-    (set! (. canvas -height) height)
-    canvas))
 
 (defn combine [canvas-size res-canvas-size columns canvases]
   (let [canvas-rows (partition-all columns canvases)

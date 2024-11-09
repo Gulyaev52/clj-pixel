@@ -145,8 +145,7 @@
                                         (canvas/generate-data-url #(canvas/draw-cel cel %)
                                                                   (cel/get-size cel))]))
                         (into {}))]
-      {:db (assoc db :cel-imgs cel-imgs)})
-    {:db db})))
+      {:db (assoc db :cel-imgs cel-imgs)}))))
 
 (re-frame/reg-event-fx
  ::select-tool
