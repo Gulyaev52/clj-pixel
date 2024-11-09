@@ -22,7 +22,7 @@
                    (:width size)
                    (:height size))))
 
-;; не должны лежать здесь с остальными утилитами
+;; todo: не должны лежать здесь с остальными утилитами
 (defn draw-cel [cel canvas]
   (let [ctx (. canvas (getContext "2d"))
         image-data (cel-pixels->image-data cel)]

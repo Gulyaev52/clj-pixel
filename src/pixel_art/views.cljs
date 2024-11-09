@@ -61,13 +61,13 @@
 
     [:<>
      (for [[idx data-url] (map-indexed vector previews)]
-       ^{:key (str data-url "-" idx)}
+       ^{:key idx}
        [:div {:style {:display :flex
                       :flex-direction :column
                       :height "100%"
                       :align-items "center"
                       :min-width 0}}
-        [preview-image (first previews)
+        [preview-image data-url
          {:height "100%"
           :min-height "70px"}]
         [:div {:style {:padding "5px" :color "black"}}
@@ -1031,6 +1031,7 @@
                           :opacity (when (:resize-content settings) "0.6")}}
             (for [y [:top :center :bottom]
                   x [:left :center :right]]
+              ^{:key (str y "-y-" x "-x")}
               [:div {:title (str (name y) "/" (name x))
                      :style {:border-radius "4px"
                              :width "24px"

@@ -20,7 +20,8 @@
               r (aget array-data index)
               g (aget array-data (+ index 1))
               b (aget array-data (+ index 2))
-              a (aget array-data (+ index 3))] ;; todo: тут значения 0-255
+              a (-> (aget array-data (+ index 3))
+                    (#(if (= % 255) 1 0)))]
           (color/int r g b a)))
       vec))
 
