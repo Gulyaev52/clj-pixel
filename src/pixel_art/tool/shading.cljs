@@ -36,12 +36,12 @@
             new-pixels (->> (resize-pixel (:pos event) pixel-size)
                             (keep (fn [pos]
                                     (let [color (cel/get-pixel pos current-cel)]
-                                      (when-not (= color color/transparent-color)
+                                      (when-not (= color color/transparent-color-int)
                                         (let [tcolor (color/->tinycolor color)]
                                           (if lighten
                                             (. tcolor (lighten amount))
                                             (. tcolor (darken amount)))
-                                          [pos (color/rgba tcolor)]))))))]
+                                          [pos (color/int tcolor)]))))))]
         {:db (update-in db [:tool :state :changes] #(merge % new-pixels))
          :fx [[:draw-preview new-pixels]]})
 

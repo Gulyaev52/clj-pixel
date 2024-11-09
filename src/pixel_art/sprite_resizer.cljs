@@ -3,7 +3,7 @@
    [pixel-art.canvas :as canvas]
    [pixel-art.history :as history]
    [pixel-art.model.cel :as cel]
-   [pixel-art.model.color :refer [rgba transparent-color]]
+   [pixel-art.model.color :as color]
    [pixel-art.utils.coll :as coll]
    [re-frame.core :as re-frame]))
 
@@ -21,7 +21,7 @@
               g (aget array-data (+ index 1))
               b (aget array-data (+ index 2))
               a (aget array-data (+ index 3))] ;; todo: тут значения 0-255
-          (rgba r g b a)))
+          (color/int r g b a)))
       vec))
 
 (defn canvas->pixels [canvas size]
@@ -54,7 +54,7 @@
           translated-pixels-map
           (->> (cel/pixels->coll cel)
                (keep (fn [[pos color]]
-                       (when (not= color transparent-color)
+                       (when (not= color color/transparent-color-int)
                          [{:x (translate-x (:x pos) (:width cel-size) (:width target-size) (:x anchor))
                            :y (translate-y (:y pos) (:height cel-size) (:height target-size) (:y anchor))}
                           color]))))

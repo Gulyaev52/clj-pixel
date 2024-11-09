@@ -1,17 +1,18 @@
 (ns pixel-art.model.color
+  (:refer-clojure :exclude [int])
   (:require ["tinycolor2" :as tinycolor]
             ["../color.js" :as color-js]))
-
-(defn ->tinycolor [color]
-  (tinycolor color))
 
 (defn ->int [color]
   (color-js/colorToInt color))
 
-(defn int->color [color]
+(defn int->rgb-str [color]
   (color-js/intToColor color))
 
-(defn rgba
+(defn ->tinycolor [color]
+  (tinycolor (int->rgb-str color)))
+
+(defn int
   ([color]
    (->int color))
   ([r g b]
@@ -19,4 +20,4 @@
   ([r g b a]
    (color-js/rgbaToInt r g b a)))
 
-(def transparent-color (rgba 0 0 0 0))
+(def transparent-color-int (int 0 0 0 0))

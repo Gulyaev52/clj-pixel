@@ -2,7 +2,6 @@
   (:require
    [pixel-art.canvas :as canvas]
    [pixel-art.export :as export]
-   [pixel-art.model.cel :as cel]
    [pixel-art.model.sprite :as sprite]
    [pixel-art.project-settings :as project-settings]
    [pixel-art.sprite-resizer :as sprite-resizer]

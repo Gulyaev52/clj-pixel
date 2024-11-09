@@ -432,12 +432,12 @@
 
 (defn color-picker [{:keys [value presetColors actions onChange]}]
   [:> color-picker-js
-   {:color value
+   {:color (color/int->rgb-str value)
     :disableAlpha true
-    :presetColors (clj->js presetColors)
+    :presetColors (clj->js (map #(update % :color color/int->rgb-str) presetColors))
     :actions (clj->js (map #(reagent.core/as-element %) actions))
     :onChange (fn [e] (let [rgba (. e -rgba)]
-                        (onChange (color/rgba (. rgba -r) (. rgba -g) (. rgba -b) (. rgba -a)))))}])
+                        (onChange (color/int (. rgba -r) (. rgba -g) (. rgba -b) (. rgba -a)))))}])
 
 (defn popper []
   (let [!opened (r/atom false)]
@@ -483,8 +483,8 @@
 
 ;; todo: зачем-это?
 (defn- replace-transparent-color [color]
-  (if (= color color/transparent-color)
-    (color/rgba 0 0 0)
+  (if (= color color/transparent-color-int)
+    (color/int 0 0 0)
     color))
 
 (defn add-new-color-picker []
@@ -548,7 +548,7 @@
                                 (re-frame/dispatch [::palette/select-color idx true]))
                :style {:width "33px"
                        :height "33px"
-                       :background-color color
+                       :background-color (color/int->rgb-str color)
                        :position "relative"
                        :cursor "pointer"
                        :color (if (.. (color/->tinycolor color) isDark)
@@ -790,10 +790,10 @@
     (fn [{:keys [value onChange]} close]
       [color-picker {:value value
                      :onChange onChange
-                     :presetColors (if (= initial-value color/transparent-color)
+                     :presetColors (if (= initial-value color/transparent-color-int)
                                      [{:color initial-value}]
                                      [{:color initial-value}
-                                      {:color color/transparent-color :title "transparent color"}])
+                                      {:color color/transparent-color-int :title "transparent color"}])
                      :onCancel close}])))
 
 (defn- current-color-selection [{:keys [value onChange]}]
@@ -802,9 +802,9 @@
      [:div {:style {:width "45px"
                     :height "45px"
                     :border-radius "5px"
-                    :background (if (= value color/transparent-color)
+                    :background (if (= value color/transparent-color-int)
                                   transparent-color-img
-                                  value)
+                                  (color/int->rgb-str value))
                     :border "thin solid black"}
             :onClick close}])
    (fn [close]

@@ -21,10 +21,10 @@
 (def default-palettes-and-current-colors
   (let [palettes [{:name "default"
                    :current true
-                   :colors (map color/rgba ["black" "red" "green" "blue" "yellow" "gray" "purple"])}]]
+                   :colors (map color/int ["black" "red" "green" "blue" "yellow" "gray" "purple"])}]]
     {:palettes palettes
      :primary-color (-> palettes first :colors first)
-     :secondary-color (color/rgba 255 0 0)}))
+     :secondary-color (color/int 255 0 0)}))
 
 (defn create-empty-sprite [size]
   (sprite/create {:size size
@@ -40,7 +40,7 @@
      (->> (create-empty-sprite sprite-size)
           (sprite/set-current-cel-pixels (for [x (range 0 (:width sprite-size))
                                                y (range 0 (:height sprite-size))]
-                                           [{:x x :y y} (color/rgba (rand-int 255) (rand-int 255) (rand-int 255))]))))))
+                                           [{:x x :y y} (color/int (rand-int 255) (rand-int 255) (rand-int 255))]))))))
 
 (defn get-viewport-scroll-pos-to-center [canvas-size drawing-container-size]
   (let [scroll-dim 15

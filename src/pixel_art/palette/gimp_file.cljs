@@ -35,7 +35,7 @@
                                                             (map parse-double)
                                                             (filter #(and (>= % 0) (<= % 255)))
                                                             (#(when (= (count %) 3) %)))]
-                                      (color/rgba r g b)))))
+                                      (color/int r g b)))))
                           vec)]
           {:ok {:name name :colors colors}})
         {:error "Second line are invalid name line"})

@@ -1,7 +1,5 @@
 (ns pixel-art.canvas
   (:require
-   [pixel-art.measure :refer [measure-fn]]
-   [pixel-art.model.color :as color]
    [pixel-art.model.sprite :as sprite]
    [sc.api]))
 
@@ -12,22 +10,13 @@
     (draw canvas-elem)
     (. canvas-elem (toDataURL "image/png"))))
 
-(defn parse-color [rgba]
-  ;; such approach is faster than usage of regexp
-  (-> rgba
-      (. (split "("))
-      second
-      (. (split ")"))
-      first
-      (. (split ","))))
-
 (defn cel-pixels->image-data [{:keys [pixels size]}]
-  (measure-fn "cel-pixels->image-data"
-              (fn []
-                (let [image-data (js/ImageData. (:width size) (:height size))]
-                  (.. image-data -data (set (js/Uint8ClampedArray. (. (js/Uint32Array. pixels) -buffer))))
-                  (. js/console (log "image-data" image-data))
-                  image-data))))
+  (let [pixels-u32arr (js/Uint32Array. (* (:width size) (:height size)))]
+    (dotimes [idx (count pixels)]
+      (aset pixels-u32arr idx (nth pixels idx)))
+    (js/ImageData. (js/Uint8ClampedArray. (. pixels-u32arr -buffer))
+                   (:width size)
+                   (:height size))))
 
 ;; не должны лежать здесь с остальными утилитами
 (defn draw-cel [cel canvas]

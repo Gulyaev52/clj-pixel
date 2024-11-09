@@ -8,6 +8,7 @@ import { validHex, HsvaColor, hsvaToHex, hsvaToRgbaString, hexToHsva, color as h
 import { useEffect } from 'react';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import Swatch from "./swatch";
+import tinycolor from 'tinycolor2';
 
 const PRESET_COLORS = ['#D0021B', '#F5A623', '#f8e61b', '#8B572A', '#7ED321', '#417505', '#BD10E0', '#9013FE', '#4A90E2', '#50E3C2', '#B8E986', '#000000', '#4A4A4A', '#9B9B9B', '#FFFFFF'];
 const Bar = props => /*#__PURE__*/_jsx("div", {
@@ -52,7 +53,6 @@ const Sketch = /*#__PURE__*/React.forwardRef((props, ref) => {
   }, [color]);
   const handleChange = hsv => {
     setHsva(hsv);
-    console.log(hsv);
     onChange && onChange(handleColor(hsv));
   };
   const handleHex = (value, evn) => {
@@ -210,7 +210,7 @@ const Sketch = /*#__PURE__*/React.forwardRef((props, ref) => {
           onClick: props.onClick,
           style: {
             ...props.style,
-            background: props.color === "rgba(0, 0, 0, 0)" ? "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABlBMVEVMTExVVVUnhsEkAAAAHUlEQVR4AWOAAUYoQOePEAUj3v9oYDQ9gMBoegAAJFwCAbLaTIMAAAAASUVORK5CYII=')" : props.color
+            background: isTransparent(props.color) ? "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABlBMVEVMTExVVVUnhsEkAAAAHUlEQVR4AWOAAUYoQOePEAUj3v9oYDQ9gMBoegAAJFwCAbLaTIMAAAAASUVORK5CYII=')" : props.color
           },
           children: [_jsxs("div", {
             style: {
@@ -244,10 +244,15 @@ const CheckedSwatchColorPoint = (props) => {
       height: 5,
       width: 5,
       borderRadius: '50%',
-      backgroundColor: props.color === "rgba(0, 0, 0, 0)" ? "black" : getContrastingColor(rgbaStringToHsva(props.color)),
+      backgroundColor: isTransparent(props.color) ? "black" : getContrastingColor(rgbaStringToHsva(props.color)),
     }}
   );
 }
+
+const isTransparent = (color) => {
+  const { r, g, b, a } = tinycolor(color).toRgb();
+  return r === 0 && g === 0 && b === 0  && a === 0;
+}; 
 
 Sketch.displayName = 'Sketch';
 

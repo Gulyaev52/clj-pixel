@@ -1,5 +1,5 @@
 (ns pixel-art.palette
-  (:require [pixel-art.model.color :refer [transparent-color]]
+  (:require [pixel-art.model.color :refer [transparent-color-int]]
             [pixel-art.model.sprite :as sprite]
             [pixel-art.palette.gimp-file :as gimp-file]
             [pixel-art.tool.utils :refer [get-current-color-type]]
@@ -82,7 +82,7 @@
          colors (->> cels
                      (mapcat :pixels)
                      distinct
-                     (remove #(= transparent-color %)))]
+                     (remove #(= transparent-color-int %)))]
      {:db (-> db
               (update-in [:palettes (get-current-palette-idx db) :colors] #(->> (concat % colors)
                                                                                 distinct

@@ -1,5 +1,5 @@
 (ns pixel-art.tool.eraser
-  (:require [pixel-art.model.color :refer [transparent-color]]
+  (:require [pixel-art.model.color :refer [transparent-color-int]]
             [pixel-art.tool.utils :refer [commit-changes-and-init-tool
                                           get-tool-options resize-pixel]]))
 
@@ -24,7 +24,7 @@
           (and (= (:type event) :mouse-move) user-is-drawing))
       (let [{:keys [pixel-size]} (get-tool-options db)
             new-pixels (->> (resize-pixel (:pos event) pixel-size)
-                            (map (fn [p] [p transparent-color])))]
+                            (map (fn [p] [p transparent-color-int])))]
         {:db (update-in db [:tool :state :changes] #(merge % new-pixels))
          :fx [[:draw-preview new-pixels]]})
 

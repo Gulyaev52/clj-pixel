@@ -20,7 +20,7 @@
 
 (defn remove-transparent-colors [selection-image]
   (->> selection-image
-       (filter (fn [[_ color]] (not= color color/transparent-color)))
+       (filter (fn [[_ color]] (not= color color/transparent-color-int)))
        (into {})))
 
 (defn move-selection [tool initial-mouse-down-pos event]
@@ -28,7 +28,7 @@
         {:keys [initial-selection-image selection-image pasted?]} (:state tool)
 
         deleted-initial-selection (when (not pasted?)
-                                    (update-vals initial-selection-image (fn [_] color/transparent-color)))
+                                    (update-vals initial-selection-image (fn [_] color/transparent-color-int)))
         moved-selection-image (-> selection-image
                                   (update-keys #(merge-with + % offset-pos)))
         changes (merge deleted-initial-selection
@@ -114,7 +114,7 @@
         {:keys [initial-selection-image pasted?]} (-> db :tool :state)
         deleted-initial-selection (if pasted?
                                     {}
-                                    (update-vals initial-selection-image (fn [_] color/transparent-color)))]
+                                    (update-vals initial-selection-image (fn [_] color/transparent-color-int)))]
     (commit-changes-and-init-tool db
                                   deleted-initial-selection
                                   {:type tool-type :state {:mode :select}})))
@@ -175,7 +175,7 @@
 (defn- get-highlight-color [color]
   (let [dark-color "rgba(0, 0, 0, 0.2)"
         light-color "rgba(255, 255, 255, 0.4)"]
-    (if (= color color/transparent-color)
+    (if (= color color/transparent-color-int)
       dark-color
       (let [luminance (.. (color/->tinycolor color) toHsl -l)]
         (if (> luminance 0.5)

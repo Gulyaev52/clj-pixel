@@ -139,13 +139,13 @@
   :generate-cel-imgs ;; todo: в подписку?
   #(-> % :sprite :cels)
   (fn [{:keys [db]}]
-    #_(let [cel-imgs (->> (-> db :sprite)
-                          sprite/get-cels-with-pos-as-coll
-                          (map (fn [cel] [(:pos cel)
-                                          (canvas/generate-data-url #(canvas/draw-cel cel %)
-                                                                    (cel/get-size cel))]))
-                          (into {}))]
-        {:db (assoc db :cel-imgs cel-imgs)})
+    (let [cel-imgs (->> (-> db :sprite)
+                        sprite/get-cels-with-pos-as-coll
+                        (map (fn [cel] [(:pos cel)
+                                        (canvas/generate-data-url #(canvas/draw-cel cel %)
+                                                                  (cel/get-size cel))]))
+                        (into {}))]
+      {:db (assoc db :cel-imgs cel-imgs)})
     {:db db})))
 
 (re-frame/reg-event-fx
@@ -518,7 +518,7 @@
 (defn get-highlight-color [color]
   (let [dark-color "rgba(0, 0, 0, 0.2)"
         light-color "rgba(255, 255, 255, 0.2)"]
-    (if (= color color/transparent-color)
+    (if (= color color/transparent-color-int)
       dark-color
       (let [luminance (.. (color/->tinycolor color) toHsl -l)]
         (if (> luminance 0.5)
@@ -550,12 +550,12 @@
          size (-> @re-frame.db/app-db :sprite sprite/get-size)]
      (doseq [[pos color] changes]
        (when (geometry/valid-point? pos size)
-         (if (= color color/transparent-color)
+         (if (= color color/transparent-color-int)
            (do
              (. current-layer-ctx (clearRect (:x pos) (:y pos) 1 1))
              (. ctx (clearRect (:x pos) (:y pos) 1 1)))
            (do
-             (set! (. ctx -fillStyle) color)
+             (set! (. ctx -fillStyle) (color/int->rgb-str color))
              (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))))
 
 ;; todo: rename
