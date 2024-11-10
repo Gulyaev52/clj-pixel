@@ -45,7 +45,7 @@
          println)))
 
 (defn valid-point? [{:keys [x y]} {:keys [width height]}]
-  (and (>= x 0) (< x width) (>= y 0) (< y height)))
+  (and x y (>= x 0) (< x width) (>= y 0) (< y height)))
 
 (defn flood-fill [start-point size pred]
   (let [!fill-stack (atom [start-point])

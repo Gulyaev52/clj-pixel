@@ -59,7 +59,7 @@
 (defn get-initial-scale [sprite-size]
   (let [[dim dim-value] (apply max-key second sprite-size)
         offset 100]
-    (/ (- (dim viewport-size) offset) dim-value)))
+    (min (/ (- (dim viewport-size) offset) dim-value) max-scale)))
 
 ;; todo: rename
 (defn get-initial-drawing-settings [sprite]
