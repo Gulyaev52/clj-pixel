@@ -4,6 +4,7 @@
    ["react-dnd" :as react-dnd]
    ["react-dnd-html5-backend" :as react-dnd-html5-backend]
    [clojure.string :as string]
+   [pixel-art.canvas :as canvas]
    [pixel-art.events :as events]
    [pixel-art.export :as export]
    [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
@@ -252,7 +253,12 @@
                                      #js {"type" "cel"
                                           "item" cel
                                           "collect" (fn [monitor]
-                                                      {:dragging (.. monitor isDragging)})}))]
+                                                      {:dragging (.. monitor isDragging)})}))
+        cel-preview (react/useMemo (fn []
+                                     (println "bla")
+                                     (canvas/generate-data-url #(canvas/draw-cel cel %)
+                                                               (:size cel)))
+                                   (array cel))]
     [:div {:style {:position "relative"}}
      (when (= (-> cel :pos :frame-idx) 0)
        [:f> droppable-cel-zone
@@ -289,12 +295,12 @@
                     :font-size 18
                     :color (when-let [group-number (:group-number cel)]
                              (get-group-color group-number))}}
-      [preview-image (:img cel) (merge {:max-width "100%"
-                                        :max-height "100%"}
-                                       (if (> (:width (:size cel))
-                                              (:height (:size cel)))
-                                         {:width "100%"}
-                                         {:height "100%"}))]
+      [preview-image cel-preview (merge {:max-width "100%"
+                                         :max-height "100%"}
+                                        (if (> (:width (:size cel))
+                                               (:height (:size cel)))
+                                          {:width "100%"}
+                                          {:height "100%"}))]
       (when (:selected cel)
         [:div
          [:button {:onClick (fn [e]

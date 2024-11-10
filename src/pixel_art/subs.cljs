@@ -176,13 +176,11 @@
  ::timeline
  (fn [db]
    (def db db)
-   (let [{:keys [cel-imgs sprite]} db
+   (let [{:keys [sprite]} db
          {:keys [layers frames]} sprite
          selected-cels-pos (sprite/get-selected-cels-pos sprite)
-         current-cel-pos (sprite/get-current-cel-pos sprite)
-         cels-coll (sprite/get-cels-with-pos-as-coll sprite)]
-     {:cels (->> cels-coll
-                 (map (fn [cel] (merge cel {:img (get cel-imgs (:pos cel))}))))
+         current-cel-pos (sprite/get-current-cel-pos sprite)]
+     {:cels (sprite/get-cels-with-pos-as-coll sprite)
       :layers (map-indexed (fn [idx layer]
                              (merge layer {:current (some? ((set (map :layer-idx selected-cels-pos)) idx)) ;; todo: почему current
                                            :idx idx}))

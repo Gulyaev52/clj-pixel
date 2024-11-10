@@ -33,7 +33,7 @@
                   :cel (cel/create size)}))
 
 (defn get-example-project []
-  (let [sprite-size {:width 256 :height 256}]
+  (let [sprite-size {:width 512 :height 512}]
     (assoc
      default-palettes-and-current-colors
      :sprite

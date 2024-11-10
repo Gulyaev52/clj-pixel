@@ -133,20 +133,6 @@
        :fx [[:clear-frame]
             [:draw-current-frame]]}))))
 
-;; todo: fix performance; если позиция ячейки изменяется то тут ошибка; если удаляется
-(re-frame/reg-global-interceptor
- (on-changes
-  :generate-cel-imgs ;; todo: в подписку?
-  #(-> % :sprite :cels)
-  (fn [{:keys [db]}]
-    (let [cel-imgs (->> (-> db :sprite)
-                        sprite/get-cels-with-pos-as-coll
-                        (map (fn [cel] [(:pos cel)
-                                        (canvas/generate-data-url #(canvas/draw-cel cel %)
-                                                                  (cel/get-size cel))]))
-                        (into {}))]
-      {:db (assoc db :cel-imgs cel-imgs)}))))
-
 (re-frame/reg-event-fx
  ::select-tool
  (fn [{:keys [db]} [_ tool-type]]
