@@ -28,8 +28,7 @@
                                                         (:size current-cel)
                                                         (:pixels current-cel)
                                                         color-under-mouse)
-                                   (map (fn [p] [p color-under-mouse]))
-                                   (into {}))
+                                   (mapv (fn [p] [p color-under-mouse])))
               tool (assoc tool :state {:mode :move-selection
                                        :initial-selection-image selection-image
                                        :selection-image selection-image

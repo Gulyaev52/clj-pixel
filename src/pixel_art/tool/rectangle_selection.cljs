@@ -1,13 +1,13 @@
 (ns pixel-art.tool.rectangle-selection
-  (:require [clojure.set]
-            [pixel-art.canvas :as canvas]
-            [pixel-art.events.event-collector]
-            [pixel-art.model.cel :as cel]
-            [pixel-art.tool.utils :refer [commit-changes-and-init-tool
-                                          get-current-cel]]
-            [pixel-art.utils.geometry :as geometry]
-            [re-frame.core :as re-frame]
-            [pixel-art.model.color :as color]))
+  (:require
+   [clojure.set]
+   [pixel-art.events.event-collector]
+   [pixel-art.measure :refer [measure-fn]]
+   [pixel-art.model.cel :as cel]
+   [pixel-art.model.color :as color]
+   [pixel-art.tool.utils :refer [commit-changes-and-init-tool get-current-cel]]
+   [pixel-art.utils.geometry :as geometry]
+   [re-frame.core :as re-frame]))
 ;; init
 ;; todo: используем так как из selection-image удаляются прозр точки(не работает днд) и если проверять вхож
 ;; todo: а зачем поле state
@@ -66,9 +66,7 @@
                                        :initial-selection-image selection-image
                                        :selection-image selection-image
                                        :changes []})]
-          {:db (assoc db :tool tool)
-           :fx [[:clear-preview]
-                [:highlight-selection selection-image]]})
+          {:db (assoc db :tool tool)})
 
         (and (= (:type event) :mouse-move) (not user-is-drawing))
         {:db db
@@ -173,8 +171,8 @@
      {:db db})))
 
 (defn- get-highlight-color [color]
-  (let [dark-color "rgba(0, 0, 0, 0.2)"
-        light-color "rgba(255, 255, 255, 0.4)"]
+  (let [dark-color 855638016
+        light-color 1728053247]
     (if (= color color/transparent-color-int)
       dark-color
       (let [luminance (.. (color/->tinycolor color) toHsl -l)]
@@ -185,7 +183,16 @@
 (re-frame/reg-fx
  :highlight-selection
  (fn [selection]
-   (let [ctx (canvas/get-canvas-context "preview")]
+   (let [canvas (. js/document (getElementById "preview"))
+         ctx (. canvas (getContext "2d"))
+         width (. canvas -width)
+         image-data (. ctx (getImageData 0 0 width (. canvas -height)))
+         image-data-arr (js/Uint32Array. (. (.. image-data -data) -buffer))]
      (doseq [[pos color] selection]
-       (set! (. ctx -fillStyle) (get-highlight-color color))
-       (. ctx (fillRect (:x pos) (:y pos) 1 1))))))
+       (aset image-data-arr
+             (+ (:x pos) (* width (:y pos)))
+             (get-highlight-color color)))
+     (let [res (js/ImageData. (js/Uint8ClampedArray. (. image-data-arr -buffer))
+                              width
+                              (. canvas -height))]
+       (. ctx (putImageData res 0 0))))))

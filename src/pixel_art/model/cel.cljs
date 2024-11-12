@@ -1,6 +1,7 @@
 (ns pixel-art.model.cel
   (:require
-   [pixel-art.model.color :as color]))
+   [pixel-art.model.color :as color]
+   [pixel-art.utils.geometry :as geometry]))
 
 (defn create-pixels-coll [size]
   (vec (repeat (* (:width size) (:height size)) color/transparent-color-int)))
@@ -16,7 +17,9 @@
   (let [{:keys [width]} size]
     (persistent! (reduce
                   (fn [res [pos color]]
-                    (assoc! res (pos->idx pos width) color))
+                    (if (geometry/valid-point? pos size)
+                      (assoc! res (pos->idx pos width) color)
+                      res))
                   (transient pixels)
                   pixels-map))))
 
