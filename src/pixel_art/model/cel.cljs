@@ -1,23 +1,24 @@
 (ns pixel-art.model.cel
-  (:require [pixel-art.utils.geometry :as geometry]
-            [pixel-art.model.color :as color]))
+  (:require
+   [pixel-art.model.color :as color]))
 
 (defn create-pixels-coll [size]
   (vec (repeat (* (:width size) (:height size)) color/transparent-color-int)))
 
-(defn pos->idx [{:keys [x y]} {:keys [width]}]
-  (+ x (* width y)))
+(defn pos->idx [pos width]
+  (+ (:x pos) (* width (:y pos))))
 
 (defn idx->pos [idx {:keys [width]}]
   {:x (rem idx width)
    :y (. js/Math (floor (/ idx width)))})
 
 (defn update-pixels-coll [pixels-map size pixels]
-  (let [pixels-t (transient pixels)] ;; todo: тут возможно нужно юзать reduce
-    (doseq [[pos color] pixels-map]
-      (when (geometry/valid-point? pos size)
-        (assoc! pixels-t (pos->idx pos size) color)))
-    (persistent! pixels-t)))
+  (let [{:keys [width]} size]
+    (persistent! (reduce
+                  (fn [res [pos color]]
+                    (assoc! res (pos->idx pos width) color))
+                  (transient pixels)
+                  pixels-map))))
 
 (defn create
   ([size]
@@ -57,7 +58,7 @@
 
 (defn get-pixel [pos cel]
   (let [{:keys [pixels size]} cel]
-    (nth pixels (pos->idx pos size) color/transparent-color-int)))
+    (nth pixels (pos->idx pos (:width size)) color/transparent-color-int)))
 
 (defn pixels->coll [cel]
   (map-indexed (fn [idx pixel] [(idx->pos idx (:size cel)) pixel])

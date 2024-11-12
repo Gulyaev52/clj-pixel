@@ -24,11 +24,11 @@
         (= (:type event) :mouse-down)
         (let [current-cel (get-current-cel db)
               color-under-mouse (cel/get-pixel (:pos event) current-cel)
-              selection-points (geometry/flood-fill (:pos event)
-                                                    (cel/get-size current-cel)
-                                                    #(= (cel/get-pixel % current-cel) color-under-mouse))
-              selection-image (->> selection-points
-                                   (map (fn [p] [p (cel/get-pixel p current-cel)]))
+              selection-image (->> (geometry/flood-fill (:pos event)
+                                                        (:size current-cel)
+                                                        (:pixels current-cel)
+                                                        color-under-mouse)
+                                   (map (fn [p] [p color-under-mouse]))
                                    (into {}))
               tool (assoc tool :state {:mode :move-selection
                                        :initial-selection-image selection-image

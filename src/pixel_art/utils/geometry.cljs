@@ -1,6 +1,7 @@
 (ns pixel-art.utils.geometry
-  (:require ["./shapeTool.js" :as shape-tool]
-            [clojure.string :as string]))
+  (:require
+   ["./shapeTool.js" :as shape-tool]
+   [clojure.string :as string]))
 
 ;; todo: pixels?
 
@@ -47,29 +48,31 @@
 (defn valid-point? [{:keys [x y]} {:keys [width height]}]
   (and x y (>= x 0) (< x width) (>= y 0) (< y height)))
 
-(defn flood-fill [start-point size pred]
-  (let [!fill-stack (atom [start-point])
-        !visited-points (atom #{})]
-    (while (> (count @!fill-stack) 0)
-      (let [point (first @!fill-stack)]
-        (swap! !fill-stack #(drop 1 %))
-        (when (and (valid-point? point size)
-                   (not (@!visited-points point))
-                   (pred point))
-          (swap! !visited-points conj point)
-          (swap! !fill-stack concat [{:x (inc (:x point))
-                                      :y (:y point)}
-                                     {:x (dec (:x point))
-                                      :y (:y point)}
-                                     {:x (:x point)
-                                      :y (inc (:y point))}
-                                     {:x (:x point)
-                                      :y (dec (:y point))}]))))
-    @!visited-points))
-(comment
-  (def matrix {{:x 0 :y 0} "black" {:x 1 :y 0} "black" {:x 2 :y 0} "white"
-               {:x 0 :y 1} "white" {:x 1 :y 1} "white" {:x 2 :y 1} "white"})
-  (flood-fill {:x 0 :y 0} {:width 8 :height 8} #(= (get matrix %) "black")))
+(defn pos->idx [x y width]
+  (+ x (* width y)))
+
+(defn flood-fill [start-pos size pixels target-color]
+  (let [{:keys [width]} size
+
+        queue #js [start-pos]
+        visited-pixels #js []
+        _ (aset visited-pixels (pos->idx (:x start-pos) (:y start-pos) width) start-pos)
+
+        dy #js [-1 0 1 0]
+        dx #js [0 1 0 -1]]
+
+    (while (> (. queue -length) 0)
+      (let [current-item (. queue pop)]
+        (dotimes [i 4]
+          (let [next-x (+ (:x current-item) (aget dx i))
+                next-y (+ (:y current-item) (aget dy i))
+                idx (pos->idx next-x next-y width)
+                is-valid (and (not (aget visited-pixels idx)) (= (nth pixels idx nil) target-color))]
+            (when is-valid
+              (let [connected-pixel {:x next-x :y next-y}]
+                (. queue (push connected-pixel))
+                (aset visited-pixels idx connected-pixel)))))))
+    visited-pixels))
 
 (defn get-line-pixels [p1 p2]
   (-> (shape-tool/getLinePixels (:x p1) (:x p2) (:y p1) (:y p2))
