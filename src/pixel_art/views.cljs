@@ -22,6 +22,7 @@
    [re-frame.core :as re-frame]
    [react :as react]
    [reagent.core :as r]
+   [stylefy.core :as stylefy :refer [use-style]]
    [sc.api]))
 
 (set! *warn-on-infer* false)
