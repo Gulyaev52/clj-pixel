@@ -36,12 +36,14 @@
 (re-frame/reg-fx
  :load-initial-data
  (fn []
-   (.. (backup/init-db+)
-       (then backup/get-backup+)
-       (then (fn [backup]
-               (re-frame/dispatch [:initialize-db backup])))
-       (catch (fn []
-                (re-frame/dispatch [:initialize-db]))))))
+   (let [viewport-size {:width (- (.. js/document -body -clientWidth) 100 400)
+                        :height (- (.. js/window -innerHeight) 30)}] ;; todo: this is not reliable
+     (.. (backup/init-db+)
+         (then backup/get-backup+)
+         (then (fn [backup]
+                 (re-frame/dispatch [:initialize-db (assoc backup :viewport-size viewport-size)])))
+         (catch (fn []
+                  (re-frame/dispatch [:initialize-db {:viewport-size viewport-size}])))))))
 
 (def dispatch-set-keydown-rules
   (let [convert-shortcut-keys #(-> %
@@ -115,7 +117,7 @@
   #(-> % :sprite sprite/get-size)
   (fn [{:keys [db]}]
     {:db (merge db
-                (project-settings/get-initial-drawing-settings (:sprite db)))
+                (project-settings/get-initial-drawing-settings (:sprite db) (:viewport-size db)))
      :fx (when (and (not (:initial-loading db)) (:initialized-canvas db))
            [[:init-canvases]
             [:zoom]

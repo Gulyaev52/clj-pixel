@@ -11,11 +11,7 @@
     :label "Pixel size"
     :initial-value 1
     :min 1
-    :max 64}
-   {:type :checkbox
-    :field :mirror-x
-    :initial-value false
-    :label "Mirror-x"}])
+    :max 64}])
 
 (defn handle-mouse-event [db event]
   (let [{:keys [user-is-drawing]} db]

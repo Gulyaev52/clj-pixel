@@ -3,6 +3,7 @@
    ["./colorPicker$default" :as color-picker-js]
    ["react-dnd" :as react-dnd]
    ["react-dnd-html5-backend" :as react-dnd-html5-backend]
+   [clojure.set :as set]
    [clojure.string :as string]
    [pixel-art.canvas :as canvas]
    [pixel-art.events :as events]
@@ -22,8 +23,8 @@
    [re-frame.core :as re-frame]
    [react :as react]
    [reagent.core :as r]
-   [stylefy.core :as stylefy :refer [use-style]]
-   [sc.api]))
+   [sc.api]
+   [stylefy.core :as stylefy :refer [use-style]]))
 
 (set! *warn-on-infer* false)
 
@@ -101,10 +102,17 @@
      :y (. js/Math (floor (/ (- (:y mouse-pos)
                                 (. canvas-layers-rect -top)) scale)))}))
 
+(defn control-label [label control]
+  [:div
+   [:label (use-style {:color "white"
+                       :font-size "13px"})
+    label]
+   control])
+
 (defn slider [{:keys [value label min max step onChange]}]
   ;; todo: labels
   [:div {:style {:display :flex :align-items :center}}
-   [:span (str label " (" value ")")]
+   [control-label (str label " (" value ")")]
    [:input {:type "range"
             :value value
             :min min
@@ -120,23 +128,7 @@
    [:input {:type "checkbox"
             :checked value
             :onChange (fn [e] (onChange (.. e -target -checked)))}]
-   [:span label]])
-
-(defn options-toolbar [tool-type]
-  (let [options @(re-frame/subscribe [::subs/tool-options])
-        options-spec (tool/options-specs tool-type)]
-    [:div {:style {:display :flex :align-items :center :gap "6px"}}
-     (for [[idx option-spec] (map-indexed vector options-spec)]
-       (let [value (get options (:field option-spec))
-             onChange #(re-frame/dispatch [::events/change-tool-option (:field option-spec) %])
-             props (assoc option-spec
-                          :value value
-                          :onChange onChange)]
-         ^{:key idx}
-         [:div
-          (case (:type option-spec)
-            :slider (slider props)
-            :checkbox (checkbox props))]))]))
+   [control-label label]])
 
 (defn get-group-color [group-number]
   (nth (cycle ["green" "pink" "yellow" "red" "blue" "purple"]) group-number))
@@ -633,7 +625,7 @@
   (let [mouse-pos @(re-frame/subscribe [::subs/mouse-pos])
         scale @(re-frame/subscribe [::subs/scale])
         sprite-size @(re-frame/subscribe [::subs/sprite-size])]
-    [:div {:style {:display :flex :gap "10px"}}
+    [:div {:style {:display :flex :gap "10px" :color "white"}}
      [:div (str "[" (:width sprite-size) "x" (:height sprite-size) "]")]
      [:div (str (:x mouse-pos) ":" (:y mouse-pos))]
      [:div (str "scale=" (. scale (toFixed 2)))]]))
@@ -665,7 +657,8 @@
         panning @(re-frame/subscribe [::subs/panning])
         user-is-drawing @(re-frame/subscribe [::subs/user-is-drawing])
         layers @(re-frame/subscribe [::subs/layers])
-        pixels-grid-cel-img @(re-frame/subscribe [::subs/pixels-grid-cel-img])]
+        pixels-grid-cel-img @(re-frame/subscribe [::subs/pixels-grid-cel-img])
+        viewport-size @(re-frame/subscribe [::subs/viewport-size])]
     [:div {:style {:display :flex
                    :flex-direction
                    :column :gap "10px"
@@ -674,8 +667,7 @@
                     :justify-content :center
                     :align-items "center"
                     :background-color drawing-container-color}}
-      [:div {:style {:position "relative"
-                     :border "1px solid black"}
+      [:div {:style {:position "relative"}
              :ref ref
              :onContextMenu (fn [event]
                               (. event preventDefault))
@@ -724,9 +716,9 @@
                                 (when (not= mouse-pos @!last-mouse-pos)
                                   (reset! !last-mouse-pos mouse-pos)
                                   (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)])))))}
-       [:div {:id "viewport" :ref viewport-ref :style {:overflow "auto"
-                                                       :width (:width project-settings/viewport-size)
-                                                       :height (:height project-settings/viewport-size)}}
+       [:div {:id "viewport"
+              :ref viewport-ref
+              :style (merge {:overflow "auto"} viewport-size)}
         [:div {:id "drawing-canvas-container" :style {:position "relative"}}
          [:div {:id "canvas-layers"
                 :style {:position "relative"
@@ -786,9 +778,9 @@
                            :width "100%"
                            :height "100%"
                            :position "relative"
-                           :z-index 10}}])]]]]]
-     [drawing-info]]))
+                           :z-index 10}}])]]]]]]))
 
+;; todo: rename
 (defn canvases-section []
   [:f> canvases-section-component])
 
@@ -812,26 +804,10 @@
                     :background (if (= value color/transparent-color-int)
                                   transparent-color-img
                                   (color/int->rgb-str value))
-                    :border "thin solid black"}
+                    :border "thin solid white"}
             :onClick close}])
    (fn [close]
      [current-color-selection-color-picker {:value value :onChange onChange} close])])
-
-(defn current-colors-selection []
-  (let [primary-color @(re-frame/subscribe [::subs/primary-color])
-        secondary-color @(re-frame/subscribe [::subs/secondary-color])]
-    [:div {:style {:position "relative"}}
-     [:div {:style {:position "relative" :z-index 1 :cursor "pointer"}}
-      [current-color-selection {:value primary-color
-                                :onChange (fn [new-primary-color]
-                                            (re-frame/dispatch [::events/set-current-color :primary-color new-primary-color]))}]]
-     [:div {:style {:position "relative" :top "-25px" :right "-32px" :cursor "pointer"}}
-      [current-color-selection {:value secondary-color
-                                :onChange (fn [new-secondary-color]
-                                            (re-frame/dispatch [::events/set-current-color :secondary-color new-secondary-color]))}]]
-     [:div {:onClick (fn [] (re-frame/dispatch [::events/swap-current-colors]))
-            :style {:position "absolute" :top "52px" :left "9px" :cursor "pointer"}}
-      "X"]]))
 
 ;; export import
 
@@ -1128,17 +1104,98 @@
 
 ;; ----------------
 
-(defn main-panel []
+(defn tool-view [{:keys [type selected]}]
+  (let [image-src (str "./imgs/tools/" (name type) ".svg")
+        title (string/replace (name type) "-" " ")]
+    [:button (use-style {:border "none"
+                         :outline "none"
+                         :background-color (if selected "rgba(255,255,255,.2)" "transparent")
+                         :background-image (str "url(" image-src ")")
+                         :background-repeat "no-repeat"
+                         :background-position "50%"
+                         :background-size "50%"
+                         :width "50px"
+                         :height "50px"
+                         :border-radius "4px"
+                         :cursor "pointer"
+                         ::stylefy/mode {:hover {:background-color "rgba(255,255,255,.2)"}}}
+                        {:title title
+                         :on-click (fn []
+                                     (re-frame/dispatch [::events/select-tool type]))})]))
+
+(defn current-colors-selection []
+  (let [primary-color @(re-frame/subscribe [::subs/primary-color])
+        secondary-color @(re-frame/subscribe [::subs/secondary-color])]
+    [:div {:style {:position "relative"}}
+     [:div {:style {:position "relative" :z-index 1 :cursor "pointer"}}
+      [current-color-selection {:value primary-color
+                                :onChange (fn [new-primary-color]
+                                            (re-frame/dispatch [::events/set-current-color :primary-color new-primary-color]))}]]
+     [:div (use-style {:position "relative" :margin-top "-25px" :margin-left "32px" :cursor "pointer"})
+      [current-color-selection {:value secondary-color
+                                :onChange (fn [new-secondary-color]
+                                            (re-frame/dispatch [::events/set-current-color :secondary-color new-secondary-color]))}]]
+     [:img (use-style
+            {:position "absolute"
+             :width "25px"
+             :transform "rotate(52deg)"
+             :top "48px"
+             :left "3px"
+             :cursor "pointer"}
+            {:src "./imgs/swap.svg"
+             :title "Swap colors"
+             :on-click (fn [] (re-frame/dispatch [::events/swap-current-colors]))})]]))
+
+(defn tools-panel []
+  (let [tool @(re-frame/subscribe [::subs/tool])]
+    [:div (use-style {:width "100px"
+                      :background-color "#333"})
+
+     [:div (use-style {:display "grid"
+                       :grid-template-columns "1fr 1fr"
+                       :gap "1px"})
+      (for [type tool/types]
+        [tool-view {:type type :selected (= (:type tool) type)}])]
+
+     [:div (use-style {:display "flex"
+                       :justify-content "center"
+                       :margin-top "15px"})
+      [current-colors-selection]]]))
+
+;;----
+
+(defn tool-options-panel []
   (let [tool @(re-frame/subscribe [::subs/tool])
-        pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])]
-    [:div {:style {:display :grid :grid-template-columns "490px 1fr"}}
-     [:div {:style {:display :flex :flex-direction :column :gap "10px"}}
-      [options-toolbar (:type tool)]
+        options @(re-frame/subscribe [::subs/tool-options]) ;; todo: объединить спеку и опции
+        options-spec (tool/options-specs (:type tool))]
+    [:div (use-style {:display :flex
+                      :align-items :center
+                      :height "30px"
+                      :padding "0 10px"
+                      :gap "12px"
+                      :background-color "#222"})
+     (for [[idx option-spec] (map-indexed vector options-spec)]
+       (let [value (get options (:field option-spec))
+             on-change #(re-frame/dispatch [::events/change-tool-option (:field option-spec) %])
+             props (assoc option-spec
+                          :value value
+                          :onChange on-change)]
+         ^{:key idx}
+         [:div
+          (case (:type option-spec)
+            :slider (slider props)
+            :checkbox (checkbox props))]))]))
+
+(defn main-panel []
+  [:div (use-style {:display :grid :grid-template-columns "100px 1fr 400px"})
+   [tools-panel]
+   [:div (use-style {:display :flex :flex-direction :column})
+    [tool-options-panel]
+    [canvases-section]]
+   [:div (use-style {:background-color "#333"})
+    [drawing-info]]
+   #_[:div
       [:div {:style {:display :flex :gap "8px"}}
-       (select {:value (:type tool)
-                :onChange (fn [tool]
-                            (re-frame/dispatch [::events/select-tool tool]))
-                :options (map (fn [t] {:value t :label (name t)}) tool/types)})
        [checkbox {:value pixels-grid-enabled
                   :label "grid"
                   :onChange (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]]
@@ -1146,7 +1203,6 @@
       [sprite-preview-section]
       [onion-skin-section]
       [palettes-section]
-      [current-colors-selection]
       [project-manage-section]
       [sprite-resizer-manager-section]
       [:<>
@@ -1154,8 +1210,7 @@
        [:button {:onClick (fn [] (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened true]))} "keyboard shortcuts"]
        [:button {:onClick (fn [] (re-frame/dispatch [::new-project-modal/set-opened true]))}
         "new project"]]]
-     [canvases-section]
-     [new-project-modal]]))
+   [new-project-modal]])
 
 (defn app []
   (if @(re-frame/subscribe [::subs/initial-loading])

@@ -13,7 +13,7 @@
 ;; todo: исп полиморфизм?
 
 (def types
-  [:pen :bucket :eraser :color-picker :rectangle :circle :line :rectangle-selection :shape-selection :shading])
+  [:pen :eraser :bucket :color-picker :rectangle :circle :line :rectangle-selection :shape-selection :shading])
 
 (defn init [tool-type]
   ((case tool-type

@@ -8,11 +8,7 @@
 (defn init [] {:type :shading :state {:changes {}}})
 
 (def options-spec
-  [{:type :checkbox
-    :field :lighten
-    :label "Lighten"
-    :initial-value true}
-   {:type :slider
+  [{:type :slider
     :field :pixel-size
     :label "Pixel size"
     :initial-value 1
@@ -23,7 +19,11 @@
     :label "Amount"
     :initial-value 6
     :min 1
-    :max 100}])
+    :max 100}
+   {:type :checkbox
+    :field :lighten
+    :label "Lighten"
+    :initial-value true}])
 
 (defn handle-mouse-event [db event]
   (let [{:keys [user-is-drawing]} db]

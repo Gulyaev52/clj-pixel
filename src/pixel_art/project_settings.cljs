@@ -11,8 +11,6 @@
 (def max-scale 80)
 (def min-scale 0.5)
 
-(def viewport-size {:width 900 :height 700})
-
 (defn get-layer-name [type layers-count]
   (str (if (= type :group) "Group " "Layer ") (inc layers-count)))
 
@@ -42,7 +40,7 @@
                                                y (range 0 (:height sprite-size))]
                                            [{:x x :y y} (color/int (rand-int 255) (rand-int 255) (rand-int 255))]))))))
 
-(defn get-viewport-scroll-pos-to-center [canvas-size drawing-container-size]
+(defn get-viewport-scroll-pos-to-center [canvas-size drawing-container-size viewport-size]
   (let [scroll-dim 15
         canvas-offset-y (/ (:height drawing-container-size) 2)
         absolute-canvas-y (+ canvas-offset-y (/ (:height canvas-size) 2))
@@ -56,16 +54,16 @@
                            (/ (:width canvas-size) 2))]
     {:x canvas-x-middle :y canvas-y-middle}))
 
-(defn get-initial-scale [sprite-size]
+(defn get-initial-scale [sprite-size viewport-size]
   (let [[dim dim-value] (apply max-key second sprite-size)
         offset 100]
     (min (/ (- (dim viewport-size) offset) dim-value) max-scale)))
 
 ;; todo: rename
-(defn get-initial-drawing-settings [sprite]
-  (let [scale (get-initial-scale (:size sprite))
+(defn get-initial-drawing-settings [sprite viewport-size]
+  (let [scale (get-initial-scale (:size sprite) viewport-size)
         canvas-size (update-vals (:size sprite) #(* % scale))
         empty-space-dim 1500
         drawing-container-size (update-vals canvas-size #(+ % empty-space-dim))
-        viewport-scroll (get-viewport-scroll-pos-to-center canvas-size drawing-container-size)]
+        viewport-scroll (get-viewport-scroll-pos-to-center canvas-size drawing-container-size viewport-size)]
     {:scale scale :drawing-container-size drawing-container-size :viewport-scroll viewport-scroll}))

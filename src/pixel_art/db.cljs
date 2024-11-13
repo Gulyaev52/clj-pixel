@@ -17,9 +17,10 @@
                          (map (fn [{:keys [field initial-value]}] [field initial-value]))
                          (into {})))))
 
-(defn get-db [{:keys [sprite palettes primary-color initialized-canvas secondary-color pixels-grid-enabled new-project-modal-opened]}]
-  (merge (project-settings/get-initial-drawing-settings sprite)
+(defn get-db [{:keys [sprite palettes primary-color initialized-canvas secondary-color pixels-grid-enabled new-project-modal-opened viewport-size]}]
+  (merge (project-settings/get-initial-drawing-settings sprite viewport-size)
          {:initialized-canvas initialized-canvas
+          :viewport-size viewport-size
           :size (sprite/get-size sprite)
           :new-project-modal (new-project-modal/init new-project-modal-opened)
           :sprite sprite

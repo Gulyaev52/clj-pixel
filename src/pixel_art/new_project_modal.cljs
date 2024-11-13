@@ -25,9 +25,11 @@
 
 (re-frame/reg-event-fx
  ::create-example-project
- (fn []
+ (fn [{:keys [db]}]
    {:fx [[:dispatch
-          [:initialize-db (project-settings/get-example-project)]]]}))
+          [:initialize-db (assoc (project-settings/get-example-project)
+                                 :viewport-size
+                                 (:viewport-size db))]]]}))
 
 (re-frame/reg-event-fx
  ::create
@@ -35,4 +37,5 @@
    {:fx [[:dispatch
           [:initialize-db
            (assoc project-settings/default-palettes-and-current-colors
-                  :sprite (project-settings/create-empty-sprite (-> db :new-project-modal :size)))]]]}))
+                  :sprite (project-settings/create-empty-sprite (-> db :new-project-modal :size))
+                  :viewport-size (:viewport-size db))]]]}))
