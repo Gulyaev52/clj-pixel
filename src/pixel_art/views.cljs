@@ -631,9 +631,8 @@
      [:div (str "scale=" (. scale (toFixed 2)))]]))
 
 (defn canvases-section-component []
-  (let [ref (react/useRef)
-        viewport-ref (react/useRef)
-        scale @(re-frame/subscribe [::subs/scale])
+  (let [viewport-ref (react/useRef)
+        viewport-size @(re-frame/subscribe [::subs/viewport-size])
         _ (react/useEffect (fn []
                              (let [handler (fn [e]
                                              (. e preventDefault) ;; preventDefault doesn't work when bind onWheel event on tag
@@ -649,136 +648,130 @@
                                                                    (if (< (. e -deltaY) 0) 1.1 (/ 1 1.1))
                                                                    center-pos
                                                                    mouse-offset-pos])))]
-                               (.. ref -current (addEventListener "wheel" handler))
+                               (.. viewport-ref -current (addEventListener "wheel" handler))
                                (fn []
-                                 (.. ref -current (removeEventListener "wheel" handler)))))
-                           (array ref viewport-ref scale))
+                                 (.. viewport-ref -current (removeEventListener "wheel" handler)))))
+                           (array viewport-ref))
+
         onion-skin @(re-frame/subscribe [::subs/onion-skin])
         panning @(re-frame/subscribe [::subs/panning])
         user-is-drawing @(re-frame/subscribe [::subs/user-is-drawing])
         layers @(re-frame/subscribe [::subs/layers])
         pixels-grid-cel-img @(re-frame/subscribe [::subs/pixels-grid-cel-img])
-        viewport-size @(re-frame/subscribe [::subs/viewport-size])]
-    [:div {:style {:display :flex
-                   :flex-direction
-                   :column :gap "10px"
-                   :align-items "center"}}
-     [:div {:style {:display :flex
-                    :justify-content :center
-                    :align-items "center"
-                    :background-color drawing-container-color}}
-      [:div {:style {:position "relative"}
-             :ref ref
-             :onContextMenu (fn [event]
-                              (. event preventDefault))
-             :onMouseDown (fn [event]
-                            (. event preventDefault)
-                            (. event stopPropagation)
-                            (if (is-middle-button? event)
-                              (do
-                                (re-frame/dispatch [::events/start-panning (get-mouse-client-pos event)])
-                                (let [mouse-move (fn [event]
-                                                   (re-frame/dispatch [::events/pan (get-mouse-client-pos event)]))]
-                                  (.. js/document (addEventListener "mousemove" mouse-move))
-                                  (.. js/document (addEventListener "mouseup"
-                                                                    (fn []
-                                                                      (re-frame/dispatch [::events/stop-panning])
-                                                                      (.. js/document (removeEventListener "mousemove" mouse-move)))
-                                                                    #js {"once" true}))))
-                              (let [right-button (is-right-button? event)
+        scale @(re-frame/subscribe [::subs/scale])]
+    [:div {:id "viewport"
+           :ref viewport-ref
+           :style (merge {:overflow "auto"
+                          :position "relative"
+                          :background-color drawing-container-color}
+                         viewport-size)
+           :onContextMenu (fn [event]
+                            (. event preventDefault))
+           :onMouseDown (fn [event]
+                          (. event preventDefault)
+                          (. event stopPropagation)
+                          (if (is-middle-button? event)
+                            (do
+                              (re-frame/dispatch [::events/start-panning (get-mouse-client-pos event)])
+                              (let [mouse-move (fn [event]
+                                                 (re-frame/dispatch [::events/pan (get-mouse-client-pos event)]))]
+                                (.. js/document (addEventListener "mousemove" mouse-move))
+                                (.. js/document (addEventListener "mouseup"
+                                                                  (fn []
+                                                                    (re-frame/dispatch [::events/stop-panning])
+                                                                    (.. js/document (removeEventListener "mousemove" mouse-move)))
+                                                                  #js {"once" true}))))
+                            (let [right-button (is-right-button? event)
 
-                                    mouse-pos (canvas-pos->frame-pos event scale)
+                                  mouse-pos (canvas-pos->frame-pos event scale)
 
-                                    mouse-move (fn [event]
-                                                 (let [scale @(re-frame/subscribe [::subs/scale])
-                                                       mouse-pos (canvas-pos->frame-pos event scale)]
-                                                   (when (not= mouse-pos @!last-mouse-pos)
-                                                     (reset! !last-mouse-pos mouse-pos)
-                                                     (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos right-button]))))
-
-                                    mouse-up (fn mouse-up [event]
+                                  mouse-move (fn [event]
                                                (let [scale @(re-frame/subscribe [::subs/scale])
                                                      mouse-pos (canvas-pos->frame-pos event scale)]
-                                                 (reset! !last-mouse-pos mouse-pos)
-                                                 (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos right-button])
-                                                 (.. js/document (removeEventListener "mousemove" mouse-move))
-                                                 (.. js/document (removeEventListener "mouseup" mouse-up))))]
-                                (re-frame/dispatch [::events/handle-mouse-event :mouse-down mouse-pos right-button])
-                                (.. js/document (addEventListener "mousemove" mouse-move))
-                                (.. js/document (addEventListener "mouseup" mouse-up)))))
-             :onMouseLeave (fn [event]
-                             (when-not (or user-is-drawing panning)
-                               (let [mouse-pos (canvas-pos->frame-pos event scale)]
-                                 (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)]))))
-             :onMouseMove (fn [event]
-                            (when-not (or user-is-drawing panning)
-                              (let [mouse-pos (canvas-pos->frame-pos event scale)]
-                                (when (not= mouse-pos @!last-mouse-pos)
-                                  (reset! !last-mouse-pos mouse-pos)
-                                  (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)])))))}
-       [:div {:id "viewport"
-              :ref viewport-ref
-              :style (merge {:overflow "auto"} viewport-size)}
-        [:div {:id "drawing-canvas-container" :style {:position "relative"}}
-         [:div {:id "canvas-layers"
-                :style {:position "relative"
-                        :left "50%"
-                        :top "50%"
-                        :transform "translate(-50%, -50%)"
-                        :background-image transparent-color-img
-                        :outline drawing-border ;; todo: why not border
-                        }}
-          [:canvas {:id "layers-below"
-                    :className "layer"
-                    :style {:position :absolute
-                            :left 0
-                            :top 0
-                            :imageRendering "pixelated"
-                            :zIndex 0
-                            :width "100%"
-                            :height "100%"}}]
-          [:canvas {:id "current-layer"
-                    :className "layer"
-                    :style {:position :absolute
-                            :left 0
-                            :top 0
-                            :imageRendering "pixelated"
-                            :zIndex 1
-                            :width "100%"
-                            :height "100%"}}]
-          [:canvas {:id "preview"
-                    :style {:position :absolute
-                            :left 0
-                            :top 0
-                            :imageRendering "pixelated"
-                            :zIndex 1
-                            :width "100%"
-                            :height "100%"}}]
-          [:canvas {:id "layers-above"
-                    :className "layer"
-                    :style {:position :absolute
-                            :left 0
-                            :top 0
-                            :imageRendering "pixelated"
-                            :zIndex 2
-                            :width "100%"
-                            :height "100%"}}]
-          [:canvas {:id "onion-skin"
-                    :style {:position :absolute
-                            :left 0
-                            :top 0
-                            :imageRendering "pixelated"
-                            :zIndex (if (= (:position onion-skin) :front)
-                                      (count layers) 0);; todo: подумать тут
-                            :width "100%"
-                            :height "100%"}}]
-          (when pixels-grid-cel-img
-            [:div {:style {:background-image (str "url(\"" pixels-grid-cel-img "\")")
-                           :background-size scale
-                           :width "100%"
-                           :height "100%"
-                           :position "relative"
-                           :z-index 10}}])]]]]]]))
+                                                 (when (not= mouse-pos @!last-mouse-pos)
+                                                   (reset! !last-mouse-pos mouse-pos)
+                                                   (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos right-button]))))
+
+                                  mouse-up (fn mouse-up [event]
+                                             (let [scale @(re-frame/subscribe [::subs/scale])
+                                                   mouse-pos (canvas-pos->frame-pos event scale)]
+                                               (reset! !last-mouse-pos mouse-pos)
+                                               (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos right-button])
+                                               (.. js/document (removeEventListener "mousemove" mouse-move))
+                                               (.. js/document (removeEventListener "mouseup" mouse-up))))]
+                              (re-frame/dispatch [::events/handle-mouse-event :mouse-down mouse-pos right-button])
+                              (.. js/document (addEventListener "mousemove" mouse-move))
+                              (.. js/document (addEventListener "mouseup" mouse-up)))))
+           :onMouseLeave (fn [event]
+                           (when-not (or user-is-drawing panning)
+                             (let [mouse-pos (canvas-pos->frame-pos event scale)]
+                               (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)]))))
+           :onMouseMove (fn [event]
+                          (when-not (or user-is-drawing panning)
+                            (let [mouse-pos (canvas-pos->frame-pos event scale)]
+                              (when (not= mouse-pos @!last-mouse-pos)
+                                (reset! !last-mouse-pos mouse-pos)
+                                (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)])))))}
+     [:div {:id "drawing-canvas-container" :style {:position "relative"}}
+      [:div {:id "canvas-layers"
+             :style {:position "relative"
+                     :left "50%"
+                     :top "50%"
+                     :transform "translate(-50%, -50%)"
+                     :background-image transparent-color-img
+                     :outline drawing-border ;; todo: why not border
+                     }}
+       [:canvas {:id "layers-below"
+                 :className "layer"
+                 :style {:position :absolute
+                         :left 0
+                         :top 0
+                         :imageRendering "pixelated"
+                         :zIndex 0
+                         :width "100%"
+                         :height "100%"}}]
+       [:canvas {:id "current-layer"
+                 :className "layer"
+                 :style {:position :absolute
+                         :left 0
+                         :top 0
+                         :imageRendering "pixelated"
+                         :zIndex 1
+                         :width "100%"
+                         :height "100%"}}]
+       [:canvas {:id "preview"
+                 :style {:position :absolute
+                         :left 0
+                         :top 0
+                         :imageRendering "pixelated"
+                         :zIndex 1
+                         :width "100%"
+                         :height "100%"}}]
+       [:canvas {:id "layers-above"
+                 :className "layer"
+                 :style {:position :absolute
+                         :left 0
+                         :top 0
+                         :imageRendering "pixelated"
+                         :zIndex 2
+                         :width "100%"
+                         :height "100%"}}]
+       [:canvas {:id "onion-skin"
+                 :style {:position :absolute
+                         :left 0
+                         :top 0
+                         :imageRendering "pixelated"
+                         :zIndex (if (= (:position onion-skin) :front)
+                                   (count layers) 0);; todo: подумать тут
+                         :width "100%"
+                         :height "100%"}}]
+       (when pixels-grid-cel-img
+         [:div {:style {:background-image (str "url(\"" pixels-grid-cel-img "\")")
+                        :background-size scale
+                        :width "100%"
+                        :height "100%"
+                        :position "relative"
+                        :z-index 10}}])]]]))
 
 ;; todo: rename
 (defn canvases-section []
