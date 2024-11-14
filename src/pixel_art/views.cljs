@@ -632,7 +632,6 @@
 
 (defn canvases-section-component []
   (let [viewport-ref (react/useRef)
-        viewport-size @(re-frame/subscribe [::subs/viewport-size])
         _ (react/useEffect (fn []
                              (let [handler (fn [e]
                                              (. e preventDefault) ;; preventDefault doesn't work when bind onWheel event on tag
@@ -661,10 +660,11 @@
         scale @(re-frame/subscribe [::subs/scale])]
     [:div {:id "viewport"
            :ref viewport-ref
-           :style (merge {:overflow "auto"
-                          :position "relative"
-                          :background-color drawing-container-color}
-                         viewport-size)
+           :style {:overflow "auto"
+                   :position "relative"
+                   :background-color drawing-container-color
+                   :width "100%"
+                   :height "100%"}
            :onContextMenu (fn [event]
                             (. event preventDefault))
            :onMouseDown (fn [event]
@@ -1180,9 +1180,17 @@
             :checkbox (checkbox props))]))]))
 
 (defn main-panel []
-  [:div (use-style {:display :grid :grid-template-columns "100px 1fr 400px"})
+  [:div (use-style {:display :grid
+                    :grid-template-columns "100px 1fr 400px"
+                    :height "100%"
+                    :width "100%"
+                    :max-height "100%"
+                    :max-width "100%"})
    [tools-panel]
-   [:div (use-style {:display :flex :flex-direction :column})
+   [:div (use-style {:display :flex
+                     :flex-direction :column
+                     :min-width 0
+                     :min-height 0})
     [tool-options-panel]
     [canvases-section]]
    [:div (use-style {:background-color "#333"})

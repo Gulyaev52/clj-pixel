@@ -15,8 +15,6 @@
 
   4) Slider, checkbox, buttons, icon-button, input
 
-  34) отрефат динамич выч viewport
-
 33) удалить .js
 
 оптимизация

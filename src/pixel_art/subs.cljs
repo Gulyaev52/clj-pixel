@@ -40,11 +40,6 @@
    (-> db :sprite :layers)))
 
 (re-frame/reg-sub
- ::viewport-size
- (fn [db]
-   (-> db :viewport-size)))
-
-(re-frame/reg-sub
  ::sprite-resizer-previews
  (fn [db]
    (when (= (-> db :sprite-resizer :opened) true)

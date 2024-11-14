@@ -36,14 +36,12 @@
 (re-frame/reg-fx
  :load-initial-data
  (fn []
-   (let [viewport-size {:width (- (.. js/document -body -clientWidth) 100 400)
-                        :height (- (.. js/window -innerHeight) 30)}] ;; todo: this is not reliable
-     (.. (backup/init-db+)
-         (then backup/get-backup+)
-         (then (fn [backup]
-                 (re-frame/dispatch [:initialize-db (assoc backup :viewport-size viewport-size)])))
-         (catch (fn []
-                  (re-frame/dispatch [:initialize-db {:viewport-size viewport-size}])))))))
+   (.. (backup/init-db+)
+       (then backup/get-backup+)
+       (then (fn [backup]
+               (re-frame/dispatch [:initialize-db backup])))
+       (catch (fn []
+                (re-frame/dispatch [:initialize-db]))))))
 
 (def dispatch-set-keydown-rules
   (let [convert-shortcut-keys #(-> %
@@ -80,10 +78,20 @@
            ;; wait for rendering canvases. todo: refactoring
            [:dispatch-later {:ms 1 :dispatch [::initialize-canvas]}]]})))
 
+(re-frame/reg-cofx
+ ::viewport-size
+ (fn [coeffects _]
+   (let [viewport-rect (.. js/document (getElementById "viewport") (getBoundingClientRect))
+         viewport-size {:width (. viewport-rect -width) :height (. viewport-rect -height)}]
+     (assoc coeffects :viewport-size viewport-size))))
+
 (re-frame/reg-event-fx
  ::initialize-canvas
- (fn [{:keys [db]}]
-   {:db (assoc db :initialized-canvas true)
+ [(re-frame/inject-cofx ::viewport-size)]
+ (fn [{:keys [db viewport-size]}]
+   {:db (merge db
+               {:initialized-canvas true}
+               (project-settings/get-initial-drawing-settings (:sprite db) viewport-size))
     :fx [[:init-canvases]
          [:draw-current-frame]
          [:zoom]]}))
