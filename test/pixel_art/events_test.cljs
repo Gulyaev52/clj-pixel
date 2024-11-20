@@ -172,17 +172,17 @@
 
      (def timeline @(rf/subscribe [::subs/timeline]))
      (is (= (:frames initial-timeline) (:frames initial-timeline)) "frames should not be changes")
-     (is (= [{:visibile? true,
+     (is (= [{:visible? true,
               :automatic-linking? false,
               :name "Layer 1",
               :current false,
               :idx 0}
-             {:visibile? true,
+             {:visible? true,
               :automatic-linking? false,
               :name "Layer 2",
               :current false,
               :idx 1}
-             {:visibile? true,
+             {:visible? true,
               :automatic-linking? false,
               :name "Layer 3",
               :current true,
@@ -217,12 +217,12 @@
             :idx 0}
            {:duration 100, :current true, :idx 1}]
           (:frames timeline)))
-   (is (= [{:visibile? true,
+   (is (= [{:visible? true,
             :automatic-linking? false,
             :name "Layer 1",
             :current false,
             :idx 0}
-           {:visibile? true,
+           {:visible? true,
             :automatic-linking? false,
             :name "Layer 2",
             :current true,
@@ -280,7 +280,7 @@
        (rf/dispatch-sync [::events/remove-layer])
 
        (let [actual-sprite (:sprite @(rf/subscribe [:db]))]
-         (is (= [{:visibile? true,
+         (is (= [{:visible? true,
                   :automatic-linking? false,
                   :name "new-layer"}]
                 (:layers actual-sprite)))
@@ -659,7 +659,7 @@
 
     (let [sprite (:sprite @(rf/subscribe [:db]))]
       (is (= [{:duration 100} {:duration 100}] (:frames sprite)))
-      (is (= [{:visibile? true,
+      (is (= [{:visible? true,
                :automatic-linking? false,
                :name "Layer 1"}]
              (:layers sprite)))
@@ -682,13 +682,13 @@
     (rf/dispatch-sync [::events/move-layer-up])
 
     (let [actual-sprite (:sprite @(rf/subscribe [:db]))]
-      (is (= [{:visibile? true,
+      (is (= [{:visible? true,
                :automatic-linking? false,
                :name "Layer 1"}
-              {:visibile? true,
+              {:visible? true,
                :automatic-linking? false,
                :name "layer 3"}
-              {:visibile? true,
+              {:visible? true,
                :automatic-linking? false,
                :name "layer 2"}]
              (:layers actual-sprite)))
@@ -707,20 +707,23 @@
     (rf/dispatch-sync [::events/move-layer-down])
 
     (let [actual-sprite (:sprite @(rf/subscribe [:db]))]
-      (is (= [{:visibile? true,
+      (is (= [{:visible? true,
                :automatic-linking? false,
                :name "layer 2"}
-              {:visibile? true,
+              {:visible? true,
                :automatic-linking? false,
                :name "Layer 1"}
-              {:visibile? true,
+              {:visible? true,
                :automatic-linking? false,
                :name "layer 3"}]
              (:layers actual-sprite)))
       (is (= (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 1} sprite))
              (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 0} actual-sprite))))
       (is (= (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 0} sprite))
-             (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 1} actual-sprite)))))))
+             (:pixels (sprite/get-cel {:frame-idx 0 :layer-idx 1} actual-sprite))))
+      (is (= {:current true :selected true}
+             (select-keys (sprite/get-cel {:frame-idx 0 :layer-idx 1} actual-sprite)
+                          [:current :selected]))))))
 
 (deftest test-palettes
   (testing "select primary and secondary color"
@@ -794,7 +797,7 @@
 
     (let [initial-palettes @(rf/subscribe [::subs/palettes])]
       (rf/dispatch-sync [::palette/select-palette 1])
-      (rf/dispatch-sync [::palette/download-palette])
+      (rf/dispatch-sync [::palette/export-palette])
       (is (= {:file-name "palette1.gpl",
               :content
               "GIMP Palette
@@ -809,7 +812,7 @@ Columns: 0
 
       (rf/dispatch-sync [::palette/remove-selected-palette])
 
-      (rf/dispatch-sync [::palette/load-palette @!last-download-file])
+      (rf/dispatch-sync [::palette/import-palette @!last-download-file])
       (is (= (-> initial-palettes
                  (assoc-in [0 :current] false)
                  (assoc-in [1 :current] true))

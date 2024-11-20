@@ -215,6 +215,24 @@
        (update-in [:db] history/save-sprite))))
 
 (re-frame/reg-event-fx
+ ::move-frame-left
+ (fn [{:keys [db]}]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] #(sprite/move-frame-left (sprite/get-current-frame-idx %) %))
+       (update-in [:db] history/save-sprite))))
+
+(re-frame/reg-event-fx
+ ::move-frame-right
+ (fn [{:keys [db]}]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type)))
+       (update-in [:db :sprite] #(sprite/move-frame-right (sprite/get-current-frame-idx %) %))
+       (update-in [:db] history/save-sprite))))
+
+(re-frame/reg-event-fx
  ::add-layer
  (fn [{:keys [db]}]
    (let [layer-name (project-settings/get-layer-name :single (-> db :sprite :layers count))
@@ -282,12 +300,24 @@
 
 (re-frame/reg-event-fx
  ::rename-layer
- (fn [{:keys [db]} [_ idx new-name]]
+ (fn [{:keys [db]} [_ new-name]]
    (-> db
        (commit-changes-and-init-tool (get-in db [:tool :state :changes])
                                      (tool/init (-> db :tool :type))) ;; todo: нужно ли?
        (update-in [:db :sprite] (fn [sprite]
-                                  (sprite/update-layer idx #(assoc % :name new-name) sprite))))))
+                                  (sprite/update-layer (sprite/get-current-layer-idx sprite) #(assoc % :name new-name) sprite))))))
+
+(re-frame/reg-event-fx
+ ::toggle-all-layers-visibility
+ (fn [{:keys [db]} [_]]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type))) ;; todo: нужно ли?
+       (update-in [:db :sprite] (fn [sprite]
+                                  (let [layers (:layers sprite)
+                                        some-visible? (some :visible? layers)
+                                        layers (mapv #(assoc % :visible? (not some-visible?)) (:layers sprite))]
+                                    (assoc sprite :layers layers)))))))
 
 (re-frame/reg-event-fx
  ::toggle-layer-visibility
@@ -296,7 +326,19 @@
        (commit-changes-and-init-tool (get-in db [:tool :state :changes])
                                      (tool/init (-> db :tool :type))) ;; todo: нужно ли?
        (update-in [:db :sprite] (fn [sprite]
-                                  (sprite/update-layer idx #(update % :visibile? not) sprite))))))
+                                  (sprite/update-layer idx #(update % :visible? not) sprite))))))
+
+(re-frame/reg-event-fx
+ ::toggle-all-layers-automatic-linking
+ (fn [{:keys [db]} [_]]
+   (-> db
+       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                     (tool/init (-> db :tool :type))) ;; todo: нужно ли?
+       (update-in [:db :sprite] (fn [sprite]
+                                  (let [layers (:layers sprite)
+                                        some-automatic-linking? (some :automatic-linking? layers)
+                                        layers (mapv #(assoc % :automatic-linking? (not some-automatic-linking?)) (:layers sprite))]
+                                    (assoc sprite :layers layers)))))))
 
 (re-frame/reg-event-fx
  ::toggle-layer-automatic-linking

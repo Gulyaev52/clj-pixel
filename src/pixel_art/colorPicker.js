@@ -126,7 +126,7 @@ const Sketch = /*#__PURE__*/React.forwardRef((props, ref) => {
           },
           children: [/*#__PURE__*/_jsx(Hue, {
             width: "auto",
-            height: 10,
+            height: 24,
             hue: hsva.h,
             pointer: Bar,
             innerProps: {
@@ -155,7 +155,7 @@ const Sketch = /*#__PURE__*/React.forwardRef((props, ref) => {
             },
             onChange: handleAlphaChange
           })]
-        }), !disableAlpha && /*#__PURE__*/_jsx(Alpha.default, {
+        }),  /*#__PURE__*/_jsx(Alpha.default, {
           width: 24,
           height: 24,
           hsva: hsva,

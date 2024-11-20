@@ -177,10 +177,19 @@
                  cels-pos
                  sprite)))
 
+(defn can-cels-be-linked? [sprite]
+  (->> (get-selected-cels-pos sprite)
+       (group-by :layer-idx)
+       (some (fn [[_ poses]] (> (count poses) 1)))))
+
 (defn link-selected-cels [main-cel-pos sprite]
   (let [selected-cels-pos (get-selected-cels-pos sprite)
         layer-selected-cels-pos (filter #(= (:layer-idx %) (:layer-idx main-cel-pos)) selected-cels-pos)]
     (link-layer-cels layer-selected-cels-pos main-cel-pos sprite)))
+
+(defn can-cel-be-unlinked? [sprite]
+  (->> (get-current-cel sprite)
+       :group-number))
 
 (defn unlink-selected-cels [sprite]
   (let [selected-cels-pos (get-selected-cels-pos sprite)]
@@ -259,9 +268,9 @@
     (-> sprite
         (assoc :layers new-layers)
         (assoc :cels new-cels)
-        (#(select-layer (max to-idx 0) %)))))
+        (#(select-layer (max (if (> to-idx from-idx) (dec to-idx) to-idx) 0) %)))))
 
-(defn move-layer-up-available? [layer-idx sprite]
+(defn move-layer-up-available? [layer-idx]
   (> layer-idx 0))
 
 (defn move-layer-up [idx sprite]
@@ -348,11 +357,22 @@
                                   sprite))
                sprite)))
 
-;; todo: обновить linked; обновить selected-cels
 (defn move-frame [from-idx to-idx sprite]
   (let [new-frames (coll/movev from-idx to-idx (:frames sprite))
         new-cels (coll/movev from-idx to-idx (:cels sprite))]
     (-> sprite
         (assoc :frames new-frames)
         (assoc :cels new-cels)
-        (#(select-frame (max (dec to-idx) 0) %)))))
+        (#(select-frame (max (if (> to-idx from-idx) (dec to-idx) to-idx) 0) %)))))
+
+(defn move-frame-left-available? [frame-idx]
+  (> frame-idx 0))
+
+(defn move-frame-left [idx sprite]
+  (move-frame idx (- idx 1) sprite))
+
+(defn move-frame-right-available? [frame-idx sprite]
+  (<= frame-idx (- (count (:frames sprite)) 2)))
+
+(defn move-frame-right [idx sprite]
+  (move-frame idx (+ idx 2) sprite))

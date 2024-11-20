@@ -89,7 +89,7 @@
                                                                                 vec)))})))
 
 (re-frame/reg-event-fx
- ::load-palette
+ ::import-palette
  (fn [{:keys [db]} [_ file-desc]]
    (if-let [palette (:ok (gimp-file/parse-content (:content file-desc)))]
      (let [palettes (->> (:palettes db)
@@ -100,7 +100,7 @@
       :fx [[:show-alert "invalid file content"]]})))
 
 (re-frame/reg-event-fx
- ::download-palette
+ ::export-palette
  (fn [{:keys [db]}]
    {:db db
     :fx [[:download-file (->> (get-current-palette db)

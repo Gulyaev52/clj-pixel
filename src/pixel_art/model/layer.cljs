@@ -1,6 +1,6 @@
 (ns pixel-art.model.layer)
 
 (defn create [name]
-  {:visibile? true
+  {:visible? true
    :automatic-linking? false
    :name name})

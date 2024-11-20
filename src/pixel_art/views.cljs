@@ -3,7 +3,6 @@
    ["./colorPicker$default" :as color-picker-js]
    ["react-dnd" :as react-dnd]
    ["react-dnd-html5-backend" :as react-dnd-html5-backend]
-   [clojure.set :as set]
    [clojure.string :as string]
    [pixel-art.canvas :as canvas]
    [pixel-art.events :as events]
@@ -76,6 +75,37 @@
         [:div {:style {:padding "5px" :color "black"}}
          (inc idx)]])]))
 
+(defn section [title children]
+  [:div (use-style {:display "flex"
+                    :align-items "center"
+                    :gap "4px"
+                    :background-color "#171717"
+                    :padding "1px 8px"
+                    :font-size "14px"
+                    :color "white"
+                    :border-radius "5px"})
+   [:div (str title ":")]
+   (into [:div (use-style {:display "flex" :align-items "center"})]
+         children)])
+
+(defn popper []
+  (let [!opened (r/atom false)]
+    (fn [trigger over]
+      [:div {:style {:position "relative"}}
+       (trigger (fn [] (reset! !opened true)))
+       (when @!opened
+         [:div
+          [:div {:style {:position "fixed"
+                         :zIndex 100
+                         :top "0px"
+                         :right "0px"
+                         :bottom "0px"
+                         :left "0px"}
+                 :onClick (fn []
+                            (reset! !opened false))}]
+          [:div {:style {:position "absolute" :zIndex 101 :bottom "calc(100% + 5px)"}}
+           (over (fn [] (reset! !opened false)))]])])))
+
 (defn parse-int [n]
   (let [res (. js/Number (parseInt n))]
     (if (js/isNaN res) nil res)))
@@ -109,7 +139,7 @@
     label]
    control])
 
-(defn slider [{:keys [value label min max step onChange]}]
+(defn slider [{:keys [value label min max step style onChange]}]
   ;; todo: labels
   [:div {:style {:display :flex :align-items :center}}
    [control-label (str label " (" value ")")]
@@ -118,7 +148,7 @@
             :min min
             :max max
             :step step
-            :style {:user-select "none"}
+            :style (merge {:user-select "none"} style)
             :onChange (fn [e]
                         (let [value (parse-double (.. e -target -value))]
                           (onChange value)))}]])
@@ -130,10 +160,43 @@
             :onChange (fn [e] (onChange (.. e -target -checked)))}]
    [control-label label]])
 
+(defn icon-button [{:keys [src title active disabled size on-click]}]
+  [:button (use-style (merge
+                       {:border "none"
+                        :outline "none"
+                        :background-color (if active "rgba(255,255,255,.2)" "transparent")
+                        :background-image (str "url(" src ")")
+                        :background-repeat "no-repeat"
+                        :background-position "50%"
+                        :background-size "70%"
+                        :border-radius "4px"
+                        :opacity (if disabled "0.4" 1)
+                        :cursor "pointer"
+                        ::stylefy/mode {:hover {:background-color "rgba(255,255,255,.2)"}}}
+                       (cond
+                         (= size :sm)
+                         {:width "28px" :height "28px" :min-height "28px" :min-width "28px"}
+                         (= size :xs)
+                         {:width "18px" :height "18px" :min-height "18px" :min-width "18px"}
+                         :else
+                         {:width "100%" :height "100%"}))
+                      {:title title
+                       :disabled disabled
+                       :on-click on-click})])
+
 (defn get-group-color [group-number]
   (nth (cycle ["green" "pink" "yellow" "red" "blue" "purple"]) group-number))
 
-(def cel-height "100px")
+(def cel-height "50px")
+
+(def current-color "yellow")
+(def selected-color "green")
+
+(defn get-border-color [{:keys [current selected]}]
+  (cond
+    current current-color
+    selected selected-color
+    :else "black"))
 
 (defn droppable-zone [{:keys [accept on-drop can-drop]} styles]
   (let [[{:keys [over can-drop]}, ref] (react-dnd/useDrop
@@ -160,42 +223,26 @@
 
 (defn layer-view [layer]
   (let [[_ ref] (react-dnd/useDrag (fn [] #js {"type" "layer" "item" layer}))]
-    [:div {:style {:position "relative"}}
+    [:div (use-style {:display :flex
+                      :align-items "center"
+                      :position "relative"})
      (when (= (:idx layer) 0)
        [:f> droppable-layer-zone (:idx layer) {:top 0 :transform "translateY(-50%)"}])
      [:div {:ref ref
             :onClick (fn [] (re-frame/dispatch [::events/select-layer (:idx layer)]))
             :style {:display :flex
-                    :flex-direction :column
                     :align-items "center"
-                    :justify-content "center"
+                    :padding "4px"
+                    :width "150px"
                     :height cel-height
                     :border-style "solid"
-                    :border-color (if (:current layer)
-                                    "green"
-                                    "black")
+                    :border-color (get-border-color layer)
                     :border-width (if (:current layer)
                                     "2px"
                                     "1px")
                     :cursor "pointer"
-                    :background-color "white"}}
-      [:div {:style {:display :flex}}
-       [:div
-        [:button {:onClick (fn [e]
-                             (. e stopPropagation)
-                             (re-frame/dispatch [::events/toggle-layer-visibility (:idx layer)]))}
-         (if (:visibile? layer) "v0" "v-")]]
-       [:div
-        [:button {:onClick (fn [e]
-                             (. e stopPropagation)
-                             (re-frame/dispatch [::events/toggle-layer-automatic-linking (:idx layer)]))}
-         (if (:automatic-linking? layer) "a+" "a-")]]
-       [:button {:onClick (fn [e]
-                            (. e stopPropagation)
-                            (let [new-name (js/prompt)]
-                              (when (seq (string/trim new-name))
-                                (re-frame/dispatch [::events/rename-layer (:idx layer) new-name]))))}
-        "re"]]
+                    :color "white"
+                    :background-color "#3B3B3B"}}
       (:name layer)]
      [:f> droppable-layer-zone (inc (:idx layer)) {:bottom 0 :transform "translateY(50%)"}]]))
 
@@ -203,7 +250,7 @@
   (droppable-zone {:accept "frame"
                    :on-drop (fn [frame]
                               (re-frame/dispatch [::events/move-frame (:idx frame) idx]))}
-                  (merge {:width "30px" :height "20px"} styles)))
+                  (merge {:width "30px" :height "100%"} styles)))
 
 (defn frame-view [frame]
   (let [[_ ref] (react-dnd/useDrag (fn []
@@ -211,22 +258,28 @@
                                           "item" frame
                                           "collect" (fn [monitor]
                                                       {:dragging (.. monitor isDragging)})}))]
-    [:div {:style {:position "relative"}}
+    [:div {:style {:position "sticky"
+                   :top 0
+                   :z-index 1
+                   :background-color "#333"}}
      (when (= (:idx frame) 0)
        [:f> droppable-frame-zone (:idx frame) {:left 0
                                                :top 0
                                                :transform "translateX(-50%)"}])
      [:div {:onClick (fn [] (re-frame/dispatch [::events/select-frame (:idx frame)]))
             :ref ref
-            :style {:border-style "solid"
-                    :border-color (if (:current frame)
-                                    "green"
-                                    "black")
+            :style {:display "flex"
+                    :align-items "center"
+                    :justify-content "center"
+                    :height "100%"
+                    :border-style "solid"
+                    :border-color (get-border-color frame)
                     :border-width (if (:current frame)
                                     "2px"
                                     "1px")
                     :text-align "center"
-                    :cursor "pointer"}} (inc (:idx frame))]
+                    :cursor "pointer"
+                    :color "white"}} (inc (:idx frame))]
      [:f> droppable-frame-zone (inc (:idx frame)) {:right 0
                                                    :top 0
                                                    :transform "translateX(50%)"}]]))
@@ -248,7 +301,6 @@
                                           "collect" (fn [monitor]
                                                       {:dragging (.. monitor isDragging)})}))
         cel-preview (react/useMemo (fn []
-                                     (println "bla")
                                      (canvas/generate-data-url #(canvas/draw-cel cel %)
                                                                (:size cel)))
                                    (array cel))]
@@ -276,9 +328,7 @@
                     :justify-content :center
                     :height "100%"
                     :border-style "solid"
-                    :border-color (if (:selected cel)
-                                    "green"
-                                    "black")
+                    :border-color (get-border-color cel)
                     :border-width (if (:selected cel)
                                     "2px"
                                     "1px")
@@ -294,16 +344,6 @@
                                                (:height (:size cel)))
                                           {:width "100%"}
                                           {:height "100%"}))]
-      (when (:selected cel)
-        [:div
-         [:button {:onClick (fn [e]
-                              (. e stopPropagation)
-                              (re-frame/dispatch [::events/link-selected-cels (:pos cel)]))
-                   :style {:position :absolute :top 0 :right 0}} "l"]
-         [:button {:onClick (fn [e]
-                              (. e stopPropagation)
-                              (re-frame/dispatch [::events/unlink-selected-cels (:pos cel)]))
-                   :style {:position :absolute :top 25 :right 0}} "u"]])
       [:div {:style {:position "absolute" :top 0}}
        (some-> (:group-number cel) inc)]]
      [:f> droppable-cel-zone
@@ -339,63 +379,54 @@
 
 (defn input-number [props] [:f> input-number-component props])
 
-(defn timeline-panel []
-  (let [{:keys [cels layers frames disabled-actions]} @(re-frame/subscribe [::subs/timeline])
-        current-frame (coll/find-first :current frames) ;; todo: to subs?
-        all-frames-duration (when (apply = (map :duration frames))
-                              (-> frames first :duration))
-        cels-by-layers (-> cels
-                           (#(group-by (fn [c] (-> c :pos :layer-idx)) %))
-                           (update-vals (fn [cels] (sort-by #(-> % :pos :frame-idx) cels))))]
-    [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
-     [:div
-      [:div {:style {:display :flex}} "frames:"
-       [:button {:disabled (:add-frame disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/add-frame]))} "add"]
-       [:button {:disabled (:remove-frame disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/remove-frame]))} "remove"]
-       [:button {:disabled (:duplicate-frame disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/duplicate-frame]))} "duplicate"]
-       [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
-        [:span "Duration (ms)"]
-        [input-number {:value (:duration current-frame)
-                       :on-blur (fn [duration]
-                                  (re-frame/dispatch [::events/set-frame-duration (:idx current-frame) duration]))}]]
+(defn vertical-resizer []
+  (let [container-ref (react/useRef)
+        handler-ref (react/useRef)
+        initial-info-ref (react/useRef)]
+    (react/useEffect (fn []
+                       (when (and (. container-ref -current)
+                                  (. handler-ref -current))
+                         (let [mousemove-handler (fn [e]
+                                                   (. e preventDefault)
+                                                   (. e stopPropagation)
+                                                   (set! (.. js/document -body -style -pointerEvents) "none")
+                                                   (set! (.. js/document -body -style -userSelect) "none")
+                                                   (let [{:keys [mousedown-pos container-height]} (. initial-info-ref -current)
+                                                         height-diff (-> (merge-with -
+                                                                                     {:x (. e -clientX) :y (. e -clientY)}
+                                                                                     mousedown-pos)
+                                                                         :y)]
+                                                     (set! (.. container-ref -current -style -height)
+                                                           (str (max (- container-height height-diff) 0) "px"))))
+                               mousedown-handler (fn [e]
+                                                   (set! (. initial-info-ref -current) {:mousedown-pos {:x (. e -clientX) :y (. e -clientY)}
+                                                                                        :container-height (.. container-ref -current -offsetHeight)})
+                                                   (. js/window (addEventListener "mousemove" mousemove-handler))
+                                                   (. js/window (addEventListener "mouseup" (fn mouseup []
+                                                                                              (set! (.. js/document -body -style -pointerEvents) "")
+                                                                                              (set! (.. js/document -body -style -userSelect) "")
+                                                                                              (. js/window (removeEventListener "mousemove" mousemove-handler))
+                                                                                              (. js/window (removeEventListener "mouseup" mouseup))))))]
+                           (.. handler-ref
+                               -current
+                               (addEventListener "mousedown" mousedown-handler))
+                           (fn []
+                             (.. handler-ref
+                                 -current
+                                 (removeEventListener "mousedown" mousedown-handler))))))
+                     (array (. container-ref -current)
+                            (. handler-ref -current)))
+    {:handler-ref handler-ref
+     :container-ref container-ref}))
 
-       [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
-        [:span "All frames duration (ms)"]
-        [input-number {:value all-frames-duration
-                       :on-blur (fn [duration]
-                                  (re-frame/dispatch [::events/set-frame-duration-for-all duration]))}]]]
-      [:div {:style {:display :flex}} "layers:"
-       [:button {:disabled (:add-layer disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/add-layer]))} "add"]
-       [:button {:disabled (:remove-layer disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/remove-layer]))} "remove"]
-       [:button {:disabled (:duplicate-layer disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/duplicate-layer]))} "duplicate"]
-       [:button {:disabled (:merge-layer-with-below disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/merge-layer-with-below]))} "merge"]
-       [:button {:disabled (:move-layer-up disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/move-layer-up]))} "move up"]
-       [:button {:disabled (:move-layer-down disabled-actions) :onClick (fn [] (re-frame/dispatch [::events/move-layer-down]))} "move down"]]]
-     [:> react-dnd/DndProvider {"backend" react-dnd-html5-backend/HTML5Backend}
-      [:<>
-       [:div {:style {:display :grid
-                      :grid-template-rows "15px"
-                      :grid-auto-rows cel-height
-                      :grid-template-columns (str "100px " (->> (repeat (count frames) "100px") (string/join " ")))
-                      :grid-column-gap "4px"
-                      :grid-row-gap "4px"}}
-        [:div "Layers"]
-        (for [frame frames] ^{:key (:idx frame)}
-             [:f> frame-view frame])
-        (for [layer layers]
-          ^{:key (:idx layer)}
-          [:<> [:f> layer-view layer]
-           (for [cel (cels-by-layers (:idx layer))]
-             ^{:key (str (:frame-idx (:pos cel)) "-" (:layer-idx (:pos cel)))}
-             [:f> cel-view cel])])]]]]))
-
-(defn select [{:keys [value onChange options]}]
+(defn select [{:keys [value onChange block options]}]
   (let [selected-option-idx (ffirst (filter #(= (:value (second %)) value) (map-indexed vector options)))]
-    [:select {:value (or selected-option-idx "")
-              :onChange (fn [event]
-                          (let [selected-option (nth options (parse-double (.. event -target -value)) nil)]
-                            (when selected-option
-                              (onChange (:value selected-option)))))}
+    [:select (use-style {:width (if block "100%" "auto")}
+                        {:value (or selected-option-idx "")
+                         :on-change (fn [event]
+                                      (let [selected-option (nth options (parse-double (.. event -target -value)) nil)]
+                                        (when selected-option
+                                          (onChange (:value selected-option)))))})
      (for [[idx opt] (map-indexed vector options)]
        ^{:key idx}
        [:option {:value idx} (:label opt)])]))
@@ -427,7 +458,255 @@
      [preview-image frame-img {:height (:height image-size)}]]))
 
 (defn sprite-preview-modal []
-  [:f> sprite-preview-modal-component])
+  (let [opened (:opened @(re-frame/subscribe [::subs/sprite-preview]))]
+    (when opened
+      [:f> sprite-preview-modal-component])))
+
+(defn onion-skin-settings []
+  (let [onion-skin @(re-frame/subscribe [::subs/onion-skin])]
+    [:div (use-style {:width "300px"
+                      :padding "8px"
+                      :background-color "#333333"
+                      :border-radius "2px"
+                      :border "2px solid #C0C0C0"
+                      :color "white"})
+     [:div (use-style {:display :grid
+                       :grid-template-columns "1fr 1fr"})
+      [:span "Previous Frames"]
+      [:input {:style {:width "100%"}
+               :type "number"
+               :min 0
+               :value (:prev (:frames-count onion-skin))
+               :onChange (fn [e]
+                           (re-frame/dispatch [::onion-skin/set-frames-count {:prev (parse-double (.. e -target -value))
+                                                                              :next (:next (:frames-count onion-skin))}]))}]]
+     [:div (use-style {:display :grid
+                       :grid-template-columns "1fr 1fr"})
+      [:span "Next Frames"]
+      [:input {:style {:width "100%"}
+               :type "number"
+               :min 0
+               :value (:next (:frames-count onion-skin))
+               :onChange (fn [e]
+                           (re-frame/dispatch [::onion-skin/set-frames-count {:prev (:prev (:frames-count onion-skin))
+                                                                              :next (parse-double (.. e -target -value))}]))}]]
+     [:div (use-style {:display :grid
+                       :grid-template-columns "1fr 1fr"})
+      [:span "Opacity"]
+      [slider {:min 0 :max 1 :step 0.1
+               :value (:opacity onion-skin)
+               :style {:width "100%"}
+               :onChange (fn [v] (re-frame/dispatch [::onion-skin/set-opacity v]))}]]
+     [:div (use-style {:display :grid
+                       :grid-template-columns "1fr 1fr"})
+      [:span "Position"]
+      [select {:value (:position onion-skin)
+               :options [{:value :front :label "in front of sprite"}
+                         {:value :behind :label "behind sprite"}]
+               :onChange (fn [v] (re-frame/dispatch [::onion-skin/set-position v]))}]]]))
+
+(defn timeline-panel-toolbar [{:keys [disabled-actions all-frames-duration current-frame]}]
+  (let [onion-skin-enabled @(re-frame/subscribe [::subs/onion-skin-enabled])]
+    [:div (use-style {:display "flex" :justify-content "space-between"})
+     [:div (use-style {:display "flex" :gap "20px"})
+
+      [section "Frames" [[icon-button {:src "./imgs/add.svg"
+                                       :title "add empty frame"
+                                       :disabled (:add-frame disabled-actions)
+                                       :size :sm
+                                       :on-click (fn [] (re-frame/dispatch [::events/add-frame]))}]
+                         [icon-button {:src "./imgs/remove.svg"
+                                       :title "remove frame"
+                                       :disabled (:remove-frame disabled-actions)
+                                       :size :sm
+                                       :on-click (fn [] (re-frame/dispatch [::events/remove-frame]))}]
+                         [icon-button {:src "./imgs/duplicate.svg"
+                                       :title "duplicate frame"
+                                       :disabled (:duplicate-frame disabled-actions)
+                                       :size :sm
+                                       :on-click (fn [] (re-frame/dispatch [::events/duplicate-frame]))}]
+                         [icon-button {:src "./imgs/arrow-left.svg"
+                                       :title "move frame left"
+                                       :disabled (:move-frame-left disabled-actions)
+                                       :size :sm
+                                       :on-click (fn [] (re-frame/dispatch [::events/move-frame-left]))}]
+                         [icon-button {:src "./imgs/arrow-right.svg"
+                                       :title "move frame right"
+                                       :disabled (:move-frame-right disabled-actions)
+                                       :size :sm
+                                       :on-click (fn [] (re-frame/dispatch [::events/move-frame-right]))}]]]
+
+      [section "Layers" [[icon-button {:src "./imgs/add.svg"
+                                       :title "add layer"
+                                       :disabled (:add-layer disabled-actions)
+                                       :size :sm
+                                       :on-click (fn [] (re-frame/dispatch [::events/add-layer]))}]
+                         [icon-button {:src "./imgs/remove.svg"
+                                       :title "remove layer"
+                                       :disabled (:remove-layer disabled-actions)
+                                       :size :sm
+                                       :on-click (fn [] (re-frame/dispatch [::events/remove-layer]))}]
+                         [icon-button {:src "./imgs/duplicate.svg"
+                                       :title "duplicate layer"
+                                       :disabled (:duplicate-layer disabled-actions)
+                                       :size :sm
+                                       :on-click (fn [] (re-frame/dispatch [::events/duplicate-layer]))}]
+                         [icon-button {:src "./imgs/merge-down.svg"
+                                       :title "merge layer with below"
+                                       :disabled (:merge-layer-with-below disabled-actions)
+                                       :size :sm
+                                       :on-click (fn [] (re-frame/dispatch [::events/merge-layer-with-below]))}]
+                         [icon-button {:src "./imgs/arrow-up.svg"
+                                       :title "move layer up"
+                                       :disabled (:move-layer-up disabled-actions)
+                                       :size :sm
+                                       :on-click (fn [] (re-frame/dispatch [::events/move-layer-up]))}]
+                         [icon-button {:src "./imgs/arrow-down.svg"
+                                       :title "move layer down"
+                                       :disabled (:move-layer-down disabled-actions)
+                                       :size :sm
+                                       :on-click (fn [] (re-frame/dispatch [::events/move-layer-down]))}]
+                         [icon-button {:src "./imgs/edit.svg"
+                                       :title "rename layer"
+                                       :size :sm
+                                       :on-click (fn [e]
+                                                   (. e stopPropagation)
+                                                   (let [new-name (js/prompt)]
+                                                     (when (seq (string/trim new-name))
+                                                       (re-frame/dispatch [::events/rename-layer new-name]))))}]]]
+
+      [section "Cels" [[icon-button {:src "./imgs/link.svg"
+                                     :title "link cels"
+                                     :disabled (:link-cels disabled-actions)
+                                     :size :sm
+                                     :on-click (fn [] (re-frame/dispatch [::events/link-selected-cels]))}]
+                       [icon-button {:src "./imgs/link-off.svg"
+                                     :title "unlink cels"
+                                     :disabled (:unlink-cel disabled-actions)
+                                     :size :sm
+                                     :on-click (fn [] (re-frame/dispatch [::events/unlink-selected-cels]))}]]]
+
+      [section "Onion skin"
+       [[icon-button {:src (if onion-skin-enabled "./imgs/layers-off.svg" "./imgs/layers.svg")
+                      :title (if onion-skin-enabled "disable onion skin" "enable onion skin")
+                      :size :sm
+                      :on-click (fn [] (re-frame/dispatch [::onion-skin/set-enabled (not onion-skin-enabled)]))}]
+        [popper
+         (fn [open]
+           [icon-button {:src "./imgs/cog.svg"
+                         :title "onion skin settings"
+                         :size :sm
+                         :on-click open}])
+         (fn []
+           [onion-skin-settings])]]]]
+
+     [:div (use-style {:display :flex :color :white})
+      [:<>
+       [sprite-preview-modal]
+       [:button {:onClick (fn [] (re-frame/dispatch [::sprite-preview/open]))} "show preview"]]
+      [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
+       [:span "Duration (ms)"]
+       [input-number {:value (:duration current-frame)
+                      :on-blur (fn [duration]
+                                 (re-frame/dispatch [::events/set-frame-duration (:idx current-frame) duration]))}]]
+
+      [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
+       [:span "All frames duration (ms)"]
+       [input-number {:value all-frames-duration
+                      :on-blur (fn [duration]
+                                 (re-frame/dispatch [::events/set-frame-duration-for-all duration]))}]]]]))
+
+(defn timeline-panel []
+  (let [{:keys [cels layers frames disabled-actions some-layer-visible some-layer-automatic-linking]} @(re-frame/subscribe [::subs/timeline])
+        current-frame (coll/find-first :current frames) ;; todo: to subs?
+        all-frames-duration (when (apply = (map :duration frames))
+                              (-> frames first :duration))
+        cels-by-layers (-> cels
+                           (#(group-by (fn [c] (-> c :pos :layer-idx)) %))
+                           (update-vals (fn [cels] (sort-by #(-> % :pos :frame-idx) cels))))
+        vertical-resizer-refs (vertical-resizer)]
+    [:div (use-style {:display "flex"
+                      :flex-direction "column"
+                      :padding "4px"
+                      :gap "4px"
+                      :flex-shrink 0
+                      :height "300px"
+                      :min-height "16px"
+                      :max-height "calc(100% - 30px)"
+                      :border "2px solid #171717"
+                      :background-color "#333"}
+                     {:ref (:container-ref vertical-resizer-refs)})
+
+     [:div (use-style {:min-height "4px"
+                       :width "40px"
+                       :background-color "gray"
+                       :cursor "grab"
+                       :align-self "center"}
+                      {:ref (:handler-ref vertical-resizer-refs)})]
+
+     [timeline-panel-toolbar {:current-frame current-frame
+                              :disabled-actions disabled-actions
+                              :all-frames-duration all-frames-duration}]
+
+     [:> react-dnd/DndProvider {"backend" react-dnd-html5-backend/HTML5Backend}
+      [:<>
+       [:div {:style {:display :grid
+                      :grid-template-rows "min-content"
+                      :grid-auto-rows cel-height
+                      :grid-template-columns (str "min-content min-content " (->> (repeat (count frames) "100px") (string/join " ")))
+                      :grid-column-gap "4px"
+                      :grid-row-gap "4px"
+                      :margin-top "4px"
+                      :overflow "auto"}}
+        [:div (use-style {:display "flex"
+                          :align-items "center"
+                          :position "sticky"
+                          :z-index 1
+                          :top 0
+                          :background-color "#333"})
+         [icon-button {:src (if some-layer-visible
+                              "./imgs/visibility.svg"
+                              "./imgs/visibility-off.svg")
+                       :title "toggle all layers visibility"
+                       :size :sm
+                       :on-click (fn []
+                                   (re-frame/dispatch [::events/toggle-all-layers-visibility]))}]
+         [icon-button {:src (if some-layer-automatic-linking
+                              "./imgs/link.svg"
+                              "./imgs/link-off.svg")
+                       :title "toggle all layers automatic linking"
+                       :size :sm
+                       :on-click (fn []
+                                   (re-frame/dispatch [::events/toggle-all-layers-automatic-linking]))}]]
+        [:div (use-style {:position "sticky"
+                          :z-index 1
+                          :top 0
+                          :background-color "#333"})]
+        (for [frame frames] ^{:key (:idx frame)}
+             [:f> frame-view frame])
+        (for [layer layers]
+          ^{:key (:idx layer)}
+          [:<>
+           [:div (use-style {:display "flex"
+                             :align-items "center"})
+            [icon-button {:src (if (:visible? layer)
+                                 "./imgs/visibility.svg"
+                                 "./imgs/visibility-off.svg")
+                          :title "toggle layer's visibility"
+                          :size :sm
+                          :on-click (fn []
+                                      (re-frame/dispatch [::events/toggle-layer-visibility (:idx layer)]))}]
+            [icon-button {:src (if (:automatic-linking? layer)
+                                 "./imgs/link.svg"
+                                 "./imgs/link-off.svg")
+                          :title "toggle layer's automatic linking"
+                          :size :sm
+                          :on-click (fn []
+                                      (re-frame/dispatch [::events/toggle-layer-automatic-linking (:idx layer)]))}]]
+           [:f> layer-view layer]
+           (for [cel (cels-by-layers (:idx layer))]
+             ^{:key (str (:frame-idx (:pos cel)) "-" (:layer-idx (:pos cel)))}
+             [:f> cel-view cel])])]]]]))
 
 (defn color-picker [{:keys [value presetColors actions onChange]}]
   [:> color-picker-js
@@ -438,25 +717,7 @@
     :onChange (fn [e] (let [rgba (. e -rgba)]
                         (onChange (color/int (. rgba -r) (. rgba -g) (. rgba -b) (. rgba -a)))))}])
 
-(defn popper []
-  (let [!opened (r/atom false)]
-    (fn [trigger over]
-      [:div {:style {:position "relative"}}
-       (trigger (fn [] (reset! !opened true)))
-       (when @!opened
-         [:div
-          [:div {:style {:position "fixed"
-                         :zIndex 100
-                         :top "0px"
-                         :right "0px"
-                         :bottom "0px"
-                         :left "0px"}
-                 :onClick (fn []
-                            (reset! !opened false))}]
-          [:div {:style {:position "absolute" :zIndex 101 :bottom "calc(100% + 5px)"}}
-           (over (fn [] (reset! !opened false)))]])])))
-
-(defn file-uploader-comp [{:keys [onUpload accept]} label]
+(defn file-uploader-comp [{:keys [onUpload accept]} render-button]
   (let [input-ref (react/useRef)]
     [:span
      [:input {:type "file"
@@ -473,12 +734,11 @@
                                 (. file-reader (readAsText file)))))
                           (set! (.. e -target -value) "") ;; without this line onChange is not triggered when the same file is choosen twice
                           )}]
-     [:button {:onClick (fn []
-                          (.. input-ref -current click))}
-      label]]))
+     [render-button (fn []
+                      (.. input-ref -current click))]]))
 
-(defn file-uploader [props label]
-  [:f> file-uploader-comp props label])
+(defn file-uploader [props render-button]
+  [:f> file-uploader-comp props render-button])
 
 ;; todo: зачем-это?
 (defn- replace-transparent-color [color]
@@ -506,120 +766,111 @@
                      :onCancel (fn []
                                  (onClose))}])))
 
+(defn palette-colors [{:keys [colors primary-color secondary-color]}]
+  [:div {:style {:display :grid
+                 :grid-template-columns "repeat(auto-fill, 35px)" ;; todo: dynamic
+                 :grid-auto-rows "35px"
+                 :grid-gap "2px"
+                 :height "100%"
+                 :overflow "auto"}}
+   (println colors)
+   (doall
+    (for [[idx color] (map-indexed vector colors)]
+      (let [dark? (.. (color/->tinycolor color) isDark)]
+        ^{:key color}
+        [:div (use-style {:background-color (color/int->rgb-str color)
+                          :position "relative"
+                          :cursor "pointer"
+                          :color (if dark? "white" "black")
+                          ::stylefy/manual [[:&:hover [:.remove-color {:opacity 1}]]]}
+                         {:on-click (fn []
+                                      (re-frame/dispatch [::palette/select-color idx false]))
+                          :on-context-menu (fn [e]
+                                             (. e preventDefault)
+                                             (re-frame/dispatch [::palette/select-color idx true]))})
+         (when (= color primary-color) "L")
+         (when (= color secondary-color) "R")
+         [:div (use-style {:position "absolute"
+                           :right "1px"
+                           :top "1px"
+                           :opacity 0}
+                          {:class "remove-color"})
+          [icon-button {:src (if dark? "./imgs/close.svg" "./imgs/close-black.svg") ;; todo: fix
+                        :title "remove color"
+                        :size :xs
+                        :on-click (fn [e]
+                                    (.. e (stopPropagation))
+                                    (re-frame/dispatch [::palette/remove-color idx]))}]]])))])
+
 (defn palettes-section []
   (let [palettes @(re-frame/subscribe [::subs/palettes])
         current-palette-idx (coll/find-first-idx :current palettes)
         current-palette (coll/find-first :current palettes)
         primary-color @(re-frame/subscribe [::subs/primary-color])
         secondary-color @(re-frame/subscribe [::subs/secondary-color])]
-    [:div
-     [:div {:style {:display :flex}}
-      [select {:value current-palette-idx
-               :options (map-indexed (fn [idx p] {:value idx :label (:name p)}) palettes)
-               :onChange (fn [idx]
-                           (re-frame/dispatch [::palette/select-palette idx]))}]
-      [:button {:onClick (fn []
-                           (when-let [name (js/prompt)]
-                             (re-frame/dispatch [::palette/create-palette name])))}
-       "add palette"]
-      [:button {:onClick (fn []
-                           (when (js/confirm "are you sure?")
-                             (re-frame/dispatch [::palette/remove-selected-palette])))
-                :disabled (not (deletable-palette? palettes))}
-       "remove palette"]
-      [:button {:onClick (fn []
-                           (when-let [name (js/prompt)]
-                             (re-frame/dispatch [::palette/rename-selected-palette name])))}
-       "rename palette"]
-      [:button {:onClick (fn []
-                           (re-frame/dispatch [::palette/add-colors-from-frame]))}
-       "add colors from current frame"]]
-     [:div {:style {:display :grid
-                    :grid-template-columns "repeat(auto-fill, 33px)"
-                    :grid-gap "2px"
-                    :width "200px"}}
-      (for [[idx color] (map-indexed vector (:colors current-palette))]
-        ^{:key color}
-        [:div {:onClick (fn []
-                          (re-frame/dispatch [::palette/select-color idx false]))
-               :onContextMenu (fn [e]
-                                (. e preventDefault)
-                                (re-frame/dispatch [::palette/select-color idx true]))
-               :style {:width "33px"
-                       :height "33px"
-                       :background-color (color/int->rgb-str color)
-                       :position "relative"
-                       :cursor "pointer"
-                       :color (if (.. (color/->tinycolor color) isDark)
-                                "white" "black")}}
-         (when (= color primary-color) "L")
-         (when (= color secondary-color) "R")
-         [:div {:onClick (fn [e]
-                           (.. e (stopPropagation))
-                           (re-frame/dispatch [::palette/remove-color idx]))
-                :style {:position "absolute"
-                        :right 1
-                        :top 1}}
-          "X"]])]
-     [:button {:onClick (fn [] (re-frame/dispatch [::palette/download-palette]))}
-      "download"]
-     [file-uploader {:onUpload (fn [file-desc]
-                                 (re-frame/dispatch [::palette/load-palette file-desc]))}
-      "load"]
-     [popper
-      (fn [close]
-        [:button {:onClick close} "add color"])
-      (fn [close]
-        [add-new-color-picker {:onClose close}])]]))
+    [:div (use-style {:display "flex"
+                      :flex-direction "column"
+                      :height "300px"})
+     [select {:value current-palette-idx
+              :options (map-indexed (fn [idx p] {:value idx :label (:name p)}) palettes)
+              :block true
+              :onChange (fn [idx]
+                          (re-frame/dispatch [::palette/select-palette idx]))}]
 
-(defn sprite-preview-section []
-  (let [sprite-preview @(re-frame/subscribe [::subs/sprite-preview])]
-    [:div
-     (when (:opened sprite-preview)
-       [sprite-preview-modal])
-     [:div {:style {:display :flex :gap "4px"}}
-      "preview size"
-      [select {:value (:size sprite-preview)
-               :options (map (fn [s] {:value s :label (name s)}) [:1x :2x :4x :custom])
-               :onChange (fn [s] (re-frame/dispatch [::sprite-preview/set-size s]))}]]
-     [:button {:onClick (fn [] (re-frame/dispatch [::sprite-preview/open]))} "show preview"]]))
+     [:div (use-style {:display "flex" :justify-content "space-between"})
+      [popper
+       (fn [close]
+         [icon-button {:src "./imgs/add.svg"
+                       :title "Add color"
+                       :size :sm
+                       :on-click close}])
+       (fn [close]
+         [add-new-color-picker {:onClose close}])]
 
-(defn onion-skin-section []
-  (let [onion-skin @(re-frame/subscribe [::subs/onion-skin])]
-    [:div
-     [:button {:onClick (fn [] (re-frame/dispatch [::onion-skin/set-enabled (not (:enabled onion-skin))]))}
-      (if (:enabled onion-skin)
-        "disable onion skin"
-        "enable onion skin")]
-     [:div
-      [:div "frames count"]
-      [:div {:style {:display :flex :gap "8px"}}
-       [:div
-        [:span {:style {:margin-right "4px"}} "prev"]
-        [:input {:style {:width "50px"}
-                 :type "number"
-                 :min 0
-                 :value (:prev (:frames-count onion-skin))
-                 :onChange (fn [e]
-                             (re-frame/dispatch [::onion-skin/set-frames-count {:prev (parse-double (.. e -target -value))
-                                                                                :next (:next (:frames-count onion-skin))}]))}]]
-       [:div
-        [:span {:style {:margin-right "4px"}} "next"]
-        [:input {:style {:width "50px"}
-                 :type "number"
-                 :min 0
-                 :value (:next (:frames-count onion-skin))
-                 :onChange (fn [e]
-                             (re-frame/dispatch [::onion-skin/set-frames-count {:prev (:prev (:frames-count onion-skin))
-                                                                                :next (parse-double (.. e -target -value))}]))}]]]]
-     [slider {:min 0 :max 1 :step 0.1
-              :value (:opacity onion-skin)
-              :label "Opacity"
-              :onChange (fn [v] (re-frame/dispatch [::onion-skin/set-opacity v]))}]
-     [select {:value (:position onion-skin)
-              :options [{:value :front :label "in front of sprite"}
-                        {:value :behind :label "behind sprite"}]
-              :onChange (fn [v] (re-frame/dispatch [::onion-skin/set-position v]))}]]))
+      [:div
+       [icon-button {:src "./imgs/new-palette.svg"
+                     :title "Add palette"
+                     :size :sm
+                     :on-click (fn []
+                                 (when-let [name (js/prompt)]
+                                   (re-frame/dispatch [::palette/create-palette name])))}]
+       [icon-button {:src "./imgs/remove.svg"
+                     :title "Remove palette"
+                     :size :sm
+                     :disabled (not (deletable-palette? palettes))
+                     :on-click (fn []
+                                 (when (js/confirm "are you sure?")
+                                   (re-frame/dispatch [::palette/remove-selected-palette])))}]
+       [icon-button {:src "./imgs/edit.svg"
+                     :title "Rename palette"
+                     :size :sm
+                     :disabled (not (deletable-palette? palettes))
+                     :on-click (fn []
+                                 (when-let [name (js/prompt)]
+                                   (re-frame/dispatch [::palette/rename-selected-palette name])))}]
+       [icon-button {:src "./imgs/adjust.svg"
+                     :title "Add colors from current frame"
+                     :size :sm
+                     :on-click (fn []
+                                 (re-frame/dispatch [::palette/add-colors-from-frame]))}]]
+
+      [:div
+       [icon-button {:src "./imgs/file-export.svg"
+                     :title "Export palette"
+                     :size :sm
+                     :on-click (fn [] (re-frame/dispatch [::palette/export-palette]))}]
+       [file-uploader {:onUpload (fn [file-desc]
+                                   (re-frame/dispatch [::palette/import-palette file-desc]))}
+        (fn [on-click]
+          [icon-button {:src "./imgs/file-import.svg"
+                        :title "Import palette"
+                        :size :sm
+                        :on-click on-click}])]]]
+
+     [:div (use-style {:flex-grow 1 :min-height 0})
+      [palette-colors {:colors (:colors current-palette)
+                       :primary-color primary-color
+                       :secondary-color secondary-color}]]]))
 
 (defn drawing-info []
   (let [mouse-pos @(re-frame/subscribe [::subs/mouse-pos])
@@ -664,7 +915,7 @@
                    :position "relative"
                    :background-color drawing-container-color
                    :width "100%"
-                   :height "100%"}
+                   :flex-grow 1}
            :onContextMenu (fn [event]
                             (. event preventDefault))
            :onMouseDown (fn [event]
@@ -940,18 +1191,6 @@
            :image [export-image-settings-form]
            :spritesheet [export-spritesheet-settings-form])]]])))
 
-(defn project-manage-section []
-  [:<>
-   [export-modal]
-   [:div
-    [:button {:onClick (fn [] (re-frame/dispatch [::project-save-load/save-as-file]))}
-     "save as file"]
-    [file-uploader {:onUpload (fn [file-desc]
-                                (re-frame/dispatch [::project-save-load/load-from-file file-desc]))}
-     "load from file"]
-    [:button {:onClick (fn [] (re-frame/dispatch [::export/set-opened true]))}
-     "open export panel"]]])
-
 ;; -----------------
 
 (defn sprite-resizer-modal []
@@ -1020,11 +1259,6 @@
                                 (re-frame/dispatch [::sprite-resizer/set-settings-option :anchor {:x x :y y}]))}])]]
           [previews-container {}
            [previews-grid-items previews]]]]))))
-
-(defn sprite-resizer-manager-section []
-  [:<>
-   [sprite-resizer-modal]
-   [:button {:onClick (fn [] (re-frame/dispatch [::sprite-resizer/set-opened true]))} "resize"]])
 
 ;; -----------------
 
@@ -1100,21 +1334,13 @@
 (defn tool-view [{:keys [type selected]}]
   (let [image-src (str "./imgs/tools/" (name type) ".svg")
         title (string/replace (name type) "-" " ")]
-    [:button (use-style {:border "none"
-                         :outline "none"
-                         :background-color (if selected "rgba(255,255,255,.2)" "transparent")
-                         :background-image (str "url(" image-src ")")
-                         :background-repeat "no-repeat"
-                         :background-position "50%"
-                         :background-size "50%"
-                         :width "50px"
-                         :height "50px"
-                         :border-radius "4px"
-                         :cursor "pointer"
-                         ::stylefy/mode {:hover {:background-color "rgba(255,255,255,.2)"}}}
-                        {:title title
-                         :on-click (fn []
-                                     (re-frame/dispatch [::events/select-tool type]))})]))
+    [:div (use-style {:width "50px" :height "50px"})
+     [icon-button {:src image-src
+                   :title title
+                   :active selected
+                   :size :auto
+                   :on-click (fn []
+                               (re-frame/dispatch [::events/select-tool type]))}]]))
 
 (defn current-colors-selection []
   (let [primary-color @(re-frame/subscribe [::subs/primary-color])
@@ -1164,6 +1390,7 @@
     [:div (use-style {:display :flex
                       :align-items :center
                       :height "30px"
+                      :flex-shrink 0
                       :padding "0 10px"
                       :gap "12px"
                       :background-color "#222"})
@@ -1179,39 +1406,68 @@
             :slider (slider props)
             :checkbox (checkbox props))]))]))
 
-(defn main-panel []
-  [:div (use-style {:display :grid
-                    :grid-template-columns "100px 1fr 400px"
+(defn right-sidebar []
+  [:div (use-style {:display "flex"
+                    :flex-direction "column"
                     :height "100%"
+                    :background-color "#333"})
+   [drawing-info]
+   [:div (use-style {:margin-top "auto"})
+    [palettes-section]]])
+
+(defn header-toolbar []
+  (let [pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])]
+    [:div (use-style {:display "flex"
+                      :gap "4px"
+                      :padding "5px"
+                      :background-color "#333"
+                      :border-bottom "2px solid #171717"})
+     [:<>
+      [new-project-modal]
+      [:button {:onClick (fn [] (re-frame/dispatch [::new-project-modal/set-opened true]))}
+       "new project"]]
+     [:button {:onClick (fn [] (re-frame/dispatch [::project-save-load/save-as-file]))}
+      "save project as file"]
+     [file-uploader {:onUpload (fn [file-desc]
+                                 (re-frame/dispatch [::project-save-load/load-from-file file-desc]))}
+      (fn [on-click]
+        [:button {:onClick on-click}
+         "load project from file"])]
+     [:<>
+      [:button {:onClick (fn [] (re-frame/dispatch [::export/set-opened true]))}
+       "open project export panel"]
+      [export-modal]]
+     [:<>
+      [sprite-resizer-modal]
+      [:button {:onClick (fn [] (re-frame/dispatch [::sprite-resizer/set-opened true]))} "resize"]]
+     [:<>
+      [:button {:onClick (fn [] (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened true]))} "keyboard shortcuts"]
+      [keyboard-shortcuts-modal]]
+     [checkbox {:value pixels-grid-enabled
+                :label "grid"
+                :onChange (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]]))
+
+(defn main-panel []
+  [:div (use-style {:height "100%"
                     :width "100%"
                     :max-height "100%"
                     :max-width "100%"})
-   [tools-panel]
-   [:div (use-style {:display :flex
-                     :flex-direction :column
-                     :min-width 0
-                     :min-height 0})
-    [tool-options-panel]
-    [canvases-section]]
-   [:div (use-style {:background-color "#333"})
-    [drawing-info]]
-   #_[:div
-      [:div {:style {:display :flex :gap "8px"}}
-       [checkbox {:value pixels-grid-enabled
-                  :label "grid"
-                  :onChange (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]]
-      [:div [:f> timeline-panel]]
-      [sprite-preview-section]
-      [onion-skin-section]
-      [palettes-section]
-      [project-manage-section]
-      [sprite-resizer-manager-section]
-      [:<>
-       [keyboard-shortcuts-modal]
-       [:button {:onClick (fn [] (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened true]))} "keyboard shortcuts"]
-       [:button {:onClick (fn [] (re-frame/dispatch [::new-project-modal/set-opened true]))}
-        "new project"]]]
-   [new-project-modal]])
+   [header-toolbar]
+   [:div (use-style {:display :grid
+                     :grid-template-columns "100px 1fr 250px"
+                     :height "100%"
+                     :width "100%"
+                     :max-height "100%"
+                     :max-width "100%"})
+    [tools-panel]
+    [:div (use-style {:display :flex
+                      :flex-direction :column
+                      :min-width 0
+                      :min-height 0})
+     [tool-options-panel]
+     [canvases-section]
+     [:f> timeline-panel]]
+    [right-sidebar]]])
 
 (defn app []
   (if @(re-frame/subscribe [::subs/initial-loading])
