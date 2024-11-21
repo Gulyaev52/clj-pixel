@@ -56,112 +56,341 @@ about why stdout printed to this file is prepended with `;` to be line comments.
 clj꞉user꞉> 
 ; Jack-in done.
 clj꞉user꞉> 
-("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAD9JREFUOE9j/M/A8J+RgYGRgUwA1kiJIWTbDHMwigEgl4AkSPESdQ0gJxypGwajLiAnBCjIA1hTIjluGPh0AABMDAgRXPy8tQAAAABJRU5ErkJggg==")
-clj꞉pixel-art.views꞉> 
 ; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,73s)
-{:data
- "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAACACAYAAAAClekiAAAAAXNSR0IArs4c6QAAAQNJREFUaEPtWNEOhCAMG///0V4wkEPdpNt8QNN78eFC2UrbwMomshWRIsHfvjADEt65F3wAqJXUPzwtPQsQ4fFZDlhBhIGEB1QlRmqgDngKLb0i8vmvWVdINZ1rdf1r9rluC/DRsIXP23kq45mdXw6wX7aapW99QS983gtQLlIHRx10A0Emsi6abpDxFMYEcttZWwBHmlW2G+DcDkQmlchEgoQyyzVNSJCE796NaYA2l8EmO+cWUoHSd3aRa1UAuzSUAePRwjtZeiAAA8XSfNrOaQDmgVOdtLOTMC0XSaJOYtrOaQDmgVPelLKTMOaBflPke+EqJHjwMBuBwC7le2EFO/8AEeM1gVkX6+wAAAAASUVORK5CYII=",
- :generation false}
-clj꞉pixel-art.views꞉> 
+; [:app] Build completed. (490 files, 2 compiled, 0 warnings, 1,24s)
 ; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,63s)
+; [:app] Build completed. (490 files, 2 compiled, 0 warnings, 0,84s)
 ; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,63s)
+; [:app] Build completed. (490 files, 2 compiled, 0 warnings, 0,76s)
 ; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,53s)
+; [:app] Build completed. (490 files, 2 compiled, 0 warnings, 0,66s)
 ; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,53s)
+; [:app] Build completed. (490 files, 2 compiled, 0 warnings, 0,72s)
 ; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,55s)
-("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAEdJREFUOE9j/M/A8J+RgYGRgUwA1kjAkP8MeCwgxmbiDYC6BOQoZIPpaAA0HEE2IruCeBfgiAiKDcAbwcTEwqgBBPLIMAhEADcvDxHjeNBiAAAAAElFTkSuQmCC"
- "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAEdJREFUOE9j/M/A8J+RgYGRgUwA1kjAkP8MeCwgxmbiDYC6BOQoZIPpaAA0HEE2IruCeBfgiAiKDcAbwcTEwqgBBPLIMAhEADcvDxHjeNBiAAAAAElFTkSuQmCC"
- "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAEdJREFUOE9j/M/A8J+RgYGRgUwA1kjAkP8MeCwgxmbiDYC6BOQoZIPpaAA0HEE2IruCeBfgiAiKDcAbwcTEwqgBBPLIMAhEADcvDxHjeNBiAAAAAElFTkSuQmCC"
- "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAEdJREFUOE9j/M/A8J+RgYGRgUwA1kjAkP8MeCwgxmbiDYC6BOQoZIPpaAA0HEE2IruCeBfgiAiKDcAbwcTEwqgBBPLIMAhEADcvDxHjeNBiAAAAAElFTkSuQmCC"
- "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAEdJREFUOE9j/M/A8J+RgYGRgUwA1kjAkP8MeCwgxmbiDYC6BOQoZIPpaAA0HEE2IruCeBfgiAiKDcAbwcTEwqgBBPLIMAhEADcvDxHjeNBiAAAAAElFTkSuQmCC"
- "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAEdJREFUOE9j/M/A8J+RgYGRgUwA1kjAkP8MeCwgxmbiDYC6BOQoZIPpaAA0HEE2IruCeBfgiAiKDcAbwcTEwqgBBPLIMAhEADcvDxHjeNBiAAAAAElFTkSuQmCC"
- "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAEdJREFUOE9j/M/A8J+RgYGRgUwA1kjAkP8MeCwgxmbiDYC6BOQoZIPpaAA0HEE2IruCeBfgiAiKDcAbwcTEwqgBBPLIMAhEADcvDxHjeNBiAAAAAElFTkSuQmCC"
- "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAEdJREFUOE9j/M/A8J+RgYGRgUwA1kjAkP8MeCwgxmbiDYC6BOQoZIPpaAA0HEE2IruCeBfgiAiKDcAbwcTEwqgBBPLIMAhEADcvDxHjeNBiAAAAAElFTkSuQmCC"
- "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAEdJREFUOE9j/M/A8J+RgYGRgUwA1kjAkP8MeCwgxmbiDYC6BOQoZIPpaAA0HEE2IruCeBfgiAiKDcAbwcTEwqgBBPLIMAhEADcvDxHjeNBiAAAAAElFTkSuQmCC"
- "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAEdJREFUOE9j/M/A8J+RgYGRgUwA1kjAkP8MeCwgxmbiDYC6BOQoZIPpaAA0HEE2IruCeBfgiAiKDcAbwcTEwqgBBPLIMAhEADcvDxHjeNBiAAAAAElFTkSuQmCC")
-clj꞉pixel-art.views꞉> 
-#'pixel-art.views/previews-grid-items
-clj꞉pixel-art.views꞉> 
-nil
-clj꞉pixel-art.views꞉> 
-10
-clj꞉pixel-art.views꞉> 
+; [:app] Build completed. (490 files, 2 compiled, 0 warnings, 0,75s)
 ; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,61s)
+; [:app] Build failure:
+; Multiple files failed to compile.
+; ------ ERROR -------------------------------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/events.cljs:1:1
+; --------------------------------------------------------------------------------
+; 
+;    1 | (ns pixel-art.events
+; -------^------------------------------------------------------------------------
+; null
+; Invalid namespace declaration
+; -- Syntax error -------------------
+; 
+;   (... ... <<<<<<< ... ...)
+;            ^^^^^^^
+; 
+; has extra input
+; 
+; -- Relevant specs -------
+; 
+; :shadow.build.ns-form/ns-form:
+;   (clojure.spec.alpha/cat
+;    :ns
+;    '#{clojure.core/ns}
+;    :name
+;    clojure.core/simple-symbol?
+;    :docstring
+;    (clojure.spec.alpha/? clojure.core/string?)
+;    :meta
+;    (clojure.spec.alpha/? clojure.core/map?)
+;    :clauses
+;    :shadow.build.ns-form/ns-clauses)
+; 
+; -------------------------
+; Detected 1 error
+; 
+; --------------------------------------------------------------------------------
+;    2 | <<<<<<< HEAD
+;    3 |   (:require
+;    4 |    [pixel-art.backup :as backup]
+;    5 |    [pixel-art.canvas :as canvas]
+; --------------------------------------------------------------------------------
+; ------ ERROR -------------------------------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/tool/rectangle_selection.cljs:1:1
+; --------------------------------------------------------------------------------
+; 
+;    1 | (ns pixel-art.tool.rectangle-selection
+; -------^------------------------------------------------------------------------
+; null
+; Invalid namespace declaration
+; -- Syntax error -------------------
+; 
+;   (... ... <<<<<<< ... ...)
+;            ^^^^^^^
+; 
+; has extra input
+; 
+; -- Relevant specs -------
+; 
+; :shadow.build.ns-form/ns-form:
+;   (clojure.spec.alpha/cat
+;    :ns
+;    '#{clojure.core/ns}
+;    :name
+;    clojure.core/simple-symbol?
+;    :docstring
+;    (clojure.spec.alpha/? clojure.core/string?)
+;    :meta
+;    (clojure.spec.alpha/? clojure.core/map?)
+;    :clauses
+;    :shadow.build.ns-form/ns-clauses)
+; 
+; -------------------------
+; Detected 1 error
+; 
+; --------------------------------------------------------------------------------
+;    2 | <<<<<<< HEAD
+;    3 |   (:require
+;    4 |    [clojure.set]
+;    5 |    [pixel-art.events.event-collector]
+; --------------------------------------------------------------------------------
+; ------ ERROR -------------------------------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/model/color.cljs:33:49
+; --------------------------------------------------------------------------------
+;   30 | 
+;   31 | (defn ->tinycolor [color]
+;   32 |   (tinycolor color))
+;   33 | >>>>>>> 2739c97b89992a9c4ecc0a3a2814b85f4cc5d2a1
+; -------------------------------------------------------^------------------------
+; pixel_art/model/color.cljs [line 33, col 49] Invalid number: 2739c97b89992a9c4ecc0a3a2814b85f4cc5d2a1.
+; 
+; --------------------------------------------------------------------------------
+;   34 | 
+; --------------------------------------------------------------------------------
+; 
 ; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,58s)
+; [:app] Build failure:
+; Multiple files failed to compile.
+; ------ ERROR -------------------------------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/tool/rectangle_selection.cljs:1:1
+; --------------------------------------------------------------------------------
+; 
+;    1 | (ns pixel-art.tool.rectangle-selection
+; -------^------------------------------------------------------------------------
+; null
+; Invalid namespace declaration
+; -- Syntax error -------------------
+; 
+;   (... ... <<<<<<< ... ...)
+;            ^^^^^^^
+; 
+; has extra input
+; 
+; -- Relevant specs -------
+; 
+; :shadow.build.ns-form/ns-form:
+;   (clojure.spec.alpha/cat
+;    :ns
+;    '#{clojure.core/ns}
+;    :name
+;    clojure.core/simple-symbol?
+;    :docstring
+;    (clojure.spec.alpha/? clojure.core/string?)
+;    :meta
+;    (clojure.spec.alpha/? clojure.core/map?)
+;    :clauses
+;    :shadow.build.ns-form/ns-clauses)
+; 
+; -------------------------
+; Detected 1 error
+; 
+; --------------------------------------------------------------------------------
+;    2 | <<<<<<< HEAD
+;    3 |   (:require
+;    4 |    [clojure.set]
+;    5 |    [pixel-art.events.event-collector]
+; --------------------------------------------------------------------------------
+; ------ ERROR -------------------------------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/model/color.cljs:33:49
+; --------------------------------------------------------------------------------
+;   30 | 
+;   31 | (defn ->tinycolor [color]
+;   32 |   (tinycolor color))
+;   33 | >>>>>>> 2739c97b89992a9c4ecc0a3a2814b85f4cc5d2a1
+; -------------------------------------------------------^------------------------
+; pixel_art/model/color.cljs [line 33, col 49] Invalid number: 2739c97b89992a9c4ecc0a3a2814b85f4cc5d2a1.
+; 
+; --------------------------------------------------------------------------------
+;   34 | 
+; --------------------------------------------------------------------------------
+; 
 ; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,53s)
-("data:,"
- "data:,"
- "data:,"
- "data:,"
- "data:,"
- "data:,"
- "data:,"
- "data:,"
- "data:,")
-clj꞉pixel-art.views꞉> 
+; [:app] Build failure:
+; Multiple files failed to compile.
+; ------ ERROR -------------------------------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/tool/rectangle_selection.cljs:1:1
+; --------------------------------------------------------------------------------
+; 
+;    1 | (ns pixel-art.tool.rectangle-selection
+; -------^------------------------------------------------------------------------
+; null
+; Invalid namespace declaration
+; -- Syntax error -------------------
+; 
+;   (... ... <<<<<<< ... ...)
+;            ^^^^^^^
+; 
+; has extra input
+; 
+; -- Relevant specs -------
+; 
+; :shadow.build.ns-form/ns-form:
+;   (clojure.spec.alpha/cat
+;    :ns
+;    '#{clojure.core/ns}
+;    :name
+;    clojure.core/simple-symbol?
+;    :docstring
+;    (clojure.spec.alpha/? clojure.core/string?)
+;    :meta
+;    (clojure.spec.alpha/? clojure.core/map?)
+;    :clauses
+;    :shadow.build.ns-form/ns-clauses)
+; 
+; -------------------------
+; Detected 1 error
+; 
+; --------------------------------------------------------------------------------
+;    2 | <<<<<<< HEAD
+;    3 |   (:require
+;    4 |    [clojure.set]
+;    5 |    [pixel-art.events.event-collector]
+; --------------------------------------------------------------------------------
+; ------ ERROR -------------------------------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/model/color.cljs:33:49
+; --------------------------------------------------------------------------------
+;   30 | 
+;   31 | (defn ->tinycolor [color]
+;   32 |   (tinycolor color))
+;   33 | >>>>>>> 2739c97b89992a9c4ecc0a3a2814b85f4cc5d2a1
+; -------------------------------------------------------^------------------------
+; pixel_art/model/color.cljs [line 33, col 49] Invalid number: 2739c97b89992a9c4ecc0a3a2814b85f4cc5d2a1.
+; 
+; --------------------------------------------------------------------------------
+;   34 | 
+; --------------------------------------------------------------------------------
+; 
 ; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,59s)
+; [:app] Build failure:
+; Multiple files failed to compile.
+; ------ ERROR -------------------------------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/tool/rectangle_selection.cljs:1:1
+; --------------------------------------------------------------------------------
+; 
+;    1 | (ns pixel-art.tool.rectangle-selection
+; -------^------------------------------------------------------------------------
+; null
+; Invalid namespace declaration
+; -- Syntax error -------------------
+; 
+;   (... ... <<<<<<< ... ...)
+;            ^^^^^^^
+; 
+; has extra input
+; 
+; -- Relevant specs -------
+; 
+; :shadow.build.ns-form/ns-form:
+;   (clojure.spec.alpha/cat
+;    :ns
+;    '#{clojure.core/ns}
+;    :name
+;    clojure.core/simple-symbol?
+;    :docstring
+;    (clojure.spec.alpha/? clojure.core/string?)
+;    :meta
+;    (clojure.spec.alpha/? clojure.core/map?)
+;    :clauses
+;    :shadow.build.ns-form/ns-clauses)
+; 
+; -------------------------
+; Detected 1 error
+; 
+; --------------------------------------------------------------------------------
+;    2 | <<<<<<< HEAD
+;    3 |   (:require
+;    4 |    [clojure.set]
+;    5 |    [pixel-art.events.event-collector]
+; --------------------------------------------------------------------------------
+; ------ ERROR -------------------------------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/model/color.cljs:33:49
+; --------------------------------------------------------------------------------
+;   30 | 
+;   31 | (defn ->tinycolor [color]
+;   32 |   (tinycolor color))
+;   33 | >>>>>>> 2739c97b89992a9c4ecc0a3a2814b85f4cc5d2a1
+; -------------------------------------------------------^------------------------
+; pixel_art/model/color.cljs [line 33, col 49] Invalid number: 2739c97b89992a9c4ecc0a3a2814b85f4cc5d2a1.
+; 
+; --------------------------------------------------------------------------------
+;   34 | 
+; --------------------------------------------------------------------------------
+; 
 ; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,52s)
+; [:app] Build failure:
+; ------ ERROR -------------------------------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/tool/rectangle_selection.cljs:1:1
+; --------------------------------------------------------------------------------
+; 
+;    1 | (ns pixel-art.tool.rectangle-selection
+; -------^------------------------------------------------------------------------
+; null
+; Invalid namespace declaration
+; -- Syntax error -------------------
+; 
+;   (... ... <<<<<<< ... ...)
+;            ^^^^^^^
+; 
+; has extra input
+; 
+; -- Relevant specs -------
+; 
+; :shadow.build.ns-form/ns-form:
+;   (clojure.spec.alpha/cat
+;    :ns
+;    '#{clojure.core/ns}
+;    :name
+;    clojure.core/simple-symbol?
+;    :docstring
+;    (clojure.spec.alpha/? clojure.core/string?)
+;    :meta
+;    (clojure.spec.alpha/? clojure.core/map?)
+;    :clauses
+;    :shadow.build.ns-form/ns-clauses)
+; 
+; -------------------------
+; Detected 1 error
+; 
+; --------------------------------------------------------------------------------
+;    2 | <<<<<<< HEAD
+;    3 |   (:require
+;    4 |    [clojure.set]
+;    5 |    [pixel-art.events.event-collector]
+; --------------------------------------------------------------------------------
+; 
 ; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,49s)
+; [:app] Build failure:
+; ------ ERROR -------------------------------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/tool/shading.cljs:43:49
+; --------------------------------------------------------------------------------
+;   40 |                                       (when-not (= color color/transparent-color-int)
+;   41 | =======
+;   42 |                                       (when-not (= color color/transparent-color)
+;   43 | >>>>>>> 2739c97b89992a9c4ecc0a3a2814b85f4cc5d2a1
+; -------------------------------------------------------^------------------------
+; pixel_art/tool/shading.cljs [line 43, col 49] Invalid number: 2739c97b89992a9c4ecc0a3a2814b85f4cc5d2a1.
+; 
+; --------------------------------------------------------------------------------
+;   44 |                                         (let [tcolor (color/->tinycolor color)]
+;   45 |                                           (if lighten
+;   46 |                                             (. tcolor (lighten amount))
+;   47 |                                             (. tcolor (darken amount)))
+; --------------------------------------------------------------------------------
+; 
 ; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,50s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,39s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,35s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,41s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,37s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,34s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,36s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,39s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,36s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,40s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,38s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,38s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,34s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,35s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,35s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,38s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,33s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,33s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,39s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,37s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,39s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,54s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,50s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,55s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,58s)
-; [:app] Compiling ...
-; [:app] Build completed. (651 files, 2 compiled, 0 warnings, 0,51s)
+; [:app] Build completed. (490 files, 17 compiled, 0 warnings, 0,97s)
