@@ -170,6 +170,18 @@
             :onChange (fn [e] (onChange (.. e -target -checked)))}]
    [:span label]])
 
+(defn button [{:keys [style onClick]} text]
+  [:button (use-style (merge {:padding "8px"
+                              :background-color "#171717"
+                              :border "none"
+                              :border-radius "4px"
+                              :color "white"
+                              :cursor "pointer"
+                              ::stylefy/mode {:hover {:background-color "rgba(255,255,255,.2)"}}}
+                             style)
+                      {:on-click onClick})
+   text])
+
 (defn icon-button [{:keys [src title active disabled size on-click]}]
   [:button (use-style (merge
                        {:border "none"
@@ -181,8 +193,10 @@
                         :background-size "70%"
                         :border-radius "4px"
                         :opacity (if disabled "0.4" 1)
-                        :cursor "pointer"
-                        ::stylefy/mode {:hover {:background-color "rgba(255,255,255,.2)"}}}
+                        :cursor (if disabled "default" "pointer")
+                        ::stylefy/mode (if disabled
+                                         {}
+                                         {:hover {:background-color "rgba(255,255,255,.2)"}})}
                        (cond
                          (= size :sm)
                          {:width "28px" :height "28px" :min-height "28px" :min-width "28px"}
@@ -606,7 +620,7 @@
      [:div (use-style {:display :flex :color :white})
       [:<>
        [sprite-preview-modal]
-       [:button {:onClick (fn [] (re-frame/dispatch [::sprite-preview/open]))} "show preview"]]
+       [button {:onClick (fn [] (re-frame/dispatch [::sprite-preview/open]))} "Show preview"]]
       [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
        [:span "Duration (ms)"]
        [input-number {:value (:duration current-frame)
@@ -758,11 +772,11 @@
       [color-picker {:value @!temp-new-value
                      :onChange (fn [new-value]
                                  (reset! !temp-new-value new-value))
-                     :actions [[:button
+                     :actions [[button
                                 {:onClick (fn []
                                             (re-frame/dispatch [::palette/add-color @!temp-new-value])
                                             (onClose))}
-                                "add"]]
+                                "Add"]]
                      :presetColors (coll/distinct-by :color [{:color primary-color}
                                                              {:color secondary-color}
                                                              {:color last-color}])
@@ -1147,9 +1161,13 @@
               (:additional-buttons props))
         [:div (use-style {:display "flex" :gap "6px" :margin-left :auto})
          (when cancel-button
-           [:button {:onClick (:onClick cancel-button) :disabled (:disabled cancel-button)} (:text cancel-button)])
+           [button {:onClick (:onClick cancel-button)
+                    :disabled (:disabled cancel-button)}
+            (:text cancel-button)])
          (when ok-button
-           [:button {:onClick (:onClick ok-button) :disabled (:disabled ok-button)} (:text ok-button)])]]]]]))
+           [button {:onClick (:onClick ok-button)
+                    :disabled (:disabled ok-button)}
+            (:text ok-button)])]]]]]))
 
 (defn export-image-settings-form []
   (let [image-settings @(re-frame/subscribe [::subs/export-image-settings])]
@@ -1169,12 +1187,12 @@
   (let [settings @(re-frame/subscribe [::subs/export-spritesheet-settings])]
     [form
      (into
-      [[form-item {:label "Columns:"
+      [[form-item {:label "Columns"
                    :control [:input {:value (:columns settings)
                                      :type "number"
                                      :onChange (fn [e]
                                                  (re-frame/dispatch [::export/set-settings-option :columns (parse-double (.. e -target -value))]))}]}]
-       [form-item {:label "Rows:"
+       [form-item {:label "Rows"
                    :control [:div (:rows settings)]}]]
       (export-common-settings-fields
        {:common-settings settings
@@ -1202,16 +1220,18 @@
                          :flex-direction "column"
                          :gap "4px"})
         [:div
-         [:button {:style {:border (when (= current-tab :image)
-                                     "1px solid blue")}
-                   :onClick (fn []
-                              (re-frame/dispatch [::export/select-tab :image]))}
-          "image"]
-         [:button {:style {:border (when (= current-tab :spritesheet)
-                                     "1px solid blue")}
-                   :onClick (fn []
-                              (re-frame/dispatch [::export/select-tab :spritesheet]))}
-          "spritesheet"]]
+         [button {:style {:border (if (= current-tab :image)
+                                    "1px solid #C0C0C0"
+                                    "none")}
+                  :onClick (fn []
+                             (re-frame/dispatch [::export/select-tab :image]))}
+          "Image"]
+         [button {:style {:border (if (= current-tab :spritesheet)
+                                    "1px solid #C0C0C0"
+                                    "none")}
+                  :onClick (fn []
+                             (re-frame/dispatch [::export/select-tab :spritesheet]))}
+          "Spritesheet"]]
 
         [previews-container {:loading (:generation preview)}
          (case current-tab
@@ -1238,7 +1258,7 @@
                 :cancel-button {:text "Cancel"
                                 :onClick (fn []
                                            (re-frame/dispatch [::sprite-resizer/set-opened false]))}
-                :ok-button {:text "Ok"
+                :ok-button {:text "Resize"
                             :onClick (fn []
                                        (re-frame/dispatch [::sprite-resizer/resize]))}}
          [form
@@ -1270,7 +1290,7 @@
                                                      (re-frame/dispatch [::sprite-resizer/set-settings-option
                                                                          :target-size
                                                                          (assoc (:target-size settings) :height height)])))}]}]
-           [form-item {:label "Resize contents:"
+           [form-item {:label "Resize contents"
                        :control [checkbox {:value (:resize-content settings)
                                            :onChange (fn [value]
                                                        (re-frame/dispatch [::sprite-resizer/set-settings-option :resize-content value]))}]}]
@@ -1334,11 +1354,11 @@
               :additional-buttons [[file-uploader {:onUpload (fn [file-desc]
                                                                (re-frame/dispatch [::project-save-load/load-from-file file-desc]))}
                                     (fn [on-click]
-                                      [:button {:onClick on-click}
-                                       "open project"])]
-                                   [:button {:onClick (fn []
-                                                        (re-frame/dispatch [::new-project-modal/create-example-project]))}
-                                    "create example project"]]}
+                                      [button {:onClick on-click}
+                                       "Open project"])]
+                                   [button {:onClick (fn []
+                                                       (re-frame/dispatch [::new-project-modal/create-example-project]))}
+                                    "Create example project"]]}
        [form
         [[form-item {:label "Width"
                      :control [:input {:value @!width
@@ -1459,24 +1479,24 @@
                       :border-bottom "2px solid #171717"})
      [:<>
       [new-project-modal]
-      [:button {:onClick (fn [] (re-frame/dispatch [::new-project-modal/set-opened true]))}
-       "new project"]]
-     [:button {:onClick (fn [] (re-frame/dispatch [::project-save-load/save-as-file]))}
-      "save project as file"]
+      [button {:onClick (fn [] (re-frame/dispatch [::new-project-modal/set-opened true]))}
+       "New project"]]
+     [button {:onClick (fn [] (re-frame/dispatch [::project-save-load/save-as-file]))}
+      "Save project as file"]
      [file-uploader {:onUpload (fn [file-desc]
                                  (re-frame/dispatch [::project-save-load/load-from-file file-desc]))}
       (fn [on-click]
-        [:button {:onClick on-click}
-         "load project from file"])]
+        [button {:onClick on-click}
+         "Load project from file"])]
      [:<>
-      [:button {:onClick (fn [] (re-frame/dispatch [::export/set-opened true]))}
-       "open project export panel"]
+      [button {:onClick (fn [] (re-frame/dispatch [::export/set-opened true]))}
+       "Open project export panel"]
       [export-modal]]
      [:<>
       [sprite-resizer-modal]
-      [:button {:onClick (fn [] (re-frame/dispatch [::sprite-resizer/set-opened true]))} "resize canvas"]]
+      [button {:onClick (fn [] (re-frame/dispatch [::sprite-resizer/set-opened true]))} "Resize canvas"]]
      [:<>
-      [:button {:onClick (fn [] (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened true]))} "keyboard shortcuts"]
+      [button {:onClick (fn [] (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened true]))} "Keyboard shortcuts"]
       [keyboard-shortcuts-modal]]
      [checkbox {:value pixels-grid-enabled
                 :label "grid"
