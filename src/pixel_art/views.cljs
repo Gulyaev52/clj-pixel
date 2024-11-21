@@ -789,7 +789,6 @@
                  :grid-gap "2px"
                  :height "100%"
                  :overflow "auto"}}
-   (println colors)
    (doall
     (for [[idx color] (map-indexed vector colors)]
       (let [dark? (.. (color/->tinycolor color) isDark)]

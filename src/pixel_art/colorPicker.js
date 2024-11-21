@@ -50,7 +50,7 @@ const Sketch = /*#__PURE__*/React.forwardRef((props, ref) => {
     if (typeof color === 'object') {
       setHsva(color);
     }
-  }, [color]);
+  }, []);
   const handleChange = hsv => {
     setHsva(hsv);
     onChange && onChange(handleColor(hsv));
@@ -66,11 +66,13 @@ const Sketch = /*#__PURE__*/React.forwardRef((props, ref) => {
       a: newAlpha.a
     }
   });
-  const handleSaturationChange = newColor => handleChange({
-    ...hsva,
-    ...newColor,
-    a: disableAlpha ? 1 : hsva.a
-  });
+  const handleSaturationChange = newColor => {
+    return handleChange({
+      ...hsva,
+      ...newColor,
+      a: disableAlpha ? 1 : hsva.a
+    });
+  };
   const styleMain = {
     '--sketch-background': 'rgb(255, 255, 255)',
     '--sketch-box-shadow': 'rgb(0 0 0 / 15%) 0px 0px 0px 1px, rgb(0 0 0 / 15%) 0px 8px 16px',
@@ -135,10 +137,13 @@ const Sketch = /*#__PURE__*/React.forwardRef((props, ref) => {
                 marginRight: 5
               }
             },
-            onChange: newHue => handleChange({
-              ...hsva,
-              ...newHue
-            })
+            onChange: newHue => {
+              console.log("hue");
+              return handleChange({
+                ...hsva,
+                ...newHue
+              });
+            }
           }), !disableAlpha && /*#__PURE__*/_jsx(Alpha.default, {
             width: "auto",
             height: 10,
