@@ -41,7 +41,7 @@
 
       (case (-> settings :layers :type)
         :visible
-        (map (fn [frame-cels] (filter #(-> % :layer :visibile?) frame-cels)) $)
+        (map (fn [frame-cels] (filter #(-> % :layer :visible?) frame-cels)) $)
 
         :selected
         (let [selected-layers-idx (set (map :layer-idx selected-poses))]

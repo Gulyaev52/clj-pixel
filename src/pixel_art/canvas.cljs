@@ -38,13 +38,13 @@
         current-cel [[(nth cels layer-idx)] (. js/document (getElementById "current-layer"))]]
     (doseq [[cels canvas] [cels-above cels-below current-cel]]
       (doseq [cel cels]
-        (when (-> cel :layer :visibile?)
+        (when (-> cel :layer :visible?)
           (draw-cel cel canvas))))))
 
 (defn draw-frame-on-single-canvas [frame-idx sprite canvas]
   (let [cels (sprite/get-frame-cels-with-layers frame-idx sprite)]
     (doseq [cel (reverse cels)]
-      (when (-> cel :layer :visibile?)
+      (when (-> cel :layer :visible?)
         (draw-cel cel canvas))))
   canvas)
 

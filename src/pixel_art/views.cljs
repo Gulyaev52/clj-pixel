@@ -700,29 +700,30 @@
                           :background-color "#333"})]
         (for [frame frames] ^{:key (:idx frame)}
              [:f> frame-view frame])
-        (for [layer layers]
-          ^{:key (:idx layer)}
-          [:<>
-           [:div (use-style {:display "flex"
-                             :align-items "center"})
-            [icon-button {:src (if (:visible? layer)
-                                 "./imgs/visibility.svg"
-                                 "./imgs/visibility-off.svg")
-                          :title "toggle layer's visibility"
-                          :size :sm
-                          :on-click (fn []
-                                      (re-frame/dispatch [::events/toggle-layer-visibility (:idx layer)]))}]
-            [icon-button {:src (if (:automatic-linking? layer)
-                                 "./imgs/link.svg"
-                                 "./imgs/link-off.svg")
-                          :title "toggle layer's automatic linking"
-                          :size :sm
-                          :on-click (fn []
-                                      (re-frame/dispatch [::events/toggle-layer-automatic-linking (:idx layer)]))}]]
-           [:f> layer-view layer]
-           (for [cel (cels-by-layers (:idx layer))]
-             ^{:key (str (:frame-idx (:pos cel)) "-" (:layer-idx (:pos cel)))}
-             [:f> cel-view cel])])]]]]))
+        (doall
+         (for [layer layers]
+           ^{:key (:idx layer)}
+           [:<>
+            [:div (use-style {:display "flex"
+                              :align-items "center"})
+             [icon-button {:src (if (:visible? layer)
+                                  "./imgs/visibility.svg"
+                                  "./imgs/visibility-off.svg")
+                           :title "toggle layer's visibility"
+                           :size :sm
+                           :on-click (fn []
+                                       (re-frame/dispatch [::events/toggle-layer-visibility (:idx layer)]))}]
+             [icon-button {:src (if (:automatic-linking? layer)
+                                  "./imgs/link.svg"
+                                  "./imgs/link-off.svg")
+                           :title "toggle layer's automatic linking"
+                           :size :sm
+                           :on-click (fn []
+                                       (re-frame/dispatch [::events/toggle-layer-automatic-linking (:idx layer)]))}]]
+            [:f> layer-view layer]
+            (for [cel (cels-by-layers (:idx layer))]
+              ^{:key (str (:frame-idx (:pos cel)) "-" (:layer-idx (:pos cel)))}
+              [:f> cel-view cel])]))]]]]))
 
 (defn color-picker [{:keys [value presetColors actions onChange]}]
   [:> color-picker-js
@@ -1428,6 +1429,7 @@
                        :grid-template-columns "1fr 1fr"
                        :gap "1px"})
       (for [type tool/types]
+        ^{:key (name type)}
         [tool-view {:type type :selected (= (:type tool) type)}])]
 
      [:div (use-style {:display "flex"
@@ -1448,17 +1450,18 @@
                       :padding "0 10px"
                       :gap "12px"
                       :background-color "#222"})
-     (for [[idx option-spec] (map-indexed vector options-spec)]
-       (let [value (get options (:field option-spec))
-             on-change #(re-frame/dispatch [::events/change-tool-option (:field option-spec) %])
-             props (assoc option-spec
-                          :value value
-                          :onChange on-change)]
-         ^{:key idx}
-         [:div
-          (case (:type option-spec)
-            :slider (slider props)
-            :checkbox (checkbox props))]))]))
+     (doall
+      (for [[idx option-spec] (map-indexed vector options-spec)]
+        (let [value (get options (:field option-spec))
+              on-change #(re-frame/dispatch [::events/change-tool-option (:field option-spec) %])
+              props (assoc option-spec
+                           :value value
+                           :onChange on-change)]
+          ^{:key idx}
+          [:div
+           (case (:type option-spec)
+             :slider (slider props)
+             :checkbox (checkbox props))])))]))
 
 (defn right-sidebar []
   [:div (use-style {:display "flex"

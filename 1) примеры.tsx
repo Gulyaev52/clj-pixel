@@ -13,11 +13,10 @@
 
   loading screen
 
-  pixels grid
-
   highlight color, higliht selection на ярких
 
 оптимизация
+transdusers?
   11) во вьюху вытащить логику рендера канваса
   22) linked cels. оптимизация
   2) sprite-resizer
