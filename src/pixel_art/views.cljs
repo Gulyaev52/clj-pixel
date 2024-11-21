@@ -649,7 +649,6 @@
                       :flex-shrink 0
                       :height "300px"
                       :min-height "16px"
-                      :max-height "calc(100% - 30px)"
                       :border "2px solid #171717"
                       :background-color "#333"}
                      {:ref (:container-ref vertical-resizer-refs)})
@@ -1506,17 +1505,18 @@
       [drawing-info]]]))
 
 (defn main-panel []
-  [:div (use-style {:height "100%"
+  [:div (use-style {:display "flex"
+                    :flex-direction "column"
+                    :height "100%"
                     :width "100%"
                     :max-height "100%"
                     :max-width "100%"})
    [header]
    [:div (use-style {:display :grid
                      :grid-template-columns "100px 1fr 250px"
-                     :height "100%"
-                     :width "100%"
-                     :max-height "100%"
-                     :max-width "100%"})
+                     :flex-grow 1
+                     :min-height 0
+                     :width "100%"})
     [tools-panel]
     [:div (use-style {:display :flex
                       :flex-direction :column

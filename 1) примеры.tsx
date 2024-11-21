@@ -7,9 +7,7 @@
 
   дизайн система
 
-  кнопки
-
-  hor scroll
+  dropdown, input
 
   поправить тесты
 
