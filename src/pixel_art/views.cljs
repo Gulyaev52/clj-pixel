@@ -26,7 +26,8 @@
    [reagent.core :as r]
    [sc.api]
    [stylefy.core :as stylefy :refer [use-style]]
-   [clojure.string :as str]))
+   [clojure.string :as str]
+   [reagent.core :as reagent]))
 
 (set! *warn-on-infer* false)
 
@@ -163,7 +164,7 @@
                                 (onChange value))}]])
 
 (defn checkbox [{:keys [value onChange label]}]
-  [:> antd/Checkbox {:value value
+  [:> antd/Checkbox {:checked value
                      :onChange (fn [e]
                                  (onChange (.. e -target -checked)))}
    label])
@@ -1143,7 +1144,7 @@
                                                  (re-frame/dispatch [::export/set-settings-option :split-layers value]))}]}]]))
 
 (defn modal [props & children]
-  (let [{:keys [cancel-button ok-button title]} props]
+  (let [{:keys [on-cancel cancel-text on-ok ok-text ok-disabled hide-footer title additional-buttons]} props]
     [:> antd/Modal (merge
                     {:title title
                      :open true
@@ -1153,11 +1154,20 @@
                               :md "30%"
                               :sm "18%"
                               :else nil)
-                     :onOk (:onClick ok-button)
-                     :okButtonProps {:disabled (:disabled ok-button)}
-                     :onCancel (:onClick cancel-button) ;; todo: pass as separated
-                     :cancelButtonProps {:disabled (:disabled cancel-button)}}
-                    (when (and (not cancel-button) (not ok-button)) {:footer nil}))
+                     :onOk on-ok
+                     :okText ok-text
+                     :okButtonProps {:disabled ok-disabled}
+                     :onCancel on-cancel
+                     :cancelText cancel-text
+                     :footer (fn [_ props]
+                               (reagent/as-element
+                                [:div (use-style {:display :flex :gap "6px"})
+                                 (concat
+                                  [(into [:div (use-style {:display "flex" :gap "6px" :margin-right "auto"})]
+                                         additional-buttons)]
+                                  [[:> (. props -CancelBtn)]
+                                   [:> (. props -OkBtn)]])]))}
+                    (when hide-footer {:footer nil}))
      children]))
 
 (defn export-image-settings-form []
@@ -1199,13 +1209,12 @@
     (when opened
       [modal {:title "Export"
               :size :lg
-              :cancel-button {:text "Cancel"
-                              :onClick (fn []
-                                         (re-frame/dispatch [::export/set-opened false]))}
-              :ok-button {:text "Export"
-                          :disabled (or exporting (not export-settings-valid?))
-                          :onClick (fn []
-                                     (re-frame/dispatch [::export/export]))}}
+              :on-cancel (fn []
+                           (re-frame/dispatch [::export/set-opened false]))
+              :ok-text "Export"
+              :ok-disabled (or exporting (not export-settings-valid?))
+              :on-ok (fn []
+                       (re-frame/dispatch [::export/export]))}
 
        [:div (use-style {:display "flex"
                          :flex-direction "column"
@@ -1243,12 +1252,11 @@
           previews @(re-frame/subscribe [::subs/sprite-resizer-previews])]
       [modal {:title "Resize canvas"
               :size :sm
-              :cancel-button {:text "Cancel"
-                              :onClick (fn []
-                                         (re-frame/dispatch [::sprite-resizer/set-opened false]))}
-              :ok-button {:text "Resize"
-                          :onClick (fn []
-                                     (re-frame/dispatch [::sprite-resizer/resize]))}}
+              :on-cancel (fn []
+                           (re-frame/dispatch [::sprite-resizer/set-opened false]))
+              :ok-text "Resize"
+              :on-ok (fn []
+                       (re-frame/dispatch [::sprite-resizer/resize]))}
        [form
         [[form-item {:label "Width"
                      :control [input-number {:value (-> settings :target-size :width)
@@ -1299,9 +1307,9 @@
   (when @(re-frame/subscribe [::subs/keyboard-shortcuts-modal-opened])
     [modal {:title "Keyboard shortcuts"
             :size :lg
-            :cancel-button {:text "Cancel"
-                            :onClick (fn []
-                                       (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened false]))}}
+            :hide-footer true
+            :on-cancel (fn []
+                         (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened false]))}
      [:div {:style {:display :grid
                     :grid-template-columns "repeat(auto-fit, minmax(200px,1fr))"}}
       (for [[type shortcuts] keyboard-shortcuts/shortcuts-by-types]
@@ -1320,12 +1328,11 @@
     (let [size @(re-frame/subscribe [::subs/new-project-modal-size])]
       [modal {:title "New project"
               :size :md
-              :cancel-button {:text "Cancel"
-                              :onClick (fn []
-                                         (re-frame/dispatch [::new-project-modal/set-opened false]))}
-              :ok-button {:text "Create"
-                          :onClick (fn []
-                                     (re-frame/dispatch [::new-project-modal/create]))}
+              :on-cancel (fn []
+                           (re-frame/dispatch [::new-project-modal/set-opened false]))
+              :ok-text "Create"
+              :on-ok (fn []
+                       (re-frame/dispatch [::new-project-modal/create]))
               :additional-buttons [[file-uploader {:onUpload (fn [file-desc]
                                                                (re-frame/dispatch [::project-save-load/load-from-file file-desc]))}
                                     (fn [on-click]
