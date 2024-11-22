@@ -1537,6 +1537,12 @@
 
 (defn app []
   (if @(re-frame/subscribe [::subs/initial-loading])
-    [:div
-     "LOADING"]
+    [:div (use-style {:display "flex"
+                      :align-items "center"
+                      :justify-content "center"
+                      :width "100%"
+                      :height "100%"
+                      :color "white"
+                      :background-color "#171717"})
+     "LOADING..."]
     [main-panel]))
