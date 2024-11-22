@@ -1,8 +1,5 @@
 17) дизайн
-  header buttons
-
   увеличение размера ячеек?
-  auto-scroll on drag
   use font icons?
 
   дизайн система

@@ -2,6 +2,7 @@
   (:require
    ["./colorPicker$default" :as color-picker-js]
    ["react-dnd" :as react-dnd]
+   ["./react-dnd-scrolling" :as react-dnd-scrolling]
    ["react-dnd-html5-backend" :as react-dnd-html5-backend]
    [clojure.string :as string]
    [pixel-art.canvas :as canvas]
@@ -633,6 +634,8 @@
                       :on-blur (fn [duration]
                                  (re-frame/dispatch [::events/set-frame-duration-for-all duration]))}]]]]))
 
+(def dndScrollingVerticalStrength (react-dnd-scrolling/createVerticalStrength 50))
+
 (defn timeline-panel []
   (let [{:keys [cels layers frames disabled-actions some-layer-visible some-layer-automatic-linking]} @(re-frame/subscribe [::subs/timeline])
         current-frame (coll/find-first :current frames) ;; todo: to subs?
@@ -641,7 +644,10 @@
         cels-by-layers (-> cels
                            (#(group-by (fn [c] (-> c :pos :layer-idx)) %))
                            (update-vals (fn [cels] (sort-by #(-> % :pos :frame-idx) cels))))
-        vertical-resizer-refs (vertical-resizer)]
+        vertical-resizer-refs (vertical-resizer)
+
+        timeline-container-ref (react/useRef)
+        _ (react-dnd-scrolling/useDndScrolling timeline-container-ref #js {"verticalStrength" dndScrollingVerticalStrength})]
     [:div (use-style {:display "flex"
                       :flex-direction "column"
                       :padding "4px"
@@ -664,66 +670,65 @@
                               :disabled-actions disabled-actions
                               :all-frames-duration all-frames-duration}]
 
-     [:> react-dnd/DndProvider {"backend" react-dnd-html5-backend/HTML5Backend}
-      [:<>
-       [:div {:style {:display :grid
-                      :grid-template-rows "min-content"
-                      :grid-auto-rows cel-height
-                      :grid-template-columns (str "min-content min-content " (->> (repeat (count frames) "100px") (string/join " ")))
-                      :grid-column-gap "4px"
-                      :grid-row-gap "4px"
-                      :margin-top "4px"
-                      :overflow "auto"}}
-        [:div (use-style {:display "flex"
-                          :align-items "center"
-                          :position "sticky"
-                          :z-index 1
-                          :top 0
-                          :background-color "#333"})
-         [icon-button {:src (if some-layer-visible
-                              "./imgs/visibility.svg"
-                              "./imgs/visibility-off.svg")
-                       :title "toggle all layers visibility"
-                       :size :sm
-                       :on-click (fn []
-                                   (re-frame/dispatch [::events/toggle-all-layers-visibility]))}]
-         [icon-button {:src (if some-layer-automatic-linking
-                              "./imgs/link.svg"
-                              "./imgs/link-off.svg")
-                       :title "toggle all layers automatic linking"
-                       :size :sm
-                       :on-click (fn []
-                                   (re-frame/dispatch [::events/toggle-all-layers-automatic-linking]))}]]
-        [:div (use-style {:position "sticky"
-                          :z-index 1
-                          :top 0
-                          :background-color "#333"})]
-        (for [frame frames] ^{:key (:idx frame)}
-             [:f> frame-view frame])
-        (doall
-         (for [layer layers]
-           ^{:key (:idx layer)}
-           [:<>
-            [:div (use-style {:display "flex"
-                              :align-items "center"})
-             [icon-button {:src (if (:visible? layer)
-                                  "./imgs/visibility.svg"
-                                  "./imgs/visibility-off.svg")
-                           :title "toggle layer's visibility"
-                           :size :sm
-                           :on-click (fn []
-                                       (re-frame/dispatch [::events/toggle-layer-visibility (:idx layer)]))}]
-             [icon-button {:src (if (:automatic-linking? layer)
-                                  "./imgs/link.svg"
-                                  "./imgs/link-off.svg")
-                           :title "toggle layer's automatic linking"
-                           :size :sm
-                           :on-click (fn []
-                                       (re-frame/dispatch [::events/toggle-layer-automatic-linking (:idx layer)]))}]]
-            [:f> layer-view layer]
-            (for [cel (cels-by-layers (:idx layer))]
-              ^{:key (str (:frame-idx (:pos cel)) "-" (:layer-idx (:pos cel)))}
-              [:f> cel-view cel])]))]]]]))
+     [:div {:ref timeline-container-ref
+            :style {:display :grid
+                    :grid-template-rows "min-content"
+                    :grid-auto-rows cel-height
+                    :grid-template-columns (str "min-content min-content " (->> (repeat (count frames) "100px") (string/join " ")))
+                    :grid-column-gap "4px"
+                    :grid-row-gap "4px"
+                    :margin-top "4px"
+                    :overflow "auto"}}
+      [:div (use-style {:display "flex"
+                        :align-items "center"
+                        :position "sticky"
+                        :z-index 1
+                        :top 0
+                        :background-color "#333"})
+       [icon-button {:src (if some-layer-visible
+                            "./imgs/visibility.svg"
+                            "./imgs/visibility-off.svg")
+                     :title "toggle all layers visibility"
+                     :size :sm
+                     :on-click (fn []
+                                 (re-frame/dispatch [::events/toggle-all-layers-visibility]))}]
+       [icon-button {:src (if some-layer-automatic-linking
+                            "./imgs/link.svg"
+                            "./imgs/link-off.svg")
+                     :title "toggle all layers automatic linking"
+                     :size :sm
+                     :on-click (fn []
+                                 (re-frame/dispatch [::events/toggle-all-layers-automatic-linking]))}]]
+      [:div (use-style {:position "sticky"
+                        :z-index 1
+                        :top 0
+                        :background-color "#333"})]
+      (for [frame frames] ^{:key (:idx frame)}
+           [:f> frame-view frame])
+      (doall
+       (for [layer layers]
+         ^{:key (:idx layer)}
+         [:<>
+          [:div (use-style {:display "flex"
+                            :align-items "center"})
+           [icon-button {:src (if (:visible? layer)
+                                "./imgs/visibility.svg"
+                                "./imgs/visibility-off.svg")
+                         :title "toggle layer's visibility"
+                         :size :sm
+                         :on-click (fn []
+                                     (re-frame/dispatch [::events/toggle-layer-visibility (:idx layer)]))}]
+           [icon-button {:src (if (:automatic-linking? layer)
+                                "./imgs/link.svg"
+                                "./imgs/link-off.svg")
+                         :title "toggle layer's automatic linking"
+                         :size :sm
+                         :on-click (fn []
+                                     (re-frame/dispatch [::events/toggle-layer-automatic-linking (:idx layer)]))}]]
+          [:f> layer-view layer]
+          (for [cel (cels-by-layers (:idx layer))]
+            ^{:key (str (:frame-idx (:pos cel)) "-" (:layer-idx (:pos cel)))}
+            [:f> cel-view cel])]))]]))
 
 (defn color-picker [{:keys [value presetColors actions onChange]}]
   [:> color-picker-js
@@ -1507,27 +1512,28 @@
       [drawing-info]]]))
 
 (defn main-panel []
-  [:div (use-style {:display "flex"
-                    :flex-direction "column"
-                    :height "100%"
-                    :width "100%"
-                    :max-height "100%"
-                    :max-width "100%"})
-   [header]
-   [:div (use-style {:display :grid
-                     :grid-template-columns "100px 1fr 250px"
-                     :flex-grow 1
-                     :min-height 0
-                     :width "100%"})
-    [tools-panel]
-    [:div (use-style {:display :flex
-                      :flex-direction :column
-                      :min-width 0
-                      :min-height 0})
-     [tool-options-panel]
-     [canvases-section]
-     [:f> timeline-panel]]
-    [right-sidebar]]])
+  [:> react-dnd/DndProvider {"backend" react-dnd-html5-backend/HTML5Backend}
+   [:div (use-style {:display "flex"
+                     :flex-direction "column"
+                     :height "100%"
+                     :width "100%"
+                     :max-height "100%"
+                     :max-width "100%"})
+    [header]
+    [:div (use-style {:display :grid
+                      :grid-template-columns "100px 1fr 250px"
+                      :flex-grow 1
+                      :min-height 0
+                      :width "100%"})
+     [tools-panel]
+     [:div (use-style {:display :flex
+                       :flex-direction :column
+                       :min-width 0
+                       :min-height 0})
+      [tool-options-panel]
+      [canvases-section]
+      [:f> timeline-panel]]
+     [right-sidebar]]]])
 
 (defn app []
   (if @(re-frame/subscribe [::subs/initial-loading])
