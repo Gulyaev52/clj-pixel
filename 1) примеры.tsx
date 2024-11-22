@@ -1,7 +1,12 @@
 17) дизайн
   дизайн система
-    dropdown, input, modal, icons, icon-button, popper
+    modal, icons, icon-button, popper
     use font icons?
+
+  popper styles = modal
+  modal передавать отдельно экшены
+  slider value label
+  где-то Onchage а где-то blur
 
   поправить тесты
 

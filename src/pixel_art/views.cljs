@@ -1,5 +1,6 @@
 (ns pixel-art.views
   (:require
+   ["antd" :as antd]
    ["./colorPicker$default" :as color-picker-js]
    ["react-dnd" :as react-dnd]
    ["./react-dnd-scrolling" :as react-dnd-scrolling]
@@ -100,7 +101,7 @@
    (into [:div (use-style {:display "flex" :align-items "center"})]
          children)])
 
-(defn popper []
+(defn custom-popover []
   (let [!opened (r/atom false)]
     (fn [trigger over]
       [:div {:style {:position "relative"}}
@@ -144,43 +145,31 @@
      :y (. js/Math (floor (/ (- (:y mouse-pos)
                                 (. canvas-layers-rect -top)) scale)))}))
 
-(defn slider [{:keys [value label min max step style onChange]}]
+(defn slider [{:keys [value label block min max step style onChange]}]
   ;; todo: labels
   [:div (use-style {:display :flex
                     :align-items :center
+                    :width (if block "100%" "250px")
+                    :gap "8px"
                     :color "white"
                     :font-size "13px"})
    [:span (str label " (" value ")")]
-   [:input {:type "range"
-            :value value
-            :min min
-            :max max
-            :step step
-            :style (merge {:user-select "none"} style)
-            :onChange (fn [e]
-                        (let [value (parse-double (.. e -target -value))]
-                          (onChange value)))}]])
+   [:> antd/Slider {:value value
+                    :min min
+                    :max max
+                    :step (or step 1)
+                    :style (merge {:user-select "none" :flex-grow 1} style)
+                    :onChange (fn [value]
+                                (onChange value))}]])
 
 (defn checkbox [{:keys [value onChange label]}]
-  [:div (use-style {:display :flex
-                    :align-items :center
-                    :color "white"
-                    :font-size "13px"})
-   [:input {:type "checkbox"
-            :checked value
-            :onChange (fn [e] (onChange (.. e -target -checked)))}]
-   [:span label]])
+  [:> antd/Checkbox {:value value
+                     :onChange (fn [e]
+                                 (onChange (.. e -target -checked)))}
+   label])
 
-(defn button [{:keys [style onClick]} text]
-  [:button (use-style (merge {:padding "8px"
-                              :background-color "#171717"
-                              :border "none"
-                              :border-radius "4px"
-                              :color "white"
-                              :cursor "pointer"
-                              ::stylefy/mode {:hover {:background-color "rgba(255,255,255,.2)"}}}
-                             style)
-                      {:on-click onClick})
+(defn button [{:keys [onClick]} text]
+  [:> antd/Button {:onClick onClick}
    text])
 
 (defn icon-button [{:keys [src title active disabled size on-click]}]
@@ -387,22 +376,40 @@
        :right 0
        :transform "translateX(50%)"}]]))
 
-(defn input-number-component [{:keys [value max on-blur]}]
+;; todo: integer input number
+(defn input-number-component [{:keys [value min max block on-blur]}]
   (let [[curr-value set-curr-value] (react/useState value)]
-    (react/useEffect (fn [] (set-curr-value (str value))) #js [value])
-    [:input {:value curr-value
-             :type "number"
-             :min 1
-             :step 1
-             :max max
-             :onChange (fn [e]
-                         (set-curr-value (.. e -target -value)))
-             :onBlur (fn []
-                       (let [width (parse-int curr-value)]
-                         (set-curr-value (str width))
-                         (on-blur width)))}]))
+    (react/useEffect (fn []
+                       (set-curr-value value))
+                     (array value))
+    [:> antd/InputNumber {:value curr-value
+                          :min (or min 1)
+                          :step 1
+                          :max max
+                          :style {:width (when block "100%")}
+                          :onChange (fn [value]
+                                      (set-curr-value value))
+                          :onBlur (fn []
+                                    (let [new-value (parse-int curr-value)]
+                                      (set-curr-value new-value)
+                                      (on-blur new-value)))}]))
 
 (defn input-number [props] [:f> input-number-component props])
+
+(defn input-text-component [{:keys [value on-blur]}]
+  (let [[curr-value set-curr-value] (react/useState value)]
+    (react/useEffect (fn []
+                       (set-curr-value value))
+                     (array value))
+    [:> antd/Input {:value curr-value
+                    :onChange (fn [e]
+                                (set-curr-value (.. e -target -value)))
+                    :onBlur (fn []
+                              (on-blur curr-value))
+                    :onPressEnter (fn []
+                                    (on-blur curr-value))}]))
+
+(defn input-text [props] [:f> input-text-component props])
 
 (defn vertical-resizer []
   (let [container-ref (react/useRef)
@@ -444,17 +451,25 @@
     {:handler-ref handler-ref
      :container-ref container-ref}))
 
-(defn select [{:keys [value onChange block options]}]
-  (let [selected-option-idx (ffirst (filter #(= (:value (second %)) value) (map-indexed vector options)))]
-    [:select (use-style {:width (if block "100%" "auto")}
-                        {:value (or selected-option-idx "")
-                         :on-change (fn [event]
-                                      (let [selected-option (nth options (parse-double (.. event -target -value)) nil)]
-                                        (when selected-option
-                                          (onChange (:value selected-option)))))})
-     (for [[idx opt] (map-indexed vector options)]
-       ^{:key idx}
-       [:option {:value idx} (:label opt)])]))
+(defn select-component [{:keys [value size onChange block options]}]
+  (let [ref (react/useRef)]
+    [:> antd/Select {:value value
+                     :ref ref
+                     :options (clj->js options)
+                     :size (case size
+                             :sm "small"
+                             :lg "large"
+                             :md "middle"
+                             nil)
+                     :style {:width (when block "100%")}
+                     :onChange (fn [value]
+                                 ;; after select option, select has focus and pressing hotkeys doesn't work + any key lead to select opening
+                                 ;; todo: find better way?
+                                 (.. ref -current blur)
+                                 (onChange value))}]))
+
+(defn select [props]
+  [:f> select-component props])
 
 (defn sprite-preview-modal-component []
   (let [{:keys [size displayed-frame-idx frame-imgs]} @(re-frame/subscribe [::subs/sprite-preview])
@@ -497,25 +512,25 @@
                       :color "white"})
      [form
       [[form-item {:label "Previous Frames"
-                   :control [:input {:style {:width "100%"}
-                                     :type "number"
-                                     :min 0
-                                     :value (:prev (:frames-count onion-skin))
-                                     :onChange (fn [e]
-                                                 (re-frame/dispatch [::onion-skin/set-frames-count {:prev (parse-double (.. e -target -value))
-                                                                                                    :next (:next (:frames-count onion-skin))}]))}]}]
+                   :control [input-number {:min 0
+                                           :value (:prev (:frames-count onion-skin))
+                                           :block true
+                                           :on-blur (fn [value]
+                                                      (re-frame/dispatch [::onion-skin/set-frames-count (assoc (:frames-count onion-skin)
+                                                                                                               :prev
+                                                                                                               value)]))}]}]
        [form-item {:label "Next Frames"
-                   :control [:input {:style {:width "100%"}
-                                     :type "number"
-                                     :min 0
-                                     :value (:next (:frames-count onion-skin))
-                                     :onChange (fn [e]
-                                                 (re-frame/dispatch [::onion-skin/set-frames-count {:prev (:prev (:frames-count onion-skin))
-                                                                                                    :next (parse-double (.. e -target -value))}]))}]}]
+                   :control [input-number {:min 0
+                                           :value (:next (:frames-count onion-skin))
+                                           :block true
+                                           :on-blur (fn [value]
+                                                      (re-frame/dispatch [::onion-skin/set-frames-count (assoc (:frames-count onion-skin)
+                                                                                                               :next
+                                                                                                               value)]))}]}]
        [form-item {:label "Opacity"
                    :control [slider {:min 0 :max 1 :step 0.1
                                      :value (:opacity onion-skin)
-                                     :style {:width "100%"}
+                                     :block true
                                      :onChange (fn [v] (re-frame/dispatch [::onion-skin/set-opacity v]))}]}]
        [form-item {:label "Position"
                    :control [select {:value (:position onion-skin)
@@ -609,7 +624,7 @@
                       :title (if onion-skin-enabled "disable onion skin" "enable onion skin")
                       :size :sm
                       :on-click (fn [] (re-frame/dispatch [::onion-skin/set-enabled (not onion-skin-enabled)]))}]
-        [popper
+        [custom-popover
          (fn [open]
            [icon-button {:src "./imgs/cog.svg"
                          :title "onion skin settings"
@@ -835,11 +850,12 @@
      [select {:value current-palette-idx
               :options (map-indexed (fn [idx p] {:value idx :label (:name p)}) palettes)
               :block true
+              :size :sm
               :onChange (fn [idx]
                           (re-frame/dispatch [::palette/select-palette idx]))}]
 
      [:div (use-style {:display "flex" :justify-content "space-between"})
-      [popper
+      [custom-popover
        (fn [close]
          [icon-button {:src "./imgs/add.svg"
                        :title "Add color"
@@ -1061,7 +1077,7 @@
                      :onCancel close}])))
 
 (defn- current-color-selection [{:keys [value onChange]}]
-  [popper
+  [custom-popover
    (fn [close]
      [:div {:style {:width "45px"
                     :height "45px"
@@ -1103,6 +1119,7 @@
                  :control [slider {:value (:scale common-settings)
                                    :min export/min-scale
                                    :max export/max-scale
+                                   :block true
                                    :step 1
                                    :onChange (fn [value]
                                                (re-frame/dispatch [::export/set-settings-option :scale value]))}]}]
@@ -1112,9 +1129,9 @@
                                     (-> common-settings :scaled-frame-size :height))
                            [:br]]}]
      [form-item {:label "File"
-                 :control [:input {:value (:file-name common-settings)
-                                   :onChange (fn [e]
-                                               (re-frame/dispatch [::export/set-settings-option :file-name (.. e -target -value)]))}]}]
+                 :control [input-text {:value (:file-name common-settings)
+                                       :on-blur (fn [value]
+                                                  (re-frame/dispatch [::export/set-settings-option :file-name value]))}]}]
      [form-item {:label "Type"
                  :control [select {:value (:file-type common-settings)
                                    :options type-options
@@ -1126,52 +1143,22 @@
                                                  (re-frame/dispatch [::export/set-settings-option :split-layers value]))}]}]]))
 
 (defn modal [props & children]
-  (let [{:keys [cancel-button ok-button]} props]
-    [:div {:style {:position "fixed"
-                   :display "flex"
-                   :zIndex 1000
-                   :alignItems "center"
-                   :justifyContent "center"
-                   :left 0
-                   :right 0
-                   :bottom 0
-                   :top 0
-                   :backgroundColor "rgba(37, 37, 37, .9)"}}
-     [:div (use-style (merge
-                       {:background-color "#333333"
-                        :color "white"}
-                       (case (:size props)
-                         :lg {:width "50%"}
-                         :md {:width "30%"}
-                         :sm {:width "18%"})))
-      [:div (use-style {:height "40px"
-                        :padding "8px"
-                        :font-size "18px"
-                        :border "2px solid #C0C0C0"
-                        :border-radius "2px"})
-       (:title props)]
-      [:div (use-style {:display :flex
-                        :flex-direction :column
-                        :padding "8px"
-                        :border-radius "2px"
-                        :border "2px solid #C0C0C0"
-                        :border-top "none"
-                        :border-top-left-radius 0
-                        :border-top-right-radius 0})
-       children
-       [:div {:style {:display :flex
-                      :margin-top "16px"}}
-        (into [:div (use-style {:display "flex" :gap "6px" :margin-right :auto})]
-              (:additional-buttons props))
-        [:div (use-style {:display "flex" :gap "6px" :margin-left :auto})
-         (when cancel-button
-           [button {:onClick (:onClick cancel-button)
-                    :disabled (:disabled cancel-button)}
-            (:text cancel-button)])
-         (when ok-button
-           [button {:onClick (:onClick ok-button)
-                    :disabled (:disabled ok-button)}
-            (:text ok-button)])]]]]]))
+  (let [{:keys [cancel-button ok-button title]} props]
+    [:> antd/Modal (merge
+                    {:title title
+                     :open true
+                     :closable true
+                     :width (case (:size props)
+                              :lg "50%"
+                              :md "30%"
+                              :sm "18%"
+                              :else nil)
+                     :onOk (:onClick ok-button)
+                     :okButtonProps {:disabled (:disabled ok-button)}
+                     :onCancel (:onClick cancel-button) ;; todo: pass as separated
+                     :cancelButtonProps {:disabled (:disabled cancel-button)}}
+                    (when (and (not cancel-button) (not ok-button)) {:footer nil}))
+     children]))
 
 (defn export-image-settings-form []
   (let [image-settings @(re-frame/subscribe [::subs/export-image-settings])]
@@ -1192,10 +1179,10 @@
     [form
      (into
       [[form-item {:label "Columns"
-                   :control [:input {:value (:columns settings)
-                                     :type "number"
-                                     :onChange (fn [e]
-                                                 (re-frame/dispatch [::export/set-settings-option :columns (parse-double (.. e -target -value))]))}]}]
+                   :control [input-number {:value (:columns settings)
+                                           :block true
+                                           :on-blur (fn [value]
+                                                      (re-frame/dispatch [::export/set-settings-option :columns value]))}]}]
        [form-item {:label "Rows"
                    :control [:div (:rows settings)]}]]
       (export-common-settings-fields
@@ -1254,70 +1241,57 @@
   (when @(re-frame/subscribe [::subs/sprite-resizer-opened])
     (let [settings @(re-frame/subscribe [::subs/sprite-resizer-settings])
           previews @(re-frame/subscribe [::subs/sprite-resizer-previews])]
-      (r/with-let
-        [!width (r/atom (str (-> settings :target-size :width)))
-         !height (r/atom (str (-> settings :target-size :height)))]
-        [modal {:title "Resize canvas"
-                :size :sm
-                :cancel-button {:text "Cancel"
-                                :onClick (fn []
-                                           (re-frame/dispatch [::sprite-resizer/set-opened false]))}
-                :ok-button {:text "Resize"
-                            :onClick (fn []
-                                       (re-frame/dispatch [::sprite-resizer/resize]))}}
-         [form
-          [[form-item {:label "Width"
-                       :control [:input {:value @!width
-                                         :type "number"
-                                         :min 1
-                                         :step 1
-                                         :max project-settings/max-sprite-dim
-                                         :onChange (fn [e]
-                                                     (reset! !width (.. e -target -value)))
-                                         :onBlur (fn []
-                                                   (let [width (min (or (parse-int @!width) 1) project-settings/max-sprite-dim)]
-                                                     (reset! !width (str width))
-                                                     (re-frame/dispatch [::sprite-resizer/set-settings-option
-                                                                         :target-size
-                                                                         (assoc (:target-size settings) :width width)])))}]}]
-           [form-item {:label "Height"
-                       :control [:input {:value @!height
-                                         :type "number"
-                                         :min 1
-                                         :step 1
-                                         :max project-settings/max-sprite-dim
-                                         :onChange (fn [e]
-                                                     (reset! !height (.. e -target -value)))
-                                         :onBlur (fn []
-                                                   (let [height (min (or (parse-int @!height) 1) project-settings/max-sprite-dim)]
-                                                     (reset! !height (str height))
-                                                     (re-frame/dispatch [::sprite-resizer/set-settings-option
-                                                                         :target-size
-                                                                         (assoc (:target-size settings) :height height)])))}]}]
-           [form-item {:label "Resize contents"
-                       :control [checkbox {:value (:resize-content settings)
-                                           :onChange (fn [value]
-                                                       (re-frame/dispatch [::sprite-resizer/set-settings-option :resize-content value]))}]}]
-           [form-item {:label "Anchor"
-                       :control [:div {:style {:display :grid
-                                               :grid-template-columns "min-content min-content min-content"
-                                               :gap "1px"
-                                               :opacity (when (:resize-content settings) "0.6")}}
-                                 (for [y [:top :center :bottom]
-                                       x [:left :center :right]]
-                                   ^{:key (str y "-y-" x "-x")}
-                                   [:div {:title (str (name y) "/" (name x))
-                                          :style {:border-radius "4px"
-                                                  :width "24px"
-                                                  :height "24px"
-                                                  :background-color (if (and (not (:resize-content settings))
-                                                                             (= {:x x :y y} (:anchor settings)))
-                                                                      "#2979ff"
-                                                                      "#444")}
-                                          :onClick (fn []
-                                                     (re-frame/dispatch [::sprite-resizer/set-settings-option :anchor {:x x :y y}]))}])]}]
-           [previews-container {}
-            [previews-grid-items previews]]]]]))))
+      [modal {:title "Resize canvas"
+              :size :sm
+              :cancel-button {:text "Cancel"
+                              :onClick (fn []
+                                         (re-frame/dispatch [::sprite-resizer/set-opened false]))}
+              :ok-button {:text "Resize"
+                          :onClick (fn []
+                                     (re-frame/dispatch [::sprite-resizer/resize]))}}
+       [form
+        [[form-item {:label "Width"
+                     :control [input-number {:value (-> settings :target-size :width)
+                                             :type "number"
+                                             :max project-settings/max-sprite-dim
+                                             :block true
+                                             :on-blur (fn [value]
+                                                        (re-frame/dispatch [::sprite-resizer/set-settings-option
+                                                                            :target-size
+                                                                            (assoc (:target-size settings) :width value)]))}]}]
+         [form-item {:label "Height"
+                     :control [input-number {:value (-> settings :target-size :height)
+                                             :type "number"
+                                             :max project-settings/max-sprite-dim
+                                             :block true
+                                             :on-blur (fn [value]
+                                                        (re-frame/dispatch [::sprite-resizer/set-settings-option
+                                                                            :target-size
+                                                                            (assoc (:target-size settings) :height value)]))}]}]
+         [form-item {:label "Resize contents"
+                     :control [checkbox {:value (:resize-content settings)
+                                         :onChange (fn [value]
+                                                     (re-frame/dispatch [::sprite-resizer/set-settings-option :resize-content value]))}]}]
+         [form-item {:label "Anchor"
+                     :control [:div {:style {:display :grid
+                                             :grid-template-columns "min-content min-content min-content"
+                                             :gap "1px"
+                                             :opacity (when (:resize-content settings) "0.6")}}
+                               (for [y [:top :center :bottom]
+                                     x [:left :center :right]]
+                                 ^{:key (str y "-y-" x "-x")}
+                                 [:div {:title (str (name y) "/" (name x))
+                                        :style {:border-radius "4px"
+                                                :width "24px"
+                                                :height "24px"
+                                                :background-color (if (and (not (:resize-content settings))
+                                                                           (= {:x x :y y} (:anchor settings)))
+                                                                    "#2979ff"
+                                                                    "#444")}
+                                        :onClick (fn []
+                                                   (re-frame/dispatch [::sprite-resizer/set-settings-option :anchor {:x x :y y}]))}])]}]
+         [previews-container {}
+          [previews-grid-items previews]]]]])))
 
 ;; -----------------
 
@@ -1332,10 +1306,10 @@
                     :grid-template-columns "repeat(auto-fit, minmax(200px,1fr))"}}
       (for [[type shortcuts] keyboard-shortcuts/shortcuts-by-types]
         [:div
-         [:h2 (str (str/capitalize (name type)) " shortcuts")]
+         [:h2 (use-style {:margin 0}) (str (str/capitalize (name type)) " shortcuts")]
          [:div
           (for [shortcut shortcuts]
-            [:div (:label shortcut)
+            [:div (str/capitalize (:label shortcut))
              " - "
              (keyboard-shortcuts/keys->string (:keys shortcut))])]])]]))
 
@@ -1343,10 +1317,7 @@
 
 (defn new-project-modal []
   (when @(re-frame/subscribe [::subs/new-project-modal-opened])
-    (r/with-let
-      [size @(re-frame/subscribe [::subs/new-project-modal-size])
-       !width (r/atom (str (:width size)))
-       !height (r/atom (str (:height size)))]
+    (let [size @(re-frame/subscribe [::subs/new-project-modal-size])]
       [modal {:title "New project"
               :size :md
               :cancel-button {:text "Cancel"
@@ -1365,29 +1336,15 @@
                                     "Create example project"]]}
        [form
         [[form-item {:label "Width"
-                     :control [:input {:value @!width
-                                       :type "number"
-                                       :min 1
-                                       :step 1
-                                       :max project-settings/max-sprite-dim
-                                       :onChange (fn [e]
-                                                   (reset! !width (.. e -target -value)))
-                                       :onBlur (fn []
-                                                 (let [width (min (or (parse-int @!width) 1) project-settings/max-sprite-dim)]
-                                                   (reset! !width (str width))
-                                                   (re-frame/dispatch [::new-project-modal/set-width width])))}]}]
+                     :control [input-number {:value (:width size)
+                                             :block true
+                                             :on-blur (fn [value]
+                                                        (re-frame/dispatch [::new-project-modal/set-width value]))}]}]
          [form-item {:label "Height"
-                     :control [:input {:value @!height
-                                       :type "number"
-                                       :min 1
-                                       :step 1
-                                       :max project-settings/max-sprite-dim
-                                       :onChange (fn [e]
-                                                   (reset! !height (.. e -target -value)))
-                                       :onBlur (fn []
-                                                 (let [height (min (or (parse-int @!height) 1) project-settings/max-sprite-dim)]
-                                                   (reset! !height (str height))
-                                                   (re-frame/dispatch [::new-project-modal/set-height height])))}]}]]]])))
+                     :control [input-number {:value (:height size)
+                                             :block true
+                                             :on-blur (fn [value]
+                                                        (re-frame/dispatch [::new-project-modal/set-height value]))}]}]]]])))
 
 ;; ----------------
 
@@ -1465,7 +1422,8 @@
           ^{:key idx}
           [:div
            (case (:type option-spec)
-             :slider (slider props)
+             :slider [:div (use-style {:width "300px"})
+                      (slider props)]
              :checkbox (checkbox props))])))]))
 
 (defn right-sidebar []
@@ -1481,6 +1439,7 @@
     [:div (use-style {:display "flex"
                       :gap "4px"
                       :padding "5px"
+                      :align-items "center"
                       :background-color "#333"
                       :border-bottom "2px solid #171717"})
      [:<>
@@ -1505,7 +1464,7 @@
       [button {:onClick (fn [] (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened true]))} "Keyboard shortcuts"]
       [keyboard-shortcuts-modal]]
      [checkbox {:value pixels-grid-enabled
-                :label "grid"
+                :label "Grid"
                 :onChange (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]
 
      [:div (use-style {:margin-left "auto"})
@@ -1513,27 +1472,29 @@
 
 (defn main-panel []
   [:> react-dnd/DndProvider {"backend" react-dnd-html5-backend/HTML5Backend}
-   [:div (use-style {:display "flex"
-                     :flex-direction "column"
-                     :height "100%"
-                     :width "100%"
-                     :max-height "100%"
-                     :max-width "100%"})
-    [header]
-    [:div (use-style {:display :grid
-                      :grid-template-columns "100px 1fr 250px"
-                      :flex-grow 1
-                      :min-height 0
-                      :width "100%"})
-     [tools-panel]
-     [:div (use-style {:display :flex
-                       :flex-direction :column
-                       :min-width 0
-                       :min-height 0})
-      [tool-options-panel]
-      [canvases-section]
-      [:f> timeline-panel]]
-     [right-sidebar]]]])
+   [:> antd/ConfigProvider {"theme" {"token" {"motion" false}
+                                     "algorithm" (. antd/theme -darkAlgorithm)}}
+    [:div (use-style {:display "flex"
+                      :flex-direction "column"
+                      :height "100%"
+                      :width "100%"
+                      :max-height "100%"
+                      :max-width "100%"})
+     [header]
+     [:div (use-style {:display :grid
+                       :grid-template-columns "100px 1fr 250px"
+                       :flex-grow 1
+                       :min-height 0
+                       :width "100%"})
+      [tools-panel]
+      [:div (use-style {:display :flex
+                        :flex-direction :column
+                        :min-width 0
+                        :min-height 0})
+       [tool-options-panel]
+       [canvases-section]
+       [:f> timeline-panel]]
+      [right-sidebar]]]]])
 
 (defn app []
   (if @(re-frame/subscribe [::subs/initial-loading])
