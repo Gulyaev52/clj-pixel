@@ -102,6 +102,15 @@
    (into [:div (use-style {:display "flex" :align-items "center"})]
          children)])
 
+;; todo: comment
+(defn popover-children [props]
+  (reagent/as-element (. props (children (. props -onClick)))))
+
+(defn popover [trigger content]
+  [:> antd/Popover {"content" (reagent/as-element content)
+                    "trigger" "click"}
+   [:> popover-children {:children trigger}]])
+
 (defn custom-popover []
   (let [!opened (r/atom false)]
     (fn [trigger over]
@@ -505,39 +514,33 @@
 
 (defn onion-skin-settings []
   (let [onion-skin @(re-frame/subscribe [::subs/onion-skin])]
-    [:div (use-style {:width "300px"
-                      :padding "8px"
-                      :background-color "#333333"
-                      :border-radius "2px"
-                      :border "2px solid #C0C0C0"
-                      :color "white"})
-     [form
-      [[form-item {:label "Previous Frames"
-                   :control [input-number {:min 0
-                                           :value (:prev (:frames-count onion-skin))
-                                           :block true
-                                           :on-blur (fn [value]
-                                                      (re-frame/dispatch [::onion-skin/set-frames-count (assoc (:frames-count onion-skin)
-                                                                                                               :prev
-                                                                                                               value)]))}]}]
-       [form-item {:label "Next Frames"
-                   :control [input-number {:min 0
-                                           :value (:next (:frames-count onion-skin))
-                                           :block true
-                                           :on-blur (fn [value]
-                                                      (re-frame/dispatch [::onion-skin/set-frames-count (assoc (:frames-count onion-skin)
-                                                                                                               :next
-                                                                                                               value)]))}]}]
-       [form-item {:label "Opacity"
-                   :control [slider {:min 0 :max 1 :step 0.1
-                                     :value (:opacity onion-skin)
-                                     :block true
-                                     :onChange (fn [v] (re-frame/dispatch [::onion-skin/set-opacity v]))}]}]
-       [form-item {:label "Position"
-                   :control [select {:value (:position onion-skin)
-                                     :options [{:value :front :label "in front of sprite"}
-                                               {:value :behind :label "behind sprite"}]
-                                     :onChange (fn [v] (re-frame/dispatch [::onion-skin/set-position v]))}]}]]]]))
+    [form
+     [[form-item {:label "Previous Frames"
+                  :control [input-number {:min 0
+                                          :value (:prev (:frames-count onion-skin))
+                                          :block true
+                                          :on-blur (fn [value]
+                                                     (re-frame/dispatch [::onion-skin/set-frames-count (assoc (:frames-count onion-skin)
+                                                                                                              :prev
+                                                                                                              value)]))}]}]
+      [form-item {:label "Next Frames"
+                  :control [input-number {:min 0
+                                          :value (:next (:frames-count onion-skin))
+                                          :block true
+                                          :on-blur (fn [value]
+                                                     (re-frame/dispatch [::onion-skin/set-frames-count (assoc (:frames-count onion-skin)
+                                                                                                              :next
+                                                                                                              value)]))}]}]
+      [form-item {:label "Opacity"
+                  :control [slider {:min 0 :max 1 :step 0.1
+                                    :value (:opacity onion-skin)
+                                    :block true
+                                    :onChange (fn [v] (re-frame/dispatch [::onion-skin/set-opacity v]))}]}]
+      [form-item {:label "Position"
+                  :control [select {:value (:position onion-skin)
+                                    :options [{:value :front :label "in front of sprite"}
+                                              {:value :behind :label "behind sprite"}]
+                                    :onChange (fn [v] (re-frame/dispatch [::onion-skin/set-position v]))}]}]]]))
 
 (defn timeline-panel-toolbar [{:keys [disabled-actions all-frames-duration current-frame]}]
   (let [onion-skin-enabled @(re-frame/subscribe [::subs/onion-skin-enabled])]
@@ -625,14 +628,13 @@
                       :title (if onion-skin-enabled "disable onion skin" "enable onion skin")
                       :size :sm
                       :on-click (fn [] (re-frame/dispatch [::onion-skin/set-enabled (not onion-skin-enabled)]))}]
-        [custom-popover
+        [popover
          (fn [open]
            [icon-button {:src "./imgs/cog.svg"
                          :title "onion skin settings"
                          :size :sm
                          :on-click open}])
-         (fn []
-           [onion-skin-settings])]]]]
+         [onion-skin-settings]]]]]
 
      [:div (use-style {:display :flex :color :white})
       [:<>
