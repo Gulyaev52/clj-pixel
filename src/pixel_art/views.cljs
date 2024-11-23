@@ -108,7 +108,8 @@
 
 (defn popover [trigger content]
   [:> antd/Popover {"content" (reagent/as-element content)
-                    "trigger" "click"}
+                    "trigger" "click"
+                    "placement" "bottom"}
    [:> popover-children {:children trigger}]])
 
 (defn custom-popover []
