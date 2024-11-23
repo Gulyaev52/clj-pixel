@@ -25,9 +25,7 @@
    [react :as react]
    [reagent.core :as r]
    [sc.api]
-   [stylefy.core :as stylefy :refer [use-style]]
-   [clojure.string :as str]
-   [reagent.core :as reagent]))
+   [stylefy.core :as stylefy :refer [use-style]]))
 
 (set! *warn-on-infer* false)
 
@@ -104,10 +102,10 @@
 
 ;; todo: comment
 (defn popover-children [props]
-  (reagent/as-element (. props (children (. props -onClick)))))
+  (r/as-element (. props (children (. props -onClick)))))
 
 (defn popover [trigger content]
-  [:> antd/Popover {"content" (reagent/as-element content)
+  [:> antd/Popover {"content" (r/as-element content)
                     "trigger" "click"
                     "placement" "bottom"}
    [:> popover-children {:children trigger}]])
@@ -183,15 +181,12 @@
   [:> antd/Button {:onClick onClick}
    text])
 
-(defn icon-button [{:keys [src title active disabled size on-click]}]
+(defn icon-button [{:keys [src icon-theme title active disabled size on-click]}]
   [:button (use-style (merge
                        {:border "none"
                         :outline "none"
+                        :padding 0
                         :background-color (if active "rgba(255,255,255,.2)" "transparent")
-                        :background-image (str "url(" src ")")
-                        :background-repeat "no-repeat"
-                        :background-position "50%"
-                        :background-size "70%"
                         :border-radius "4px"
                         :opacity (if disabled "0.4" 1)
                         :cursor (if disabled "default" "pointer")
@@ -207,7 +202,16 @@
                          {:width "100%" :height "100%"}))
                       {:title title
                        :disabled disabled
-                       :on-click on-click})])
+                       :on-click on-click})
+   [:div (use-style {:width "100%"
+                     :height "100%"
+                     :mask-image (str "url(./imgs/" (name src) ".svg)")
+                     :mask-repeat "no-repeat"
+                     :mask-position "center"
+                     :mask-size "70%"
+                     :background-color (case (or icon-theme :light)
+                                         :light "white"
+                                         :dark "black")})]])
 
 (defn get-group-color [group-number]
   (nth (cycle ["green" "pink" "yellow" "red" "blue" "purple"]) group-number))
@@ -547,64 +551,63 @@
   (let [onion-skin-enabled @(re-frame/subscribe [::subs/onion-skin-enabled])]
     [:div (use-style {:display "flex" :justify-content "space-between"})
      [:div (use-style {:display "flex" :gap "20px"})
-
-      [section "Frames" [[icon-button {:src "./imgs/add.svg"
+      [section "Frames" [[icon-button {:src :add
                                        :title "add empty frame"
                                        :disabled (:add-frame disabled-actions)
                                        :size :sm
                                        :on-click (fn [] (re-frame/dispatch [::events/add-frame]))}]
-                         [icon-button {:src "./imgs/remove.svg"
+                         [icon-button {:src :remove
                                        :title "remove frame"
                                        :disabled (:remove-frame disabled-actions)
                                        :size :sm
                                        :on-click (fn [] (re-frame/dispatch [::events/remove-frame]))}]
-                         [icon-button {:src "./imgs/duplicate.svg"
+                         [icon-button {:src :duplicate
                                        :title "duplicate frame"
                                        :disabled (:duplicate-frame disabled-actions)
                                        :size :sm
                                        :on-click (fn [] (re-frame/dispatch [::events/duplicate-frame]))}]
-                         [icon-button {:src "./imgs/arrow-left.svg"
+                         [icon-button {:src :arrow-left
                                        :title "move frame left"
                                        :disabled (:move-frame-left disabled-actions)
                                        :size :sm
                                        :on-click (fn [] (re-frame/dispatch [::events/move-frame-left]))}]
-                         [icon-button {:src "./imgs/arrow-right.svg"
+                         [icon-button {:src :arrow-right
                                        :title "move frame right"
                                        :disabled (:move-frame-right disabled-actions)
                                        :size :sm
                                        :on-click (fn [] (re-frame/dispatch [::events/move-frame-right]))}]]]
 
-      [section "Layers" [[icon-button {:src "./imgs/add.svg"
+      [section "Layers" [[icon-button {:src :add
                                        :title "add layer"
                                        :disabled (:add-layer disabled-actions)
                                        :size :sm
                                        :on-click (fn [] (re-frame/dispatch [::events/add-layer]))}]
-                         [icon-button {:src "./imgs/remove.svg"
+                         [icon-button {:src :remove
                                        :title "remove layer"
                                        :disabled (:remove-layer disabled-actions)
                                        :size :sm
                                        :on-click (fn [] (re-frame/dispatch [::events/remove-layer]))}]
-                         [icon-button {:src "./imgs/duplicate.svg"
+                         [icon-button {:src :duplicate
                                        :title "duplicate layer"
                                        :disabled (:duplicate-layer disabled-actions)
                                        :size :sm
                                        :on-click (fn [] (re-frame/dispatch [::events/duplicate-layer]))}]
-                         [icon-button {:src "./imgs/merge-down.svg"
+                         [icon-button {:src :merge-down
                                        :title "merge layer with below"
                                        :disabled (:merge-layer-with-below disabled-actions)
                                        :size :sm
                                        :on-click (fn [] (re-frame/dispatch [::events/merge-layer-with-below]))}]
-                         [icon-button {:src "./imgs/arrow-up.svg"
+                         [icon-button {:src :arrow-up
                                        :title "move layer up"
                                        :disabled (:move-layer-up disabled-actions)
                                        :size :sm
                                        :on-click (fn [] (re-frame/dispatch [::events/move-layer-up]))}]
-                         [icon-button {:src "./imgs/arrow-down.svg"
+                         [icon-button {:src :arrow-down
                                        :title "move layer down"
                                        :disabled (:move-layer-down disabled-actions)
                                        :size :sm
                                        :on-click (fn [] (re-frame/dispatch [::events/move-layer-down]))}]
-                         [icon-button {:src "./imgs/edit.svg"
+                         [icon-button {:src :edit
                                        :title "rename layer"
                                        :size :sm
                                        :on-click (fn [e]
@@ -613,25 +616,25 @@
                                                      (when (seq (string/trim new-name))
                                                        (re-frame/dispatch [::events/rename-layer new-name]))))}]]]
 
-      [section "Cels" [[icon-button {:src "./imgs/link.svg"
+      [section "Cels" [[icon-button {:src :link
                                      :title "link cels"
                                      :disabled (:link-cels disabled-actions)
                                      :size :sm
                                      :on-click (fn [] (re-frame/dispatch [::events/link-selected-cels]))}]
-                       [icon-button {:src "./imgs/link-off.svg"
+                       [icon-button {:src :link-off
                                      :title "unlink cels"
                                      :disabled (:unlink-cel disabled-actions)
                                      :size :sm
                                      :on-click (fn [] (re-frame/dispatch [::events/unlink-selected-cels]))}]]]
 
       [section "Onion skin"
-       [[icon-button {:src (if onion-skin-enabled "./imgs/layers-off.svg" "./imgs/layers.svg")
+       [[icon-button {:src (if onion-skin-enabled :layers-off :layers)
                       :title (if onion-skin-enabled "disable onion skin" "enable onion skin")
                       :size :sm
                       :on-click (fn [] (re-frame/dispatch [::onion-skin/set-enabled (not onion-skin-enabled)]))}]
         [popover
          (fn [open]
-           [icon-button {:src "./imgs/cog.svg"
+           [icon-button {:src :cog
                          :title "onion skin settings"
                          :size :sm
                          :on-click open}])
@@ -705,15 +708,15 @@
                         :top 0
                         :background-color "#333"})
        [icon-button {:src (if some-layer-visible
-                            "./imgs/visibility.svg"
-                            "./imgs/visibility-off.svg")
+                            :visibility
+                            :visibility-off)
                      :title "toggle all layers visibility"
                      :size :sm
                      :on-click (fn []
                                  (re-frame/dispatch [::events/toggle-all-layers-visibility]))}]
        [icon-button {:src (if some-layer-automatic-linking
-                            "./imgs/link.svg"
-                            "./imgs/link-off.svg")
+                            :link
+                            :link-off)
                      :title "toggle all layers automatic linking"
                      :size :sm
                      :on-click (fn []
@@ -731,15 +734,15 @@
           [:div (use-style {:display "flex"
                             :align-items "center"})
            [icon-button {:src (if (:visible? layer)
-                                "./imgs/visibility.svg"
-                                "./imgs/visibility-off.svg")
+                                :visibility
+                                :visibility-off)
                          :title "toggle layer's visibility"
                          :size :sm
                          :on-click (fn []
                                      (re-frame/dispatch [::events/toggle-layer-visibility (:idx layer)]))}]
            [icon-button {:src (if (:automatic-linking? layer)
-                                "./imgs/link.svg"
-                                "./imgs/link-off.svg")
+                                :link
+                                :link-off)
                          :title "toggle layer's automatic linking"
                          :size :sm
                          :on-click (fn []
@@ -816,12 +819,12 @@
                  :overflow "auto"}}
    (doall
     (for [[idx color] (map-indexed vector colors)]
-      (let [dark? (.. (color/->tinycolor color) isDark)]
+      (let [color-dark? (.. (color/->tinycolor color) isDark)]
         ^{:key color}
         [:div (use-style {:background-color (color/int->rgb-str color)
                           :position "relative"
                           :cursor "pointer"
-                          :color (if dark? "white" "black")
+                          :color (if color-dark? "white" "black")
                           ::stylefy/manual [[:&:hover [:.remove-color {:opacity 1}]]]}
                          {:on-click (fn []
                                       (re-frame/dispatch [::palette/select-color idx false]))
@@ -835,7 +838,8 @@
                            :top "1px"
                            :opacity 0}
                           {:class "remove-color"})
-          [icon-button {:src (if dark? "./imgs/close.svg" "./imgs/close-black.svg") ;; todo: fix
+          [icon-button {:src :close
+                        :icon-theme (if color-dark? :light :dark)
                         :title "remove color"
                         :size :xs
                         :on-click (fn [e]
@@ -861,7 +865,7 @@
      [:div (use-style {:display "flex" :justify-content "space-between"})
       [custom-popover
        (fn [close]
-         [icon-button {:src "./imgs/add.svg"
+         [icon-button {:src :add
                        :title "Add color"
                        :size :sm
                        :on-click close}])
@@ -869,41 +873,41 @@
          [add-new-color-picker {:onClose close}])]
 
       [:div
-       [icon-button {:src "./imgs/new-palette.svg"
+       [icon-button {:src :new-palette
                      :title "Add palette"
                      :size :sm
                      :on-click (fn []
                                  (when-let [name (js/prompt)]
                                    (re-frame/dispatch [::palette/create-palette name])))}]
-       [icon-button {:src "./imgs/remove.svg"
+       [icon-button {:src :remove
                      :title "Remove palette"
                      :size :sm
                      :disabled (not (deletable-palette? palettes))
                      :on-click (fn []
                                  (when (js/confirm "are you sure?")
                                    (re-frame/dispatch [::palette/remove-selected-palette])))}]
-       [icon-button {:src "./imgs/edit.svg"
+       [icon-button {:src :edit
                      :title "Rename palette"
                      :size :sm
                      :disabled (not (deletable-palette? palettes))
                      :on-click (fn []
                                  (when-let [name (js/prompt)]
                                    (re-frame/dispatch [::palette/rename-selected-palette name])))}]
-       [icon-button {:src "./imgs/adjust.svg"
+       [icon-button {:src :adjust
                      :title "Add colors from current frame"
                      :size :sm
                      :on-click (fn []
                                  (re-frame/dispatch [::palette/add-colors-from-frame]))}]]
 
       [:div
-       [icon-button {:src "./imgs/file-export.svg"
+       [icon-button {:src :file-export
                      :title "Export palette"
                      :size :sm
                      :on-click (fn [] (re-frame/dispatch [::palette/export-palette]))}]
        [file-uploader {:onUpload (fn [file-desc]
                                    (re-frame/dispatch [::palette/import-palette file-desc]))}
         (fn [on-click]
-          [icon-button {:src "./imgs/file-import.svg"
+          [icon-button {:src :file-import
                         :title "Import palette"
                         :size :sm
                         :on-click on-click}])]]]
@@ -1083,14 +1087,16 @@
 (defn- current-color-selection [{:keys [value onChange]}]
   [custom-popover
    (fn [close]
-     [:div {:style {:width "45px"
-                    :height "45px"
-                    :border-radius "5px"
-                    :background (if (= value color/transparent-color-int)
-                                  transparent-color-img
-                                  (color/int->rgb-str value))
-                    :border "thin solid white"}
-            :onClick close}])
+     [:div (use-style
+            {:width "45px"
+             :height "45px"
+             :border-radius "5px"
+             :cursor "pointer"
+             :background (if (= value color/transparent-color-int)
+                           transparent-color-img
+                           (color/int->rgb-str value))
+             :border "thin solid white"}
+            {:onClick close})])
    (fn [close]
      [current-color-selection-color-picker {:value value :onChange onChange} close])])
 
@@ -1163,7 +1169,7 @@
                      :onCancel on-cancel
                      :cancelText cancel-text
                      :footer (fn [_ props]
-                               (reagent/as-element
+                               (r/as-element
                                 [:div (use-style {:display :flex :gap "6px"})
                                  (concat
                                   [(into [:div (use-style {:display "flex" :gap "6px" :margin-right "auto"})]
@@ -1317,10 +1323,10 @@
                     :grid-template-columns "repeat(auto-fit, minmax(200px,1fr))"}}
       (for [[type shortcuts] keyboard-shortcuts/shortcuts-by-types]
         [:div
-         [:h2 (use-style {:margin 0}) (str (str/capitalize (name type)) " shortcuts")]
+         [:h2 (use-style {:margin 0}) (str (string/capitalize (name type)) " shortcuts")]
          [:div
           (for [shortcut shortcuts]
-            [:div (str/capitalize (:label shortcut))
+            [:div (string/capitalize (:label shortcut))
              " - "
              (keyboard-shortcuts/keys->string (:keys shortcut))])]])]]))
 
@@ -1359,10 +1365,9 @@
 ;; ----------------
 
 (defn tool-view [{:keys [type selected]}]
-  (let [image-src (str "./imgs/tools/" (name type) ".svg")
-        title (string/replace (name type) "-" " ")]
+  (let [title (string/replace (name type) "-" " ")]
     [:div (use-style {:width "50px" :height "50px"})
-     [icon-button {:src image-src
+     [icon-button {:src type
                    :title title
                    :active selected
                    :size :auto
@@ -1372,25 +1377,23 @@
 (defn current-colors-selection []
   (let [primary-color @(re-frame/subscribe [::subs/primary-color])
         secondary-color @(re-frame/subscribe [::subs/secondary-color])]
-    [:div {:style {:position "relative"}}
-     [:div {:style {:position "relative" :z-index 1 :cursor "pointer"}}
+    [:div (use-style {:width "min-content" :position "relative"})
+     [:div (use-style {:width "min-content" :position "relative" :z-index 1})
       [current-color-selection {:value primary-color
                                 :onChange (fn [new-primary-color]
                                             (re-frame/dispatch [::events/set-current-color :primary-color new-primary-color]))}]]
-     [:div (use-style {:position "relative" :margin-top "-25px" :margin-left "32px" :cursor "pointer"})
+     [:div (use-style {:margin-top "-25px" :margin-left "32px"})
       [current-color-selection {:value secondary-color
                                 :onChange (fn [new-secondary-color]
                                             (re-frame/dispatch [::events/set-current-color :secondary-color new-secondary-color]))}]]
-     [:img (use-style
-            {:position "absolute"
-             :width "25px"
-             :transform "rotate(52deg)"
-             :top "48px"
-             :left "3px"
-             :cursor "pointer"}
-            {:src "./imgs/swap.svg"
-             :title "Swap colors"
-             :on-click (fn [] (re-frame/dispatch [::events/swap-current-colors]))})]]))
+     [:div (use-style {:position "absolute"
+                       :top "48px"
+                       :left "3px"
+                       :cursor "pointer"})
+      [icon-button {:src :swap
+                    :title "Swap colors"
+                    :size :sm
+                    :on-click (fn [] (re-frame/dispatch [::events/swap-current-colors]))}]]]))
 
 (defn tools-panel []
   (let [tool @(re-frame/subscribe [::subs/tool])]

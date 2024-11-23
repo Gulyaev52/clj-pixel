@@ -1,23 +1,17 @@
 17) дизайн
   дизайн система
-    modal, icons, icon-button, popper
-    use font icons?
+    переиспользовать цвета
+    slider value label
+    где-то Onchage а где-то blur
 
-  popper styles = modal
-  modal передавать отдельно экшены
-  slider value label
-  где-то Onchage а где-то blur
+  on resize не центрирует
+    resize + create
 
   поправить тесты
 
   highlight color, higliht selection на ярких
 
   image rendering pixelated. превью и сам если отдаляешь. нарисуй квадрат
-
-
-  1) может быть сложно кастомизировать. Пока не попробуешь не узнаешь
-  2) много иконок нет которые мне надо
-  3) конвертации
 
 оптимизация
 transdusers?
