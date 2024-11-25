@@ -35,14 +35,33 @@
 
 (def drawing-border "1px solid black")
 
+(defn typography
+  ([text] (typography {} text))
+  ([props title] [:> antd/Typography props title]))
+
+(defn space [& children]
+  (let [props (first children)
+        items (if (map? props)
+                (rest children)
+                children)]
+    [:> antd/Space (if (map? props)
+                     props {})
+     items]))
+
+(defn title
+  ([text] (title text {}))
+  ([props title] [:> (. antd/Typography -Title)
+                  (assoc-in props [:style :margin-top] 0) ;; todo: fix
+                  title]))
+
 (defn form [items]
-  (into [:div (use-style {:display "flex" :flex-direction "column" :gap "4px"})] items))
+  (apply space {:direction "vertical" :style {:width "100%"}} items))
 
 (defn form-item [{:keys [label control]}]
   [:div (use-style {:display "grid"
                     :grid-template-columns "1fr 1fr"
                     :align-items "center"})
-   [:span label]
+   [typography label]
    control])
 
 (defn preview-image [src style]
@@ -96,7 +115,7 @@
                     :font-size "14px"
                     :color "white"
                     :border-radius "5px"})
-   [:div (str title ":")]
+   [typography title]
    (into [:div (use-style {:display "flex" :align-items "center"})]
          children)])
 
@@ -155,14 +174,13 @@
                                 (. canvas-layers-rect -top)) scale)))}))
 
 (defn slider [{:keys [value label block min max step style onChange]}]
-  ;; todo: labels
   [:div (use-style {:display :flex
                     :align-items :center
                     :width (if block "100%" "250px")
                     :gap "8px"
                     :color "white"
                     :font-size "13px"})
-   [:span (str label " (" value ")")]
+   [typography (str label " (" value ")")]
    [:> antd/Slider {:value value
                     :min min
                     :max max
@@ -272,7 +290,7 @@
                     :cursor "pointer"
                     :color "white"
                     :background-color "#3B3B3B"}}
-      (:name layer)]
+      [typography (:name layer)]]
      [:f> droppable-layer-zone (inc (:idx layer)) {:bottom 0 :transform "translateY(50%)"}]]))
 
 (defn droppable-frame-zone [idx styles]
@@ -308,7 +326,8 @@
                                     "1px")
                     :text-align "center"
                     :cursor "pointer"
-                    :color "white"}} (inc (:idx frame))]
+                    :color "white"}}
+      [typography (inc (:idx frame))]]
      [:f> droppable-frame-zone (inc (:idx frame)) {:right 0
                                                    :top 0
                                                    :transform "translateX(50%)"}]]))
@@ -550,7 +569,7 @@
 (defn timeline-panel-toolbar [{:keys [disabled-actions all-frames-duration current-frame]}]
   (let [onion-skin-enabled @(re-frame/subscribe [::subs/onion-skin-enabled])]
     [:div (use-style {:display "flex" :justify-content "space-between"})
-     [:div (use-style {:display "flex" :gap "20px"})
+     [space
       [section "Frames" [[icon-button {:src :add
                                        :title "add empty frame"
                                        :disabled (:add-frame disabled-actions)
@@ -645,13 +664,13 @@
        [sprite-preview-modal]
        [button {:onClick (fn [] (re-frame/dispatch [::sprite-preview/open]))} "Show preview"]]
       [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
-       [:span "Duration (ms)"]
+       [typography "Duration (ms)"]
        [input-number {:value (:duration current-frame)
                       :on-blur (fn [duration]
                                  (re-frame/dispatch [::events/set-frame-duration (:idx current-frame) duration]))}]]
 
       [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
-       [:span "All frames duration (ms)"]
+       [typography "All frames duration (ms)"]
        [input-number {:value all-frames-duration
                       :on-blur (fn [duration]
                                  (re-frame/dispatch [::events/set-frame-duration-for-all duration]))}]]]]))
@@ -921,10 +940,10 @@
   (let [mouse-pos @(re-frame/subscribe [::subs/mouse-pos])
         scale @(re-frame/subscribe [::subs/scale])
         sprite-size @(re-frame/subscribe [::subs/sprite-size])]
-    [:div {:style {:display :flex :gap "10px" :color "white"}}
-     [:div (str "[" (:width sprite-size) "x" (:height sprite-size) "]")]
-     [:div (str (:x mouse-pos) ":" (:y mouse-pos))]
-     [:div (str "scale=" (. scale (toFixed 2)))]]))
+    [space
+     [typography (str "[" (:width sprite-size) "x" (:height sprite-size) "]")]
+     [typography (str (:x mouse-pos) ":" (:y mouse-pos))]
+     [typography (str "scale=" (. scale (toFixed 2)))]]))
 
 (defn canvases-section-component []
   (let [viewport-ref (react/useRef)
@@ -1225,9 +1244,7 @@
               :on-ok (fn []
                        (re-frame/dispatch [::export/export]))}
 
-       [:div (use-style {:display "flex"
-                         :flex-direction "column"
-                         :gap "4px"})
+       [space {:direction "vertical" :style {:width "100%"}}
         [:div
          [button {:style {:border (if (= current-tab :image)
                                     "1px solid #C0C0C0"
@@ -1323,7 +1340,7 @@
                     :grid-template-columns "repeat(auto-fit, minmax(200px,1fr))"}}
       (for [[type shortcuts] keyboard-shortcuts/shortcuts-by-types]
         [:div
-         [:h2 (use-style {:margin 0}) (str (string/capitalize (name type)) " shortcuts")]
+         [title {:level 4} (str (string/capitalize (name type)) " shortcuts")]
          [:div
           (for [shortcut shortcuts]
             [:div (string/capitalize (:label shortcut))
@@ -1450,10 +1467,10 @@
 (defn header []
   (let [pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])]
     [:div (use-style {:display "flex"
-                      :gap "4px"
-                      :padding "5px"
                       :align-items "center"
+                      :padding "5px"
                       :background-color "#333"
+                      :gap "4px"
                       :border-bottom "2px solid #171717"})
      [:<>
       [new-project-modal]

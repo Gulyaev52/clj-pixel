@@ -1,8 +1,10 @@
 17) дизайн
   дизайн система
+    tabs
     переиспользовать цвета
     slider value label
     где-то Onchage а где-то blur
+    form
 
   on resize не центрирует
     resize + create
