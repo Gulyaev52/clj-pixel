@@ -15,6 +15,8 @@
 
   image rendering pixelated. превью и сам если отдаляешь. нарисуй квадрат
 
+  linking doesn't work
+
 оптимизация
 transdusers?
   11) во вьюху вытащить логику рендера канваса

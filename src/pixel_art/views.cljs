@@ -103,8 +103,8 @@
         [preview-image data-url
          {:height "100%"
           :min-height "70px"}]
-        [:div {:style {:padding "5px" :color "black"}}
-         (inc idx)]])]))
+        [:div {:style {:padding "5px"}}
+         [typography (inc idx)]]])]))
 
 (defn section [title children]
   [:div (use-style {:display "flex"
@@ -113,7 +113,6 @@
                     :background-color "#171717"
                     :padding "1px 8px"
                     :font-size "14px"
-                    :color "white"
                     :border-radius "5px"})
    [typography title]
    (into [:div (use-style {:display "flex" :align-items "center"})]
@@ -178,7 +177,6 @@
                     :align-items :center
                     :width (if block "100%" "250px")
                     :gap "8px"
-                    :color "white"
                     :font-size "13px"})
    [typography (str label " (" value ")")]
    [:> antd/Slider {:value value
@@ -288,7 +286,6 @@
                                     "2px"
                                     "1px")
                     :cursor "pointer"
-                    :color "white"
                     :background-color "#3B3B3B"}}
       [typography (:name layer)]]
      [:f> droppable-layer-zone (inc (:idx layer)) {:bottom 0 :transform "translateY(50%)"}]]))
@@ -325,8 +322,7 @@
                                     "2px"
                                     "1px")
                     :text-align "center"
-                    :cursor "pointer"
-                    :color "white"}}
+                    :cursor "pointer"}}
       [typography (inc (:idx frame))]]
      [:f> droppable-frame-zone (inc (:idx frame)) {:right 0
                                                    :top 0
@@ -381,11 +377,7 @@
                                     "2px"
                                     "1px")
                     :background-color drawing-container-color
-                    :cursor "pointer"
-                    :font-weight "bold"
-                    :font-size 18
-                    :color (when-let [group-number (:group-number cel)]
-                             (get-group-color group-number))}}
+                    :cursor "pointer"}}
       [preview-image cel-preview (merge {:max-width "100%"
                                          :max-height "100%"}
                                         (if (> (:width (:size cel))
@@ -393,7 +385,11 @@
                                           {:width "100%"}
                                           {:height "100%"}))]
       [:div {:style {:position "absolute" :top 0}}
-       (some-> (:group-number cel) inc)]]
+       (some-> (:group-number cel)
+               inc
+               (#(typography {:style {:color (when-let [group-number (:group-number cel)]
+                                               (get-group-color group-number))}}
+                             %)))]]
      [:f> droppable-cel-zone
       (:pos cel)
       :layer
@@ -659,7 +655,7 @@
                          :on-click open}])
          [onion-skin-settings]]]]]
 
-     [:div (use-style {:display :flex :color :white})
+     [:div (use-style {:display :flex})
       [:<>
        [sprite-preview-modal]
        [button {:onClick (fn [] (re-frame/dispatch [::sprite-preview/open]))} "Show preview"]]
@@ -1524,7 +1520,7 @@
        [tool-options-panel]
        [canvases-section]
        [:f> timeline-panel]]
-      [right-sidebar]]]]])
+      [:f> right-sidebar]]]]])
 
 (defn app []
   (if @(re-frame/subscribe [::subs/initial-loading])
@@ -1533,7 +1529,6 @@
                       :justify-content "center"
                       :width "100%"
                       :height "100%"
-                      :color "white"
                       :background-color "#171717"})
-     "LOADING..."]
+     [:> antd/Spin {:size "large"}]]
     [main-panel]))

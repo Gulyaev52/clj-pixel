@@ -392,12 +392,13 @@
 
 (re-frame/reg-event-fx
  ::link-selected-cels
- (fn [{:keys [db]} [_ main-cel-pos]]
-   (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
-       (update-in [:db :sprite] #(sprite/link-selected-cels main-cel-pos %))
-       (update-in [:db] history/save-sprite))))
+ (fn [{:keys [db]} [_]]
+   (let [main-cel-pos (sprite/get-current-cel-pos (:sprite db))]
+     (-> db
+         (commit-changes-and-init-tool (get-in db [:tool :state :changes])
+                                       (tool/init (-> db :tool :type)))
+         (update-in [:db :sprite] #(sprite/link-selected-cels main-cel-pos %))
+         (update-in [:db] history/save-sprite)))))
 
 (re-frame/reg-event-fx
  ::unlink-selected-cels
