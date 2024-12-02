@@ -1,8 +1,9 @@
 17) дизайн
   slider value label
-  где-то Onchage а где-то blur
   form
   style vs use-style
+  fix :f>
+  ошибки и варнинги
 
   on resize не центрирует
     resize + create

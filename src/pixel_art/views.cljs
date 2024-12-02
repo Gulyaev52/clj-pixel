@@ -132,8 +132,8 @@
                          :right "0px"
                          :bottom "0px"
                          :left "0px"}
-                 :onClick (fn []
-                            (reset! !opened false))}]
+                 :on-click (fn []
+                             (reset! !opened false))}]
           [:div {:style {:position "absolute" :zIndex 101 :bottom "calc(100% + 5px)"}}
            (over (fn [] (reset! !opened false)))]])])))
 
@@ -163,7 +163,7 @@
      :y (. js/Math (floor (/ (- (:y mouse-pos)
                                 (. canvas-layers-rect -top)) scale)))}))
 
-(defn slider [{:keys [value label block min max step style onChange]}]
+(defn slider [{:keys [value label block min max step style on-change]}]
   [:div (use-style {:display :flex
                     :align-items :center
                     :width (if block "100%" "250px")
@@ -176,16 +176,16 @@
                     :step (or step 1)
                     :style (merge {:user-select "none" :flex-grow 1} style)
                     :onChange (fn [value]
-                                (onChange value))}]])
+                                (on-change value))}]])
 
-(defn checkbox [{:keys [value onChange label]}]
+(defn checkbox [{:keys [value on-change label]}]
   [:> antd/Checkbox {:checked value
                      :onChange (fn [e]
-                                 (onChange (.. e -target -checked)))}
+                                 (on-change (.. e -target -checked)))}
    label])
 
-(defn button [{:keys [onClick]} text]
-  [:> antd/Button {:onClick onClick}
+(defn button [{:keys [on-click]} text]
+  [:> antd/Button {:onClick on-click}
    text])
 
 (defn icon-button [{:keys [src icon-theme title active disabled size on-click]}]
@@ -266,7 +266,7 @@
      (when (= (:idx layer) 0)
        [:f> droppable-layer-zone (:idx layer) {:top 0 :transform "translateY(-50%)"}])
      [:div {:ref ref
-            :onClick (fn [] (re-frame/dispatch [::events/select-layer (:idx layer)]))
+            :on-click (fn [] (re-frame/dispatch [::events/select-layer (:idx layer)]))
             :style {:display :flex
                     :align-items "center"
                     :padding "4px"
@@ -302,7 +302,7 @@
        [:f> droppable-frame-zone (:idx frame) {:left 0
                                                :top 0
                                                :transform "translateX(-50%)"}])
-     [:div {:onClick (fn [] (re-frame/dispatch [::events/select-frame (:idx frame)]))
+     [:div {:on-click (fn [] (re-frame/dispatch [::events/select-frame (:idx frame)]))
             :ref ref
             :style {:display "flex"
                     :align-items "center"
@@ -351,13 +351,13 @@
          :top 0
          :left 0
          :transform "translateX(-50%)"}])
-     [:div {:onClick (fn [e]
-                       (cond
-                         (.. e -shiftKey)
-                         (re-frame/dispatch [::events/add-cels-range-to-selection (:pos cel)])
-                         (.. e -ctrlKey)
-                         (re-frame/dispatch [::events/toggle-cel-to-selection (:pos cel)])
-                         :else (re-frame/dispatch [::events/select-only-1-cel (:pos cel)])))
+     [:div {:on-click (fn [e]
+                        (cond
+                          (.. e -shiftKey)
+                          (re-frame/dispatch [::events/add-cels-range-to-selection (:pos cel)])
+                          (.. e -ctrlKey)
+                          (re-frame/dispatch [::events/toggle-cel-to-selection (:pos cel)])
+                          :else (re-frame/dispatch [::events/select-only-1-cel (:pos cel)])))
             :ref ref
             :style {:position "relative"
                     :display :flex
@@ -474,7 +474,7 @@
     {:handler-ref handler-ref
      :container-ref container-ref}))
 
-(defn select-component [{:keys [value size onChange block options]}]
+(defn select-component [{:keys [value size on-change block options]}]
   (let [ref (react/useRef)]
     [:> antd/Select {:value value
                      :ref ref
@@ -485,11 +485,11 @@
                              :md "middle"
                              nil)
                      :style {:width (when block "100%")}
-                     :onChange (fn [value]
+                     :on-change (fn [value]
                                  ;; after select option, select has focus and pressing hotkeys doesn't work + any key lead to select opening
                                  ;; todo: find better way?
-                                 (.. ref -current blur)
-                                 (onChange value))}]))
+                                  (.. ref -current blur)
+                                  (on-change value))}]))
 
 (defn select [props]
   [:f> select-component props])
@@ -548,12 +548,12 @@
                   :control [slider {:min 0 :max 1 :step 0.1
                                     :value (:opacity onion-skin)
                                     :block true
-                                    :onChange (fn [v] (re-frame/dispatch [::onion-skin/set-opacity v]))}]}]
+                                    :on-change (fn [v] (re-frame/dispatch [::onion-skin/set-opacity v]))}]}]
       [form-item {:label "Position"
                   :control [select {:value (:position onion-skin)
                                     :options [{:value :front :label "in front of sprite"}
                                               {:value :behind :label "behind sprite"}]
-                                    :onChange (fn [v] (re-frame/dispatch [::onion-skin/set-position v]))}]}]]]))
+                                    :on-change (fn [v] (re-frame/dispatch [::onion-skin/set-position v]))}]}]]]))
 
 (defn timeline-panel-section [title children]
   [:> antd/Card {:size "small"}
@@ -658,7 +658,7 @@
      [:div (use-style {:display :flex})
       [:<>
        [sprite-preview-modal]
-       [button {:onClick (fn [] (re-frame/dispatch [::sprite-preview/open]))} "Show preview"]]
+       [button {:on-click (fn [] (re-frame/dispatch [::sprite-preview/open]))} "Show preview"]]
       [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
        [typography "Duration (ms)"]
        [input-number {:value (:duration current-frame)
@@ -766,32 +766,32 @@
             ^{:key (str (:frame-idx (:pos cel)) "-" (:layer-idx (:pos cel)))}
             [:f> cel-view cel])]))]]))
 
-(defn color-picker [{:keys [value presetColors actions onChange]}]
+(defn color-picker [{:keys [value preset-colors actions on-change]}]
   [:> color-picker-js
    {:color (color/int->rgb-str value)
     :disableAlpha true
-    :presetColors (clj->js (map #(update % :color color/int->rgb-str) presetColors))
+    :presetColors (clj->js (map #(update % :color color/int->rgb-str) preset-colors))
     :actions (clj->js (map #(reagent.core/as-element %) actions))
     :onChange (fn [e] (let [rgba (. e -rgba)]
-                        (onChange (color/int (. rgba -r) (. rgba -g) (. rgba -b) (. rgba -a)))))}])
+                        (on-change (color/int (. rgba -r) (. rgba -g) (. rgba -b) (. rgba -a)))))}])
 
-(defn file-uploader-comp [{:keys [onUpload accept]} render-button]
+(defn file-uploader-comp [{:keys [on-upload accept]} render-button]
   (let [input-ref (react/useRef)]
     [:span
      [:input {:type "file"
               :accept accept
               :ref input-ref
               :style {:display "none"}
-              :onChange (fn [e]
-                          (let [files (.. e -target -files)]
-                            (when-first [file files]
-                              (let [file-reader (js/FileReader.)]
-                                (set! (. file-reader -onload) (fn [e]
-                                                                (onUpload {:file-name (. file -name)
-                                                                           :content (.. e -target -result)})))
-                                (. file-reader (readAsText file)))))
-                          (set! (.. e -target -value) "") ;; without this line onChange is not triggered when the same file is choosen twice
-                          )}]
+              :on-change (fn [e]
+                           (let [files (.. e -target -files)]
+                             (when-first [file files]
+                               (let [file-reader (js/FileReader.)]
+                                 (set! (. file-reader -onload) (fn [e]
+                                                                 (on-upload {:file-name (. file -name)
+                                                                             :content (.. e -target -result)})))
+                                 (. file-reader (readAsText file)))))
+                           (set! (.. e -target -value) "") ;; without this line onChange is not triggered when the same file is choosen twice
+                           )}]
      [render-button (fn []
                       (.. input-ref -current click))]]))
 
@@ -809,20 +809,20 @@
         secondary-color (replace-transparent-color @(re-frame/subscribe [::subs/secondary-color]))
         last-color (replace-transparent-color (last (:colors @(re-frame/subscribe [::subs/current-palette]))))
         !temp-new-value (r/atom primary-color)]
-    (fn [{:keys [onClose]}]
+    (fn [{:keys [on-close]}]
       [color-picker {:value @!temp-new-value
-                     :onChange (fn [new-value]
-                                 (reset! !temp-new-value new-value))
+                     :on-change (fn [new-value]
+                                  (reset! !temp-new-value new-value))
                      :actions [[button
-                                {:onClick (fn []
-                                            (re-frame/dispatch [::palette/add-color @!temp-new-value])
-                                            (onClose))}
+                                {:on-click (fn []
+                                             (re-frame/dispatch [::palette/add-color @!temp-new-value])
+                                             (on-close))}
                                 "Add"]]
-                     :presetColors (coll/distinct-by :color [{:color primary-color}
-                                                             {:color secondary-color}
-                                                             {:color last-color}])
-                     :onCancel (fn []
-                                 (onClose))}])))
+                     :preset-colors (coll/distinct-by :color [{:color primary-color}
+                                                              {:color secondary-color}
+                                                              {:color last-color}])
+                     :on-cancel (fn []
+                                  (on-close))}])))
 
 (defn palette-colors [{:keys [colors primary-color secondary-color]}]
   (let [theme-token (use-theme-token)]
@@ -874,8 +874,8 @@
               :options (map-indexed (fn [idx p] {:value idx :label (:name p)}) palettes)
               :block true
               :size :sm
-              :onChange (fn [idx]
-                          (re-frame/dispatch [::palette/select-palette idx]))}]
+              :on-change (fn [idx]
+                           (re-frame/dispatch [::palette/select-palette idx]))}]
 
      [:div (use-style {:display "flex" :justify-content "space-between"})
       [custom-popover
@@ -885,7 +885,7 @@
                        :size :sm
                        :on-click close}])
        (fn [close]
-         [add-new-color-picker {:onClose close}])]
+         [add-new-color-picker {:on-close close}])]
 
       [:div
        [icon-button {:src :new-palette
@@ -919,8 +919,8 @@
                      :title "Export palette"
                      :size :sm
                      :on-click (fn [] (re-frame/dispatch [::palette/export-palette]))}]
-       [file-uploader {:onUpload (fn [file-desc]
-                                   (re-frame/dispatch [::palette/import-palette file-desc]))}
+       [file-uploader {:on-upload (fn [file-desc]
+                                    (re-frame/dispatch [::palette/import-palette file-desc]))}
         (fn [on-click]
           [icon-button {:src :file-import
                         :title "Import palette"
@@ -976,53 +976,53 @@
                    :background-color preview-container-bg-color
                    :width "100%"
                    :flex-grow 1}
-           :onContextMenu (fn [event]
-                            (. event preventDefault))
-           :onMouseDown (fn [event]
-                          (. event preventDefault)
-                          (. event stopPropagation)
-                          (if (is-middle-button? event)
-                            (do
-                              (re-frame/dispatch [::events/start-panning (get-mouse-client-pos event)])
-                              (let [mouse-move (fn [event]
-                                                 (re-frame/dispatch [::events/pan (get-mouse-client-pos event)]))]
-                                (.. js/document (addEventListener "mousemove" mouse-move))
-                                (.. js/document (addEventListener "mouseup"
-                                                                  (fn []
-                                                                    (re-frame/dispatch [::events/stop-panning])
-                                                                    (.. js/document (removeEventListener "mousemove" mouse-move)))
-                                                                  #js {"once" true}))))
-                            (let [right-button (is-right-button? event)
+           :on-context-menu (fn [event]
+                              (. event preventDefault))
+           :on-mouse-down (fn [event]
+                            (. event preventDefault)
+                            (. event stopPropagation)
+                            (if (is-middle-button? event)
+                              (do
+                                (re-frame/dispatch [::events/start-panning (get-mouse-client-pos event)])
+                                (let [mouse-move (fn [event]
+                                                   (re-frame/dispatch [::events/pan (get-mouse-client-pos event)]))]
+                                  (.. js/document (addEventListener "mousemove" mouse-move))
+                                  (.. js/document (addEventListener "mouseup"
+                                                                    (fn []
+                                                                      (re-frame/dispatch [::events/stop-panning])
+                                                                      (.. js/document (removeEventListener "mousemove" mouse-move)))
+                                                                    #js {"once" true}))))
+                              (let [right-button (is-right-button? event)
 
-                                  mouse-pos (canvas-pos->frame-pos event scale)
+                                    mouse-pos (canvas-pos->frame-pos event scale)
 
-                                  mouse-move (fn [event]
+                                    mouse-move (fn [event]
+                                                 (let [scale @(re-frame/subscribe [::subs/scale])
+                                                       mouse-pos (canvas-pos->frame-pos event scale)]
+                                                   (when (not= mouse-pos @!last-mouse-pos)
+                                                     (reset! !last-mouse-pos mouse-pos)
+                                                     (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos right-button]))))
+
+                                    mouse-up (fn mouse-up [event]
                                                (let [scale @(re-frame/subscribe [::subs/scale])
                                                      mouse-pos (canvas-pos->frame-pos event scale)]
-                                                 (when (not= mouse-pos @!last-mouse-pos)
-                                                   (reset! !last-mouse-pos mouse-pos)
-                                                   (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos right-button]))))
-
-                                  mouse-up (fn mouse-up [event]
-                                             (let [scale @(re-frame/subscribe [::subs/scale])
-                                                   mouse-pos (canvas-pos->frame-pos event scale)]
-                                               (reset! !last-mouse-pos mouse-pos)
-                                               (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos right-button])
-                                               (.. js/document (removeEventListener "mousemove" mouse-move))
-                                               (.. js/document (removeEventListener "mouseup" mouse-up))))]
-                              (re-frame/dispatch [::events/handle-mouse-event :mouse-down mouse-pos right-button])
-                              (.. js/document (addEventListener "mousemove" mouse-move))
-                              (.. js/document (addEventListener "mouseup" mouse-up)))))
-           :onMouseLeave (fn [event]
-                           (when-not (or user-is-drawing panning)
-                             (let [mouse-pos (canvas-pos->frame-pos event scale)]
-                               (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)]))))
-           :onMouseMove (fn [event]
-                          (when-not (or user-is-drawing panning)
-                            (let [mouse-pos (canvas-pos->frame-pos event scale)]
-                              (when (not= mouse-pos @!last-mouse-pos)
-                                (reset! !last-mouse-pos mouse-pos)
-                                (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)])))))}
+                                                 (reset! !last-mouse-pos mouse-pos)
+                                                 (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos right-button])
+                                                 (.. js/document (removeEventListener "mousemove" mouse-move))
+                                                 (.. js/document (removeEventListener "mouseup" mouse-up))))]
+                                (re-frame/dispatch [::events/handle-mouse-event :mouse-down mouse-pos right-button])
+                                (.. js/document (addEventListener "mousemove" mouse-move))
+                                (.. js/document (addEventListener "mouseup" mouse-up)))))
+           :on-mouse-leave (fn [event]
+                             (when-not (or user-is-drawing panning)
+                               (let [mouse-pos (canvas-pos->frame-pos event scale)]
+                                 (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)]))))
+           :on-mouse-move (fn [event]
+                            (when-not (or user-is-drawing panning)
+                              (let [mouse-pos (canvas-pos->frame-pos event scale)]
+                                (when (not= mouse-pos @!last-mouse-pos)
+                                  (reset! !last-mouse-pos mouse-pos)
+                                  (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)])))))}
      [:div {:id "drawing-canvas-container" :style {:position "relative"}}
       [:div {:id "canvas-layers"
              :style {:position "relative"
@@ -1090,16 +1090,16 @@
 
 (defn- current-color-selection-color-picker [{:keys [value]}]
   (let [initial-value value]
-    (fn [{:keys [value onChange]} close]
+    (fn [{:keys [value on-change]} close]
       [color-picker {:value value
-                     :onChange onChange
-                     :presetColors (if (= initial-value color/transparent-color-int)
-                                     [{:color initial-value}]
-                                     [{:color initial-value}
-                                      {:color color/transparent-color-int :title "transparent color"}])
-                     :onCancel close}])))
+                     :on-change on-change
+                     :preset-colors (if (= initial-value color/transparent-color-int)
+                                      [{:color initial-value}]
+                                      [{:color initial-value}
+                                       {:color color/transparent-color-int :title "transparent color"}])
+                     :on-cancel close}])))
 
-(defn- current-color-selection [{:keys [value onChange]}]
+(defn- current-color-selection [{:keys [value on-change]}]
   [custom-popover
    (fn [close]
      [:div (use-style
@@ -1111,9 +1111,9 @@
                            transparent-color-img
                            (color/int->rgb-str value))
              :border "thin solid white"}
-            {:onClick close})])
+            {:on-click close})])
    (fn [close]
-     [current-color-selection-color-picker {:value value :onChange onChange} close])])
+     [current-color-selection-color-picker {:value value :on-change on-change} close])])
 
 ;; export import
 
@@ -1127,27 +1127,27 @@
                  :control [select {:value (:frames common-settings)
                                    :options [{:label "All frames" :value :all}
                                              {:label "Selected frames" :value :selected}]
-                                   :onChange (fn [value]
-                                               (re-frame/dispatch [::export/set-settings-option :frames value]))}]}]
+                                   :on-change (fn [value]
+                                                (re-frame/dispatch [::export/set-settings-option :frames value]))}]}]
      [form-item {:label "Layers"
                  :control [select {:value (:layers common-settings)
                                    :options layer-options
-                                   :onChange (fn [value]
-                                               (re-frame/dispatch [::export/set-settings-option :layers value]))}]}]
+                                   :on-change (fn [value]
+                                                (re-frame/dispatch [::export/set-settings-option :layers value]))}]}]
      [form-item {:label "Direction"
                  :control [select {:value (:direction common-settings)
                                    :options [{:label "Forward" :value :forward}
                                              {:label "Backwards" :value :backwards}]
-                                   :onChange (fn [value]
-                                               (re-frame/dispatch [::export/set-settings-option :direction value]))}]}]
+                                   :on-change (fn [value]
+                                                (re-frame/dispatch [::export/set-settings-option :direction value]))}]}]
      [form-item {:label "Frame scale"
                  :control [slider {:value (:scale common-settings)
                                    :min export/min-scale
                                    :max export/max-scale
                                    :block true
                                    :step 1
-                                   :onChange (fn [value]
-                                               (re-frame/dispatch [::export/set-settings-option :scale value]))}]}]
+                                   :on-change (fn [value]
+                                                (re-frame/dispatch [::export/set-settings-option :scale value]))}]}]
      [form-item {:label "Frame size"
                  :control [:<> (str (-> common-settings :scaled-frame-size :width)
                                     "x"
@@ -1160,12 +1160,12 @@
      [form-item {:label "Type"
                  :control [select {:value (:file-type common-settings)
                                    :options type-options
-                                   :onChange (fn [value]
-                                               (re-frame/dispatch [::export/set-settings-option :file-type value]))}]}]
+                                   :on-change (fn [value]
+                                                (re-frame/dispatch [::export/set-settings-option :file-type value]))}]}]
      [form-item {:label "Split layers"
                  :control [checkbox {:value (:split-layers common-settings)
-                                     :onChange (fn [value]
-                                                 (re-frame/dispatch [::export/set-settings-option :split-layers value]))}]}]]))
+                                     :on-change (fn [value]
+                                                  (re-frame/dispatch [::export/set-settings-option :split-layers value]))}]}]]))
 
 (defn modal [props & children]
   (let [{:keys [on-cancel cancel-text on-ok ok-text ok-disabled hide-footer title additional-buttons]} props]
@@ -1205,8 +1205,8 @@
       (when (= (:file-type image-settings) :gif)
         [[form-item
           "Never repeat" [checkbox {:value (not (:repeat image-settings))
-                                    :onChange (fn [value]
-                                                (re-frame/dispatch [::export/set-settings-option :repeat (not value)]))}]]]))]))
+                                    :on-change (fn [value]
+                                                 (re-frame/dispatch [::export/set-settings-option :repeat (not value)]))}]]]))]))
 
 (defn export-spritesheet-settings-form []
   (let [settings @(re-frame/subscribe [::subs/export-spritesheet-settings])]
@@ -1319,8 +1319,8 @@
                                                                             (assoc (:target-size settings) :height value)]))}]}]
          [form-item {:label "Resize contents"
                      :control [checkbox {:value (:resize-content settings)
-                                         :onChange (fn [value]
-                                                     (re-frame/dispatch [::sprite-resizer/set-settings-option :resize-content value]))}]}]
+                                         :on-change (fn [value]
+                                                      (re-frame/dispatch [::sprite-resizer/set-settings-option :resize-content value]))}]}]
          [form-item {:label "Anchor"
                      :control [:f> anchor settings]}]
          [previews-container {}
@@ -1358,13 +1358,13 @@
               :ok-text "Create"
               :on-ok (fn []
                        (re-frame/dispatch [::new-project-modal/create]))
-              :additional-buttons [[file-uploader {:onUpload (fn [file-desc]
-                                                               (re-frame/dispatch [::project-save-load/load-from-file file-desc]))}
+              :additional-buttons [[file-uploader {:on-upload (fn [file-desc]
+                                                                (re-frame/dispatch [::project-save-load/load-from-file file-desc]))}
                                     (fn [on-click]
-                                      [button {:onClick on-click}
+                                      [button {:on-click on-click}
                                        "Open project"])]
-                                   [button {:onClick (fn []
-                                                       (re-frame/dispatch [::new-project-modal/create-example-project]))}
+                                   [button {:on-click (fn []
+                                                        (re-frame/dispatch [::new-project-modal/create-example-project]))}
                                     "Create example project"]]}
        [form
         [[form-item {:label "Width"
@@ -1396,12 +1396,12 @@
     [:div (use-style {:width "min-content" :position "relative"})
      [:div (use-style {:width "min-content" :position "relative" :z-index 1})
       [current-color-selection {:value primary-color
-                                :onChange (fn [new-primary-color]
-                                            (re-frame/dispatch [::events/set-current-color :primary-color new-primary-color]))}]]
+                                :on-change (fn [new-primary-color]
+                                             (re-frame/dispatch [::events/set-current-color :primary-color new-primary-color]))}]]
      [:div (use-style {:margin-top "-25px" :margin-left "32px"})
       [current-color-selection {:value secondary-color
-                                :onChange (fn [new-secondary-color]
-                                            (re-frame/dispatch [::events/set-current-color :secondary-color new-secondary-color]))}]]
+                                :on-change (fn [new-secondary-color]
+                                             (re-frame/dispatch [::events/set-current-color :secondary-color new-secondary-color]))}]]
      [:div (use-style {:position "absolute"
                        :top "48px"
                        :left "3px"
@@ -1448,7 +1448,7 @@
               on-change #(re-frame/dispatch [::events/change-tool-option (:field option-spec) %])
               props (assoc option-spec
                            :value value
-                           :onChange on-change)]
+                           :on-change on-change)]
           ^{:key idx}
           [:div
            (case (:type option-spec)
@@ -1476,28 +1476,28 @@
                       :border-bottom (str "1px solid " (.-colorBorder theme-token))})
      [:<>
       [new-project-modal]
-      [button {:onClick (fn [] (re-frame/dispatch [::new-project-modal/set-opened true]))}
+      [button {:on-click (fn [] (re-frame/dispatch [::new-project-modal/set-opened true]))}
        "New project"]]
-     [button {:onClick (fn [] (re-frame/dispatch [::project-save-load/save-as-file]))}
+     [button {:on-click (fn [] (re-frame/dispatch [::project-save-load/save-as-file]))}
       "Save project as file"]
-     [file-uploader {:onUpload (fn [file-desc]
-                                 (re-frame/dispatch [::project-save-load/load-from-file file-desc]))}
+     [file-uploader {:on-upload (fn [file-desc]
+                                  (re-frame/dispatch [::project-save-load/load-from-file file-desc]))}
       (fn [on-click]
-        [button {:onClick on-click}
+        [button {:on-click on-click}
          "Load project from file"])]
      [:<>
-      [button {:onClick (fn [] (re-frame/dispatch [::export/set-opened true]))}
+      [button {:on-click (fn [] (re-frame/dispatch [::export/set-opened true]))}
        "Open project export panel"]
       [export-modal]]
      [:<>
       [:f> sprite-resizer-modal]
-      [button {:onClick (fn [] (re-frame/dispatch [::sprite-resizer/set-opened true]))} "Resize canvas"]]
+      [button {:on-click (fn [] (re-frame/dispatch [::sprite-resizer/set-opened true]))} "Resize canvas"]]
      [:<>
-      [button {:onClick (fn [] (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened true]))} "Keyboard shortcuts"]
+      [button {:on-click (fn [] (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened true]))} "Keyboard shortcuts"]
       [keyboard-shortcuts-modal]]
      [checkbox {:value pixels-grid-enabled
                 :label "Grid"
-                :onChange (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]
+                :on-change (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]
 
      [:div (use-style {:margin-left "auto"})
       [drawing-info]]]))
