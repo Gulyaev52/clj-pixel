@@ -48,7 +48,10 @@
                 (rest children)
                 children)]
     [:> antd/Space (if (map? props)
-                     props {})
+                     (merge props
+                            (when (:block props)
+                              {:style {:width "100%"}}))
+                     {})
      items]))
 
 (defn title
@@ -1247,7 +1250,7 @@
               :on-ok (fn []
                        (re-frame/dispatch [::export/export]))}
 
-       [space {:direction "vertical" :style {:width "100%"}}
+       [space {:direction "vertical" :block true}
         [radio-group {:value current-tab
                       :options [{:value :image :label "Image"}
                                 {:value :spritesheet :label "Spritesheet"}]
