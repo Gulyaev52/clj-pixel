@@ -1223,6 +1223,13 @@
        {:common-settings settings
         :type-options [{:label "png" :value :png}]}))]))
 
+(defn radio-group [{:keys [value options on-change]}]
+  (into
+   [:> (.-Group antd/Radio) {:value (name value)
+                             :onChange (fn [e]
+                                         (on-change (keyword (.. e -target -value))))}]
+   (map (fn [opt] [:> (.-Button antd/Radio) {:value (name (:value opt))} (:label opt)]) options)))
+
 (defn export-modal []
   (let [current-tab @(re-frame/subscribe [::subs/export-current-tab])
         opened @(re-frame/subscribe [::subs/export-modal-opened])
@@ -1241,19 +1248,11 @@
                        (re-frame/dispatch [::export/export]))}
 
        [space {:direction "vertical" :style {:width "100%"}}
-        [:div
-         [button {:style {:border (if (= current-tab :image)
-                                    "1px solid #C0C0C0"
-                                    "none")}
-                  :onClick (fn []
-                             (re-frame/dispatch [::export/select-tab :image]))}
-          "Image"]
-         [button {:style {:border (if (= current-tab :spritesheet)
-                                    "1px solid #C0C0C0"
-                                    "none")}
-                  :onClick (fn []
-                             (re-frame/dispatch [::export/select-tab :spritesheet]))}
-          "Spritesheet"]]
+        [radio-group {:value current-tab
+                      :options [{:value :image :label "Image"}
+                                {:value :spritesheet :label "Spritesheet"}]
+                      :on-change (fn [tab]
+                                   (re-frame/dispatch [::export/select-tab tab]))}]
 
         [previews-container {:loading (:generation preview)}
          (case current-tab
