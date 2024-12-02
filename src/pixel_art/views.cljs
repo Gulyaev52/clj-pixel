@@ -1267,11 +1267,30 @@
 
 ;; -----------------
 
+(defn anchor [settings]
+  (let [theme-token (use-theme-token)]
+    [:div {:style {:display :grid
+                   :grid-template-columns "min-content min-content min-content"
+                   :gap "1px"
+                   :opacity (when (:resize-content settings) "0.6")}}
+     (for [y [:top :center :bottom]
+           x [:left :center :right]]
+       ^{:key (str y "-y-" x "-x")}
+       [:div {:title (str (name y) "/" (name x))
+              :style {:border-radius "4px"
+                      :width "24px"
+                      :height "24px"
+                      :background-color (if (and (not (:resize-content settings))
+                                                 (= {:x x :y y} (:anchor settings)))
+                                          (.-colorPrimaryActive theme-token)
+                                          "#444")}
+              :on-click (fn []
+                          (re-frame/dispatch [::sprite-resizer/set-settings-option :anchor {:x x :y y}]))}])]))
+
 (defn sprite-resizer-modal []
   (when @(re-frame/subscribe [::subs/sprite-resizer-opened])
     (let [settings @(re-frame/subscribe [::subs/sprite-resizer-settings])
-          previews @(re-frame/subscribe [::subs/sprite-resizer-previews])
-          theme-token (use-theme-token)]
+          previews @(re-frame/subscribe [::subs/sprite-resizer-previews])]
       [modal {:title "Resize canvas"
               :size :sm
               :on-cancel (fn []
@@ -1303,23 +1322,7 @@
                                          :onChange (fn [value]
                                                      (re-frame/dispatch [::sprite-resizer/set-settings-option :resize-content value]))}]}]
          [form-item {:label "Anchor"
-                     :control [:div {:style {:display :grid
-                                             :grid-template-columns "min-content min-content min-content"
-                                             :gap "1px"
-                                             :opacity (when (:resize-content settings) "0.6")}}
-                               (for [y [:top :center :bottom]
-                                     x [:left :center :right]]
-                                 ^{:key (str y "-y-" x "-x")}
-                                 [:div {:title (str (name y) "/" (name x))
-                                        :style {:border-radius "4px"
-                                                :width "24px"
-                                                :height "24px"
-                                                :background-color (if (and (not (:resize-content settings))
-                                                                           (= {:x x :y y} (:anchor settings)))
-                                                                    (.-colorPrimaryActive theme-token)
-                                                                    "#444")}
-                                        :onClick (fn []
-                                                   (re-frame/dispatch [::sprite-resizer/set-settings-option :anchor {:x x :y y}]))}])]}]
+                     :control [:f> anchor settings]}]
          [previews-container {}
           [previews-grid-items previews]]]]])))
 
