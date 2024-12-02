@@ -29,11 +29,14 @@
 
 (set! *warn-on-infer* false)
 
-(def drawing-container-color "#A0A0A0")
+(def preview-container-bg-color "#A0A0A0")
 
 (def transparent-color-img "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABlBMVEVMTExVVVUnhsEkAAAAHUlEQVR4AWOAAUYoQOePEAUj3v9oYDQ9gMBoegAAJFwCAbLaTIMAAAAASUVORK5CYII=')")
 
 (def drawing-border "1px solid black")
+
+(defn use-theme-token []
+  (.. antd/theme useToken -token))
 
 (defn typography
   ([text] (typography {} text))
@@ -82,7 +85,7 @@
                  :border "1px solid black"
                  :padding "2px"
                  :overflow "auto"
-                 :background-color drawing-container-color
+                 :background-color preview-container-bg-color
                  :opacity (when loading "0.6")}}
    items])
 
@@ -105,18 +108,6 @@
           :min-height "70px"}]
         [:div {:style {:padding "5px"}}
          [typography (inc idx)]]])]))
-
-(defn section [title children]
-  [:div (use-style {:display "flex"
-                    :align-items "center"
-                    :gap "4px"
-                    :background-color "#171717"
-                    :padding "1px 8px"
-                    :font-size "14px"
-                    :border-radius "5px"})
-   [typography title]
-   (into [:div (use-style {:display "flex" :align-items "center"})]
-         children)])
 
 ;; todo: comment
 (defn popover-children [props]
@@ -237,11 +228,11 @@
 (def current-color "yellow")
 (def selected-color "green")
 
-(defn get-border-color [{:keys [current selected]}]
+(defn get-border-color [{:keys [current selected]} theme-token]
   (cond
     current current-color
     selected selected-color
-    :else "black"))
+    :else (.-colorBorder theme-token)))
 
 (defn droppable-zone [{:keys [accept on-drop can-drop]} styles]
   (let [[{:keys [over can-drop]}, ref] (react-dnd/useDrop
@@ -267,7 +258,8 @@
                   (merge {:height "20px" :width "100%"} styles)))
 
 (defn layer-view [layer]
-  (let [[_ ref] (react-dnd/useDrag (fn [] #js {"type" "layer" "item" layer}))]
+  (let [[_ ref] (react-dnd/useDrag (fn [] #js {"type" "layer" "item" layer}))
+        theme-token (use-theme-token)]
     [:div (use-style {:display :flex
                       :align-items "center"
                       :position "relative"})
@@ -281,12 +273,11 @@
                     :width "150px"
                     :height cel-height
                     :border-style "solid"
-                    :border-color (get-border-color layer)
+                    :border-color (get-border-color layer theme-token)
                     :border-width (if (:current layer)
                                     "2px"
                                     "1px")
-                    :cursor "pointer"
-                    :background-color "#3B3B3B"}}
+                    :cursor "pointer"}}
       [typography (:name layer)]]
      [:f> droppable-layer-zone (inc (:idx layer)) {:bottom 0 :transform "translateY(50%)"}]]))
 
@@ -301,11 +292,12 @@
                                      #js {"type" "frame"
                                           "item" frame
                                           "collect" (fn [monitor]
-                                                      {:dragging (.. monitor isDragging)})}))]
+                                                      {:dragging (.. monitor isDragging)})}))
+        theme-token (use-theme-token)]
     [:div {:style {:position "sticky"
                    :top 0
-                   :z-index 1
-                   :background-color "#333"}}
+                   :background-color (.-colorBgContainer theme-token)
+                   :z-index 1}}
      (when (= (:idx frame) 0)
        [:f> droppable-frame-zone (:idx frame) {:left 0
                                                :top 0
@@ -317,7 +309,7 @@
                     :justify-content "center"
                     :height "100%"
                     :border-style "solid"
-                    :border-color (get-border-color frame)
+                    :border-color (get-border-color frame theme-token)
                     :border-width (if (:current frame)
                                     "2px"
                                     "1px")
@@ -347,7 +339,8 @@
         cel-preview (react/useMemo (fn []
                                      (canvas/generate-data-url #(canvas/draw-cel cel %)
                                                                (:size cel)))
-                                   (array cel))]
+                                   (array cel))
+        theme-token (use-theme-token)]
     [:div {:style {:position "relative"}}
      (when (= (-> cel :pos :frame-idx) 0)
        [:f> droppable-cel-zone
@@ -372,11 +365,11 @@
                     :justify-content :center
                     :height "100%"
                     :border-style "solid"
-                    :border-color (get-border-color cel)
+                    :border-color (get-border-color cel theme-token)
                     :border-width (if (:selected cel)
                                     "2px"
                                     "1px")
-                    :background-color drawing-container-color
+                    :background-color preview-container-bg-color
                     :cursor "pointer"}}
       [preview-image cel-preview (merge {:max-width "100%"
                                          :max-height "100%"}
@@ -562,87 +555,94 @@
                                               {:value :behind :label "behind sprite"}]
                                     :onChange (fn [v] (re-frame/dispatch [::onion-skin/set-position v]))}]}]]]))
 
+(defn timeline-panel-section [title children]
+  [:> antd/Card {:size "small"}
+   [space
+    [typography title]
+    (into [:div (use-style {:display "flex" :align-items "center"})]
+          children)]])
+
 (defn timeline-panel-toolbar [{:keys [disabled-actions all-frames-duration current-frame]}]
   (let [onion-skin-enabled @(re-frame/subscribe [::subs/onion-skin-enabled])]
     [:div (use-style {:display "flex" :justify-content "space-between"})
      [space
-      [section "Frames" [[icon-button {:src :add
-                                       :title "add empty frame"
-                                       :disabled (:add-frame disabled-actions)
-                                       :size :sm
-                                       :on-click (fn [] (re-frame/dispatch [::events/add-frame]))}]
-                         [icon-button {:src :remove
-                                       :title "remove frame"
-                                       :disabled (:remove-frame disabled-actions)
-                                       :size :sm
-                                       :on-click (fn [] (re-frame/dispatch [::events/remove-frame]))}]
-                         [icon-button {:src :duplicate
-                                       :title "duplicate frame"
-                                       :disabled (:duplicate-frame disabled-actions)
-                                       :size :sm
-                                       :on-click (fn [] (re-frame/dispatch [::events/duplicate-frame]))}]
-                         [icon-button {:src :arrow-left
-                                       :title "move frame left"
-                                       :disabled (:move-frame-left disabled-actions)
-                                       :size :sm
-                                       :on-click (fn [] (re-frame/dispatch [::events/move-frame-left]))}]
-                         [icon-button {:src :arrow-right
-                                       :title "move frame right"
-                                       :disabled (:move-frame-right disabled-actions)
-                                       :size :sm
-                                       :on-click (fn [] (re-frame/dispatch [::events/move-frame-right]))}]]]
+      [timeline-panel-section "Frames" [[icon-button {:src :add
+                                                      :title "add empty frame"
+                                                      :disabled (:add-frame disabled-actions)
+                                                      :size :sm
+                                                      :on-click (fn [] (re-frame/dispatch [::events/add-frame]))}]
+                                        [icon-button {:src :remove
+                                                      :title "remove frame"
+                                                      :disabled (:remove-frame disabled-actions)
+                                                      :size :sm
+                                                      :on-click (fn [] (re-frame/dispatch [::events/remove-frame]))}]
+                                        [icon-button {:src :duplicate
+                                                      :title "duplicate frame"
+                                                      :disabled (:duplicate-frame disabled-actions)
+                                                      :size :sm
+                                                      :on-click (fn [] (re-frame/dispatch [::events/duplicate-frame]))}]
+                                        [icon-button {:src :arrow-left
+                                                      :title "move frame left"
+                                                      :disabled (:move-frame-left disabled-actions)
+                                                      :size :sm
+                                                      :on-click (fn [] (re-frame/dispatch [::events/move-frame-left]))}]
+                                        [icon-button {:src :arrow-right
+                                                      :title "move frame right"
+                                                      :disabled (:move-frame-right disabled-actions)
+                                                      :size :sm
+                                                      :on-click (fn [] (re-frame/dispatch [::events/move-frame-right]))}]]]
 
-      [section "Layers" [[icon-button {:src :add
-                                       :title "add layer"
-                                       :disabled (:add-layer disabled-actions)
-                                       :size :sm
-                                       :on-click (fn [] (re-frame/dispatch [::events/add-layer]))}]
-                         [icon-button {:src :remove
-                                       :title "remove layer"
-                                       :disabled (:remove-layer disabled-actions)
-                                       :size :sm
-                                       :on-click (fn [] (re-frame/dispatch [::events/remove-layer]))}]
-                         [icon-button {:src :duplicate
-                                       :title "duplicate layer"
-                                       :disabled (:duplicate-layer disabled-actions)
-                                       :size :sm
-                                       :on-click (fn [] (re-frame/dispatch [::events/duplicate-layer]))}]
-                         [icon-button {:src :merge-down
-                                       :title "merge layer with below"
-                                       :disabled (:merge-layer-with-below disabled-actions)
-                                       :size :sm
-                                       :on-click (fn [] (re-frame/dispatch [::events/merge-layer-with-below]))}]
-                         [icon-button {:src :arrow-up
-                                       :title "move layer up"
-                                       :disabled (:move-layer-up disabled-actions)
-                                       :size :sm
-                                       :on-click (fn [] (re-frame/dispatch [::events/move-layer-up]))}]
-                         [icon-button {:src :arrow-down
-                                       :title "move layer down"
-                                       :disabled (:move-layer-down disabled-actions)
-                                       :size :sm
-                                       :on-click (fn [] (re-frame/dispatch [::events/move-layer-down]))}]
-                         [icon-button {:src :edit
-                                       :title "rename layer"
-                                       :size :sm
-                                       :on-click (fn [e]
-                                                   (. e stopPropagation)
-                                                   (let [new-name (js/prompt)]
-                                                     (when (seq (string/trim new-name))
-                                                       (re-frame/dispatch [::events/rename-layer new-name]))))}]]]
+      [timeline-panel-section "Layers" [[icon-button {:src :add
+                                                      :title "add layer"
+                                                      :disabled (:add-layer disabled-actions)
+                                                      :size :sm
+                                                      :on-click (fn [] (re-frame/dispatch [::events/add-layer]))}]
+                                        [icon-button {:src :remove
+                                                      :title "remove layer"
+                                                      :disabled (:remove-layer disabled-actions)
+                                                      :size :sm
+                                                      :on-click (fn [] (re-frame/dispatch [::events/remove-layer]))}]
+                                        [icon-button {:src :duplicate
+                                                      :title "duplicate layer"
+                                                      :disabled (:duplicate-layer disabled-actions)
+                                                      :size :sm
+                                                      :on-click (fn [] (re-frame/dispatch [::events/duplicate-layer]))}]
+                                        [icon-button {:src :merge-down
+                                                      :title "merge layer with below"
+                                                      :disabled (:merge-layer-with-below disabled-actions)
+                                                      :size :sm
+                                                      :on-click (fn [] (re-frame/dispatch [::events/merge-layer-with-below]))}]
+                                        [icon-button {:src :arrow-up
+                                                      :title "move layer up"
+                                                      :disabled (:move-layer-up disabled-actions)
+                                                      :size :sm
+                                                      :on-click (fn [] (re-frame/dispatch [::events/move-layer-up]))}]
+                                        [icon-button {:src :arrow-down
+                                                      :title "move layer down"
+                                                      :disabled (:move-layer-down disabled-actions)
+                                                      :size :sm
+                                                      :on-click (fn [] (re-frame/dispatch [::events/move-layer-down]))}]
+                                        [icon-button {:src :edit
+                                                      :title "rename layer"
+                                                      :size :sm
+                                                      :on-click (fn [e]
+                                                                  (. e stopPropagation)
+                                                                  (let [new-name (js/prompt)]
+                                                                    (when (seq (string/trim new-name))
+                                                                      (re-frame/dispatch [::events/rename-layer new-name]))))}]]]
 
-      [section "Cels" [[icon-button {:src :link
-                                     :title "link cels"
-                                     :disabled (:link-cels disabled-actions)
-                                     :size :sm
-                                     :on-click (fn [] (re-frame/dispatch [::events/link-selected-cels]))}]
-                       [icon-button {:src :link-off
-                                     :title "unlink cels"
-                                     :disabled (:unlink-cel disabled-actions)
-                                     :size :sm
-                                     :on-click (fn [] (re-frame/dispatch [::events/unlink-selected-cels]))}]]]
+      [timeline-panel-section "Cels" [[icon-button {:src :link
+                                                    :title "link cels"
+                                                    :disabled (:link-cels disabled-actions)
+                                                    :size :sm
+                                                    :on-click (fn [] (re-frame/dispatch [::events/link-selected-cels]))}]
+                                      [icon-button {:src :link-off
+                                                    :title "unlink cels"
+                                                    :disabled (:unlink-cel disabled-actions)
+                                                    :size :sm
+                                                    :on-click (fn [] (re-frame/dispatch [::events/unlink-selected-cels]))}]]]
 
-      [section "Onion skin"
+      [timeline-panel-section "Onion skin"
        [[icon-button {:src (if onion-skin-enabled :layers-off :layers)
                       :title (if onion-skin-enabled "disable onion skin" "enable onion skin")
                       :size :sm
@@ -684,6 +684,7 @@
         vertical-resizer-refs (vertical-resizer)
 
         timeline-container-ref (react/useRef)
+        theme-token (use-theme-token)
         _ (react-dnd-scrolling/useDndScrolling timeline-container-ref #js {"verticalStrength" dndScrollingVerticalStrength})]
     [:div (use-style {:display "flex"
                       :flex-direction "column"
@@ -691,9 +692,7 @@
                       :gap "4px"
                       :flex-shrink 0
                       :height "300px"
-                      :min-height "16px"
-                      :border "2px solid #171717"
-                      :background-color "#333"}
+                      :min-height "16px"}
                      {:ref (:container-ref vertical-resizer-refs)})
 
      [:div (use-style {:min-height "4px"
@@ -720,8 +719,8 @@
                         :align-items "center"
                         :position "sticky"
                         :z-index 1
-                        :top 0
-                        :background-color "#333"})
+                        :background-color (.-colorBgContainer theme-token)
+                        :top 0})
        [icon-button {:src (if some-layer-visible
                             :visibility
                             :visibility-off)
@@ -738,8 +737,8 @@
                                  (re-frame/dispatch [::events/toggle-all-layers-automatic-linking]))}]]
       [:div (use-style {:position "sticky"
                         :z-index 1
-                        :top 0
-                        :background-color "#333"})]
+                        :background-color (.-colorBgContainer theme-token)
+                        :top 0})]
       (for [frame frames] ^{:key (:idx frame)}
            [:f> frame-view frame])
       (doall
@@ -826,40 +825,41 @@
                                  (onClose))}])))
 
 (defn palette-colors [{:keys [colors primary-color secondary-color]}]
-  [:div {:style {:display :grid
-                 :grid-template-columns "repeat(auto-fill, 35px)" ;; todo: dynamic
-                 :grid-auto-rows "35px"
-                 :grid-gap "2px"
-                 :height "100%"
-                 :overflow "auto"}}
-   (doall
-    (for [[idx color] (map-indexed vector colors)]
-      (let [color-dark? (.. (color/->tinycolor color) isDark)]
-        ^{:key color}
-        [:div (use-style {:background-color (color/int->rgb-str color)
-                          :position "relative"
-                          :cursor "pointer"
-                          :color (if color-dark? "white" "black")
-                          ::stylefy/manual [[:&:hover [:.remove-color {:opacity 1}]]]}
-                         {:on-click (fn []
-                                      (re-frame/dispatch [::palette/select-color idx false]))
-                          :on-context-menu (fn [e]
-                                             (. e preventDefault)
-                                             (re-frame/dispatch [::palette/select-color idx true]))})
-         (when (= color primary-color) "L")
-         (when (= color secondary-color) "R")
-         [:div (use-style {:position "absolute"
-                           :right "1px"
-                           :top "1px"
-                           :opacity 0}
-                          {:class "remove-color"})
-          [icon-button {:src :close
-                        :icon-theme (if color-dark? :light :dark)
-                        :title "remove color"
-                        :size :xs
-                        :on-click (fn [e]
-                                    (.. e (stopPropagation))
-                                    (re-frame/dispatch [::palette/remove-color idx]))}]]])))])
+  (let [theme-token (use-theme-token)]
+    [:div {:style {:display :grid
+                   :grid-template-columns "repeat(auto-fill, 35px)" ;; todo: dynamic
+                   :grid-auto-rows "35px"
+                   :grid-gap "2px"
+                   :height "100%"
+                   :overflow "auto"}}
+     (doall
+      (for [[idx color] (map-indexed vector colors)]
+        (let [color-dark? (.. (color/->tinycolor color) isDark)]
+          ^{:key color}
+          [:div (use-style {:background-color (color/int->rgb-str color)
+                            :position "relative"
+                            :cursor "pointer"
+                            :color (if color-dark? (.-colorText theme-token) (.-colorBgBase theme-token))
+                            ::stylefy/manual [[:&:hover [:.remove-color {:opacity 1}]]]}
+                           {:on-click (fn []
+                                        (re-frame/dispatch [::palette/select-color idx false]))
+                            :on-context-menu (fn [e]
+                                               (. e preventDefault)
+                                               (re-frame/dispatch [::palette/select-color idx true]))})
+           (when (= color primary-color) "L")
+           (when (= color secondary-color) "R")
+           [:div (use-style {:position "absolute"
+                             :right "1px"
+                             :top "1px"
+                             :opacity 0}
+                            {:class "remove-color"})
+            [icon-button {:src :close
+                          :icon-theme (if color-dark? :light :dark)
+                          :title "remove color"
+                          :size :xs
+                          :on-click (fn [e]
+                                      (.. e (stopPropagation))
+                                      (re-frame/dispatch [::palette/remove-color idx]))}]]])))]))
 
 (defn palettes-section []
   (let [palettes @(re-frame/subscribe [::subs/palettes])
@@ -928,9 +928,9 @@
                         :on-click on-click}])]]]
 
      [:div (use-style {:flex-grow 1 :min-height 0})
-      [palette-colors {:colors (:colors current-palette)
-                       :primary-color primary-color
-                       :secondary-color secondary-color}]]]))
+      [:f> palette-colors {:colors (:colors current-palette)
+                           :primary-color primary-color
+                           :secondary-color secondary-color}]]]))
 
 (defn drawing-info []
   (let [mouse-pos @(re-frame/subscribe [::subs/mouse-pos])
@@ -973,7 +973,7 @@
            :ref viewport-ref
            :style {:overflow "auto"
                    :position "relative"
-                   :background-color drawing-container-color
+                   :background-color preview-container-bg-color
                    :width "100%"
                    :flex-grow 1}
            :onContextMenu (fn [event]
@@ -1271,7 +1271,8 @@
 (defn sprite-resizer-modal []
   (when @(re-frame/subscribe [::subs/sprite-resizer-opened])
     (let [settings @(re-frame/subscribe [::subs/sprite-resizer-settings])
-          previews @(re-frame/subscribe [::subs/sprite-resizer-previews])]
+          previews @(re-frame/subscribe [::subs/sprite-resizer-previews])
+          theme-token (use-theme-token)]
       [modal {:title "Resize canvas"
               :size :sm
               :on-cancel (fn []
@@ -1316,7 +1317,7 @@
                                                 :height "24px"
                                                 :background-color (if (and (not (:resize-content settings))
                                                                            (= {:x x :y y} (:anchor settings)))
-                                                                    "#2979ff"
+                                                                    (.-colorPrimaryActive theme-token)
                                                                     "#444")}
                                         :onClick (fn []
                                                    (re-frame/dispatch [::sprite-resizer/set-settings-option :anchor {:x x :y y}]))}])]}]
@@ -1409,13 +1410,15 @@
                     :on-click (fn [] (re-frame/dispatch [::events/swap-current-colors]))}]]]))
 
 (defn tools-panel []
-  (let [tool @(re-frame/subscribe [::subs/tool])]
+  (let [tool @(re-frame/subscribe [::subs/tool])
+        theme-token (use-theme-token)]
     [:div (use-style {:width "100px"
-                      :background-color "#333"})
+                      :border-right (str "1px solid " (.-colorBorder theme-token))})
 
      [:div (use-style {:display "grid"
                        :grid-template-columns "1fr 1fr"
-                       :gap "1px"})
+                       :gap "1px"
+                       :padding "1px"})
       (for [type tool/types]
         ^{:key (name type)}
         [tool-view {:type type :selected (= (:type tool) type)}])]
@@ -1436,8 +1439,7 @@
                       :height "30px"
                       :flex-shrink 0
                       :padding "0 10px"
-                      :gap "12px"
-                      :background-color "#222"})
+                      :gap "12px"})
      (doall
       (for [[idx option-spec] (map-indexed vector options-spec)]
         (let [value (get options (:field option-spec))
@@ -1453,21 +1455,23 @@
              :checkbox (checkbox props))])))]))
 
 (defn right-sidebar []
-  [:div (use-style {:display "flex"
-                    :flex-direction "column"
-                    :height "100%"
-                    :background-color "#333"})
-   [:div (use-style {:margin-top "auto"})
-    [palettes-section]]])
+  (let [theme-token (use-theme-token)]
+    [:div (use-style {:display "flex"
+                      :flex-direction "column"
+                      :height "100%"
+                      :padding "1px"
+                      :border-left (str "1px solid " (.-colorBorder theme-token))})
+     [:div (use-style {:margin-top "auto"})
+      [palettes-section]]]))
 
 (defn header []
-  (let [pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])]
+  (let [pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])
+        theme-token (use-theme-token)]
     [:div (use-style {:display "flex"
                       :align-items "center"
                       :padding "5px"
-                      :background-color "#333"
                       :gap "4px"
-                      :border-bottom "2px solid #171717"})
+                      :border-bottom (str "1px solid " (.-colorBorder theme-token))})
      [:<>
       [new-project-modal]
       [button {:onClick (fn [] (re-frame/dispatch [::new-project-modal/set-opened true]))}
@@ -1484,7 +1488,7 @@
        "Open project export panel"]
       [export-modal]]
      [:<>
-      [sprite-resizer-modal]
+      [:f> sprite-resizer-modal]
       [button {:onClick (fn [] (re-frame/dispatch [::sprite-resizer/set-opened true]))} "Resize canvas"]]
      [:<>
       [button {:onClick (fn [] (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened true]))} "Keyboard shortcuts"]
@@ -1497,38 +1501,44 @@
       [drawing-info]]]))
 
 (defn main-panel []
-  [:> react-dnd/DndProvider {"backend" react-dnd-html5-backend/HTML5Backend}
-   [:> antd/ConfigProvider {"theme" {"token" {"motion" false}
-                                     "algorithm" (. antd/theme -darkAlgorithm)}}
-    [:div (use-style {:display "flex"
-                      :flex-direction "column"
-                      :height "100%"
-                      :width "100%"
-                      :max-height "100%"
-                      :max-width "100%"})
-     [header]
-     [:div (use-style {:display :grid
-                       :grid-template-columns "100px 1fr 250px"
-                       :flex-grow 1
-                       :min-height 0
-                       :width "100%"})
-      [tools-panel]
-      [:div (use-style {:display :flex
-                        :flex-direction :column
-                        :min-width 0
-                        :min-height 0})
-       [tool-options-panel]
-       [canvases-section]
-       [:f> timeline-panel]]
-      [:f> right-sidebar]]]]])
+  (let [colorBgContainer (.. antd/theme useToken -token -colorBgContainer)]
+    [:> react-dnd/DndProvider {"backend" react-dnd-html5-backend/HTML5Backend}
+     [:div (use-style {:display "flex"
+                       :flex-direction "column"
+                       :height "100%"
+                       :width "100%"
+                       :max-height "100%"
+                       :max-width "100%"
+                       :background-color colorBgContainer})
+      [:f> header]
+      [:div (use-style {:display :grid
+                        :grid-template-columns "100px 1fr 250px"
+                        :flex-grow 1
+                        :min-height 0
+                        :width "100%"})
+       [:f> tools-panel]
+       [:div (use-style {:display :flex
+                         :flex-direction :column
+                         :min-width 0
+                         :min-height 0})
+        [tool-options-panel]
+        [canvases-section]
+        [:f> timeline-panel]]
+       [:f> right-sidebar]]]]))
 
-(defn app []
-  (if @(re-frame/subscribe [::subs/initial-loading])
+(defn app-loading-view []
+  (let [colorBgContainer (.. antd/theme useToken -token -colorBgContainer)]
     [:div (use-style {:display "flex"
                       :align-items "center"
                       :justify-content "center"
                       :width "100%"
                       :height "100%"
-                      :background-color "#171717"})
-     [:> antd/Spin {:size "large"}]]
-    [main-panel]))
+                      :background-color colorBgContainer})
+     [:> antd/Spin {:size "large"}]]))
+
+(defn app []
+  [:> antd/ConfigProvider {"theme" {"token" {"motion" false}
+                                    "algorithm" (. antd/theme -darkAlgorithm)}}
+   (if @(re-frame/subscribe [::subs/initial-loading])
+     [:f> app-loading-view]
+     [:f> main-panel])])
