@@ -1,6 +1,4 @@
 17) дизайн
-  slider value label
-
   on resize не центрирует
     resize + create
 
@@ -11,6 +9,10 @@
   image rendering pixelated. превью и сам если отдаляешь. нарисуй квадрат
 
   linking doesn't work
+
+  bucket doesn't work correctly
+
+подсказки про линкинг и днд
 
 оптимизация
 transdusers?

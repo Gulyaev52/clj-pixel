@@ -172,7 +172,10 @@
                  :width (if block "100%" "250px")
                  :gap "8px"
                  :font-size "13px"}}
-   [typography (str label " (" value ")")]
+   [:div {:style {:display :flex :gap "4px"}}
+    [typography label]
+    [typography {:style {:white-space "nowrap" :width "20px"}} ;; use fixed width to avoid slider jumping when value width is changed
+     (str "(" value ")")]]
    [:> antd/Slider {:value value
                     :min min
                     :max max
