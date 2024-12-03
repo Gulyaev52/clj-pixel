@@ -94,7 +94,8 @@
                (project-settings/get-initial-drawing-settings (:sprite db) viewport-size))
     :fx [[:init-canvases]
          [:draw-current-frame]
-         [:zoom]]}))
+         [:zoom]
+         [:draw-onion-skin {:sprite (:sprite db) :opacity (-> db :onion-skin :opacity)}]]}))
 
 (re-frame/reg-fx
  :init-canvases
@@ -127,11 +128,7 @@
     {:db (merge db
                 (project-settings/get-initial-drawing-settings (:sprite db) (:viewport-size db)))
      :fx (when (and (not (:initial-loading db)) (:initialized-canvas db))
-           [[:init-canvases]
-            [:zoom]
-            [:draw-current-frame]
-            [:draw-onion-skin {:sprite (:sprite db) :opacity (-> db :onion-skin :opacity)}] ;; а оно тут точно надо?
-            ])})))
+           [[:dispatch-later {:ms 1 :dispatch [::initialize-canvas]}]])})))
 
 (re-frame/reg-global-interceptor
  (on-changes
