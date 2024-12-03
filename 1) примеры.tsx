@@ -2,8 +2,6 @@
   slider value label
   form
   style vs use-style
-  fix :f>
-  ошибки и варнинги
 
   on resize не центрирует
     resize + create

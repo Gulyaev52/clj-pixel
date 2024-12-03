@@ -48,12 +48,12 @@
         items (if (map? props)
                 (rest children)
                 children)]
-    [:> antd/Space (if (map? props)
-                     (merge props
-                            (when (:block props)
-                              {:style {:width "100%"}}))
-                     {})
-     items]))
+    (into [:> antd/Space (if (map? props)
+                           (merge (dissoc props :block)
+                                  (when (:block props)
+                                    {:style {:width "100%"}}))
+                           {})]
+          items)))
 
 (defn title
   ([text] (title text {}))
@@ -421,7 +421,7 @@
                                       (set-curr-value new-value)
                                       (on-blur new-value)))}]))
 
-(defn input-text [{:keys [value on-blur]}]
+(def-func-component input-text [{:keys [value on-blur]}]
   (let [[curr-value set-curr-value] (react/useState value)]
     (react/useEffect (fn []
                        (set-curr-value value))
@@ -774,7 +774,7 @@
                         (on-change (color/int (. rgba -r) (. rgba -g) (. rgba -b) (. rgba -a)))))}])
 
 (defn file-uploader [{:keys [on-upload accept]} render-button]
-  (let [!input-ref (r/atom nil)]
+  (r/with-let [!input-ref (r/atom nil)]
     [:span
      [:input {:type "file"
               :accept accept
@@ -791,7 +791,7 @@
                            (set! (.. e -target -value) "") ;; without this line onChange is not triggered when the same file is choosen twice
                            )}]
      [render-button (fn []
-                      (.. !input-ref -current click))]]))
+                      (.. @!input-ref click))]]))
 
 ;; todo: зачем-это?
 (defn- replace-transparent-color [color]
@@ -1160,30 +1160,31 @@
 
 (defn modal [props & children]
   (let [{:keys [on-cancel cancel-text on-ok ok-text ok-disabled hide-footer title additional-buttons]} props]
-    [:> antd/Modal (merge
-                    {:title title
-                     :open true
-                     :closable true
-                     :width (case (:size props)
-                              :lg "50%"
-                              :md "30%"
-                              :sm "18%"
-                              :else nil)
-                     :onOk on-ok
-                     :okText ok-text
-                     :okButtonProps {:disabled ok-disabled}
-                     :onCancel on-cancel
-                     :cancelText cancel-text
-                     :footer (fn [_ props]
-                               (r/as-element
-                                [:div (use-style {:display :flex :gap "6px"})
-                                 (concat
-                                  [(into [:div (use-style {:display "flex" :gap "6px" :margin-right "auto"})]
-                                         additional-buttons)]
-                                  [[:> (. props -CancelBtn)]
-                                   [:> (. props -OkBtn)]])]))}
-                    (when hide-footer {:footer nil}))
-     children]))
+    (into
+     [:> antd/Modal (merge
+                     {:title title
+                      :open true
+                      :closable true
+                      :width (case (:size props)
+                               :lg "50%"
+                               :md "30%"
+                               :sm "18%"
+                               :else nil)
+                      :onOk on-ok
+                      :okText ok-text
+                      :okButtonProps {:disabled ok-disabled}
+                      :onCancel on-cancel
+                      :cancelText cancel-text
+                      :footer (fn [_ props]
+                                (r/as-element
+                                 (into [:div (use-style {:display :flex :gap "6px"})]
+                                       (concat
+                                        [(into [:div (use-style {:display "flex" :gap "6px" :margin-right "auto"})]
+                                               additional-buttons)]
+                                        [[:> (. props -CancelBtn)]
+                                         [:> (. props -OkBtn)]]))))}
+                     (when hide-footer {:footer nil}))]
+     children)))
 
 (defn export-image-settings-form []
   (let [image-settings @(re-frame/subscribe [::subs/export-image-settings])]
@@ -1329,10 +1330,12 @@
      [:div {:style {:display :grid
                     :grid-template-columns "repeat(auto-fit, minmax(200px,1fr))"}}
       (for [[type shortcuts] keyboard-shortcuts/shortcuts-by-types]
+        ^{:key (name type)}
         [:div
          [title {:level 4} (str (string/capitalize (name type)) " shortcuts")]
          [:div
           (for [shortcut shortcuts]
+            ^{:key (:label shortcut)}
             [:div (string/capitalize (:label shortcut))
              " - "
              (keyboard-shortcuts/keys->string (:keys shortcut))])]])]]))
