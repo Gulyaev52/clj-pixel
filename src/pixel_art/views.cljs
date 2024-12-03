@@ -61,8 +61,8 @@
                   (assoc-in props [:style :margin-top] 0) ;; todo: fix
                   title]))
 
-(defn form [items]
-  (apply space {:direction "vertical" :style {:width "100%"}} items))
+(defn form [& items]
+  (into [space {:direction "vertical" :style {:width "100%"}}] items))
 
 (defn form-item [{:keys [label control]}]
   [:div (use-style {:display "grid"
@@ -525,32 +525,32 @@
 (defn onion-skin-settings []
   (let [onion-skin @(re-frame/subscribe [::subs/onion-skin])]
     [form
-     [[form-item {:label "Previous Frames"
-                  :control [input-number {:min 0
-                                          :value (:prev (:frames-count onion-skin))
-                                          :block true
-                                          :on-blur (fn [value]
-                                                     (re-frame/dispatch [::onion-skin/set-frames-count (assoc (:frames-count onion-skin)
-                                                                                                              :prev
-                                                                                                              value)]))}]}]
-      [form-item {:label "Next Frames"
-                  :control [input-number {:min 0
-                                          :value (:next (:frames-count onion-skin))
-                                          :block true
-                                          :on-blur (fn [value]
-                                                     (re-frame/dispatch [::onion-skin/set-frames-count (assoc (:frames-count onion-skin)
-                                                                                                              :next
-                                                                                                              value)]))}]}]
-      [form-item {:label "Opacity"
-                  :control [slider {:min 0 :max 1 :step 0.1
-                                    :value (:opacity onion-skin)
-                                    :block true
-                                    :on-change (fn [v] (re-frame/dispatch [::onion-skin/set-opacity v]))}]}]
-      [form-item {:label "Position"
-                  :control [select {:value (:position onion-skin)
-                                    :options [{:value :front :label "in front of sprite"}
-                                              {:value :behind :label "behind sprite"}]
-                                    :on-change (fn [v] (re-frame/dispatch [::onion-skin/set-position v]))}]}]]]))
+     [form-item {:label "Previous Frames"
+                 :control [input-number {:min 0
+                                         :value (:prev (:frames-count onion-skin))
+                                         :block true
+                                         :on-blur (fn [value]
+                                                    (re-frame/dispatch [::onion-skin/set-frames-count (assoc (:frames-count onion-skin)
+                                                                                                             :prev
+                                                                                                             value)]))}]}]
+     [form-item {:label "Next Frames"
+                 :control [input-number {:min 0
+                                         :value (:next (:frames-count onion-skin))
+                                         :block true
+                                         :on-blur (fn [value]
+                                                    (re-frame/dispatch [::onion-skin/set-frames-count (assoc (:frames-count onion-skin)
+                                                                                                             :next
+                                                                                                             value)]))}]}]
+     [form-item {:label "Opacity"
+                 :control [slider {:min 0 :max 1 :step 0.1
+                                   :value (:opacity onion-skin)
+                                   :block true
+                                   :on-change (fn [v] (re-frame/dispatch [::onion-skin/set-opacity v]))}]}]
+     [form-item {:label "Position"
+                 :control [select {:value (:position onion-skin)
+                                   :options [{:value :front :label "in front of sprite"}
+                                             {:value :behind :label "behind sprite"}]
+                                   :on-change (fn [v] (re-frame/dispatch [::onion-skin/set-position v]))}]}]]))
 
 (defn timeline-panel-section [title children]
   [:> antd/Card {:size "small"}
@@ -1188,32 +1188,32 @@
 
 (defn export-image-settings-form []
   (let [image-settings @(re-frame/subscribe [::subs/export-image-settings])]
-    [form
-     (into
-      (export-common-settings-fields
-       {:common-settings image-settings
-        :type-options [{:label "png" :value :png}
-                       {:label "gif" :value :gif}]})
-      (when (= (:file-type image-settings) :gif)
-        [[form-item
-          "Never repeat" [checkbox {:value (not (:repeat image-settings))
-                                    :on-change (fn [value]
-                                                 (re-frame/dispatch [::export/set-settings-option :repeat (not value)]))}]]]))]))
+    (into [form]
+          (into
+           (export-common-settings-fields
+            {:common-settings image-settings
+             :type-options [{:label "png" :value :png}
+                            {:label "gif" :value :gif}]})
+           (when (= (:file-type image-settings) :gif)
+             [[form-item
+               "Never repeat" [checkbox {:value (not (:repeat image-settings))
+                                         :on-change (fn [value]
+                                                      (re-frame/dispatch [::export/set-settings-option :repeat (not value)]))}]]])))))
 
 (defn export-spritesheet-settings-form []
   (let [settings @(re-frame/subscribe [::subs/export-spritesheet-settings])]
-    [form
-     (into
-      [[form-item {:label "Columns"
-                   :control [input-number {:value (:columns settings)
-                                           :block true
-                                           :on-blur (fn [value]
-                                                      (re-frame/dispatch [::export/set-settings-option :columns value]))}]}]
-       [form-item {:label "Rows"
-                   :control [:div (:rows settings)]}]]
-      (export-common-settings-fields
-       {:common-settings settings
-        :type-options [{:label "png" :value :png}]}))]))
+    (into [form]
+          (into
+           [[form-item {:label "Columns"
+                        :control [input-number {:value (:columns settings)
+                                                :block true
+                                                :on-blur (fn [value]
+                                                           (re-frame/dispatch [::export/set-settings-option :columns value]))}]}]
+            [form-item {:label "Rows"
+                        :control [:div (:rows settings)]}]]
+           (export-common-settings-fields
+            {:common-settings settings
+             :type-options [{:label "png" :value :png}]})))))
 
 (defn radio-group [{:keys [value options on-change]}]
   (into
@@ -1291,32 +1291,32 @@
               :on-ok (fn []
                        (re-frame/dispatch [::sprite-resizer/resize]))}
        [form
-        [[form-item {:label "Width"
-                     :control [input-number {:value (-> settings :target-size :width)
-                                             :type "number"
-                                             :max project-settings/max-sprite-dim
-                                             :block true
-                                             :on-blur (fn [value]
-                                                        (re-frame/dispatch [::sprite-resizer/set-settings-option
-                                                                            :target-size
-                                                                            (assoc (:target-size settings) :width value)]))}]}]
-         [form-item {:label "Height"
-                     :control [input-number {:value (-> settings :target-size :height)
-                                             :type "number"
-                                             :max project-settings/max-sprite-dim
-                                             :block true
-                                             :on-blur (fn [value]
-                                                        (re-frame/dispatch [::sprite-resizer/set-settings-option
-                                                                            :target-size
-                                                                            (assoc (:target-size settings) :height value)]))}]}]
-         [form-item {:label "Resize contents"
-                     :control [checkbox {:value (:resize-content settings)
-                                         :on-change (fn [value]
-                                                      (re-frame/dispatch [::sprite-resizer/set-settings-option :resize-content value]))}]}]
-         [form-item {:label "Anchor"
-                     :control [anchor settings]}]
-         [previews-container {}
-          [previews-grid-items previews]]]]])))
+        [form-item {:label "Width"
+                    :control [input-number {:value (-> settings :target-size :width)
+                                            :type "number"
+                                            :max project-settings/max-sprite-dim
+                                            :block true
+                                            :on-blur (fn [value]
+                                                       (re-frame/dispatch [::sprite-resizer/set-settings-option
+                                                                           :target-size
+                                                                           (assoc (:target-size settings) :width value)]))}]}]
+        [form-item {:label "Height"
+                    :control [input-number {:value (-> settings :target-size :height)
+                                            :type "number"
+                                            :max project-settings/max-sprite-dim
+                                            :block true
+                                            :on-blur (fn [value]
+                                                       (re-frame/dispatch [::sprite-resizer/set-settings-option
+                                                                           :target-size
+                                                                           (assoc (:target-size settings) :height value)]))}]}]
+        [form-item {:label "Resize contents"
+                    :control [checkbox {:value (:resize-content settings)
+                                        :on-change (fn [value]
+                                                     (re-frame/dispatch [::sprite-resizer/set-settings-option :resize-content value]))}]}]
+        [form-item {:label "Anchor"
+                    :control [anchor settings]}]
+        [previews-container {}
+         [previews-grid-items previews]]]])))
 
 ;; -----------------
 
@@ -1361,16 +1361,16 @@
                                                         (re-frame/dispatch [::new-project-modal/create-example-project]))}
                                     "Create example project"]]}
        [form
-        [[form-item {:label "Width"
-                     :control [input-number {:value (:width size)
-                                             :block true
-                                             :on-blur (fn [value]
-                                                        (re-frame/dispatch [::new-project-modal/set-width value]))}]}]
-         [form-item {:label "Height"
-                     :control [input-number {:value (:height size)
-                                             :block true
-                                             :on-blur (fn [value]
-                                                        (re-frame/dispatch [::new-project-modal/set-height value]))}]}]]]])))
+        [form-item {:label "Width"
+                    :control [input-number {:value (:width size)
+                                            :block true
+                                            :on-blur (fn [value]
+                                                       (re-frame/dispatch [::new-project-modal/set-width value]))}]}]
+        [form-item {:label "Height"
+                    :control [input-number {:value (:height size)
+                                            :block true
+                                            :on-blur (fn [value]
+                                                       (re-frame/dispatch [::new-project-modal/set-height value]))}]}]]])))
 
 ;; ----------------
 
