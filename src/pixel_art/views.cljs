@@ -1,9 +1,9 @@
 (ns pixel-art.views
   (:require
-   ["antd" :as antd]
    ["./colorPicker$default" :as color-picker-js]
-   ["react-dnd" :as react-dnd]
    ["./react-dnd-scrolling" :as react-dnd-scrolling]
+   ["antd" :as antd]
+   ["react-dnd" :as react-dnd]
    ["react-dnd-html5-backend" :as react-dnd-html5-backend]
    [clojure.string :as string]
    [pixel-art.canvas :as canvas]
@@ -25,7 +25,8 @@
    [react :as react]
    [reagent.core :as r]
    [sc.api]
-   [stylefy.core :as stylefy :refer [use-style]]))
+   [stylefy.core :as stylefy :refer [use-style]])
+  (:require-macros [pixel-art.reagent :refer [def-func-component]]))
 
 (set! *warn-on-infer* false)
 
@@ -254,20 +255,20 @@
                             :background-color (when (and can-drop over) "blue")}
                            styles)}])))
 
-(defn droppable-layer-zone [to-idx styles]
+(def-func-component droppable-layer-zone [to-idx styles]
   (droppable-zone {:accept "layer"
                    :on-drop (fn [layer]
                               (re-frame/dispatch [::events/move-layer (:idx layer) to-idx]))}
                   (merge {:height "20px" :width "100%"} styles)))
 
-(defn layer-view [layer]
+(def-func-component layer-view [layer]
   (let [[_ ref] (react-dnd/useDrag (fn [] #js {"type" "layer" "item" layer}))
         theme-token (use-theme-token)]
     [:div (use-style {:display :flex
                       :align-items "center"
                       :position "relative"})
      (when (= (:idx layer) 0)
-       [:f> droppable-layer-zone (:idx layer) {:top 0 :transform "translateY(-50%)"}])
+       [droppable-layer-zone (:idx layer) {:top 0 :transform "translateY(-50%)"}])
      [:div {:ref ref
             :on-click (fn [] (re-frame/dispatch [::events/select-layer (:idx layer)]))
             :style {:display :flex
@@ -282,15 +283,15 @@
                                     "1px")
                     :cursor "pointer"}}
       [typography (:name layer)]]
-     [:f> droppable-layer-zone (inc (:idx layer)) {:bottom 0 :transform "translateY(50%)"}]]))
+     [droppable-layer-zone (inc (:idx layer)) {:bottom 0 :transform "translateY(50%)"}]]))
 
-(defn droppable-frame-zone [idx styles]
+(def-func-component droppable-frame-zone [idx styles]
   (droppable-zone {:accept "frame"
                    :on-drop (fn [frame]
                               (re-frame/dispatch [::events/move-frame (:idx frame) idx]))}
                   (merge {:width "30px" :height "100%"} styles)))
 
-(defn frame-view [frame]
+(def-func-component frame-view [frame]
   (let [[_ ref] (react-dnd/useDrag (fn []
                                      #js {"type" "frame"
                                           "item" frame
@@ -302,9 +303,9 @@
                    :background-color (.-colorBgContainer theme-token)
                    :z-index 1}}
      (when (= (:idx frame) 0)
-       [:f> droppable-frame-zone (:idx frame) {:left 0
-                                               :top 0
-                                               :transform "translateX(-50%)"}])
+       [droppable-frame-zone (:idx frame) {:left 0
+                                           :top 0
+                                           :transform "translateX(-50%)"}])
      [:div {:on-click (fn [] (re-frame/dispatch [::events/select-frame (:idx frame)]))
             :ref ref
             :style {:display "flex"
@@ -319,11 +320,11 @@
                     :text-align "center"
                     :cursor "pointer"}}
       [typography (inc (:idx frame))]]
-     [:f> droppable-frame-zone (inc (:idx frame)) {:right 0
-                                                   :top 0
-                                                   :transform "translateX(50%)"}]]))
+     [droppable-frame-zone (inc (:idx frame)) {:right 0
+                                               :top 0
+                                               :transform "translateX(50%)"}]]))
 
-(defn droppable-cel-zone [pos direction-type styles]
+(def-func-component droppable-cel-zone [pos direction-type styles]
   (droppable-zone {:accept "cel"
                    :can-drop (fn [cel]
                                (case direction-type
@@ -333,7 +334,7 @@
                               (re-frame/dispatch [::events/move-cel (:pos cel) pos]))}
                   styles))
 
-(defn cel-view [cel]
+(def-func-component cel-view [cel]
   (let [[_ ref] (react-dnd/useDrag (fn []
                                      #js {"type" "cel"
                                           "item" cel
@@ -346,7 +347,7 @@
         theme-token (use-theme-token)]
     [:div {:style {:position "relative"}}
      (when (= (-> cel :pos :frame-idx) 0)
-       [:f> droppable-cel-zone
+       [droppable-cel-zone
         (:pos cel)
         :frame
         {:height "100%"
@@ -386,14 +387,14 @@
                (#(typography {:style {:color (when-let [group-number (:group-number cel)]
                                                (get-group-color group-number))}}
                              %)))]]
-     [:f> droppable-cel-zone
+     [droppable-cel-zone
       (:pos cel)
       :layer
       {:height "100%"
        :width "100%"
        :top 0
        :left 0}]
-     [:f> droppable-cel-zone
+     [droppable-cel-zone
       (update (:pos cel) :frame-idx inc)
       :frame
       {:height "100%"
@@ -403,7 +404,7 @@
        :transform "translateX(50%)"}]]))
 
 ;; todo: integer input number
-(defn input-number-component [{:keys [value min max block on-blur]}]
+(def-func-component input-number [{:keys [value min max block on-blur]}]
   (let [[curr-value set-curr-value] (react/useState value)]
     (react/useEffect (fn []
                        (set-curr-value value))
@@ -420,9 +421,7 @@
                                       (set-curr-value new-value)
                                       (on-blur new-value)))}]))
 
-(defn input-number [props] [:f> input-number-component props])
-
-(defn input-text-component [{:keys [value on-blur]}]
+(defn input-text [{:keys [value on-blur]}]
   (let [[curr-value set-curr-value] (react/useState value)]
     (react/useEffect (fn []
                        (set-curr-value value))
@@ -434,8 +433,6 @@
                               (on-blur curr-value))
                     :onPressEnter (fn []
                                     (on-blur curr-value))}]))
-
-(defn input-text [props] [:f> input-text-component props])
 
 (defn vertical-resizer []
   (let [container-ref (react/useRef)
@@ -477,7 +474,7 @@
     {:handler-ref handler-ref
      :container-ref container-ref}))
 
-(defn select-component [{:keys [value size on-change block options]}]
+(def-func-component select [{:keys [value size on-change block options]}]
   (let [ref (react/useRef)]
     [:> antd/Select {:value value
                      :ref ref
@@ -494,10 +491,7 @@
                                   (.. ref -current blur)
                                   (on-change value))}]))
 
-(defn select [props]
-  [:f> select-component props])
-
-(defn sprite-preview-modal-component []
+(def-func-component sprite-preview-modal-component []
   (let [{:keys [size displayed-frame-idx frame-imgs]} @(re-frame/subscribe [::subs/sprite-preview])
         sprite-size @(re-frame/subscribe [::subs/sprite-size])
         frame-img (or (get frame-imgs displayed-frame-idx nil) (get frame-imgs 0))
@@ -526,7 +520,7 @@
 (defn sprite-preview-modal []
   (let [opened (:opened @(re-frame/subscribe [::subs/sprite-preview]))]
     (when opened
-      [:f> sprite-preview-modal-component])))
+      [sprite-preview-modal-component])))
 
 (defn onion-skin-settings []
   (let [onion-skin @(re-frame/subscribe [::subs/onion-skin])]
@@ -676,7 +670,7 @@
 
 (def dndScrollingVerticalStrength (react-dnd-scrolling/createVerticalStrength 50))
 
-(defn timeline-panel []
+(def-func-component timeline-panel []
   (let [{:keys [cels layers frames disabled-actions some-layer-visible some-layer-automatic-linking]} @(re-frame/subscribe [::subs/timeline])
         current-frame (coll/find-first :current frames) ;; todo: to subs?
         all-frames-duration (when (apply = (map :duration frames))
@@ -742,8 +736,9 @@
                         :z-index 1
                         :background-color (.-colorBgContainer theme-token)
                         :top 0})]
-      (for [frame frames] ^{:key (:idx frame)}
-           [:f> frame-view frame])
+      (for [frame frames]
+        ^{:key (:idx frame)}
+        [frame-view frame])
       (doall
        (for [layer layers]
          ^{:key (:idx layer)}
@@ -764,10 +759,10 @@
                          :size :sm
                          :on-click (fn []
                                      (re-frame/dispatch [::events/toggle-layer-automatic-linking (:idx layer)]))}]]
-          [:f> layer-view layer]
+          [layer-view layer]
           (for [cel (cels-by-layers (:idx layer))]
             ^{:key (str (:frame-idx (:pos cel)) "-" (:layer-idx (:pos cel)))}
-            [:f> cel-view cel])]))]]))
+            [cel-view cel])]))]]))
 
 (defn color-picker [{:keys [value preset-colors actions on-change]}]
   [:> color-picker-js
@@ -778,12 +773,12 @@
     :onChange (fn [e] (let [rgba (. e -rgba)]
                         (on-change (color/int (. rgba -r) (. rgba -g) (. rgba -b) (. rgba -a)))))}])
 
-(defn file-uploader-comp [{:keys [on-upload accept]} render-button]
-  (let [input-ref (react/useRef)]
+(defn file-uploader [{:keys [on-upload accept]} render-button]
+  (let [!input-ref (r/atom nil)]
     [:span
      [:input {:type "file"
               :accept accept
-              :ref input-ref
+              :ref (fn [ref] (reset! !input-ref ref))
               :style {:display "none"}
               :on-change (fn [e]
                            (let [files (.. e -target -files)]
@@ -796,10 +791,7 @@
                            (set! (.. e -target -value) "") ;; without this line onChange is not triggered when the same file is choosen twice
                            )}]
      [render-button (fn []
-                      (.. input-ref -current click))]]))
-
-(defn file-uploader [props render-button]
-  [:f> file-uploader-comp props render-button])
+                      (.. !input-ref -current click))]]))
 
 ;; todo: зачем-это?
 (defn- replace-transparent-color [color]
@@ -827,7 +819,7 @@
                      :on-cancel (fn []
                                   (on-close))}])))
 
-(defn palette-colors [{:keys [colors primary-color secondary-color]}]
+(def-func-component palette-colors [{:keys [colors primary-color secondary-color]}]
   (let [theme-token (use-theme-token)]
     [:div {:style {:display :grid
                    :grid-template-columns "repeat(auto-fill, 35px)" ;; todo: dynamic
@@ -931,9 +923,9 @@
                         :on-click on-click}])]]]
 
      [:div (use-style {:flex-grow 1 :min-height 0})
-      [:f> palette-colors {:colors (:colors current-palette)
-                           :primary-color primary-color
-                           :secondary-color secondary-color}]]]))
+      [palette-colors {:colors (:colors current-palette)
+                       :primary-color primary-color
+                       :secondary-color secondary-color}]]]))
 
 (defn drawing-info []
   (let [mouse-pos @(re-frame/subscribe [::subs/mouse-pos])
@@ -944,7 +936,7 @@
      [typography (str (:x mouse-pos) ":" (:y mouse-pos))]
      [typography (str "scale=" (. scale (toFixed 2)))]]))
 
-(defn canvases-section-component []
+(def-func-component canvases-section []
   (let [viewport-ref (react/useRef)
         _ (react/useEffect (fn []
                              (let [handler (fn [e]
@@ -1086,10 +1078,6 @@
                         :height "100%"
                         :position "relative"
                         :z-index 10}}])]]]))
-
-;; todo: rename
-(defn canvases-section []
-  [:f> canvases-section-component])
 
 (defn- current-color-selection-color-picker [{:keys [value]}]
   (let [initial-value value]
@@ -1270,7 +1258,7 @@
 
 ;; -----------------
 
-(defn anchor [settings]
+(def-func-component anchor [settings]
   (let [theme-token (use-theme-token)]
     [:div {:style {:display :grid
                    :grid-template-columns "min-content min-content min-content"
@@ -1325,7 +1313,7 @@
                                          :on-change (fn [value]
                                                       (re-frame/dispatch [::sprite-resizer/set-settings-option :resize-content value]))}]}]
          [form-item {:label "Anchor"
-                     :control [:f> anchor settings]}]
+                     :control [anchor settings]}]
          [previews-container {}
           [previews-grid-items previews]]]]])))
 
@@ -1414,7 +1402,7 @@
                     :size :sm
                     :on-click (fn [] (re-frame/dispatch [::events/swap-current-colors]))}]]]))
 
-(defn tools-panel []
+(def-func-component tools-panel []
   (let [tool @(re-frame/subscribe [::subs/tool])
         theme-token (use-theme-token)]
     [:div (use-style {:width "100px"
@@ -1459,7 +1447,7 @@
                       (slider props)]
              :checkbox (checkbox props))])))]))
 
-(defn right-sidebar []
+(def-func-component right-sidebar []
   (let [theme-token (use-theme-token)]
     [:div (use-style {:display "flex"
                       :flex-direction "column"
@@ -1469,7 +1457,7 @@
      [:div (use-style {:margin-top "auto"})
       [palettes-section]]]))
 
-(defn header []
+(def-func-component header []
   (let [pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])
         theme-token (use-theme-token)]
     [:div (use-style {:display "flex"
@@ -1493,7 +1481,7 @@
        "Open project export panel"]
       [export-modal]]
      [:<>
-      [:f> sprite-resizer-modal]
+      [sprite-resizer-modal]
       [button {:on-click (fn [] (re-frame/dispatch [::sprite-resizer/set-opened true]))} "Resize canvas"]]
      [:<>
       [button {:on-click (fn [] (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened true]))} "Keyboard shortcuts"]
@@ -1505,7 +1493,7 @@
      [:div (use-style {:margin-left "auto"})
       [drawing-info]]]))
 
-(defn main-panel []
+(def-func-component main-panel []
   (let [colorBgContainer (.. antd/theme useToken -token -colorBgContainer)]
     [:> react-dnd/DndProvider {"backend" react-dnd-html5-backend/HTML5Backend}
      [:div (use-style {:display "flex"
@@ -1515,23 +1503,23 @@
                        :max-height "100%"
                        :max-width "100%"
                        :background-color colorBgContainer})
-      [:f> header]
+      [header]
       [:div (use-style {:display :grid
                         :grid-template-columns "100px 1fr 250px"
                         :flex-grow 1
                         :min-height 0
                         :width "100%"})
-       [:f> tools-panel]
+       [tools-panel]
        [:div (use-style {:display :flex
                          :flex-direction :column
                          :min-width 0
                          :min-height 0})
         [tool-options-panel]
         [canvases-section]
-        [:f> timeline-panel]]
-       [:f> right-sidebar]]]]))
+        [timeline-panel]]
+       [right-sidebar]]]]))
 
-(defn app-loading-view []
+(def-func-component app-loading-view []
   (let [colorBgContainer (.. antd/theme useToken -token -colorBgContainer)]
     [:div (use-style {:display "flex"
                       :align-items "center"
@@ -1545,5 +1533,5 @@
   [:> antd/ConfigProvider {"theme" {"token" {"motion" false}
                                     "algorithm" (. antd/theme -darkAlgorithm)}}
    (if @(re-frame/subscribe [::subs/initial-loading])
-     [:f> app-loading-view]
-     [:f> main-panel])])
+     [app-loading-view]
+     [main-panel])])
