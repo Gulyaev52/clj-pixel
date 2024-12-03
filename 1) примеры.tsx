@@ -1,7 +1,5 @@
 17) дизайн
   slider value label
-  form
-  style vs use-style
 
   on resize не центрирует
     resize + create

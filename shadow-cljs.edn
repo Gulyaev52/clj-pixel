@@ -15,8 +15,6 @@
   [vvvvalvalval/scope-capture "0.3.3"]
   [day8.re-frame/test "0.1.5"]
   [com.github.flow-storm/flow-storm-inst "3.15.7"]
-  [stylefy "3.2.0"]
-  [stylefy/reagent "3.0.0"]
   [re-com "2.22.11"]]
 
  :dev-http

@@ -24,8 +24,7 @@
    [re-frame.core :as re-frame]
    [react :as react]
    [reagent.core :as r]
-   [sc.api]
-   [stylefy.core :as stylefy :refer [use-style]])
+   [sc.api])
   (:require-macros [pixel-art.reagent :refer [def-func-component]]))
 
 (set! *warn-on-infer* false)
@@ -65,9 +64,9 @@
   (into [space {:direction "vertical" :style {:width "100%"}}] items))
 
 (defn form-item [{:keys [label control]}]
-  [:div (use-style {:display "grid"
-                    :grid-template-columns "1fr 1fr"
-                    :align-items "center"})
+  [:div {:style {:display "grid"
+                 :grid-template-columns "1fr 1fr"
+                 :align-items "center"}}
    [typography label]
    control])
 
@@ -168,11 +167,11 @@
                                 (. canvas-layers-rect -top)) scale)))}))
 
 (defn slider [{:keys [value label block min max step style on-change]}]
-  [:div (use-style {:display :flex
-                    :align-items :center
-                    :width (if block "100%" "250px")
-                    :gap "8px"
-                    :font-size "13px"})
+  [:div {:style {:display :flex
+                 :align-items :center
+                 :width (if block "100%" "250px")
+                 :gap "8px"
+                 :font-size "13px"}}
    [typography (str label " (" value ")")]
    [:> antd/Slider {:value value
                     :min min
@@ -193,36 +192,34 @@
    text])
 
 (defn icon-button [{:keys [src icon-theme title active disabled size on-click]}]
-  [:button (use-style (merge
-                       {:border "none"
-                        :outline "none"
-                        :padding 0
-                        :background-color (if active "rgba(255,255,255,.2)" "transparent")
-                        :border-radius "4px"
-                        :opacity (if disabled "0.4" 1)
-                        :cursor (if disabled "default" "pointer")
-                        ::stylefy/mode (if disabled
-                                         {}
-                                         {:hover {:background-color "rgba(255,255,255,.2)"}})}
-                       (cond
-                         (= size :sm)
-                         {:width "28px" :height "28px" :min-height "28px" :min-width "28px"}
-                         (= size :xs)
-                         {:width "18px" :height "18px" :min-height "18px" :min-width "18px"}
-                         :else
-                         {:width "100%" :height "100%"}))
-                      {:title title
-                       :disabled disabled
-                       :on-click on-click})
-   [:div (use-style {:width "100%"
-                     :height "100%"
-                     :mask-image (str "url(./imgs/" (name src) ".svg)")
-                     :mask-repeat "no-repeat"
-                     :mask-position "center"
-                     :mask-size "70%"
-                     :background-color (case (or icon-theme :light)
-                                         :light "white"
-                                         :dark "black")})]])
+  [:button (merge {:className "icon-button"
+                   :style (merge
+                           {:border "none"
+                            :outline "none"
+                            :padding 0
+                            :background-color (if active "rgba(255,255,255,.2)" "transparent")
+                            :border-radius "4px"
+                            :opacity (if disabled "0.4" 1)
+                            :cursor (if disabled "default" "pointer")}
+                           (cond
+                             (= size :sm)
+                             {:width "28px" :height "28px" :min-height "28px" :min-width "28px"}
+                             (= size :xs)
+                             {:width "18px" :height "18px" :min-height "18px" :min-width "18px"}
+                             :else
+                             {:width "100%" :height "100%"}))
+                   :title title
+                   :disabled disabled
+                   :on-click on-click})
+   [:div {:style {:width "100%"
+                  :height "100%"
+                  :mask-image (str "url(./imgs/" (name src) ".svg)")
+                  :mask-repeat "no-repeat"
+                  :mask-position "center"
+                  :mask-size "70%"
+                  :background-color (case (or icon-theme :light)
+                                      :light "white"
+                                      :dark "black")}}]])
 
 (defn get-group-color [group-number]
   (nth (cycle ["green" "pink" "yellow" "red" "blue" "purple"]) group-number))
@@ -264,9 +261,9 @@
 (def-func-component layer-view [layer]
   (let [[_ ref] (react-dnd/useDrag (fn [] #js {"type" "layer" "item" layer}))
         theme-token (use-theme-token)]
-    [:div (use-style {:display :flex
-                      :align-items "center"
-                      :position "relative"})
+    [:div {:style {:display :flex
+                   :align-items "center"
+                   :position "relative"}}
      (when (= (:idx layer) 0)
        [droppable-layer-zone (:idx layer) {:top 0 :transform "translateY(-50%)"}])
      [:div {:ref ref
@@ -556,12 +553,12 @@
   [:> antd/Card {:size "small"}
    [space
     [typography title]
-    (into [:div (use-style {:display "flex" :align-items "center"})]
+    (into [:div {:style {:display "flex" :align-items "center"}}]
           children)]])
 
 (defn timeline-panel-toolbar [{:keys [disabled-actions all-frames-duration current-frame]}]
   (let [onion-skin-enabled @(re-frame/subscribe [::subs/onion-skin-enabled])]
-    [:div (use-style {:display "flex" :justify-content "space-between"})
+    [:div {:style {:display "flex" :justify-content "space-between"}}
      [space
       [timeline-panel-section "Frames" [[icon-button {:src :add
                                                       :title "add empty frame"
@@ -652,7 +649,7 @@
                          :on-click open}])
          [onion-skin-settings]]]]]
 
-     [:div (use-style {:display :flex})
+     [:div {:style {:display :flex}}
       [:<>
        [sprite-preview-modal]
        [button {:on-click (fn [] (re-frame/dispatch [::sprite-preview/open]))} "Show preview"]]
@@ -683,21 +680,21 @@
         timeline-container-ref (react/useRef)
         theme-token (use-theme-token)
         _ (react-dnd-scrolling/useDndScrolling timeline-container-ref #js {"verticalStrength" dndScrollingVerticalStrength})]
-    [:div (use-style {:display "flex"
-                      :flex-direction "column"
-                      :padding "4px"
-                      :gap "4px"
-                      :flex-shrink 0
-                      :height "300px"
-                      :min-height "16px"}
-                     {:ref (:container-ref vertical-resizer-refs)})
+    [:div {:ref (:container-ref vertical-resizer-refs)
+           :style {:display "flex"
+                   :flex-direction "column"
+                   :padding "4px"
+                   :gap "4px"
+                   :flex-shrink 0
+                   :height "300px"
+                   :min-height "16px"}}
 
-     [:div (use-style {:min-height "4px"
-                       :width "40px"
-                       :background-color "gray"
-                       :cursor "grab"
-                       :align-self "center"}
-                      {:ref (:handler-ref vertical-resizer-refs)})]
+     [:div {:ref (:handler-ref vertical-resizer-refs)
+            :style {:min-height "4px"
+                    :width "40px"
+                    :background-color "gray"
+                    :cursor "grab"
+                    :align-self "center"}}]
 
      [timeline-panel-toolbar {:current-frame current-frame
                               :disabled-actions disabled-actions
@@ -712,12 +709,12 @@
                     :grid-row-gap "4px"
                     :margin-top "4px"
                     :overflow "auto"}}
-      [:div (use-style {:display "flex"
-                        :align-items "center"
-                        :position "sticky"
-                        :z-index 1
-                        :background-color (.-colorBgContainer theme-token)
-                        :top 0})
+      [:div {:style {:display "flex"
+                     :align-items "center"
+                     :position "sticky"
+                     :z-index 1
+                     :background-color (.-colorBgContainer theme-token)
+                     :top 0}}
        [icon-button {:src (if some-layer-visible
                             :visibility
                             :visibility-off)
@@ -732,10 +729,10 @@
                      :size :sm
                      :on-click (fn []
                                  (re-frame/dispatch [::events/toggle-all-layers-automatic-linking]))}]]
-      [:div (use-style {:position "sticky"
-                        :z-index 1
-                        :background-color (.-colorBgContainer theme-token)
-                        :top 0})]
+      [:div {:style {:position "sticky"
+                     :z-index 1
+                     :background-color (.-colorBgContainer theme-token)
+                     :top 0}}]
       (for [frame frames]
         ^{:key (:idx frame)}
         [frame-view frame])
@@ -743,8 +740,8 @@
        (for [layer layers]
          ^{:key (:idx layer)}
          [:<>
-          [:div (use-style {:display "flex"
-                            :align-items "center"})
+          [:div {:style {:display "flex"
+                         :align-items "center"}}
            [icon-button {:src (if (:visible? layer)
                                 :visibility
                                 :visibility-off)
@@ -831,23 +828,23 @@
       (for [[idx color] (map-indexed vector colors)]
         (let [color-dark? (.. (color/->tinycolor color) isDark)]
           ^{:key color}
-          [:div (use-style {:background-color (color/int->rgb-str color)
-                            :position "relative"
-                            :cursor "pointer"
-                            :color (if color-dark? (.-colorText theme-token) (.-colorBgBase theme-token))
-                            ::stylefy/manual [[:&:hover [:.remove-color {:opacity 1}]]]}
-                           {:on-click (fn []
-                                        (re-frame/dispatch [::palette/select-color idx false]))
-                            :on-context-menu (fn [e]
-                                               (. e preventDefault)
-                                               (re-frame/dispatch [::palette/select-color idx true]))})
+          [:div {:className "color-container"
+                 :style {:background-color (color/int->rgb-str color)
+                         :position "relative"
+                         :cursor "pointer"
+                         :color (if color-dark? (.-colorText theme-token) (.-colorBgBase theme-token))}
+                 :on-click (fn []
+                             (re-frame/dispatch [::palette/select-color idx false]))
+                 :on-context-menu (fn [e]
+                                    (. e preventDefault)
+                                    (re-frame/dispatch [::palette/select-color idx true]))}
            (when (= color primary-color) "L")
            (when (= color secondary-color) "R")
-           [:div (use-style {:position "absolute"
-                             :right "1px"
-                             :top "1px"
-                             :opacity 0}
-                            {:class "remove-color"})
+           [:div {:className "remove-color-button"
+                  :style {:position "absolute"
+                          :right "1px"
+                          :top "1px"
+                          :opacity 0}}
             [icon-button {:src :close
                           :icon-theme (if color-dark? :light :dark)
                           :title "remove color"
@@ -862,9 +859,9 @@
         current-palette (coll/find-first :current palettes)
         primary-color @(re-frame/subscribe [::subs/primary-color])
         secondary-color @(re-frame/subscribe [::subs/secondary-color])]
-    [:div (use-style {:display "flex"
-                      :flex-direction "column"
-                      :height "300px"})
+    [:div {:style {:display "flex"
+                   :flex-direction "column"
+                   :height "300px"}}
      [select {:value current-palette-idx
               :options (map-indexed (fn [idx p] {:value idx :label (:name p)}) palettes)
               :block true
@@ -872,7 +869,7 @@
               :on-change (fn [idx]
                            (re-frame/dispatch [::palette/select-palette idx]))}]
 
-     [:div (use-style {:display "flex" :justify-content "space-between"})
+     [:div {:style {:display "flex" :justify-content "space-between"}}
       [custom-popover
        (fn [close]
          [icon-button {:src :add
@@ -922,7 +919,7 @@
                         :size :sm
                         :on-click on-click}])]]]
 
-     [:div (use-style {:flex-grow 1 :min-height 0})
+     [:div {:style {:flex-grow 1 :min-height 0}}
       [palette-colors {:colors (:colors current-palette)
                        :primary-color primary-color
                        :secondary-color secondary-color}]]]))
@@ -1093,16 +1090,15 @@
 (defn- current-color-selection [{:keys [value on-change]}]
   [custom-popover
    (fn [close]
-     [:div (use-style
-            {:width "45px"
-             :height "45px"
-             :border-radius "5px"
-             :cursor "pointer"
-             :background (if (= value color/transparent-color-int)
-                           transparent-color-img
-                           (color/int->rgb-str value))
-             :border "thin solid white"}
-            {:on-click close})])
+     [:div {:style {:width "45px"
+                    :height "45px"
+                    :border-radius "5px"
+                    :cursor "pointer"
+                    :background (if (= value color/transparent-color-int)
+                                  transparent-color-img
+                                  (color/int->rgb-str value))
+                    :border "thin solid white"}
+            :on-click close}])
    (fn [close]
      [current-color-selection-color-picker {:value value :on-change on-change} close])])
 
@@ -1177,9 +1173,9 @@
                       :cancelText cancel-text
                       :footer (fn [_ props]
                                 (r/as-element
-                                 (into [:div (use-style {:display :flex :gap "6px"})]
+                                 (into [:div {:style {:display :flex :gap "6px"}}]
                                        (concat
-                                        [(into [:div (use-style {:display "flex" :gap "6px" :margin-right "auto"})]
+                                        [(into [:div {:style {:display "flex" :gap "6px" :margin-right "auto"}}]
                                                additional-buttons)]
                                         [[:> (. props -CancelBtn)]
                                          [:> (. props -OkBtn)]]))))}
@@ -1376,7 +1372,7 @@
 
 (defn tool-view [{:keys [type selected]}]
   (let [title (string/replace (name type) "-" " ")]
-    [:div (use-style {:width "50px" :height "50px"})
+    [:div {:style {:width "50px" :height "50px"}}
      [icon-button {:src type
                    :title title
                    :active selected
@@ -1387,19 +1383,19 @@
 (defn current-colors-selection []
   (let [primary-color @(re-frame/subscribe [::subs/primary-color])
         secondary-color @(re-frame/subscribe [::subs/secondary-color])]
-    [:div (use-style {:width "min-content" :position "relative"})
-     [:div (use-style {:width "min-content" :position "relative" :z-index 1})
+    [:div {:style {:width "min-content" :position "relative"}}
+     [:div {:style {:width "min-content" :position "relative" :z-index 1}}
       [current-color-selection {:value primary-color
                                 :on-change (fn [new-primary-color]
                                              (re-frame/dispatch [::events/set-current-color :primary-color new-primary-color]))}]]
-     [:div (use-style {:margin-top "-25px" :margin-left "32px"})
+     [:div {:style {:margin-top "-25px" :margin-left "32px"}}
       [current-color-selection {:value secondary-color
                                 :on-change (fn [new-secondary-color]
                                              (re-frame/dispatch [::events/set-current-color :secondary-color new-secondary-color]))}]]
-     [:div (use-style {:position "absolute"
-                       :top "48px"
-                       :left "3px"
-                       :cursor "pointer"})
+     [:div {:style {:position "absolute"
+                    :top "48px"
+                    :left "3px"
+                    :cursor "pointer"}}
       [icon-button {:src :swap
                     :title "Swap colors"
                     :size :sm
@@ -1408,20 +1404,20 @@
 (def-func-component tools-panel []
   (let [tool @(re-frame/subscribe [::subs/tool])
         theme-token (use-theme-token)]
-    [:div (use-style {:width "100px"
-                      :border-right (str "1px solid " (.-colorBorder theme-token))})
+    [:div {:style {:width "100px"
+                   :border-right (str "1px solid " (.-colorBorder theme-token))}}
 
-     [:div (use-style {:display "grid"
-                       :grid-template-columns "1fr 1fr"
-                       :gap "1px"
-                       :padding "1px"})
+     [:div {:style {:display "grid"
+                    :grid-template-columns "1fr 1fr"
+                    :gap "1px"
+                    :padding "1px"}}
       (for [type tool/types]
         ^{:key (name type)}
         [tool-view {:type type :selected (= (:type tool) type)}])]
 
-     [:div (use-style {:display "flex"
-                       :justify-content "center"
-                       :margin-top "15px"})
+     [:div {:style {:display "flex"
+                    :justify-content "center"
+                    :margin-top "15px"}}
       [current-colors-selection]]]))
 
 ;;----
@@ -1430,12 +1426,12 @@
   (let [tool @(re-frame/subscribe [::subs/tool])
         options @(re-frame/subscribe [::subs/tool-options]) ;; todo: объединить спеку и опции
         options-spec (tool/options-specs (:type tool))]
-    [:div (use-style {:display :flex
-                      :align-items :center
-                      :height "30px"
-                      :flex-shrink 0
-                      :padding "0 10px"
-                      :gap "12px"})
+    [:div {:style {:display :flex
+                   :align-items :center
+                   :height "30px"
+                   :flex-shrink 0
+                   :padding "0 10px"
+                   :gap "12px"}}
      (doall
       (for [[idx option-spec] (map-indexed vector options-spec)]
         (let [value (get options (:field option-spec))
@@ -1446,28 +1442,28 @@
           ^{:key idx}
           [:div
            (case (:type option-spec)
-             :slider [:div (use-style {:width "300px"})
+             :slider [:div {:style {:width "300px"}}
                       (slider props)]
              :checkbox (checkbox props))])))]))
 
 (def-func-component right-sidebar []
   (let [theme-token (use-theme-token)]
-    [:div (use-style {:display "flex"
-                      :flex-direction "column"
-                      :height "100%"
-                      :padding "1px"
-                      :border-left (str "1px solid " (.-colorBorder theme-token))})
-     [:div (use-style {:margin-top "auto"})
+    [:div {:style {:display "flex"
+                   :flex-direction "column"
+                   :height "100%"
+                   :padding "1px"
+                   :border-left (str "1px solid " (.-colorBorder theme-token))}}
+     [:div {:style {:margin-top "auto"}}
       [palettes-section]]]))
 
 (def-func-component header []
   (let [pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])
         theme-token (use-theme-token)]
-    [:div (use-style {:display "flex"
-                      :align-items "center"
-                      :padding "5px"
-                      :gap "4px"
-                      :border-bottom (str "1px solid " (.-colorBorder theme-token))})
+    [:div {:style {:display "flex"
+                   :align-items "center"
+                   :padding "5px"
+                   :gap "4px"
+                   :border-bottom (str "1px solid " (.-colorBorder theme-token))}}
      [:<>
       [new-project-modal]
       [button {:on-click (fn [] (re-frame/dispatch [::new-project-modal/set-opened true]))}
@@ -1493,30 +1489,30 @@
                 :label "Grid"
                 :on-change (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]
 
-     [:div (use-style {:margin-left "auto"})
+     [:div {:style {:margin-left "auto"}}
       [drawing-info]]]))
 
 (def-func-component main-panel []
   (let [colorBgContainer (.. antd/theme useToken -token -colorBgContainer)]
     [:> react-dnd/DndProvider {"backend" react-dnd-html5-backend/HTML5Backend}
-     [:div (use-style {:display "flex"
-                       :flex-direction "column"
-                       :height "100%"
-                       :width "100%"
-                       :max-height "100%"
-                       :max-width "100%"
-                       :background-color colorBgContainer})
+     [:div {:style {:display "flex"
+                    :flex-direction "column"
+                    :height "100%"
+                    :width "100%"
+                    :max-height "100%"
+                    :max-width "100%"
+                    :background-color colorBgContainer}}
       [header]
-      [:div (use-style {:display :grid
-                        :grid-template-columns "100px 1fr 250px"
-                        :flex-grow 1
-                        :min-height 0
-                        :width "100%"})
+      [:div {:style {:display :grid
+                     :grid-template-columns "100px 1fr 250px"
+                     :flex-grow 1
+                     :min-height 0
+                     :width "100%"}}
        [tools-panel]
-       [:div (use-style {:display :flex
-                         :flex-direction :column
-                         :min-width 0
-                         :min-height 0})
+       [:div {:style {:display :flex
+                      :flex-direction :column
+                      :min-width 0
+                      :min-height 0}}
         [tool-options-panel]
         [canvases-section]
         [timeline-panel]]
@@ -1524,12 +1520,12 @@
 
 (def-func-component app-loading-view []
   (let [colorBgContainer (.. antd/theme useToken -token -colorBgContainer)]
-    [:div (use-style {:display "flex"
-                      :align-items "center"
-                      :justify-content "center"
-                      :width "100%"
-                      :height "100%"
-                      :background-color colorBgContainer})
+    [:div {:style {:display "flex"
+                   :align-items "center"
+                   :justify-content "center"
+                   :width "100%"
+                   :height "100%"
+                   :background-color colorBgContainer}}
      [:> antd/Spin {:size "large"}]]))
 
 (defn app []

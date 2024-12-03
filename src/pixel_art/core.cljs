@@ -5,9 +5,7 @@
    [pixel-art.events :as events]
    [pixel-art.events.event-collector]
    [pixel-art.views :as views]
-   [pixel-art.config :as config]
-   [stylefy.core :as stylefy]
-   [stylefy.reagent :as stylefy-reagent]))
+   [pixel-art.config :as config]))
 
 
 (defn dev-setup []
@@ -26,6 +24,5 @@
 
 (defn init []
   (re-frame/dispatch-sync [::events/start-app])
-  (stylefy/init {:dom (stylefy-reagent/init)})
   (dev-setup)
   (mount-root))
