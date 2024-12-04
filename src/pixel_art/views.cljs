@@ -6,7 +6,6 @@
    ["react-dnd" :as react-dnd]
    ["react-dnd-html5-backend" :as react-dnd-html5-backend]
    [clojure.string :as string]
-   [snitch.core :refer-macros [defn* *let *fn]]
    [pixel-art.canvas :as canvas]
    [pixel-art.events :as events]
    [pixel-art.export :as export]
@@ -131,14 +130,14 @@
        (when @!opened
          [:div
           [:div {:style {:position "fixed"
-                         :zIndex 100
+                         :z-index 100
                          :top "0px"
                          :right "0px"
                          :bottom "0px"
                          :left "0px"}
                  :on-click (fn []
                              (reset! !opened false))}]
-          [:div {:style {:position "absolute" :zIndex 101 :bottom "calc(100% + 5px)"}}
+          [:div {:style {:position "absolute" :z-index 101 :bottom "calc(100% + 5px)"}}
            (over (fn [] (reset! !opened false)))]])])))
 
 (defn parse-int [n]
@@ -509,7 +508,7 @@
                            (array))]
     [:div {:style {:position "fixed"
                    :display "flex"
-                   :zIndex 1000
+                   :z-index 1000
                    :alignItems "center"
                    :justifyContent "center"
                    :left 0
@@ -1036,8 +1035,8 @@
                  :style {:position :absolute
                          :left 0
                          :top 0
-                         :imageRendering "pixelated"
-                         :zIndex 0
+                         :image-rendering "pixelated"
+                         :z-index 0
                          :width "100%"
                          :height "100%"}}]
        [:canvas {:id "current-layer"
@@ -1045,16 +1044,16 @@
                  :style {:position :absolute
                          :left 0
                          :top 0
-                         :imageRendering "pixelated"
-                         :zIndex 1
+                         :image-rendering "pixelated"
+                         :z-index 1
                          :width "100%"
                          :height "100%"}}]
        [:canvas {:id "preview"
                  :style {:position :absolute
                          :left 0
                          :top 0
-                         :imageRendering "pixelated"
-                         :zIndex 1
+                         :image-rendering "pixelated"
+                         :z-index 1
                          :width "100%"
                          :height "100%"}}]
        [:canvas {:id "layers-above"
@@ -1062,18 +1061,19 @@
                  :style {:position :absolute
                          :left 0
                          :top 0
-                         :imageRendering "pixelated"
-                         :zIndex 2
+                         :image-rendering "pixelated"
+                         :z-index 2
                          :width "100%"
                          :height "100%"}}]
        [:canvas {:id "onion-skin"
                  :style {:position :absolute
                          :left 0
                          :top 0
-                         :imageRendering "pixelated"
-                         :zIndex (if (= (:position onion-skin) :front)
-                                   (count layers)
-                                   0);; todo: подумать тут
+                         :opacity (:opacity onion-skin)
+                         :image-rendering "pixelated"
+                         :z-index (if (= (:position onion-skin) :front)
+                                    (count layers)
+                                    0);; todo: подумать тут
                          :width "100%"
                          :height "100%"}}]
        (when pixels-grid-cel-img
