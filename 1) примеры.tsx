@@ -3,14 +3,19 @@
 
   highlight color, higliht selection на ярких
 
+  history doesn't work
+
   image rendering pixelated. превью и сам если отдаляешь. нарисуй квадрат
 
-  bucket doesn't work correctly
+  default zoom когда маленький экран
+
+  рисует даже на скрол
 
 подсказки про линкинг и днд
 
 оптимизация
 transdusers?
+  10) рисование на большом
   11) во вьюху вытащить логику рендера канваса
   22) linked cels. оптимизация
   2) sprite-resizer

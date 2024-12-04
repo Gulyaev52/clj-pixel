@@ -1,8 +1,7 @@
 (ns pixel-art.utils.geometry
   (:require
    ["./shapeTool.js" :as shape-tool]
-   [clojure.string :as string]
-   [sc.api :as api]))
+   [clojure.string :as string]))
 
 ;; todo: pixels?
 
@@ -53,7 +52,7 @@
   (+ x (* width y)))
 
 (defn flood-fill [start-pos size pixels target-color]
-  (let [{:keys [width]} size
+  (let [{:keys [width height]} size
 
         queue #js [start-pos]
         visited-pixels #js []
@@ -67,8 +66,10 @@
         (dotimes [i 4]
           (let [next-x (+ (:x current-item) (aget dx i))
                 next-y (+ (:y current-item) (aget dy i))
-                idx (pos->idx next-x next-y width)
-                is-valid (and (not (aget visited-pixels idx)) (= (nth pixels idx nil) target-color))]
+                idx (if (and (>= next-x 0) (< next-x width) (>= next-y 0) (< next-y height))
+                      (pos->idx next-x next-y width)
+                      nil)
+                is-valid (and idx (not (aget visited-pixels idx)) (= (nth pixels idx nil) target-color))]
             (when is-valid
               (let [connected-pixel {:x next-x :y next-y}]
                 (. queue (push connected-pixel))
