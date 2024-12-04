@@ -552,7 +552,6 @@
                                    :options [{:value :front :label "in front of sprite"}
                                              {:value :behind :label "behind sprite"}]
                                    :on-change (fn [v]
-                                                (println v :bla)
                                                 (re-frame/dispatch [::onion-skin/set-position v]))}]}]]))
 
 (defn timeline-panel-section [title children]

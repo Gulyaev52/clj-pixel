@@ -5,11 +5,7 @@
 
   image rendering pixelated. превью и сам если отдаляешь. нарисуй квадрат
 
-  linking doesn't work
-
   bucket doesn't work correctly
-
-  onion-skin opacity doesn't work.
 
 подсказки про линкинг и днд
 

@@ -1,14 +1,16 @@
 (ns pixel-art.db
-  (:require [pixel-art.export :as export]
-            [pixel-art.history :as history]
-            [pixel-art.model.sprite :as sprite]
-            [pixel-art.new-project-modal :as new-project-modal]
-            [pixel-art.onion-skin :as onion-skin]
-            [pixel-art.palette :as palette]
-            [pixel-art.sprite-preview :as preview]
-            [pixel-art.sprite-resizer :as sprite-resizer]
-            [pixel-art.tool.core :as tool]
-            [sc.api]))
+  (:require
+   [pixel-art.export :as export]
+   [pixel-art.history :as history]
+   [pixel-art.model.sprite :as sprite]
+   [pixel-art.new-project-modal :as new-project-modal]
+   [pixel-art.onion-skin :as onion-skin]
+   [pixel-art.palette :as palette]
+   [pixel-art.project-settings :as project-settings]
+   [pixel-art.sprite-preview :as preview]
+   [pixel-art.sprite-resizer :as sprite-resizer]
+   [pixel-art.tool.core :as tool]
+   [sc.api]))
 
 (defn get-initial-options [m]
   (-> m
@@ -20,6 +22,7 @@
   {:initialized-canvas initialized-canvas
    :size (sprite/get-size sprite)
    :new-project-modal (new-project-modal/init new-project-modal-opened)
+   :scale project-settings/min-scale
    :sprite sprite
    :tool (tool/init :pen)
    :tools-options (get-initial-options tool/options-specs)

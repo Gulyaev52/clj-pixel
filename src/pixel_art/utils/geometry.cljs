@@ -1,7 +1,8 @@
 (ns pixel-art.utils.geometry
   (:require
    ["./shapeTool.js" :as shape-tool]
-   [clojure.string :as string]))
+   [clojure.string :as string]
+   [sc.api :as api]))
 
 ;; todo: pixels?
 
