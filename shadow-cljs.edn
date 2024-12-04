@@ -15,7 +15,8 @@
   [vvvvalvalval/scope-capture "0.3.3"]
   [day8.re-frame/test "0.1.5"]
   [com.github.flow-storm/flow-storm-inst "3.15.7"]
-  [re-com "2.22.11"]]
+  [re-com "2.22.11"]
+  [org.clojars.abhinav/snitch "0.1.14"]]
 
  :dev-http
  {8280 "resources/public"

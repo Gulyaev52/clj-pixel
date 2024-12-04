@@ -6,6 +6,7 @@
    ["react-dnd" :as react-dnd]
    ["react-dnd-html5-backend" :as react-dnd-html5-backend]
    [clojure.string :as string]
+   [snitch.core :refer-macros [defn* *let *fn]]
    [pixel-art.canvas :as canvas]
    [pixel-art.events :as events]
    [pixel-art.export :as export]
@@ -474,22 +475,23 @@
     {:handler-ref handler-ref
      :container-ref container-ref}))
 
-(def-func-component select [{:keys [value size on-change block options]}]
-  (let [ref (react/useRef)]
+(defn select [{:keys [value size on-change block options]}]
+  (r/with-let [!ref (atom nil)]
     [:> antd/Select {:value value
-                     :ref ref
-                     :options (clj->js options)
+                     :ref (fn [ref] (reset! !ref ref))
+                     :options (clj->js (map-indexed (fn [idx v] (assoc v :index idx)) options))
                      :size (case size
                              :sm "small"
                              :lg "large"
                              :md "middle"
                              nil)
                      :style {:width (when block "100%")}
-                     :on-change (fn [value]
+                     :on-change (fn [_ option]
                                  ;; after select option, select has focus and pressing hotkeys doesn't work + any key lead to select opening
                                  ;; todo: find better way?
-                                  (.. ref -current blur)
-                                  (on-change value))}]))
+                                  (when-let [value (some-> (nth options (.-index option)) :value)]
+                                    (.. @!ref blur)
+                                    (on-change value)))}]))
 
 (def-func-component sprite-preview-modal-component []
   (let [{:keys [size displayed-frame-idx frame-imgs]} @(re-frame/subscribe [::subs/sprite-preview])
@@ -550,7 +552,9 @@
                  :control [select {:value (:position onion-skin)
                                    :options [{:value :front :label "in front of sprite"}
                                              {:value :behind :label "behind sprite"}]
-                                   :on-change (fn [v] (re-frame/dispatch [::onion-skin/set-position v]))}]}]]))
+                                   :on-change (fn [v]
+                                                (println v :bla)
+                                                (re-frame/dispatch [::onion-skin/set-position v]))}]}]]))
 
 (defn timeline-panel-section [title children]
   [:> antd/Card {:size "small"}
@@ -1068,7 +1072,8 @@
                          :top 0
                          :imageRendering "pixelated"
                          :zIndex (if (= (:position onion-skin) :front)
-                                   (count layers) 0);; todo: подумать тут
+                                   (count layers)
+                                   0);; todo: подумать тут
                          :width "100%"
                          :height "100%"}}]
        (when pixels-grid-cel-img
@@ -1077,7 +1082,7 @@
                         :width "100%"
                         :height "100%"
                         :position "relative"
-                        :z-index 10}}])]]]))
+                        :z-index 1000}}])]]]))
 
 (defn- current-color-selection-color-picker [{:keys [value]}]
   (let [initial-value value]

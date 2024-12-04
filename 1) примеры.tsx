@@ -1,7 +1,4 @@
 17) дизайн
-  on resize не центрирует
-    resize + create
-
   поправить тесты
 
   highlight color, higliht selection на ярких
@@ -11,6 +8,8 @@
   linking doesn't work
 
   bucket doesn't work correctly
+
+  onion-skin opacity doesn't work.
 
 подсказки про линкинг и днд
 
