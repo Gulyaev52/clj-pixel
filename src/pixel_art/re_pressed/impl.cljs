@@ -136,6 +136,7 @@
      (fn [e]
        (.preventDefault e)))))
 
+(defonce !listen-key (atom nil))
 
 (rf/reg-fx
  (keyword
@@ -147,83 +148,89 @@
    (register-effects event-type)
 
    (let [{:keys [clear-on-success-event-match]} arguments]
-     (ev/listen
-      js/document
-      event-type
-      (fn [e]
-        (let [ns-keyword (->ns-keyword event-type)
+     ;; we can have a case when keyboard-event is called again.
+     ;; If we don't remove previous listener then we have 2 listeners
+     (when-let [k @!listen-key]
+       (ev/unlistenByKey k))
 
-              e-key         (.-keyCode e)
-              modifier-key? (modifier-keys e-key)
+     (->> (ev/listen
+           js/document
+           event-type
+           (fn [e]
+             (let [ns-keyword (->ns-keyword event-type)
 
-              ;; --
-              ;; thanks re-frame-10x for this snippet
-              tag-name        (.-tagName (.-target e))
-              entering-input? (and (and (= tag-name "INPUT")
-                                        (not (contains? #{"range" "checkbox"} (.-type (.-target e)))))
-                                   (contains?
-                                    #{"INPUT"
-                                      "SELECT"
-                                      "TEXTAREA"}
-                                    tag-name))
-              ;; --
+                   e-key         (.-keyCode e)
+                   modifier-key? (modifier-keys e-key)
 
-              hit-key {:altKey   (.-altKey e)
-                       :ctrlKey  (.-ctrlKey e)
-                       :metaKey  (.-metaKey e)
-                       :shiftKey (.-shiftKey e)
-                       :keyCode  (.-keyCode e)}
+                                      ;; --
+                                      ;; thanks re-frame-10x for this snippet
+                   tag-name        (.-tagName (.-target e))
+                   entering-input? (and (and (= tag-name "INPUT")
+                                             (not (contains? #{"range" "checkbox"} (.-type (.-target e)))))
+                                        (contains?
+                                         #{"INPUT"
+                                           "SELECT"
+                                           "TEXTAREA"}
+                                         tag-name))
+                                      ;; --
 
-              always-listen-keys @(rf/subscribe [(ns-keyword "-always-listen-keys")])
-              always-listen?     (some #(is-key? hit-key %) always-listen-keys)]
+                   hit-key {:altKey   (.-altKey e)
+                            :ctrlKey  (.-ctrlKey e)
+                            :metaKey  (.-metaKey e)
+                            :shiftKey (.-shiftKey e)
+                            :keyCode  (.-keyCode e)}
 
-          (when (or (and (not modifier-key?)
-                         (not entering-input?))
-                    always-listen?)
-            (rf/dispatch-sync [(ns-keyword "-set-key") hit-key])
-            (let [recent-keys @(rf/subscribe [(ns-keyword "-keys")])
-                  event-keys  @(rf/subscribe [(ns-keyword "-event-keys")])
-                  clear-keys  @(rf/subscribe [(ns-keyword "-clear-keys")])
+                   always-listen-keys @(rf/subscribe [(ns-keyword "-always-listen-keys")])
+                   always-listen?     (some #(is-key? hit-key %) always-listen-keys)]
 
-                  recent-key (last recent-keys)
+               (when (or (and (not modifier-key?)
+                              (not entering-input?))
+                         always-listen?)
+                 (rf/dispatch-sync [(ns-keyword "-set-key") hit-key])
+                 (let [recent-keys @(rf/subscribe [(ns-keyword "-keys")])
+                       event-keys  @(rf/subscribe [(ns-keyword "-event-keys")])
+                       clear-keys  @(rf/subscribe [(ns-keyword "-clear-keys")])
 
-                  is-key-sequence? (fn [key-maps]
-                                     (every? true?
-                                             (mapv
-                                              #(is-key? %1 %2)
-                                              (concat (reverse recent-keys)
-                                                      (repeat max-record {}))
-                                              (reverse key-maps))))
+                       recent-key (last recent-keys)
 
-                  check-events (doall
-                                (for [[trigger-event
-                                       & ks] event-keys]
-                                  (let [triggered? (some is-key-sequence? ks)]
-                                    (vector trigger-event triggered?))))
+                       is-key-sequence? (fn [key-maps]
+                                          (every? true?
+                                                  (mapv
+                                                   #(is-key? %1 %2)
+                                                   (concat (reverse recent-keys)
+                                                           (repeat max-record {}))
+                                                   (reverse key-maps))))
 
-                  [triggered-event
-                   event?] (some->> check-events
-                                    (filter #(true? (second %)))
-                                    first)
+                       check-events (doall
+                                     (for [[trigger-event
+                                            & ks] event-keys]
+                                       (let [triggered? (some is-key-sequence? ks)]
+                                         (vector trigger-event triggered?))))
 
-                  clear? (some is-key-sequence? clear-keys)]
-              (when (= "keydown" event-type)
-                (let [prevent-default-keys @(rf/subscribe [(ns-keyword "-prevent-default-keys")])
-                      prevent-default?     (some #(is-key? recent-key %) prevent-default-keys)]
-                  (when prevent-default?
-                    (rf/dispatch-sync [(ns-keyword "-prevent-default-keys")
-                                       e]))))
+                       [triggered-event
+                        event?] (some->> check-events
+                                         (filter #(true? (second %)))
+                                         first)
 
-              (cond
-                clear?
-                (rf/dispatch-sync [(ns-keyword "-clear-keys")])
+                       clear? (some is-key-sequence? clear-keys)]
+                   (when (= "keydown" event-type)
+                     (let [prevent-default-keys @(rf/subscribe [(ns-keyword "-prevent-default-keys")])
+                           prevent-default?     (some #(is-key? recent-key %) prevent-default-keys)]
+                       (when prevent-default?
+                         (rf/dispatch-sync [(ns-keyword "-prevent-default-keys")
+                                            e]))))
 
-                event?
-                (do
-                  (when clear-on-success-event-match
-                    (rf/dispatch-sync [(ns-keyword "-clear-keys")]))
-                  (rf/dispatch-sync (conj triggered-event
-                                          e
-                                          recent-keys)))
+                   (cond
+                     clear?
+                     (rf/dispatch-sync [(ns-keyword "-clear-keys")])
 
-                :else nil)))))))))
+                     event?
+                     (do
+                       (when clear-on-success-event-match
+                         (rf/dispatch-sync [(ns-keyword "-clear-keys")]))
+                       (rf/dispatch-sync (conj triggered-event
+                                               e
+                                               recent-keys)))
+
+                     :else nil))))))
+          (reset! !listen-key)))))

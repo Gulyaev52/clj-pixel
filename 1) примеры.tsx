@@ -3,8 +3,6 @@
 
   highlight color, higliht selection на ярких
 
-  history doesn't work
-
   image rendering pixelated. превью и сам если отдаляешь. нарисуй квадрат
 
   default zoom когда маленький экран
