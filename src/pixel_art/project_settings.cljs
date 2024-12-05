@@ -60,6 +60,7 @@
     (min (/ (- (dim viewport-size) offset) dim-value) max-scale)))
 
 ;; todo: rename
+;; todo: а надо ли это? мб просто вызвать scrollIntoView
 (defn get-initial-drawing-settings [sprite viewport-size]
   (let [scale (get-initial-scale (:size sprite) viewport-size)
         canvas-size (update-vals (:size sprite) #(* % scale))

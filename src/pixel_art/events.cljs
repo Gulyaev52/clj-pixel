@@ -76,7 +76,7 @@
       :fx [[:dispatch [::rp/add-keyboard-event-listener "keydown"]]
            dispatch-set-keydown-rules
            ;; wait for rendering canvases. todo: refactoring
-           [:dispatch-later {:ms 1 :dispatch [::initialize-canvas]}]]})))
+           [:dispatch-later {:ms 10 :dispatch [::initialize-canvas]}]]})))
 
 (re-frame/reg-cofx
  ::viewport-size
