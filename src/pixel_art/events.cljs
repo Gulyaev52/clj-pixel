@@ -551,8 +551,8 @@
    (update-viewport-scroll)))
 
 (defn get-highlight-color [color]
-  (let [dark-color "rgba(0, 0, 0, 0.2)"
-        light-color "rgba(255, 255, 255, 0.2)"]
+  (let [dark-color "rgba(0, 0, 0, 0.3)"
+        light-color "rgba(255, 255, 255, 0.3)"]
     (if (= color color/transparent-color-int)
       dark-color
       (let [luminance (.. (color/->tinycolor color) toHsl -l)]

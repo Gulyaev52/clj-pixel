@@ -1,13 +1,15 @@
 17) дизайн
   поправить тесты
 
-  highlight color, higliht selection на ярких
-
   image rendering pixelated. превью и сам если отдаляешь. нарисуй квадрат
 
   рисует даже на скрол
 
   перенести вью логику во вьюху
+
+  Highlight selection тянуть вправо
+
+  move selection
 
 подсказки про линкинг и днд
 

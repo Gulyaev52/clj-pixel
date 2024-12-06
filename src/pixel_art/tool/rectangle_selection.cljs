@@ -2,7 +2,6 @@
   (:require
    [clojure.set]
    [pixel-art.events.event-collector]
-   [pixel-art.measure :refer [measure-fn]]
    [pixel-art.model.cel :as cel]
    [pixel-art.model.color :as color]
    [pixel-art.tool.utils :refer [commit-changes-and-init-tool get-current-cel]]
@@ -170,9 +169,9 @@
                                    [:highlight-selection selection-image]]))))
      {:db db})))
 
-(defn- get-highlight-color [color]
-  (let [dark-color 855638016
-        light-color 1728053247]
+(defn get-highlight-color [color]
+  (let [dark-color (color/int 0 0 0 0.3)
+        light-color (color/int 255 255 255 0.3)]
     (if (= color color/transparent-color-int)
       dark-color
       (let [luminance (.. (color/->tinycolor color) toHsl -l)]
