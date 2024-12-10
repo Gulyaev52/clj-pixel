@@ -89,11 +89,10 @@
                                      (< (:layer-idx current-cel-pos) (:layer-idx cel-pos)))
                               [current-cel-pos cel-pos]
                               [cel-pos current-cel-pos])
-        new-selected-cels (flatten
-                           (for [frame-idx (range (:frame-idx less-cel) (inc (:frame-idx more-cel)))]
-                             (for [layer-idx (range (:layer-idx less-cel) (inc (:frame-idx more-cel)))]
-                               {:frame-idx frame-idx
-                                :layer-idx layer-idx})))]
+        new-selected-cels (for [frame-idx (range (:frame-idx less-cel) (inc (:frame-idx more-cel)))
+                                layer-idx (range (:layer-idx less-cel) (inc (:frame-idx more-cel)))]
+                            {:frame-idx frame-idx
+                             :layer-idx layer-idx})]
     (->> (reduce #(select-cel %2 %1) sprite new-selected-cels)
          (select-cel cel-pos))))
 

@@ -13,21 +13,17 @@
 
 (defn get-rectange-border-points [p1 p2]
   (let [{:keys [top-left bottom-right]} (get-ordered-rectangle-points [p1 p2])]
-    (->> (for [x (range (:x top-left) (inc (:x bottom-right)))]
-           (for [y (range (:y top-left) (inc (:y bottom-right)))]
-             (if (and (< (:x top-left) x (:x bottom-right))
-                      (< (:y top-left) y (:y bottom-right)))
-               nil
-               {:x x :y y})))
-         flatten
-         (keep identity))))
+    (for [x (range (:x top-left) (inc (:x bottom-right)))
+          y (range (:y top-left) (inc (:y bottom-right)))
+          :when (not (and (< (:x top-left) x (:x bottom-right))
+                          (< (:y top-left) y (:y bottom-right))))]
+      {:x x :y y})))
 
 (defn get-rectange-points [p1 p2]
   (let [{:keys [top-left bottom-right]} (get-ordered-rectangle-points [p1 p2])]
-    (->> (for [x (range (:x top-left) (inc (:x bottom-right)))]
-           (for [y (range (:y top-left) (inc (:y bottom-right)))]
-             {:x x :y y}))
-         flatten)))
+    (for [x (range (:x top-left) (inc (:x bottom-right)))
+          y (range (:y top-left) (inc (:y bottom-right)))]
+      {:x x :y y})))
 
 (defn display-points [points size]
   (let [{:keys [width]} size
