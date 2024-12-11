@@ -101,6 +101,7 @@
  :init-canvases
  (fn []
    (let [preview-canvas (. js/document (getElementById "preview"))
+         visual-effects-canvas (. js/document (getElementById "visual-effects"))
          layers-below-canvas (. js/document (getElementById "layers-below"))
          layers-above-canvas (. js/document (getElementById "layers-above"))
          current-layer (. js/document (getElementById "current-layer"))
@@ -111,7 +112,7 @@
          scale (-> @re-frame.db/app-db :scale)
          drawing-canvas-container (.. js/document (getElementById "drawing-canvas-container"))
          canvas-layers (.. js/document (getElementById "canvas-layers"))]
-     (doseq [canvas [preview-canvas onion-skin-canvas layers-below-canvas layers-above-canvas current-layer]]
+     (doseq [canvas [preview-canvas visual-effects-canvas onion-skin-canvas layers-below-canvas layers-above-canvas current-layer]]
        (set! (. canvas -width) (:width sprite-size))
        (set! (. canvas -height) (:height sprite-size)))
      (set! (.. canvas-layers -style -width) (str (* (:width sprite-size) scale) "px"))
@@ -552,7 +553,7 @@
 
 (defn get-highlight-color [color]
   (let [dark-color "rgba(0, 0, 0, 0.3)"
-        light-color "rgba(255, 255, 255, 0.3)"]
+        light-color "rgba(255, 255, 255, 0.2)"]
     (if (= color color/transparent-color-int)
       dark-color
       (let [luminance (.. (color/->tinycolor color) toHsl -l)]
@@ -563,7 +564,7 @@
 (re-frame/reg-fx
  :highlight-pixels
  (fn [poses]
-   (let [ctx (canvas/get-canvas-context "preview")
+   (let [ctx (canvas/get-canvas-context "visual-effects")
          size (sprite/get-size (:sprite @re-frame.db/app-db))
          current-cel (get-current-cel @re-frame.db/app-db)]
      (doseq [pos poses]
@@ -571,6 +572,11 @@
          (set! (. ctx -fillStyle) (->> (cel/get-pixel pos current-cel)
                                        get-highlight-color))
          (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))
+
+(re-frame/reg-fx
+ :clear-visual-effects
+ (fn []
+   (canvas/clear-canvas (. js/document (getElementById "visual-effects")))))
 
 (re-frame/reg-fx
  :clear-preview

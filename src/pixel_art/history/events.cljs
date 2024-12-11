@@ -10,7 +10,8 @@
      {:db (-> db
               (assoc :tool (tool/init (-> db :tool :type)))
               history/undo)
-      :fx [[:clear-preview]]}
+      :fx [[:clear-preview]
+           [:clear-visual-effects]]}
      {:db db})))
 
 (re-frame/reg-event-fx
@@ -20,5 +21,6 @@
      {:db (-> db
               (assoc :tool (tool/init (-> db :tool :type)))
               history/redo)
-      :fx [[:clear-preview]]}
+      :fx [[:clear-preview]
+           [:clear-visual-effects]]}
      {:db db})))

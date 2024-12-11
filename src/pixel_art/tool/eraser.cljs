@@ -22,13 +22,14 @@
             new-pixels (->> (resize-pixel (:pos event) pixel-size)
                             (map (fn [p] [p transparent-color-int])))]
         {:db (update-in db [:tool :state :changes] #(merge % new-pixels))
-         :fx [[:draw-preview new-pixels]]})
+         :fx [[:clear-visual-effects]
+              [:draw-preview new-pixels]]})
 
       (and (= (:type event) :mouse-move) (not user-is-drawing))
       (let [{:keys [pixel-size]} (get-tool-options db)
             points (resize-pixel (:pos event) pixel-size)]
         {:db db
-         :fx [[:clear-preview]
+         :fx [[:clear-visual-effects]
               [:highlight-pixels points]]})
 
       (= :mouse-up (:type event))

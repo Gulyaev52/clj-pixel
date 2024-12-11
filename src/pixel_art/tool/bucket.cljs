@@ -36,7 +36,7 @@
 
     (and (= (:type event) :mouse-move) (not (:user-is-drawing db)))
     {:db db
-     :fx [[:clear-preview]
+     :fx [[:clear-visual-effects]
           [:highlight-pixels [(:pos event)]]]}
 
     :else {:db db}))

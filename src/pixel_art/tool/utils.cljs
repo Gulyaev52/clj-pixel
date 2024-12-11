@@ -23,7 +23,8 @@
                  (history/save-sprite))}
         {:db db})
       (assoc-in [:db :tool] tool-init)
-      (assoc :fx [[:clear-preview]])))
+      (assoc :fx [[:clear-preview]
+                  [:clear-visual-effects]])))
 
 ;; Resize the pixel at {col, row} for the provided size. Will return the array of pixels centered
 ;; * around the original pixel, forming a pixel square of side=size

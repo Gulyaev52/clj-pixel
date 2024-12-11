@@ -34,12 +34,12 @@
                                        :selection-image selection-image
                                        :changes []})]
           {:db (assoc db :tool tool)
-           :fx [[:clear-preview]
+           :fx [[:clear-visual-effects]
                 [:highlight-selection selection-image]]})
 
         (= (:type event) :mouse-move)
         {:db db
-         :fx [[:clear-preview]
+         :fx [[:clear-visual-effects]
               [:highlight-pixels [(:pos event)]]]}
 
         :else {:db db})
@@ -56,7 +56,8 @@
              (-> tool :state :user-is-moving-selection))
         (let [{:keys [changes]} (move-selection tool initial-mouse-down-pos event)]
           {:db (assoc-in db [:tool :state :changes] changes)
-           :fx [[:clear-preview]
+           :fx [[:clear-visual-effects]
+                [:clear-preview]
                 [:draw-preview changes]]})
 
         (and (= (:type event) :mouse-up) (-> tool :state :user-is-moving-selection))

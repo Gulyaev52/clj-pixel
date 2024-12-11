@@ -1055,6 +1055,14 @@
                          :z-index 1
                          :width "100%"
                          :height "100%"}}]
+       [:canvas {:id "visual-effects"
+                 :style {:position :absolute
+                         :left 0
+                         :top 0
+                         :image-rendering "pixelated"
+                         :z-index 1
+                         :width "100%"
+                         :height "100%"}}]
        [:canvas {:id "layers-above"
                  :className "layer"
                  :style {:position :absolute

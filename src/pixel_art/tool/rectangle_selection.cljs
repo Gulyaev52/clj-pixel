@@ -6,7 +6,8 @@
    [pixel-art.model.color :as color]
    [pixel-art.tool.utils :refer [commit-changes-and-init-tool get-current-cel]]
    [pixel-art.utils.geometry :as geometry]
-   [re-frame.core :as re-frame]))
+   [re-frame.core :as re-frame]
+   [re-frame.db :as db]))
 ;; init
 ;; todo: используем так как из selection-image удаляются прозр точки(не работает днд) и если проверять вхож
 ;; todo: а зачем поле state
@@ -52,7 +53,7 @@
         (or (= (:type event) :mouse-down)
             (and (= (:type event) :mouse-move) user-is-drawing))
         {:db (assoc-in db [:tool :state :user-is-making-selection] true)
-         :fx [[:clear-preview]
+         :fx [[:clear-visual-effects]
               [:highlight-selection (get-rectangle-selection-image initial-mouse-down-pos
                                                                    (:pos event)
                                                                    (get-current-cel db))]]}
@@ -69,7 +70,7 @@
 
         (and (= (:type event) :mouse-move) (not user-is-drawing))
         {:db db
-         :fx [[:clear-preview]
+         :fx [[:clear-visual-effects]
               [:highlight-pixels [(:pos event)]]]}
 
         :else {:db db})
@@ -85,7 +86,8 @@
             (and (= (:type event) :mouse-move) user-is-drawing))
         (let [{:keys [changes]} (move-selection tool initial-mouse-down-pos event)]
           {:db (assoc-in db [:tool :state :changes] changes)
-           :fx [[:clear-preview]
+           :fx [[:clear-visual-effects]
+                [:clear-preview]
                 [:draw-preview changes]]})
 
         (= (:type event) :mouse-up)
@@ -166,12 +168,13 @@
            (assoc-in [:db :tool] new-tool)
            (update :fx #(concat % [[:clear-preview]
                                    [:draw-preview changes]
+                                   [:clear-visual-effects]
                                    [:highlight-selection selection-image]]))))
      {:db db})))
 
 (defn get-highlight-color [color]
   (let [dark-color (color/int 0 0 0 0.3)
-        light-color (color/int 255 255 255 0.3)]
+        light-color (color/int 255 255 255 0.2)]
     (if (= color color/transparent-color-int)
       dark-color
       (let [luminance (.. (color/->tinycolor color) toHsl -l)]
@@ -182,11 +185,11 @@
 (re-frame/reg-fx
  :highlight-selection
  (fn [selection]
-   (let [canvas (. js/document (getElementById "preview"))
+   (let [canvas (. js/document (getElementById "visual-effects"))
          ctx (. canvas (getContext "2d"))
          width (. canvas -width)
-         image-data (. ctx (getImageData 0 0 width (. canvas -height)))
-         image-data-arr (js/Uint32Array. (. (.. image-data -data) -buffer))]
+         sprite-size (-> @db/app-db :sprite :size)
+         image-data-arr (js/Uint32Array. (* (:width sprite-size) (:height sprite-size)))]
      (doseq [[pos color] selection]
        (aset image-data-arr
              (+ (:x pos) (* width (:y pos)))
