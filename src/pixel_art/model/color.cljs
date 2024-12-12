@@ -21,3 +21,13 @@
    (color-js/rgbaToInt r g b a)))
 
 (def transparent-color-int (int 0 0 0 0))
+
+(defn get-highlight-color [color]
+  (let [dark-color (int 0 0 0 0.3)
+        light-color (int 255 255 255 0.2)]
+    (if (= color transparent-color-int)
+      dark-color
+      (let [luminance (.. (->tinycolor color) toHsl -l)]
+        (if (> luminance 0.5)
+          dark-color
+          light-color)))))

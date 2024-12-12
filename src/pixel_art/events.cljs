@@ -551,27 +551,16 @@
  (fn []
    (update-viewport-scroll)))
 
-(defn get-highlight-color [color]
-  (let [dark-color "rgba(0, 0, 0, 0.3)"
-        light-color "rgba(255, 255, 255, 0.2)"]
-    (if (= color color/transparent-color-int)
-      dark-color
-      (let [luminance (.. (color/->tinycolor color) toHsl -l)]
-        (if (> luminance 0.5)
-          dark-color
-          light-color)))))
-
 (re-frame/reg-fx
  :highlight-pixels
  (fn [poses]
-   (let [ctx (canvas/get-canvas-context "visual-effects")
-         size (sprite/get-size (:sprite @re-frame.db/app-db))
-         current-cel (get-current-cel @re-frame.db/app-db)]
-     (doseq [pos poses]
-       (when (geometry/valid-point? pos size)
-         (set! (. ctx -fillStyle) (->> (cel/get-pixel pos current-cel)
-                                       get-highlight-color))
-         (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))
+   (let [current-cel (get-current-cel @re-frame.db/app-db)
+         size (-> @re-frame.db/app-db :sprite sprite/get-size)
+         changes (->> poses
+                      (filter (fn [pos] (geometry/valid-point? pos size)))
+                      (map (fn [pos] [pos (color/get-highlight-color (cel/get-pixel pos current-cel))])))]
+     (canvas/update-image-data (. js/document (getElementById "visual-effects"))
+                               changes))))
 
 (re-frame/reg-fx
  :clear-visual-effects
@@ -586,18 +575,14 @@
 (re-frame/reg-fx
  :draw-preview
  (fn [changes]
-   (let [ctx (canvas/get-canvas-context "preview")
-         current-layer-ctx (canvas/get-canvas-context "current-layer")
-         size (-> @re-frame.db/app-db :sprite sprite/get-size)]
-     (doseq [[pos color] changes]
-       (when (geometry/valid-point? pos size)
-         (if (= color color/transparent-color-int)
-           (do
-             (. current-layer-ctx (clearRect (:x pos) (:y pos) 1 1))
-             (. ctx (clearRect (:x pos) (:y pos) 1 1)))
-           (do
-             (set! (. ctx -fillStyle) (color/int->rgb-str color))
-             (. ctx (fillRect (:x pos) (:y pos) 1 1)))))))))
+   (let [size (-> @re-frame.db/app-db :sprite sprite/get-size)
+         {transparent-changes true rest-changes false}
+         (->> changes
+              (filter (fn [[pos]] (geometry/valid-point? pos size)))
+              (group-by (fn [[_ color]] (= color color/transparent-color-int))))]
+     (canvas/update-image-data (. js/document (getElementById "preview")) rest-changes)
+     (when (seq transparent-changes)
+       (canvas/update-image-data (. js/document (getElementById "current-layer")) transparent-changes)))))
 
 ;; todo: rename
 (re-frame/reg-fx

@@ -1,7 +1,7 @@
 (ns pixel-art.canvas
   (:require
-   [pixel-art.measure :refer [measure-fn]]
    [pixel-art.model.sprite :as sprite]
+   [pixel-art.utils.geometry :as geometry]
    [sc.api]))
 
 (defn create-canvas [{:keys [width height]}]
@@ -119,3 +119,20 @@
 (defn canvas->pixels [canvas size]
   (let [image-data (.. canvas (getContext "2d") (getImageData 0 0 (:width size) (:height size)))]
     (vec (js/Uint32Array. (. (.. image-data -data) -buffer)))))
+
+;; todo: rename
+(defn set-image-data [image-data changes size]
+  (let [pixels-u32arr (js/Uint32Array. (.. image-data -data -buffer))]
+    (doseq [[pos color] changes
+            :let [idx (geometry/pos->idx (:x pos) (:y pos) (:width size))]]
+      (aset pixels-u32arr idx color))
+    (js/ImageData. (js/Uint8ClampedArray. (. pixels-u32arr -buffer))
+                   (:width size)
+                   (:height size))))
+
+(defn update-image-data [canvas changes]
+  (let [size {:width (.-width canvas) :height (.-height canvas)}
+        ctx (. canvas (getContext "2d"))]
+    (-> (. ctx (getImageData 0 0 (:width size) (:height size)))
+        (set-image-data changes size)
+        (#(. ctx (putImageData % 0 0))))))

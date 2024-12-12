@@ -1,7 +1,3 @@
-пофиксить цвета подсветки
-на разных канвас по разному рисуется.
-highlight-pixels + дублируются
-
 волшебная палочка не работает
 
 17) дизайн
@@ -272,25 +268,3 @@ rectangle-select. transpare-color
                 (. preview-ctx (clearRect (:x pos) (:y pos) 1 1)))
               (. preview-ctx (fillRect (:x pos) (:y pos) 1 1))
               (. preview-ctx restore))))))))
-
-
-
-
-              (defn preview-changes->image-data [preview-image-data changes size]
-                (let [pixels-u32arr (js/Uint32Array. preview-image-data)]
-                  (doseq [[pos color] changes
-                          :when (geometry/valid-point? pos size)
-                          :let [idx (geometry/pos->idx (:x pos) (:y pos) (:width size))]]
-                    (aset pixels-u32arr idx color))
-                  (js/ImageData. (js/Uint8ClampedArray. (. pixels-u32arr -buffer))
-                                 (:width size)
-                                 (:height size))))
-              
-              (re-frame/reg-fx
-               :draw-preview
-               (fn [changes]
-                 (let [ctx (canvas/get-canvas-context "preview")
-                       current-layer-ctx (canvas/get-canvas-context "current-layer")
-                       size (-> @re-frame.db/app-db :sprite sprite/get-size)
-                       image-data (preview-changes->image-data (.. (. ctx (getImageData 0 0 (:width size) (:height size))) -data -buffer) changes size)]
-                   (. ctx (putImageData image-data 0 0)))))

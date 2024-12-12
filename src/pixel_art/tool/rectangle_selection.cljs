@@ -1,9 +1,11 @@
 (ns pixel-art.tool.rectangle-selection
   (:require
    [clojure.set]
+   [pixel-art.canvas :as canvas]
    [pixel-art.events.event-collector]
    [pixel-art.model.cel :as cel]
    [pixel-art.model.color :as color]
+   [pixel-art.model.sprite :as sprite]
    [pixel-art.tool.utils :refer [commit-changes-and-init-tool get-current-cel]]
    [pixel-art.utils.geometry :as geometry]
    [re-frame.core :as re-frame]
@@ -172,29 +174,12 @@
                                    [:highlight-selection selection-image]]))))
      {:db db})))
 
-(defn get-highlight-color [color]
-  (let [dark-color (color/int 0 0 0 0.3)
-        light-color (color/int 255 255 255 0.2)]
-    (if (= color color/transparent-color-int)
-      dark-color
-      (let [luminance (.. (color/->tinycolor color) toHsl -l)]
-        (if (> luminance 0.5)
-          dark-color
-          light-color)))))
-
 (re-frame/reg-fx
  :highlight-selection
  (fn [selection]
-   (let [canvas (. js/document (getElementById "visual-effects"))
-         ctx (. canvas (getContext "2d"))
-         width (. canvas -width)
-         sprite-size (-> @db/app-db :sprite :size)
-         image-data-arr (js/Uint32Array. (* (:width sprite-size) (:height sprite-size)))]
-     (doseq [[pos color] selection]
-       (aset image-data-arr
-             (+ (:x pos) (* width (:y pos)))
-             (get-highlight-color color)))
-     (let [res (js/ImageData. (js/Uint8ClampedArray. (. image-data-arr -buffer))
-                              width
-                              (. canvas -height))]
-       (. ctx (putImageData res 0 0))))))
+   (let [size (-> @db/app-db :sprite sprite/get-size)
+         canvas (. js/document (getElementById "visual-effects"))]
+     (->> selection
+          (filter (fn [[pos]] (geometry/valid-point? pos size)))
+          (map (fn [[pos color]] [pos (color/get-highlight-color color)]))
+          (#(canvas/update-image-data canvas %))))))
