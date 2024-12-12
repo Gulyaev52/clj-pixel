@@ -930,13 +930,14 @@
                        :secondary-color secondary-color}]]]))
 
 (defn drawing-info []
-  (let [mouse-pos @(re-frame/subscribe [::subs/mouse-pos])
-        scale @(re-frame/subscribe [::subs/scale])
-        sprite-size @(re-frame/subscribe [::subs/sprite-size])]
-    [space
-     [typography (str "[" (:width sprite-size) "x" (:height sprite-size) "]")]
-     [typography (str (:x mouse-pos) ":" (:y mouse-pos))]
-     [typography (str "scale=" (. scale (toFixed 2)))]]))
+  (when-not @(re-frame/subscribe [::subs/initial-loading])
+    (let [mouse-pos @(re-frame/subscribe [::subs/mouse-pos])
+          scale @(re-frame/subscribe [::subs/scale])
+          sprite-size @(re-frame/subscribe [::subs/sprite-size])]
+      [space
+       [typography (str "[" (:width sprite-size) "x" (:height sprite-size) "]")]
+       [typography (str (:x mouse-pos) ":" (:y mouse-pos))]
+       [typography (str "scale=" (. scale (toFixed 2)))]])))
 
 (def-func-component canvases-section []
   (let [viewport-ref (react/useRef)
@@ -1234,13 +1235,12 @@
    (map (fn [opt] [:> (.-Button antd/Radio) {:value (name (:value opt))} (:label opt)]) options)))
 
 (defn export-modal []
-  (let [current-tab @(re-frame/subscribe [::subs/export-current-tab])
-        opened @(re-frame/subscribe [::subs/export-modal-opened])
-        exporting @(re-frame/subscribe [::subs/exporting])
-        export-settings-valid? @(re-frame/subscribe [::subs/export-settings-valid?])
-        spritesheet-settings @(re-frame/subscribe [::subs/export-spritesheet-settings])
-        preview @(re-frame/subscribe [::subs/export-preview])]
-    (when opened
+  (when @(re-frame/subscribe [::subs/export-modal-opened])
+    (let [current-tab @(re-frame/subscribe [::subs/export-current-tab])
+          exporting @(re-frame/subscribe [::subs/exporting])
+          export-settings-valid? @(re-frame/subscribe [::subs/export-settings-valid?])
+          spritesheet-settings @(re-frame/subscribe [::subs/export-spritesheet-settings])
+          preview @(re-frame/subscribe [::subs/export-preview])]
       [modal {:title "Export"
               :size :lg
               :on-cancel (fn []
@@ -1507,9 +1507,20 @@
      [:div {:style {:margin-left "auto"}}
       [drawing-info]]]))
 
-(def-func-component main-panel []
-  (let [colorBgContainer (.. antd/theme useToken -token -colorBgContainer)]
+(def-func-component app-content []
+  (let [initial-loading @(re-frame/subscribe [::subs/initial-loading])
+        colorBgContainer (.. antd/theme useToken -token -colorBgContainer)]
     [:> react-dnd/DndProvider {"backend" react-dnd-html5-backend/HTML5Backend}
+     (when initial-loading
+       [:div {:style {:position "fixed"
+                      :z-index 1000
+                      :display "flex"
+                      :align-items "center"
+                      :justify-content "center"
+                      :width "100%"
+                      :height "100%"
+                      :background-color "rgba(0, 0, 0, 0.8)"}}
+        [:> antd/Spin {:size "large"}]])
      [:div {:style {:display "flex"
                     :flex-direction "column"
                     :height "100%"
@@ -1533,19 +1544,7 @@
         [timeline-panel]]
        [right-sidebar]]]]))
 
-(def-func-component app-loading-view []
-  (let [colorBgContainer (.. antd/theme useToken -token -colorBgContainer)]
-    [:div {:style {:display "flex"
-                   :align-items "center"
-                   :justify-content "center"
-                   :width "100%"
-                   :height "100%"
-                   :background-color colorBgContainer}}
-     [:> antd/Spin {:size "large"}]]))
-
 (defn app []
   [:> antd/ConfigProvider {"theme" {"token" {"motion" false}
                                     "algorithm" (. antd/theme -darkAlgorithm)}}
-   (if @(re-frame/subscribe [::subs/initial-loading])
-     [app-loading-view]
-     [main-panel])])
+   [app-content]])

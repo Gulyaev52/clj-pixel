@@ -18,22 +18,24 @@
                          (map (fn [{:keys [field initial-value]}] [field initial-value]))
                          (into {})))))
 
-(defn get-db [{:keys [sprite palettes primary-color initialized-canvas secondary-color pixels-grid-enabled new-project-modal-opened]}]
-  {:initialized-canvas initialized-canvas
-   :size (sprite/get-size sprite)
-   :new-project-modal (new-project-modal/init new-project-modal-opened)
-   :scale project-settings/min-scale
-   :sprite sprite
-   :tool (tool/init :pen)
-   :tools-options (get-initial-options tool/options-specs)
-   :primary-color primary-color
-   :secondary-color secondary-color
-   :selection-manager {}
-   :onion-skin (onion-skin/init)
-   :history (history/init {:sprite sprite})
-   :sprite-preview (preview/init)
-   :pixels-grid-enabled (if (some? pixels-grid-enabled) pixels-grid-enabled true)
-   :palettes (palette/init palettes)
-   :keyboard-shortcuts-modal-opened false
-   :export (export/init)
-   :sprite-resizer (sprite-resizer/init)})
+(defn get-db [{:keys [sprite palettes primary-color secondary-color pixels-grid-enabled new-project-modal-opened]} viewport-size]
+  (merge
+   {:viewport-size viewport-size
+    :size (sprite/get-size sprite)
+    :new-project-modal (new-project-modal/init new-project-modal-opened)
+    :scale project-settings/min-scale
+    :sprite sprite
+    :tool (tool/init :pen)
+    :tools-options (get-initial-options tool/options-specs)
+    :primary-color primary-color
+    :secondary-color secondary-color
+    :selection-manager {}
+    :onion-skin (onion-skin/init)
+    :history (history/init {:sprite sprite})
+    :sprite-preview (preview/init)
+    :pixels-grid-enabled (if (some? pixels-grid-enabled) pixels-grid-enabled true)
+    :palettes (palette/init palettes)
+    :keyboard-shortcuts-modal-opened false
+    :export (export/init)
+    :sprite-resizer (sprite-resizer/init)}
+   (project-settings/get-initial-drawing-settings (:size sprite) viewport-size)))

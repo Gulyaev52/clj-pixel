@@ -64,20 +64,6 @@
                                             (mapcat (fn [{:keys [keys]}] keys))
                                             (map convert-shortcut-keys))}]]))
 
-(re-frame/reg-event-fx
- :initialize-db
- (fn [_ [_ settings]]
-   (let [initial-db (if settings
-                      (db/get-db settings)
-                      (db/get-db (assoc project-settings/default-palettes-and-current-colors
-                                        :sprite (project-settings/create-empty-sprite {:width 64 :height 64})
-                                        :new-project-modal-opened true)))]
-     {:db initial-db
-      :fx [[:dispatch [::rp/add-keyboard-event-listener "keydown"]]
-           dispatch-set-keydown-rules
-           ;; wait for rendering canvases. todo: refactoring
-           [:dispatch-later {:ms 10 :dispatch [::initialize-canvas]}]]})))
-
 (re-frame/reg-cofx
  ::viewport-size
  (fn [coeffects _]
@@ -86,12 +72,24 @@
      (assoc coeffects :viewport-size viewport-size))))
 
 (re-frame/reg-event-fx
- ::initialize-canvas
+ :initialize-db
  [(re-frame/inject-cofx ::viewport-size)]
- (fn [{:keys [db viewport-size]}]
-   {:db (merge db
-               {:initialized-canvas true}
-               (project-settings/get-initial-drawing-settings (:sprite db) viewport-size))
+ (fn [{:keys [viewport-size]} [_ settings]]
+   (let [initial-db (if settings
+                      (db/get-db settings viewport-size)
+                      (db/get-db (assoc project-settings/default-palettes-and-current-colors
+                                        :sprite (project-settings/create-empty-sprite {:width 64 :height 64})
+                                        :new-project-modal-opened true)
+                                 viewport-size))]
+     {:db initial-db
+      :fx [[:dispatch [::rp/add-keyboard-event-listener "keydown"]]
+           dispatch-set-keydown-rules
+           [:dispatch [::initialize-canvases]]]})))
+
+(re-frame/reg-event-fx
+ ::initialize-canvases
+ (fn [{:keys [db]}]
+   {:db db
     :fx [[:init-canvases]
          [:draw-current-frame]
          [:zoom]
@@ -123,20 +121,21 @@
 
 (re-frame/reg-global-interceptor
  (on-changes
-  :resize-canvases ;; todo: initialize-db?
+  :resize-canvases
   #(-> % :sprite sprite/get-size)
-  (fn [{:keys [db]}]
-    {:db (merge db
-                (project-settings/get-initial-drawing-settings (:sprite db) (:viewport-size db)))
-     :fx (when (and (not (:initial-loading db)) (:initialized-canvas db))
-           [[:dispatch-later {:ms 1 :dispatch [::initialize-canvas]}]])})))
+  (fn [{:keys [db old new]}]
+    (if (and old new) ;; new is empty on initial rending. we don't need to run this again
+      {:db (merge db
+                  (project-settings/get-initial-drawing-settings (:size (:sprite db)) (:viewport-size db)))
+       :fx [[:dispatch [::initialize-canvases]]]}
+      {:db db}))))
 
 (re-frame/reg-global-interceptor
  (on-changes
-  :redraw-current-cel ;; это также нужно и на изменения слоя. например прозрачности или видимости
+  :redraw-current-cel
   #(-> % :sprite)
   (fn [{:keys [db]}]
-    (when (and (not (:initial-loading db)) (:initialized-canvas db))
+    (when (not (:initial-loading db))
       {:db db
        :fx [[:clear-frame]
             [:draw-current-frame]]}))))
