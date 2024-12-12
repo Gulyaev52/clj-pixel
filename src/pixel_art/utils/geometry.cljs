@@ -70,7 +70,7 @@
               (let [connected-pixel {:x next-x :y next-y}]
                 (. queue (push connected-pixel))
                 (aset visited-pixels idx connected-pixel)))))))
-    visited-pixels))
+    (. visited-pixels (filter js/Boolean))))
 
 (defn get-line-pixels [p1 p2]
   (-> (shape-tool/getLinePixels (:x p1) (:x p2) (:y p1) (:y p2))

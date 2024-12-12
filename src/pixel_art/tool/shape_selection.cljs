@@ -1,9 +1,10 @@
 (ns pixel-art.tool.shape-selection
-  (:require [pixel-art.model.cel :as cel]
-            [pixel-art.tool.rectangle-selection :as rectangle-selection :refer [move-selection]]
-            [pixel-art.tool.utils :refer [commit-changes-and-init-tool
-                                          get-current-cel]]
-            [pixel-art.utils.geometry :as geometry]))
+  (:require
+   [pixel-art.model.cel :as cel]
+   [pixel-art.tool.rectangle-selection :as rectangle-selection :refer [move-selection]]
+   [pixel-art.tool.utils :refer [commit-changes-and-init-tool get-current-cel]]
+   [pixel-art.utils.geometry :as geometry]
+   [sc.api :as api]))
 
 ;; подумать как работать с preview и canvas
 
@@ -28,7 +29,8 @@
                                                         (:size current-cel)
                                                         (:pixels current-cel)
                                                         color-under-mouse)
-                                   (mapv (fn [p] [p color-under-mouse])))
+                                   (map (fn [p] [p color-under-mouse]))
+                                   (into {}))
               tool (assoc tool :state {:mode :move-selection
                                        :initial-selection-image selection-image
                                        :selection-image selection-image
