@@ -4,6 +4,7 @@
    [pixel-art.history :as history]
    [pixel-art.model.cel :as cel]
    [pixel-art.model.color :as color]
+   [pixel-art.project-settings :as project-settings]
    [pixel-art.utils.coll :as coll]
    [re-frame.core :as re-frame]))
 
@@ -68,10 +69,13 @@
 
 (re-frame/reg-event-fx
  ::resize
- (fn [{:keys [db]}]
+ [(re-frame/inject-cofx :viewport-size)]
+ (fn [{:keys [db viewport-size]}]
+   (println viewport-size)
    (let [{:keys [sprite] {:keys [settings]} :sprite-resizer} db
          resized-sprite (resize-sprite sprite settings)]
      {:db (-> db
-              (assoc :sprite resized-sprite)
+              (project-settings/set-sprite resized-sprite {:prev-sprite (:sprite db)
+                                                           :viewport-size viewport-size})
               (assoc-in [:sprite-resizer :opened] false)
               history/save-sprite)})))

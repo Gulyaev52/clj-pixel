@@ -5,22 +5,24 @@
 
 (re-frame/reg-event-fx
  ::undo
- (fn [{:keys [db]} _]
+ [(re-frame/inject-cofx :viewport-size)]
+ (fn [{:keys [db viewport-size]} _]
    (if (history/check-undo-available? db)
      {:db (-> db
               (assoc :tool (tool/init (-> db :tool :type)))
-              history/undo)
+              (history/undo viewport-size))
       :fx [[:clear-preview]
            [:clear-visual-effects]]}
      {:db db})))
 
 (re-frame/reg-event-fx
  ::redo
- (fn [{:keys [db]} _]
+ [(re-frame/inject-cofx :viewport-size)]
+ (fn [{:keys [db viewport-size]} _]
    (if (history/check-redo-available? db)
      {:db (-> db
               (assoc :tool (tool/init (-> db :tool :type)))
-              history/redo)
+              (history/redo viewport-size))
       :fx [[:clear-preview]
            [:clear-visual-effects]]}
      {:db db})))

@@ -68,3 +68,10 @@
         drawing-container-size (update-vals canvas-size #(+ % empty-space-dim))
         viewport-scroll (get-viewport-scroll-pos-to-center canvas-size drawing-container-size viewport-size)]
     {:scale scale :drawing-container-size drawing-container-size :viewport-scroll viewport-scroll}))
+
+(defn set-sprite [db sprite {:keys [prev-sprite viewport-size]}]
+  (-> db
+      (assoc :sprite sprite)
+      (#(if (not= (:size sprite) (:size prev-sprite))
+          (merge % (get-initial-drawing-settings (:size sprite) viewport-size))
+          %))))

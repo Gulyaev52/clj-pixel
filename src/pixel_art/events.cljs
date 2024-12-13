@@ -17,7 +17,6 @@
    [pixel-art.tool.core :as tool]
    [pixel-art.tool.utils :refer [commit-changes-and-init-tool get-current-cel]]
    [pixel-art.utils.geometry :as geometry]
-   [pixel-art.utils.interceptor :refer [on-changes]]
    [re-frame.core :as re-frame]
    [re-frame.db]
    [sc.api]))
@@ -65,7 +64,7 @@
                                             (map convert-shortcut-keys))}]]))
 
 (re-frame/reg-cofx
- ::viewport-size
+ :viewport-size
  (fn [coeffects _]
    (let [viewport-rect (.. js/document (getElementById "viewport") (getBoundingClientRect))
          viewport-size {:width (. viewport-rect -width) :height (. viewport-rect -height)}]
@@ -73,7 +72,7 @@
 
 (re-frame/reg-event-fx
  :initialize-db
- [(re-frame/inject-cofx ::viewport-size)]
+ [(re-frame/inject-cofx :viewport-size)]
  (fn [{:keys [viewport-size]} [_ settings]]
    (let [initial-db (if settings
                       (db/get-db settings viewport-size)
@@ -84,17 +83,6 @@
      {:db initial-db
       :fx [[:dispatch [::rp/add-keyboard-event-listener "keydown"]]
            dispatch-set-keydown-rules]})))
-
-(re-frame/reg-global-interceptor
- (on-changes
-  :resize-canvases
-  #(-> % :sprite sprite/get-size)
-  (fn [{:keys [db old new]}]
-    (if (and old new) ;; new is empty on initial rending. we don't need to run this again
-      {:db (merge db
-                  (project-settings/get-initial-drawing-settings (:size (:sprite db))
-                                                                 (:viewport-size db)))}
-      {:db db}))))
 
 (re-frame/reg-event-fx
  ::select-tool

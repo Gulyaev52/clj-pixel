@@ -56,6 +56,7 @@
                    clj->js)]
     (request->promise (. store (put record)))))
 
+;; todo: move to init
 (re-frame/reg-global-interceptor
  (on-paths-change
   :backup
