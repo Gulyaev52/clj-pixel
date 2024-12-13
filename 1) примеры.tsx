@@ -1,9 +1,14 @@
+resize on-changes. set-sprite?
+onion-skin next-frames не работает правильно
+  потому что прозрачные ячейки перетирают
+history с переключением
+
 17) дизайн
   поправить тесты
 
   image rendering pixelated. превью и сам если отдаляешь. нарисуй квадрат
 
-  перенести вью логику во вьюху
+  zoom too fast https://stackoverflow.com/questions/5527601/normalizing-mousewheel-speed-across-browsers
 
 подсказки про линкинг и днд
 

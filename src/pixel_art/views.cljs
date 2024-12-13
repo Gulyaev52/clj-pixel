@@ -11,6 +11,7 @@
    [pixel-art.export :as export]
    [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
    [pixel-art.model.color :as color]
+   [pixel-art.model.sprite :as sprite]
    [pixel-art.new-project-modal :as new-project-modal]
    [pixel-art.onion-skin :as onion-skin]
    [pixel-art.palette :as palette :refer [deletable-palette?]]
@@ -466,9 +467,10 @@
                                -current
                                (addEventListener "mousedown" mousedown-handler))
                            (fn []
-                             (.. handler-ref
-                                 -current
-                                 (removeEventListener "mousedown" mousedown-handler))))))
+                             (when (. handler-ref -current)
+                               (.. handler-ref
+                                   -current
+                                   (removeEventListener "mousedown" mousedown-handler)))))))
                      (array (. container-ref -current)
                             (. handler-ref -current)))
     {:handler-ref handler-ref
@@ -941,32 +943,55 @@
 
 (def-func-component canvases-section []
   (let [viewport-ref (react/useRef)
-        _ (react/useEffect (fn []
-                             (let [handler (fn [e]
-                                             (. e preventDefault) ;; preventDefault doesn't work when bind onWheel event on tag
-                                             (. e stopPropagation)
-                                             (let [viewport-rect (.. viewport-ref -current getBoundingClientRect)
-                                                   center-pos {:x (- (.. e -clientX) (.. viewport-rect -left))
-                                                               :y (- (.. e -clientY) (.. viewport-rect -top))}
-                                                   mouse-offset-pos {:x (+ (- (.. e -clientX) (.. viewport-rect -left))
-                                                                           (.. viewport-ref -current -scrollLeft))
-                                                                     :y (+ (- (.. e -clientY) (.. viewport-rect -top))
-                                                                           (.. viewport-ref -current -scrollTop))}]
-                                               (re-frame/dispatch [::events/zoom
-                                                                   (if (< (. e -deltaY) 0) 1.1 (/ 1 1.1))
-                                                                   center-pos
-                                                                   mouse-offset-pos])))]
-                               (.. viewport-ref -current (addEventListener "wheel" handler))
-                               (fn []
-                                 (.. viewport-ref -current (removeEventListener "wheel" handler)))))
-                           (array viewport-ref))
-
-        onion-skin @(re-frame/subscribe [::subs/onion-skin])
         panning @(re-frame/subscribe [::subs/panning])
         user-is-drawing @(re-frame/subscribe [::subs/user-is-drawing])
         layers @(re-frame/subscribe [::subs/layers])
         pixels-grid-cel-img @(re-frame/subscribe [::subs/pixels-grid-cel-img])
-        scale @(re-frame/subscribe [::subs/scale])]
+        scale @(re-frame/subscribe [::subs/scale])
+        sprite @(re-frame/subscribe [::subs/sprite])
+        sprite-size (:size sprite)
+        scaled-sprite-size (update-vals sprite-size #(* scale %))
+        drawing-container-size @(re-frame/subscribe [::subs/drawing-container-size])
+        viewport-scroll @(re-frame/subscribe [::subs/viewport-scroll])
+        onion-skin @(re-frame/subscribe [::subs/onion-skin])]
+    (react/useEffect (fn []
+                       (when sprite
+                         (canvas/clear-canvases (vec (. js/document (getElementsByClassName "layer"))))
+                         (canvas/draw-frame (sprite/get-current-frame-idx sprite) sprite)))
+                     (array sprite)) ;; todo: optimize
+    (react/useEffect (fn []
+                       (when (:enabled onion-skin)
+                         (onion-skin/draw-onion-skin sprite))
+                       (fn []
+                         (onion-skin/hide-onion-skin)))
+                     (to-array (flatten (concat [onion-skin]
+                                                (onion-skin/get-onion-skin-frames sprite (:frames-count onion-skin))))))
+    (react/useLayoutEffect (fn []
+                             (when-let [current (.-current viewport-ref)]
+                               (set! (.. current -scrollTop) (:y viewport-scroll))
+                               (set! (.. current -scrollLeft) (:x viewport-scroll)))
+                             (fn []))
+                           (array viewport-scroll viewport-ref))
+    (react/useEffect (fn []
+                       (let [handler (fn [e]
+                                       (. e preventDefault) ;; preventDefault doesn't work when bind onWheel event on tag
+                                       (. e stopPropagation)
+                                       (let [viewport-rect (.. viewport-ref -current getBoundingClientRect)
+                                             center-pos {:x (- (.. e -clientX) (.. viewport-rect -left))
+                                                         :y (- (.. e -clientY) (.. viewport-rect -top))}
+                                             mouse-offset-pos {:x (+ (- (.. e -clientX) (.. viewport-rect -left))
+                                                                     (.. viewport-ref -current -scrollLeft))
+                                                               :y (+ (- (.. e -clientY) (.. viewport-rect -top))
+                                                                     (.. viewport-ref -current -scrollTop))}]
+                                         (re-frame/dispatch [::events/zoom
+                                                             (if (< (. e -deltaY) 0) 1.1 (/ 1 1.1))
+                                                             center-pos
+                                                             mouse-offset-pos])))]
+                         (.. viewport-ref -current (addEventListener "wheel" handler))
+                         (fn []
+                           (when (. viewport-ref -current)
+                             (.. viewport-ref -current (removeEventListener "wheel" handler))))))
+                     (array viewport-ref))
     [:div {:id "viewport"
            :ref viewport-ref
            :style {:overflow "auto"
@@ -1021,69 +1046,84 @@
                                 (when (not= mouse-pos @!last-mouse-pos)
                                   (reset! !last-mouse-pos mouse-pos)
                                   (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)])))))}
-     [:div {:id "drawing-canvas-container" :style {:position "relative"}}
+     [:div {:id "drawing-canvas-container"
+            :style (merge {:position "relative"} drawing-container-size)}
       [:div {:id "canvas-layers"
-             :style {:position "relative"
-                     :left "50%"
-                     :top "50%"
-                     :transform "translate(-50%, -50%)"
-                     :background-image transparent-color-img
-                     :outline drawing-border ;; todo: why not border
-                     }}
-       [:canvas {:id "layers-below"
-                 :className "layer"
-                 :style {:position :absolute
-                         :left 0
-                         :top 0
-                         :image-rendering "pixelated"
-                         :z-index 0
-                         :width "100%"
-                         :height "100%"}}]
-       [:canvas {:id "current-layer"
-                 :className "layer"
-                 :style {:position :absolute
-                         :left 0
-                         :top 0
-                         :image-rendering "pixelated"
-                         :z-index 1
-                         :width "100%"
-                         :height "100%"}}]
-       [:canvas {:id "preview"
-                 :style {:position :absolute
-                         :left 0
-                         :top 0
-                         :image-rendering "pixelated"
-                         :z-index 1
-                         :width "100%"
-                         :height "100%"}}]
-       [:canvas {:id "visual-effects"
-                 :style {:position :absolute
-                         :left 0
-                         :top 0
-                         :image-rendering "pixelated"
-                         :z-index 1
-                         :width "100%"
-                         :height "100%"}}]
-       [:canvas {:id "layers-above"
-                 :className "layer"
-                 :style {:position :absolute
-                         :left 0
-                         :top 0
-                         :image-rendering "pixelated"
-                         :z-index 2
-                         :width "100%"
-                         :height "100%"}}]
-       [:canvas {:id "onion-skin"
-                 :style {:position :absolute
-                         :left 0
-                         :top 0
-                         :opacity (:opacity onion-skin)
-                         :image-rendering "pixelated"
-                         :z-index (if (= (:position onion-skin) :front)
-                                    (count layers)
-                                    0);; todo: подумать тут
-                         :width "100%"
-                         :height "100%"}}]
+             :style (merge
+                     {:position "relative"
+                      :left "50%"
+                      :top "50%"
+                      :transform "translate(-50%, -50%)"
+                      :background-image transparent-color-img
+                      :outline drawing-border ;; todo: why not border
+                      }
+                     scaled-sprite-size)}
+       [:canvas (merge
+                 {:id "layers-below"
+                  :className "layer"
+                  :style {:position :absolute
+                          :left 0
+                          :top 0
+                          :image-rendering "pixelated"
+                          :z-index 0
+                          :width "100%"
+                          :height "100%"}}
+                 sprite-size)]
+       [:canvas (merge
+                 {:id "current-layer"
+                  :className "layer"
+                  :style {:position :absolute
+                          :left 0
+                          :top 0
+                          :image-rendering "pixelated"
+                          :z-index 1
+                          :width "100%"
+                          :height "100%"}}
+                 sprite-size)]
+       [:canvas (merge
+                 {:id "preview"
+                  :style {:position :absolute
+                          :left 0
+                          :top 0
+                          :image-rendering "pixelated"
+                          :z-index 1
+                          :width "100%"
+                          :height "100%"}}
+                 sprite-size)]
+       [:canvas (merge
+                 {:id "visual-effects"
+                  :style {:position :absolute
+                          :left 0
+                          :top 0
+                          :image-rendering "pixelated"
+                          :z-index 1
+                          :width "100%"
+                          :height "100%"}}
+                 sprite-size)]
+       [:canvas (merge
+                 {:id "layers-above"
+                  :className "layer"
+                  :style {:position :absolute
+                          :left 0
+                          :top 0
+                          :image-rendering "pixelated"
+                          :z-index 2
+                          :width "100%"
+                          :height "100%"}}
+                 sprite-size)]
+       [:canvas (merge
+                 {:id "onion-skin"
+                  :style {:position :absolute
+                          :left 0
+                          :top 0
+                          :opacity (:opacity onion-skin)
+                          :image-rendering "pixelated"
+                          :z-index (if (= (:position onion-skin) :front)
+                                     (count layers)
+                                     0);; todo: подумать тут
+                          :width "100%"
+                          :height "100%"}}
+                 sprite-size)]
        (when pixels-grid-cel-img
          [:div {:style {:background-image (str "url(\"" pixels-grid-cel-img "\")")
                         :background-size scale

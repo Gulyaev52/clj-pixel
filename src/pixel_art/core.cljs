@@ -19,9 +19,6 @@
     (rdom/render [views/app]
                  root-el)))
 
-(defn ^:dev/after-load update-canvas []
-  (re-frame/dispatch [::events/initialize-canvases]))
-
 (defn init []
   (re-frame/dispatch-sync [::events/start-app])
   (dev-setup)

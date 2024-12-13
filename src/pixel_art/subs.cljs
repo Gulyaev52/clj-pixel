@@ -95,6 +95,14 @@
    (-> db :export :opened)))
 
 (re-frame/reg-sub
+ ::drawing-container-size
+ (fn [db] (:drawing-container-size db)))
+
+(re-frame/reg-sub
+ ::viewport-scroll
+ (fn [db] (:viewport-scroll db)))
+
+(re-frame/reg-sub
  ::sprite-size
  (fn [db]
    (-> db :sprite :size)))

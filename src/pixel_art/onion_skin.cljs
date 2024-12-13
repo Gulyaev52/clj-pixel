@@ -1,7 +1,6 @@
 (ns pixel-art.onion-skin
   (:require [pixel-art.canvas :as canvas]
             [pixel-art.model.sprite :as sprite]
-            [pixel-art.utils.interceptor :refer [on-changes]]
             [re-frame.core :as re-frame]
             [re-frame.db :as db]))
 
@@ -20,70 +19,39 @@
                                    (dec (count frames)))))]
     (set (concat prev-idxs next-idxs))))
 
+(defn get-onion-skin-frames [sprite frames-count]
+  (->> (get-onion-skin-frames-idx sprite frames-count)
+       (map #(sprite/get-frame-cels % sprite))))
+
 (re-frame/reg-event-fx
  ::set-frames-count
  (fn [{:keys [db]} [_ frames-count]]
-   (let [onion-skin (:onion-skin db)]
-     {:db (assoc-in db [:onion-skin :frames-count] frames-count)
-      :fx [[:draw-onion-skin {:sprite (:sprite db) :opacity (:opacity onion-skin)}]]})))
+   {:db (assoc-in db [:onion-skin :frames-count] frames-count)}))
 
 (re-frame/reg-event-fx
  ::set-enabled
  (fn [{:keys [db]} [_ enabled]]
-   {:db (assoc-in db [:onion-skin :enabled] enabled)
-    :fx (if enabled
-          [[:draw-onion-skin {:sprite (:sprite db) :opacity (-> db :onion-skin :opacity)}]]
-          [[:hide-onion-skin]])}))
+   {:db (assoc-in db [:onion-skin :enabled] enabled)}))
 
 (re-frame/reg-event-fx
  ::set-opacity
  (fn [{:keys [db]} [_ opacity]]
-   {:db (assoc-in db [:onion-skin :opacity] opacity)
-    :fx (when (-> db :onion-skin :enabled)
-          [[:draw-onion-skin {:sprite (:sprite db) :opacity opacity}]])}))
+   {:db (assoc-in db [:onion-skin :opacity] opacity)}))
 
 (re-frame/reg-event-fx
  ::set-position
  (fn [{:keys [db]} [_ position]]
-   {:db (assoc-in db [:onion-skin :position] position)
-    :fx (when (-> db :onion-skin :enabled)
-          [[:draw-onion-skin {:sprite (:sprite db) :opacity (-> db :onion-skin :opacity)}]])}))
+   {:db (assoc-in db [:onion-skin :position] position)}))
 
-(re-frame/reg-global-interceptor
- (on-changes
-  :redraw-onion-skin-on-sprite-change
-  #(-> % :sprite)
-  (fn [{:keys [db old new]}]
-    (let [onion-skin (:onion-skin db)]
-      (if (:enabled onion-skin) ;; todo: refactoring
-        (let [need-redraw (if (not= (sprite/get-current-frame old) (sprite/get-current-frame new))
-                            true
-                            (let [old-frames-idx (get-onion-skin-frames-idx old (:frames-count onion-skin))
-                                  new-frames-idx (get-onion-skin-frames-idx new (:frames-count onion-skin))]
-                              (if (not= old-frames-idx new-frames-idx)
-                                true
-                                (->> (range 0 (max (count old-frames-idx) (count new-frames-idx))) ;; например, move или delete
-                                     (some (fn [idx]
-                                             (not (identical? (nth (:frames old) idx)
-                                                              (nth (:frames new) idx)))))))))]
-          {:db db
-           :fx (when need-redraw
-                 [[:draw-onion-skin {:sprite new :opacity (:opacity onion-skin)}]])})
-        {:db db})))))
+;; todo: rename this module to onion-skin settings
+(defn draw-onion-skin [sprite]
+  (let [canvas (. js/document (getElementById "onion-skin"))
+        ctx (. canvas (getContext "2d"))
+        db @db/app-db
+        onion-frames-idx (get-onion-skin-frames-idx sprite (-> db :onion-skin :frames-count))]
+    (. ctx (clearRect 0 0 (. canvas -width) (. canvas -height)))
+    (doseq [frame-idx onion-frames-idx]
+      (canvas/draw-frame-on-single-canvas frame-idx sprite canvas))))
 
-(re-frame/reg-fx
- :draw-onion-skin ;; todo: draw-onion-skin-when-enabled
- (fn [{:keys [sprite]}]
-   (when (:enabled (:onion-skin @db/app-db))
-     (let [canvas (. js/document (getElementById "onion-skin"))
-           ctx (. canvas (getContext "2d"))
-           db @db/app-db
-           onion-frames-idx (get-onion-skin-frames-idx sprite (-> db :onion-skin :frames-count))]
-       (. ctx (clearRect 0 0 (. canvas -width) (. canvas -height)))
-       (doseq [frame-idx onion-frames-idx]
-         (canvas/draw-frame-on-single-canvas frame-idx sprite canvas))))))
-
-(re-frame/reg-fx
- :hide-onion-skin
- (fn []
-   (canvas/clear-canvas (. js/document (getElementById "onion-skin")))))
+(defn hide-onion-skin []
+  (canvas/clear-canvas (. js/document (getElementById "onion-skin"))))

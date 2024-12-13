@@ -83,41 +83,7 @@
                                  viewport-size))]
      {:db initial-db
       :fx [[:dispatch [::rp/add-keyboard-event-listener "keydown"]]
-           dispatch-set-keydown-rules
-           [:dispatch [::initialize-canvases]]]})))
-
-(re-frame/reg-event-fx
- ::initialize-canvases
- (fn [{:keys [db]}]
-   {:db db
-    :fx [[:init-canvases]
-         [:draw-current-frame]
-         [:zoom]
-         [:draw-onion-skin {:sprite (:sprite db) :opacity (-> db :onion-skin :opacity)}]]}))
-
-(re-frame/reg-fx
- :init-canvases
- (fn []
-   (let [preview-canvas (. js/document (getElementById "preview"))
-         visual-effects-canvas (. js/document (getElementById "visual-effects"))
-         layers-below-canvas (. js/document (getElementById "layers-below"))
-         layers-above-canvas (. js/document (getElementById "layers-above"))
-         current-layer (. js/document (getElementById "current-layer"))
-         onion-skin-canvas (. js/document (getElementById "onion-skin"))
-
-         drawing-container-size (:drawing-container-size @re-frame.db/app-db)
-         sprite-size (-> @re-frame.db/app-db :sprite sprite/get-size)
-         scale (-> @re-frame.db/app-db :scale)
-         drawing-canvas-container (.. js/document (getElementById "drawing-canvas-container"))
-         canvas-layers (.. js/document (getElementById "canvas-layers"))]
-     (doseq [canvas [preview-canvas visual-effects-canvas onion-skin-canvas layers-below-canvas layers-above-canvas current-layer]]
-       (set! (. canvas -width) (:width sprite-size))
-       (set! (. canvas -height) (:height sprite-size)))
-     (set! (.. canvas-layers -style -width) (str (* (:width sprite-size) scale) "px"))
-     (set! (.. canvas-layers -style -height) (str (* (:height sprite-size) scale) "px"))
-
-     (set! (.. drawing-canvas-container -style -width) (str (:width drawing-container-size) "px"))
-     (set! (.. drawing-canvas-container -style -height) (str (:height drawing-container-size) "px")))))
+           dispatch-set-keydown-rules]})))
 
 (re-frame/reg-global-interceptor
  (on-changes
@@ -126,19 +92,9 @@
   (fn [{:keys [db old new]}]
     (if (and old new) ;; new is empty on initial rending. we don't need to run this again
       {:db (merge db
-                  (project-settings/get-initial-drawing-settings (:size (:sprite db)) (:viewport-size db)))
-       :fx [[:dispatch [::initialize-canvases]]]}
+                  (project-settings/get-initial-drawing-settings (:size (:sprite db))
+                                                                 (:viewport-size db)))}
       {:db db}))))
-
-(re-frame/reg-global-interceptor
- (on-changes
-  :redraw-current-cel
-  #(-> % :sprite)
-  (fn [{:keys [db]}]
-    (when (not (:initial-loading db))
-      {:db db
-       :fx [[:clear-frame]
-            [:draw-current-frame]]}))))
 
 (re-frame/reg-event-fx
  ::select-tool
@@ -458,8 +414,7 @@
          {:db (-> db
                   (assoc :scale new-scale)
                   (assoc :viewport-scroll new-viewport-scroll)
-                  (assoc :drawing-container-size new-drawing-container-size))
-          :fx [[:zoom]]})
+                  (assoc :drawing-container-size new-drawing-container-size))})
        {:db db}))))
 
 (re-frame/reg-event-fx
@@ -474,8 +429,7 @@
  (fn [{:keys [db]} [_ mouse-pos]]
    (let [delta-pos (merge-with - (:start-panning-pos db) mouse-pos)
          new-viewport-scroll (merge-with + (:initial-viewport-scroll db) delta-pos)]
-     {:db (assoc db :viewport-scroll new-viewport-scroll)
-      :fx [[:pan]]})))
+     {:db (assoc db :viewport-scroll new-viewport-scroll)})))
 
 (re-frame/reg-event-fx
  ::stop-panning
@@ -520,35 +474,6 @@
                   :mouse-pos (:pos event))
            (tool/handle-mouse-event event)
            (assoc-in [:db :initial-mouse-down-pos] nil))))))
-
-(defn- update-viewport-scroll []
-  (let [viewport (.. js/document (getElementById "viewport"))
-        viewport-scroll (:viewport-scroll @re-frame.db/app-db)]
-    (set! (.. viewport -scrollTop) (:y viewport-scroll))
-    (set! (.. viewport -scrollLeft) (:x viewport-scroll))))
-
-(re-frame/reg-fx
- :zoom
- (fn []
-   (let [canvas-layers (.. js/document (getElementById "canvas-layers"))
-         sprite-size (-> @re-frame.db/app-db :sprite sprite/get-size)
-         scale (-> @re-frame.db/app-db :scale)
-         new-sprite-size {:width (* (:width sprite-size) scale)
-                          :height (* (:height sprite-size) scale)}]
-     (set! (.. canvas-layers -style -width) (str (:width new-sprite-size) "px"))
-     (set! (.. canvas-layers -style -height) (str (:height new-sprite-size) "px"))
-
-     (let [drawing-canvas-container (.. js/document (getElementById "drawing-canvas-container"))
-           drawing-container-size (:drawing-container-size @re-frame.db/app-db)]
-       (set! (.. drawing-canvas-container -style -width) (str (:width drawing-container-size) "px"))
-       (set! (.. drawing-canvas-container -style -height) (str (:height drawing-container-size) "px")))
-
-     (update-viewport-scroll))))
-
-(re-frame/reg-fx
- :pan
- (fn []
-   (update-viewport-scroll)))
 
 (re-frame/reg-fx
  :highlight-pixels
