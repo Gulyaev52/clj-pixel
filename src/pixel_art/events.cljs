@@ -496,19 +496,6 @@
      (when (seq transparent-changes)
        (canvas/update-image-data (. js/document (getElementById "current-layer")) transparent-changes)))))
 
-;; todo: rename
-(re-frame/reg-fx
- :clear-frame
- (fn []
-   (canvas/clear-canvases (vec (. js/document (getElementsByClassName "layer"))))))
-
-;; todo: rename to current-frame
-(re-frame/reg-fx
- :draw-current-frame
- (fn []
-   (let [{:keys [sprite]} @re-frame.db/app-db]
-     (canvas/draw-frame (sprite/get-current-frame-idx sprite) sprite))))
-
 (re-frame/reg-fx
  :show-alert
  (fn [message]

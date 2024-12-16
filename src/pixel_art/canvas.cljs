@@ -2,7 +2,8 @@
   (:require
    [pixel-art.model.sprite :as sprite]
    [pixel-art.utils.geometry :as geometry]
-   [sc.api]))
+   [sc.api]
+   [pixel-art.model.color :as color]))
 
 (defn create-canvas [{:keys [width height]}]
   (let [canvas (.. js/document (createElement "canvas"))]
@@ -15,20 +16,29 @@
     (draw canvas)
     (. canvas (toDataURL "image/png"))))
 
-(defn cel-pixels->image-data [{:keys [pixels size]}]
-  (let [pixels-u32arr (js/Uint32Array. (* (:width size) (:height size)))]
+;; set-image-data
+(defn cel-pixels->image-data [image-data {:keys [pixels size]} skip-transparent-color]
+  (let [pixels-u32arr (js/Uint32Array. (.. image-data -data -buffer))]
     (dotimes [idx (count pixels)]
-      (aset pixels-u32arr idx (nth pixels idx)))
+      (let [color (nth pixels idx)
+            add-color? (if skip-transparent-color
+                         (not= color color/transparent-color-int)
+                         true)]
+        (when add-color?
+          (aset pixels-u32arr idx (nth pixels idx)))))
     (js/ImageData. (js/Uint8ClampedArray. (. pixels-u32arr -buffer))
                    (:width size)
                    (:height size))))
 
-;; todo: не должны лежать здесь с остальными утилитами
-(defn draw-cel [cel canvas]
-  (let [ctx (. canvas (getContext "2d"))
-        image-data (cel-pixels->image-data cel)]
-    (. ctx (putImageData image-data 0 0))
-    canvas))
+;; todo: не должны лежать здесь с остальными утилитами. set-image-data
+(defn draw-cel
+  ([cel canvas] (draw-cel cel canvas true))
+  ([cel canvas skip-transparent-color]
+   (let [ctx (. canvas (getContext "2d"))
+         prev-image-data (. ctx (getImageData 0 0 (:width (:size cel)) (:height (:size cel))))
+         image-data (cel-pixels->image-data prev-image-data cel skip-transparent-color)]
+     (. ctx (putImageData image-data 0 0))
+     canvas)))
 
 (defn draw-frame [frame-idx sprite]
   (let [{:keys [layer-idx]} (sprite/get-current-cel-pos sprite)
@@ -45,13 +55,13 @@
   (let [cels (sprite/get-frame-cels-with-layers frame-idx sprite)]
     (doseq [cel (reverse cels)]
       (when (-> cel :layer :visible?)
-        (draw-cel cel canvas))))
+        (draw-cel cel canvas true))))
   canvas)
 
 ;; todo: refactore above
 (defn draw-cels-on-single-canvas [cels canvas]
   (doseq [cel (reverse cels)]
-    (draw-cel cel canvas))
+    (draw-cel cel canvas true))
   canvas)
 
 (defn clear-canvas [canvas]
@@ -61,10 +71,6 @@
 (defn clear-canvases [canvases]
   (doseq [canvas canvases]
     (clear-canvas canvas)))
-
-(defn get-canvas-context [id]
-  (let [canvas (. js/document (getElementById id))]
-    (.. canvas (getContext "2d"))))
 
 (defn to-data-url [canvas format]
   (. canvas (toDataURL (str "image/" format))))
