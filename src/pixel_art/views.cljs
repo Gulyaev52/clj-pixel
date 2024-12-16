@@ -313,7 +313,7 @@
                     :align-items "center"
                     :justify-content "center"
                     :height "100%"
-                    :border-style "solid"
+                    :border-style (if (:onion-skin frame) "dashed" "solid")
                     :border-color (get-border-color frame theme-token)
                     :border-width (if (:current frame)
                                     "2px"

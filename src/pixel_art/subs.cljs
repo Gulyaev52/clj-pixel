@@ -7,7 +7,8 @@
    [pixel-art.sprite-resizer :as sprite-resizer]
    [pixel-art.tool.utils :refer [get-tool-options]]
    [pixel-art.utils.coll :as coll]
-   [re-frame.core :as re-frame]))
+   [re-frame.core :as re-frame]
+   [pixel-art.onion-skin :as onion-skin]))
 
 ;; todo: добавить комментарий почему картинкой
 (re-frame/reg-sub
@@ -50,6 +51,13 @@
                            (canvas/draw-frame-on-single-canvas frame-idx resized-sprite)
                            (#(canvas/to-data-url % "png"))))]
        previews))))
+
+(re-frame/reg-sub
+ ::onion-skin-frames-idx
+ (fn [db]
+   (let [onion-skin (:onion-skin db)]
+     (when (:enabled onion-skin)
+       (onion-skin/get-onion-skin-frames-idx (:sprite db) (:onion-skin db))))))
 
 (re-frame/reg-sub
  ::sprite-resizer-settings
@@ -192,7 +200,10 @@
    (let [{:keys [sprite]} db
          {:keys [layers frames]} sprite
          selected-cels-pos (sprite/get-selected-cels-pos sprite)
-         current-cel-pos (sprite/get-current-cel-pos sprite)]
+         current-cel-pos (sprite/get-current-cel-pos sprite)
+         onion-skin (:onion-skin db)
+         onion-skin-frames-idx (when (:enabled onion-skin)
+                                 (onion-skin/get-onion-skin-frames-idx (:sprite db) (:frames-count onion-skin)))]
      {:cels (sprite/get-cels-with-pos-as-coll sprite)
       :layers (map-indexed (fn [idx layer]
                              (merge layer {:current (= idx (:layer-idx current-cel-pos))
@@ -204,7 +215,8 @@
       :frames (map-indexed (fn [idx frame]
                              (merge frame {:current (= idx (:frame-idx current-cel-pos))
                                            :selected (some? ((set (map :frame-idx selected-cels-pos)) idx))
-                                           :idx idx}))
+                                           :idx idx
+                                           :onion-skin (contains? onion-skin-frames-idx idx)}))
                            frames)
       :disabled-actions {:remove-layer (not (sprite/remove-layer-available? sprite))
                          :merge-layer-with-below (not (sprite/merge-layer-with-below-available? sprite))
