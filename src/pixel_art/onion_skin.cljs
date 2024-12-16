@@ -44,14 +44,13 @@
    {:db (assoc-in db [:onion-skin :position] position)}))
 
 ;; todo: rename this module to onion-skin settings
-(defn draw-onion-skin [sprite]
-  (let [canvas (. js/document (getElementById "onion-skin"))
-        ctx (. canvas (getContext "2d"))
+(defn draw-onion-skin [canvas sprite]
+  (let [ctx (. canvas (getContext "2d"))
         db @db/app-db
         onion-frames-idx (get-onion-skin-frames-idx sprite (-> db :onion-skin :frames-count))]
     (. ctx (clearRect 0 0 (. canvas -width) (. canvas -height)))
     (doseq [frame-idx onion-frames-idx]
       (canvas/draw-frame-on-single-canvas frame-idx sprite canvas))))
 
-(defn hide-onion-skin []
-  (canvas/clear-canvas (. js/document (getElementById "onion-skin"))))
+(defn hide-onion-skin [canvas]
+  (canvas/clear-canvas canvas))

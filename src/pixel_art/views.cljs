@@ -943,6 +943,7 @@
 
 (def-func-component canvases-section []
   (let [viewport-ref (react/useRef)
+        onion-skin-ref (react/useRef)
         panning @(re-frame/subscribe [::subs/panning])
         user-is-drawing @(re-frame/subscribe [::subs/user-is-drawing])
         layers @(re-frame/subscribe [::subs/layers])
@@ -960,11 +961,13 @@
                          (canvas/draw-frame (sprite/get-current-frame-idx sprite) sprite)))
                      (array sprite)) ;; todo: optimize
     (react/useEffect (fn []
-                       (when (:enabled onion-skin)
-                         (onion-skin/draw-onion-skin sprite))
+                       (when (and (:enabled onion-skin) (.-current onion-skin-ref))
+                         (onion-skin/draw-onion-skin (.-current onion-skin-ref) sprite))
                        (fn []
-                         (onion-skin/hide-onion-skin)))
+                         (when (.-current onion-skin-ref)
+                           (onion-skin/hide-onion-skin (.-current onion-skin-ref)))))
                      (to-array (flatten (concat [onion-skin]
+                                                [onion-skin-ref]
                                                 (onion-skin/get-onion-skin-frames sprite (:frames-count onion-skin))))))
     (react/useLayoutEffect (fn []
                              (when-let [current (.-current viewport-ref)]
@@ -1113,6 +1116,7 @@
                  sprite-size)]
        [:canvas (merge
                  {:id "onion-skin"
+                  :ref onion-skin-ref
                   :style {:position :absolute
                           :left 0
                           :top 0

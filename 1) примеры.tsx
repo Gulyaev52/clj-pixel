@@ -1,7 +1,7 @@
-resize on-changes. set-sprite?
 onion-skin next-frames не работает правильно
   потому что прозрачные ячейки перетирают
 если изменения были на сером форне или скроле то они коммитятся и добавляются в историю
+wheeled https://github.com/d3/d3-zoom/blob/c8df708b78b46553bc4a0fbf1baf4ffc10cef8bd/src/zoom.js#L234
 
 17) дизайн
   поправить тесты
