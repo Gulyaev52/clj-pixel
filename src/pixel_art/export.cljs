@@ -5,8 +5,7 @@
    [clojure.string :as string]
    [pixel-art.canvas :as canvas]
    [pixel-art.model.sprite :as sprite]
-   [re-frame.core :as re-frame]
-   [sc.api :as api]))
+   [re-frame.core :as re-frame]))
 
 (def max-scale 32)
 (def min-scale 1)
@@ -115,6 +114,7 @@
            :fx [[::generate-gif {:rendered-frames rendered-frames
                                  :repeat (:repeat settings)
                                  :base64 true
+                                 :size size
                                  :on-finish [::generate-gif-preview-success]}]]})))))
 
 (re-frame/reg-event-fx
@@ -212,6 +212,7 @@
            {:db db
             :fx [[::generate-gif {:rendered-frames rendered-frames
                                   :repeat (:repeat settings)
+                                  :size size
                                   :on-finish [::download-generated-blob (:file-name settings)] ;; todo: fix
                                   }]]}))))))
 
@@ -254,15 +255,24 @@
 
 (re-frame/reg-fx
  ::generate-gif
- (fn [{:keys [rendered-frames base64 repeat on-finish]}]
+ (fn [{:keys [rendered-frames base64 repeat size on-finish]}]
    (let [gif (create-gif (clj->js {"workers" 2
                                    "quality" 1
-                                   "preserveColors" true
-                                   "transparent" "rgba(0, 0, 0, 0)"
-                                   "repeat" (if repeat 0 -1)}))]
+                                   "width" (:width size)
+                                   "height" (:height size)
+                                   "repeat" (if repeat 0 -1)}))
+
+         frame-with-background-canvas (canvas/create-canvas size)
+         frame-with-background-canvas-ctx (. frame-with-background-canvas (getContext "2d"))]
+     (set! (. frame-with-background-canvas-ctx -fillStyle) "#ffffff") ;; todo: calc transparent color
+
      (doseq [{:keys [canvas cels]} rendered-frames]
        (let [cel (first cels)] ;; todo: refactor?
-         (. gif (addFrame canvas #js {"delay" (-> cel :frame :duration)}))))
+         (. frame-with-background-canvas-ctx (clearRect 0 0 (:width size) (:height size)))
+         (. frame-with-background-canvas-ctx (fillRect 0 0 (:width size) (:height size)))
+         (. frame-with-background-canvas-ctx (drawImage canvas 0 0 (:width size) (:height size)))
+         (. gif (addFrame frame-with-background-canvas-ctx #js {"delay" (-> cel :frame :duration)
+                                                                "copy" true}))))
      (. gif (on "finished" (fn [blob]
                              (if base64
                                (.. (blob->base64 blob)
