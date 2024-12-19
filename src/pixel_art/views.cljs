@@ -1041,8 +1041,7 @@
                                 (.. js/document (addEventListener "mouseup" mouse-up)))))
            :on-mouse-leave (fn [event]
                              (when-not (or user-is-drawing panning)
-                               (let [mouse-pos (canvas-pos->frame-pos event scale)]
-                                 (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)]))))
+                               (re-frame/dispatch [::events/handle-mouse-event :mouse-move nil (is-right-button? event)])))
            :on-mouse-move (fn [event]
                             (when-not (or user-is-drawing panning)
                               (let [mouse-pos (canvas-pos->frame-pos event scale)]

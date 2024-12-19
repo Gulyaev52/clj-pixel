@@ -9,7 +9,7 @@
 (def max-sprite-dim 512) ;; todo: check this value
 
 (def max-scale 80)
-(def min-scale 0.5)
+(def min-scale 1)
 
 (defn get-layer-name [type layers-count]
   (str (if (= type :group) "Group " "Layer ") (inc layers-count)))

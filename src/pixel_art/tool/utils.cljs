@@ -29,10 +29,11 @@
 ;; Resize the pixel at {col, row} for the provided size. Will return the array of pixels centered
 ;; * around the original pixel, forming a pixel square of side=size
 (defn resize-pixel [point size]
-  (for [j (range 0 size)
-        i (range 0 size)]
-    {:x (+ (- (:x point) (. js/Math (floor (/ size 2)))) i)
-     :y (+ (- (:y point) (. js/Math (floor (/ size 2)))) j)}))
+  (when point
+    (for [j (range 0 size)
+          i (range 0 size)]
+      {:x (+ (- (:x point) (. js/Math (floor (/ size 2)))) i)
+       :y (+ (- (:y point) (. js/Math (floor (/ size 2)))) j)})))
 (comment
   (resize-pixel {:x 3 :y 3} 1)
   (resize-pixel {:x 3 :y 3} 2)

@@ -441,6 +441,7 @@
 (re-frame/reg-event-fx
  ::handle-mouse-event
  (fn [{:keys [db]} [_ event-type mouse-pos right-button]]
+   (println event-type mouse-pos)
    (let [event {:type event-type :pos mouse-pos :right-button right-button}]
      (case event-type
        :mouse-down

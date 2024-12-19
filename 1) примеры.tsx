@@ -1,17 +1,18 @@
-wheeled https://github.com/d3/d3-zoom/blob/c8df708b78b46553bc4a0fbf1baf4ffc10cef8bd/src/zoom.js#L234
 17) дизайн
-  поправить тесты
+поправить тесты
 
-  image rendering pixelated. превью и сам если отдаляешь. нарисуй квадрат
+image rendering pixelated. превью и сам если отдаляешь. нарисуй квадрат
 
-  zoom too fast https://stackoverflow.com/questions/5527601/normalizing-mousewheel-speed-across-browsers
+zoom too fast https://stackoverflow.com/questions/5527601/normalizing-mousewheel-speed-across-browsers
+  wheeled https://github.com/d3/d3-zoom/blob/c8df708b78b46553bc4a0fbf1baf4ffc10cef8bd/src/zoom.js#L234
 
-подсказки про линкинг и днд
+больщой экран
 
 таб
 
 16) сделать ручное сохранение?
-16) highlight cell иногда остаётсЯ
+
+17) пен на большом 
 
 оптимизация
 transdusers?
@@ -37,6 +38,7 @@ transdusers?
 
 18) todos
 33) удалить .js
+34) подсказки про линкинг и днд
 
 
 улучшения:
