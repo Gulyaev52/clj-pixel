@@ -66,7 +66,7 @@
 (defn get-initial-drawing-settings [sprite-size viewport-size]
   (let [scale (get-initial-scale sprite-size viewport-size)
         canvas-size (update-vals sprite-size #(* % scale))
-        empty-space-dim 1500
+        empty-space-dim (max 1500 (:width viewport-size))
         drawing-container-size (update-vals canvas-size #(+ % empty-space-dim))
         viewport-scroll (get-viewport-scroll-pos-to-center canvas-size drawing-container-size viewport-size)]
     {:scale scale :drawing-container-size drawing-container-size :viewport-scroll viewport-scroll}))
