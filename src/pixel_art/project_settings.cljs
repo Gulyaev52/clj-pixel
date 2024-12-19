@@ -57,7 +57,9 @@
 (defn get-initial-scale [sprite-size viewport-size]
   (let [[dim dim-value] (apply max-key second sprite-size)
         offset 100]
-    (min (/ (- (dim viewport-size) offset) dim-value) max-scale)))
+    (-> (/ (- (dim viewport-size) offset) dim-value)
+        (min max-scale)
+        (max min-scale))))
 
 ;; todo: rename
 ;; todo: а надо ли это? мб просто вызвать scrollIntoView
