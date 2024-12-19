@@ -3,10 +3,9 @@
 
 image rendering pixelated. превью и сам если отдаляешь. нарисуй квадрат
 
-zoom too fast https://stackoverflow.com/questions/5527601/normalizing-mousewheel-speed-across-browsers
-  wheeled https://github.com/d3/d3-zoom/blob/c8df708b78b46553bc4a0fbf1baf4ffc10cef8bd/src/zoom.js#L234
-
-больщой экран
+zoom
+  большой экран
+  4на4 отдалить по максимуму
 
 таб
 
@@ -42,6 +41,7 @@ transdusers?
 
 
 улучшения:
+18) zoom-out смещает
 17) preview отдельное окно?
 20) откат изменений на текущем фрейме если пред был прошлый
 19) если изменения были на сером форне или скроле то они коммитятся и добавляются в историю

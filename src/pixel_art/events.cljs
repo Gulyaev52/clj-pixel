@@ -373,11 +373,8 @@
 
 (re-frame/reg-event-fx
  ::zoom
- (fn [{:keys [db]} [_ delta center-pos mouse-offset-pos]]
-   (let [prev-scale (:scale db)
-         new-scale (-> (-> db :scale (* delta))
-                       (min project-settings/max-scale)
-                       (max project-settings/min-scale))]
+ (fn [{:keys [db]} [_ delta new-scale center-pos mouse-offset-pos]]
+   (let [prev-scale (:scale db)]
      (if (not= prev-scale new-scale)
        (let [delta (if (#{project-settings/max-scale project-settings/min-scale} new-scale)
                      (/ new-scale prev-scale)
@@ -441,7 +438,6 @@
 (re-frame/reg-event-fx
  ::handle-mouse-event
  (fn [{:keys [db]} [_ event-type mouse-pos right-button]]
-   (println event-type mouse-pos)
    (let [event {:type event-type :pos mouse-pos :right-button right-button}]
      (case event-type
        :mouse-down
