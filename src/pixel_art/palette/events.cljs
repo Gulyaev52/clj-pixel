@@ -1,4 +1,4 @@
-(ns pixel-art.palette
+(ns pixel-art.palette.events ;; todo: rename to palette-manager?
   (:require [pixel-art.model.color :refer [transparent-color-int]]
             [pixel-art.model.sprite :as sprite]
             [pixel-art.palette.gimp-file :as gimp-file]
@@ -7,21 +7,14 @@
             [re-frame.core :as re-frame]
             [sc.api]))
 
-;; todo
-;; добавлять в историю?
-;; move color
-;; default палетка должна быть особенной?
-
 (defn deletable-palette? [palettes]
   (> (count palettes) 1))
 
-(defn get-current-palette-idx [db]
+(defn- get-current-palette-idx [db]
   (coll/find-first-idx :current (:palettes db)))
 
-(defn get-current-palette [db]
+(defn- get-current-palette [db]
   (nth (:palettes db) (get-current-palette-idx db)))
-
-(defn init [palettes] palettes)
 
 (re-frame/reg-event-fx
  ::select-palette

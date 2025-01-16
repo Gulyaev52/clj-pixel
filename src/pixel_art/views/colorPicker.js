@@ -7,7 +7,7 @@ import Hue from '@uiw/react-color-hue';
 import { validHex, HsvaColor, hsvaToHex, hsvaToRgbaString, hexToHsva, color as handleColor, rgbaStringToHsva, ColorResult, getContrastingColor } from '@uiw/color-convert';
 import { useEffect } from 'react';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import Swatch from "./swatch";
+import Swatch from "../swatch";
 import tinycolor from 'tinycolor2';
 
 const PRESET_COLORS = ['#D0021B', '#F5A623', '#f8e61b', '#8B572A', '#7ED321', '#417505', '#BD10E0', '#9013FE', '#4A90E2', '#50E3C2', '#B8E986', '#000000', '#4A4A4A', '#9B9B9B', '#FFFFFF'];

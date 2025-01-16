@@ -1,6 +1,5 @@
 (ns pixel-art.views
   (:require
-   ["./colorPicker$default" :as color-picker-js]
    ["./react-dnd-scrolling" :as react-dnd-scrolling]
    ["antd" :as antd]
    ["react-dnd" :as react-dnd]
@@ -17,7 +16,7 @@
    [pixel-art.new-project-modal.events :as new-project-modal]
    [pixel-art.new-project-modal.views :refer [new-project-modal]]
    [pixel-art.onion-skin :as onion-skin]
-   [pixel-art.palette :as palette :refer [deletable-palette?]]
+   [pixel-art.palette.views :refer [palettes-section]]
    [pixel-art.project-save-load :as project-save-load]
    [pixel-art.project-settings :as project-settings]
    [pixel-art.sprite-preview.events :as sprite-preview.events]
@@ -27,6 +26,7 @@
    [pixel-art.subs :as subs]
    [pixel-art.tool.core :as tool]
    [pixel-art.utils.coll :as coll]
+   [pixel-art.views.color-picker :refer [color-picker]]
    [pixel-art.views.constants :refer [drawing-border
                                       preview-container-bg-color
                                       transparent-color-img]]
@@ -38,7 +38,6 @@
    [re-frame.core :as re-frame]
    [re-frame.db :as db]
    [react :as react]
-   [reagent.core :as r]
    [sc.api])
   (:require-macros [pixel-art.views.reagent :refer [def-func-component]]))
 
@@ -532,149 +531,6 @@
           (for [cel (cels-by-layers (:idx layer))]
             ^{:key (str (:frame-idx (:pos cel)) "-" (:layer-idx (:pos cel)))}
             [cel-view cel])]))]]))
-
-(defn color-picker [{:keys [value preset-colors actions on-change]}]
-  [:> color-picker-js
-   {:color (color/int->rgb-str value)
-    :disableAlpha true
-    :presetColors (clj->js (map #(update % :color color/int->rgb-str) preset-colors))
-    :actions (clj->js (map #(reagent.core/as-element %) actions))
-    :onChange (fn [e] (let [rgba (. e -rgba)]
-                        (on-change (color/int (. rgba -r) (. rgba -g) (. rgba -b) (. rgba -a)))))}])
-
-;; todo: зачем-это?
-(defn- replace-transparent-color [color]
-  (if (= color color/transparent-color-int)
-    (color/int 0 0 0)
-    color))
-
-(defn add-new-color-picker []
-  (let [primary-color (replace-transparent-color @(re-frame/subscribe [::subs/primary-color]))
-        secondary-color (replace-transparent-color @(re-frame/subscribe [::subs/secondary-color]))
-        last-color (replace-transparent-color (last (:colors @(re-frame/subscribe [::subs/current-palette]))))
-        !temp-new-value (r/atom primary-color)]
-    (fn [{:keys [on-close]}]
-      [color-picker {:value @!temp-new-value
-                     :on-change (fn [new-value]
-                                  (reset! !temp-new-value new-value))
-                     :actions [[button
-                                {:on-click (fn []
-                                             (re-frame/dispatch [::palette/add-color @!temp-new-value])
-                                             (on-close))}
-                                "Add"]]
-                     :preset-colors (coll/distinct-by :color [{:color primary-color}
-                                                              {:color secondary-color}
-                                                              {:color last-color}])
-                     :on-cancel (fn []
-                                  (on-close))}])))
-
-(def-func-component palette-colors [{:keys [colors primary-color secondary-color]}]
-  (let [theme-token (use-theme-token)]
-    [:div {:style {:display :grid
-                   :grid-template-columns "repeat(auto-fill, 35px)" ;; todo: dynamic
-                   :grid-auto-rows "35px"
-                   :grid-gap "2px"
-                   :height "100%"
-                   :overflow "auto"}}
-     (doall
-      (for [[idx color] (map-indexed vector colors)]
-        (let [color-dark? (.. (color/->tinycolor color) isDark)]
-          ^{:key color}
-          [:div {:className "color-container"
-                 :style {:background-color (color/int->rgb-str color)
-                         :position "relative"
-                         :cursor "pointer"
-                         :color (if color-dark? (.-colorText theme-token) (.-colorBgBase theme-token))}
-                 :on-click (fn []
-                             (re-frame/dispatch [::palette/select-color idx false]))
-                 :on-context-menu (fn [e]
-                                    (. e preventDefault)
-                                    (re-frame/dispatch [::palette/select-color idx true]))}
-           (when (= color primary-color) "L")
-           (when (= color secondary-color) "R")
-           [:div {:className "remove-color-button"
-                  :style {:position "absolute"
-                          :right "1px"
-                          :top "1px"
-                          :opacity 0}}
-            [icon-button {:src :close
-                          :icon-theme (if color-dark? :light :dark)
-                          :title "remove color"
-                          :size :xs
-                          :on-click (fn [e]
-                                      (.. e (stopPropagation))
-                                      (re-frame/dispatch [::palette/remove-color idx]))}]]])))]))
-
-(defn palettes-section []
-  (let [palettes @(re-frame/subscribe [::subs/palettes])
-        current-palette-idx (coll/find-first-idx :current palettes)
-        current-palette (coll/find-first :current palettes)
-        primary-color @(re-frame/subscribe [::subs/primary-color])
-        secondary-color @(re-frame/subscribe [::subs/secondary-color])]
-    [:div {:style {:display "flex"
-                   :flex-direction "column"
-                   :height "300px"}}
-     [select {:value current-palette-idx
-              :options (map-indexed (fn [idx p] {:value idx :label (:name p)}) palettes)
-              :block true
-              :size :sm
-              :on-change (fn [idx]
-                           (re-frame/dispatch [::palette/select-palette idx]))}]
-
-     [:div {:style {:display "flex" :justify-content "space-between"}}
-      [custom-popover
-       (fn [close]
-         [icon-button {:src :add
-                       :title "Add color"
-                       :size :sm
-                       :on-click close}])
-       (fn [close]
-         [add-new-color-picker {:on-close close}])]
-
-      [:div
-       [icon-button {:src :new-palette
-                     :title "Add palette"
-                     :size :sm
-                     :on-click (fn []
-                                 (when-let [name (js/prompt)]
-                                   (re-frame/dispatch [::palette/create-palette name])))}]
-       [icon-button {:src :remove
-                     :title "Remove palette"
-                     :size :sm
-                     :disabled (not (deletable-palette? palettes))
-                     :on-click (fn []
-                                 (when (js/confirm "are you sure?")
-                                   (re-frame/dispatch [::palette/remove-selected-palette])))}]
-       [icon-button {:src :edit
-                     :title "Rename palette"
-                     :size :sm
-                     :disabled (not (deletable-palette? palettes))
-                     :on-click (fn []
-                                 (when-let [name (js/prompt)]
-                                   (re-frame/dispatch [::palette/rename-selected-palette name])))}]
-       [icon-button {:src :adjust
-                     :title "Add colors from current frame"
-                     :size :sm
-                     :on-click (fn []
-                                 (re-frame/dispatch [::palette/add-colors-from-frame]))}]]
-
-      [:div
-       [icon-button {:src :file-export
-                     :title "Export palette"
-                     :size :sm
-                     :on-click (fn [] (re-frame/dispatch [::palette/export-palette]))}]
-       [file-uploader {:on-upload (fn [file-desc]
-                                    (re-frame/dispatch [::palette/import-palette file-desc]))}
-        (fn [on-click]
-          [icon-button {:src :file-import
-                        :title "Import palette"
-                        :size :sm
-                        :on-click on-click}])]]]
-
-     [:div {:style {:flex-grow 1 :min-height 0}}
-      [palette-colors {:colors (:colors current-palette)
-                       :primary-color primary-color
-                       :secondary-color secondary-color}]]]))
 
 (defn drawing-info []
   (when-not @(re-frame/subscribe [::subs/initial-loading])
