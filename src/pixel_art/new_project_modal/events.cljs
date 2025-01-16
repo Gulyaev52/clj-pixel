@@ -1,4 +1,4 @@
-(ns pixel-art.new-project-modal
+(ns pixel-art.new-project-modal.events
   (:require [pixel-art.project-settings :as project-settings]
             [re-frame.core :as re-frame]))
 
@@ -25,7 +25,7 @@
 
 (re-frame/reg-event-fx
  ::create-example-project
- (fn [{:keys [db]}]
+ (fn []
    {:fx [[:dispatch
           [:initialize-db (project-settings/get-example-project)]]]}))
 

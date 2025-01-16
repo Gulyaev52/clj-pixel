@@ -13,7 +13,8 @@
    [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
    [pixel-art.model.color :as color]
    [pixel-art.model.sprite :as sprite]
-   [pixel-art.new-project-modal :as new-project-modal]
+   [pixel-art.new-project-modal.events :as new-project-modal]
+   [pixel-art.new-project-modal.views :refer [new-project-modal]]
    [pixel-art.onion-skin :as onion-skin]
    [pixel-art.palette :as palette :refer [deletable-palette?]]
    [pixel-art.project-save-load :as project-save-load]
@@ -28,10 +29,10 @@
                                       preview-container-bg-color
                                       transparent-color-img]]
    [pixel-art.views.preview :refer [preview-image]]
-   [pixel-art.views.ui-kit :refer [button checkbox custom-popover form
-                                   form-item icon-button input-number modal
-                                   popover select slider space title
-                                   typography use-theme-token]]
+   [pixel-art.views.ui-kit :refer [button checkbox custom-popover
+                                   file-uploader form form-item icon-button
+                                   input-number modal popover select slider
+                                   space title typography use-theme-token]]
    [re-frame.core :as re-frame]
    [re-frame.db :as db]
    [react :as react]
@@ -570,26 +571,6 @@
     :onChange (fn [e] (let [rgba (. e -rgba)]
                         (on-change (color/int (. rgba -r) (. rgba -g) (. rgba -b) (. rgba -a)))))}])
 
-(defn file-uploader [{:keys [on-upload accept]} render-button]
-  (r/with-let [!input-ref (r/atom nil)]
-    [:span
-     [:input {:type "file"
-              :accept accept
-              :ref (fn [ref] (reset! !input-ref ref))
-              :style {:display "none"}
-              :on-change (fn [e]
-                           (let [files (.. e -target -files)]
-                             (when-first [file files]
-                               (let [file-reader (js/FileReader.)]
-                                 (set! (. file-reader -onload) (fn [e]
-                                                                 (on-upload {:file-name (. file -name)
-                                                                             :content (.. e -target -result)})))
-                                 (. file-reader (readAsText file)))))
-                           (set! (.. e -target -value) "") ;; without this line onChange is not triggered when the same file is choosen twice
-                           )}]
-     [render-button (fn []
-                      (.. @!input-ref click))]]))
-
 ;; todo: зачем-это?
 (defn- replace-transparent-color [color]
   (if (= color color/transparent-color-int)
@@ -988,38 +969,6 @@
             [:div (string/capitalize (:label shortcut))
              " - "
              (keyboard-shortcuts/keys->string (:keys shortcut))])]])]]))
-
-;; -----------------
-
-(defn new-project-modal []
-  (when @(re-frame/subscribe [::subs/new-project-modal-opened])
-    (let [size @(re-frame/subscribe [::subs/new-project-modal-size])]
-      [modal {:title "New project"
-              :size :md
-              :on-cancel (fn []
-                           (re-frame/dispatch [::new-project-modal/set-opened false]))
-              :ok-text "Create"
-              :on-ok (fn []
-                       (re-frame/dispatch [::new-project-modal/create]))
-              :additional-buttons [[file-uploader {:on-upload (fn [file-desc]
-                                                                (re-frame/dispatch [::project-save-load/load-from-file file-desc]))}
-                                    (fn [on-click]
-                                      [button {:on-click on-click}
-                                       "Open project"])]
-                                   [button {:on-click (fn []
-                                                        (re-frame/dispatch [::new-project-modal/create-example-project]))}
-                                    "Create example project"]]}
-       [form
-        [form-item {:label "Width"
-                    :control [input-number {:value (:width size)
-                                            :block true
-                                            :on-blur (fn [value]
-                                                       (re-frame/dispatch [::new-project-modal/set-width value]))}]}]
-        [form-item {:label "Height"
-                    :control [input-number {:value (:height size)
-                                            :block true
-                                            :on-blur (fn [value]
-                                                       (re-frame/dispatch [::new-project-modal/set-height value]))}]}]]])))
 
 ;; ----------------
 

@@ -3,7 +3,7 @@
    [pixel-art.export.events :as export]
    [pixel-art.history :as history]
    [pixel-art.model.sprite :as sprite]
-   [pixel-art.new-project-modal :as new-project-modal]
+   [pixel-art.new-project-modal.events :as new-project-modal]
    [pixel-art.onion-skin :as onion-skin]
    [pixel-art.palette :as palette]
    [pixel-art.project-settings :as project-settings]

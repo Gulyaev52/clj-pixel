@@ -1,8 +1,8 @@
 (ns pixel-art.views.ui-kit
   (:require
    ["antd" :as antd]
-   [react :as react]
    [reagent.core :as reag]
+   [react :as react]
    [sc.api])
   (:require-macros [pixel-art.views.reagent :refer [def-func-component]]))
 
@@ -211,3 +211,23 @@
                                          [:> (. props -OkBtn)]]))))}
                      (when hide-footer {:footer nil}))]
      children)))
+
+(defn file-uploader [{:keys [on-upload accept]} render-button]
+  (reag/with-let [!input-ref (reag/atom nil)]
+    [:span
+     [:input {:type "file"
+              :accept accept
+              :ref (fn [ref] (reset! !input-ref ref))
+              :style {:display "none"}
+              :on-change (fn [e]
+                           (let [files (.. e -target -files)]
+                             (when-first [file files]
+                               (let [file-reader (js/FileReader.)]
+                                 (set! (. file-reader -onload) (fn [e]
+                                                                 (on-upload {:file-name (. file -name)
+                                                                             :content (.. e -target -result)})))
+                                 (. file-reader (readAsText file)))))
+                           (set! (.. e -target -value) "") ;; without this line onChange is not triggered when the same file is choosen twice
+                           )}]
+     [render-button (fn []
+                      (.. @!input-ref click))]]))
