@@ -1,10 +1,8 @@
 (ns pixel-art.subs
   (:require
-   [pixel-art.canvas :as canvas]
    [pixel-art.export :as export]
    [pixel-art.model.sprite :as sprite]
    [pixel-art.project-settings :as project-settings]
-   [pixel-art.sprite-resizer :as sprite-resizer]
    [pixel-art.tool.utils :refer [get-tool-options]]
    [pixel-art.utils.coll :as coll]
    [re-frame.core :as re-frame]
@@ -39,35 +37,6 @@
  ::layers
  (fn [db]
    (-> db :sprite :layers)))
-
-(re-frame/reg-sub
- ::sprite-resizer-previews
- (fn [db]
-   (when (= (-> db :sprite-resizer :opened) true)
-     (let [{:keys [sprite] {:keys [settings]} :sprite-resizer} db
-           resized-sprite (sprite-resizer/resize-sprite sprite settings)
-           previews (for [frame-idx (range 0 (count (:frames sprite)))]
-                      (->> (canvas/create-canvas (:size resized-sprite))
-                           (canvas/draw-frame-on-single-canvas frame-idx resized-sprite)
-                           (#(canvas/to-data-url % "png"))))]
-       previews))))
-
-(re-frame/reg-sub
- ::onion-skin-frames-idx
- (fn [db]
-   (let [onion-skin (:onion-skin db)]
-     (when (:enabled onion-skin)
-       (onion-skin/get-onion-skin-frames-idx (:sprite db) (:onion-skin db))))))
-
-(re-frame/reg-sub
- ::sprite-resizer-settings
- (fn [db]
-   (-> db :sprite-resizer :settings)))
-
-(re-frame/reg-sub
- ::sprite-resizer-opened
- (fn [db]
-   (-> db :sprite-resizer :opened)))
 
 (re-frame/reg-sub
  ::export-spritesheet-settings

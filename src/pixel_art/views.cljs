@@ -18,7 +18,8 @@
    [pixel-art.project-save-load :as project-save-load]
    [pixel-art.project-settings :as project-settings]
    [pixel-art.sprite-preview :as sprite-preview]
-   [pixel-art.sprite-resizer :as sprite-resizer]
+   [pixel-art.sprite-resizer.events :as sprite-resizer]
+   [pixel-art.sprite-resizer.views :refer [sprite-resizer-modal]]
    [pixel-art.subs :as subs]
    [pixel-art.tool.core :as tool]
    [pixel-art.utils.coll :as coll]
@@ -29,7 +30,7 @@
                                     previews-grid-items]]
    [pixel-art.views.ui-kit :refer [button checkbox custom-popover form
                                    form-item icon-button input-number
-                                   input-text popover slider space title
+                                   input-text modal popover slider space title
                                    typography use-theme-token]]
    [re-frame.core :as re-frame]
    [re-frame.db :as db]
@@ -1036,34 +1037,6 @@
                                      :on-change (fn [value]
                                                   (re-frame/dispatch [::export/set-settings-option :split-layers value]))}]}]]))
 
-(defn modal [props & children]
-  (let [{:keys [on-cancel cancel-text on-ok ok-text ok-disabled hide-footer title additional-buttons]} props]
-    (into
-     [:> antd/Modal (merge
-                     {:title title
-                      :open true
-                      :closable true
-                      :width (case (:size props)
-                               :lg "50%"
-                               :md "30%"
-                               :sm "18%"
-                               :else nil)
-                      :onOk on-ok
-                      :okText ok-text
-                      :okButtonProps {:disabled ok-disabled}
-                      :onCancel on-cancel
-                      :cancelText cancel-text
-                      :footer (fn [_ props]
-                                (r/as-element
-                                 (into [:div {:style {:display :flex :gap "6px"}}]
-                                       (concat
-                                        [(into [:div {:style {:display "flex" :gap "6px" :margin-right "auto"}}]
-                                               additional-buttons)]
-                                        [[:> (. props -CancelBtn)]
-                                         [:> (. props -OkBtn)]]))))}
-                     (when hide-footer {:footer nil}))]
-     children)))
-
 (defn export-image-settings-form []
   (let [image-settings @(re-frame/subscribe [::subs/export-image-settings])]
     (into [form]
@@ -1133,67 +1106,6 @@
          (case current-tab
            :image [export-image-settings-form]
            :spritesheet [export-spritesheet-settings-form])]]])))
-
-;; -----------------
-
-(def-func-component anchor [settings]
-  (let [theme-token (use-theme-token)]
-    [:div {:style {:display :grid
-                   :grid-template-columns "min-content min-content min-content"
-                   :gap "1px"
-                   :opacity (when (:resize-content settings) "0.6")}}
-     (for [y [:top :center :bottom]
-           x [:left :center :right]]
-       ^{:key (str y "-y-" x "-x")}
-       [:div {:title (str (name y) "/" (name x))
-              :style {:border-radius "4px"
-                      :width "24px"
-                      :height "24px"
-                      :background-color (if (and (not (:resize-content settings))
-                                                 (= {:x x :y y} (:anchor settings)))
-                                          (.-colorPrimaryActive theme-token)
-                                          "#444")}
-              :on-click (fn []
-                          (re-frame/dispatch [::sprite-resizer/set-settings-option :anchor {:x x :y y}]))}])]))
-
-(defn sprite-resizer-modal []
-  (when @(re-frame/subscribe [::subs/sprite-resizer-opened])
-    (let [settings @(re-frame/subscribe [::subs/sprite-resizer-settings])
-          previews @(re-frame/subscribe [::subs/sprite-resizer-previews])]
-      [modal {:title "Resize canvas"
-              :size :sm
-              :on-cancel (fn []
-                           (re-frame/dispatch [::sprite-resizer/set-opened false]))
-              :ok-text "Resize"
-              :on-ok (fn []
-                       (re-frame/dispatch [::sprite-resizer/resize]))}
-       [form
-        [form-item {:label "Width"
-                    :control [input-number {:value (-> settings :target-size :width)
-                                            :type "number"
-                                            :max project-settings/max-sprite-dim
-                                            :block true
-                                            :on-blur (fn [value]
-                                                       (re-frame/dispatch [::sprite-resizer/set-settings-option
-                                                                           :target-size
-                                                                           (assoc (:target-size settings) :width value)]))}]}]
-        [form-item {:label "Height"
-                    :control [input-number {:value (-> settings :target-size :height)
-                                            :type "number"
-                                            :max project-settings/max-sprite-dim
-                                            :block true
-                                            :on-blur (fn [value]
-                                                       (re-frame/dispatch [::sprite-resizer/set-settings-option
-                                                                           :target-size
-                                                                           (assoc (:target-size settings) :height value)]))}]}]
-        [form-item {:label "Resize contents"
-                    :control [checkbox {:value (:resize-content settings)
-                                        :on-change (fn [value]
-                                                     (re-frame/dispatch [::sprite-resizer/set-settings-option :resize-content value]))}]}]
-        [form-item {:label "Anchor"
-                    :control [anchor settings]}]
-        [previews-container {}
-         [previews-grid-items previews]]]])))
 
 ;; -----------------
 
@@ -1364,8 +1276,8 @@
       [sprite-resizer-modal]
       [button {:on-click (fn [] (re-frame/dispatch [::sprite-resizer/set-opened true]))} "Resize canvas"]]
      [:<>
-      [button {:on-click (fn [] (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened true]))} "Keyboard shortcuts"]
-      [keyboard-shortcuts-modal]]
+      [keyboard-shortcuts-modal]
+      [button {:on-click (fn [] (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened true]))} "Keyboard shortcuts"]]
      [checkbox {:value pixels-grid-enabled
                 :label "Grid"
                 :on-change (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]

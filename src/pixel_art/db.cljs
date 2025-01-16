@@ -8,7 +8,7 @@
    [pixel-art.palette :as palette]
    [pixel-art.project-settings :as project-settings]
    [pixel-art.sprite-preview :as preview]
-   [pixel-art.sprite-resizer :as sprite-resizer]
+   [pixel-art.sprite-resizer.events :as sprite-resizer]
    [pixel-art.tool.core :as tool]
    [sc.api]))
 

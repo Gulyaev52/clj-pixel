@@ -1,32 +1,23 @@
-(ns pixel-art.sprite-resizer
+(ns pixel-art.sprite-resizer.utils
   (:require
    [pixel-art.canvas :as canvas]
-   [pixel-art.history :as history]
    [pixel-art.model.cel :as cel]
    [pixel-art.model.color :as color]
-   [pixel-art.project-settings :as project-settings]
-   [pixel-art.utils.coll :as coll]
-   [re-frame.core :as re-frame]))
+   [pixel-art.utils.coll :as coll]))
 
-(defn init []
-  {:opened false
-   :settings {:target-size nil
-              :resize-content false
-              :anchor {:x :center :y :center}}})
-
-(defn translate-x [x width resized-width anchor-x]
+(defn- translate-x [x width resized-width anchor-x]
   (case anchor-x
     :left x
     :right (- x (- width resized-width))
     :center (- x (. js/Math (round (/ (- width resized-width) 2))))))
 
-(defn translate-y [y height resized-height anchor-y]
+(defn- translate-y [y height resized-height anchor-y]
   (case anchor-y
     :top y
     :bottom (- y (- height resized-height))
     :center (- y (. js/Math (round (/ (- height resized-height) 2))))))
 
-(defn resize-cel [cel {:keys [target-size resize-content anchor]}]
+(defn- resize-cel [cel {:keys [target-size resize-content anchor]}]
   (if resize-content
     (->> (canvas/create-canvas (:size cel))
          (canvas/draw-cel cel)
@@ -54,28 +45,3 @@
     (assoc sprite
            :cels resized-cels
            :size (:target-size settings))))
-
-(re-frame/reg-event-fx
- ::set-opened
- (fn [{:keys [db]} [_ opened]]
-   {:db (-> db
-            (assoc-in [:sprite-resizer :opened] opened)
-            (assoc-in [:sprite-resizer :settings :target-size] (-> db :sprite :size)))}))
-
-(re-frame/reg-event-fx
- ::set-settings-option
- (fn [{:keys [db]} [_ option value]]
-   {:db (assoc-in db [:sprite-resizer :settings option] value)}))
-
-(re-frame/reg-event-fx
- ::resize
- [(re-frame/inject-cofx :viewport-size)]
- (fn [{:keys [db viewport-size]}]
-   (println viewport-size)
-   (let [{:keys [sprite] {:keys [settings]} :sprite-resizer} db
-         resized-sprite (resize-sprite sprite settings)]
-     {:db (-> db
-              (project-settings/set-sprite resized-sprite {:prev-sprite (:sprite db)
-                                                           :viewport-size viewport-size})
-              (assoc-in [:sprite-resizer :opened] false)
-              history/save-sprite)})))

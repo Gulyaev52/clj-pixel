@@ -158,3 +158,31 @@
                               (on-blur curr-value))
                     :onPressEnter (fn []
                                     (on-blur curr-value))}]))
+
+(defn modal [props & children]
+  (let [{:keys [on-cancel cancel-text on-ok ok-text ok-disabled hide-footer title additional-buttons]} props]
+    (into
+     [:> antd/Modal (merge
+                     {:title title
+                      :open true
+                      :closable true
+                      :width (case (:size props)
+                               :lg "50%"
+                               :md "30%"
+                               :sm "18%"
+                               :else nil)
+                      :onOk on-ok
+                      :okText ok-text
+                      :okButtonProps {:disabled ok-disabled}
+                      :onCancel on-cancel
+                      :cancelText cancel-text
+                      :footer (fn [_ props]
+                                (r/as-element
+                                 (into [:div {:style {:display :flex :gap "6px"}}]
+                                       (concat
+                                        [(into [:div {:style {:display "flex" :gap "6px" :margin-right "auto"}}]
+                                               additional-buttons)]
+                                        [[:> (. props -CancelBtn)]
+                                         [:> (. props -OkBtn)]]))))}
+                     (when hide-footer {:footer nil}))]
+     children)))
