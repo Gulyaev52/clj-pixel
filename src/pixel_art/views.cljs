@@ -10,7 +10,8 @@
    [pixel-art.events :as events]
    [pixel-art.export.events :as export]
    [pixel-art.export.views :refer [export-modal]]
-   [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
+   [pixel-art.keyboard-shortcuts-modal.views :refer [keyboard-shortcuts-modal]]
+   [pixel-art.keyboard-shortcuts-modal.events :as keyboard-shortcuts-modal]
    [pixel-art.model.color :as color]
    [pixel-art.model.sprite :as sprite]
    [pixel-art.new-project-modal.events :as new-project-modal]
@@ -31,8 +32,8 @@
    [pixel-art.views.preview :refer [preview-image]]
    [pixel-art.views.ui-kit :refer [button checkbox custom-popover
                                    file-uploader form form-item icon-button
-                                   input-number modal popover select slider
-                                   space title typography use-theme-token]]
+                                   input-number popover select slider space
+                                   typography use-theme-token]]
    [re-frame.core :as re-frame]
    [re-frame.db :as db]
    [react :as react]
@@ -948,30 +949,6 @@
    (fn [close]
      [current-color-selection-color-picker {:value value :on-change on-change} close])])
 
-;; -----------------
-
-(defn keyboard-shortcuts-modal []
-  (when @(re-frame/subscribe [::subs/keyboard-shortcuts-modal-opened])
-    [modal {:title "Keyboard shortcuts"
-            :size :lg
-            :hide-footer true
-            :on-cancel (fn []
-                         (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened false]))}
-     [:div {:style {:display :grid
-                    :grid-template-columns "repeat(auto-fit, minmax(200px,1fr))"}}
-      (for [[type shortcuts] keyboard-shortcuts/shortcuts-by-types]
-        ^{:key (name type)}
-        [:div
-         [title {:level 4} (str (string/capitalize (name type)) " shortcuts")]
-         [:div
-          (for [shortcut shortcuts]
-            ^{:key (:label shortcut)}
-            [:div (string/capitalize (:label shortcut))
-             " - "
-             (keyboard-shortcuts/keys->string (:keys shortcut))])]])]]))
-
-;; ----------------
-
 (defn tool-view [{:keys [type selected]}]
   (let [title (string/replace (name type) "-" " ")]
     [:div {:style {:width "50px" :height "50px"}}
@@ -1086,7 +1063,7 @@
       [button {:on-click (fn [] (re-frame/dispatch [::sprite-resizer/set-opened true]))} "Resize canvas"]]
      [:<>
       [keyboard-shortcuts-modal]
-      [button {:on-click (fn [] (re-frame/dispatch [::events/set-keyboard-shortcuts-modal-opened true]))} "Keyboard shortcuts"]]
+      [button {:on-click (fn [] (re-frame/dispatch [::keyboard-shortcuts-modal/set-opened true]))} "Keyboard shortcuts"]]
      [checkbox {:value pixels-grid-enabled
                 :label "Grid"
                 :on-change (fn [checked] (re-frame/dispatch [::events/enable-pixels-grid checked]))}]

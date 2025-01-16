@@ -4,6 +4,7 @@
    [pixel-art.history :as history]
    [pixel-art.model.sprite :as sprite]
    [pixel-art.new-project-modal.events :as new-project-modal]
+   [pixel-art.keyboard-shortcuts-modal.events :as keyboard-shortcuts-modal]
    [pixel-art.onion-skin :as onion-skin]
    [pixel-art.palette :as palette]
    [pixel-art.project-settings :as project-settings]
@@ -35,7 +36,7 @@
     :sprite-preview (preview/init)
     :pixels-grid-enabled (if (some? pixels-grid-enabled) pixels-grid-enabled true)
     :palettes (palette/init palettes)
-    :keyboard-shortcuts-modal-opened false
+    :keyboard-shortcuts-modal (keyboard-shortcuts-modal/init)
     :export (export/init)
     :sprite-resizer (sprite-resizer/init)}
    (project-settings/get-initial-drawing-settings (:size sprite) viewport-size)))

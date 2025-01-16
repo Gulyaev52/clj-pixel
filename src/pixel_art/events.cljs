@@ -93,11 +93,6 @@
                                    tool))))
 
 (re-frame/reg-event-fx
- ::set-keyboard-shortcuts-modal-opened
- (fn [{:keys [db]} [_ opened]]
-   {:db (assoc db :keyboard-shortcuts-modal-opened opened)}))
-
-(re-frame/reg-event-fx
  ::change-tool-option ;; todo: set
  (fn [{:keys [db]} [_ field value]]
    (let [tool-type (-> db :tool :type)]
