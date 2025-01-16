@@ -1,3 +1,7 @@
+events -> db ?
+export layers
+export -> export modal
+
 16) сделать ручное сохранение?
 image rendering pixelated. превью и сам если отдаляешь. нарисуй квадрат
   https://github.com/Gulyaev52/clj-pixel/commit/69d1382d79f9772d08ab125e1ddd74313d703ff8

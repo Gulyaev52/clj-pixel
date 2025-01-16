@@ -2,7 +2,7 @@
   (:require
    ["antd" :as antd]
    [react :as react]
-   [reagent.core :as r]
+   [reagent.core :as reag]
    [sc.api])
   (:require-macros [pixel-art.views.reagent :refer [def-func-component]]))
 
@@ -43,16 +43,16 @@
 
 ;; todo: comment
 (defn- popover-children [props]
-  (r/as-element (. props (children (. props -onClick)))))
+  (reag/as-element (. props (children (. props -onClick)))))
 
 (defn popover [trigger content]
-  [:> antd/Popover {"content" (r/as-element content)
+  [:> antd/Popover {"content" (reag/as-element content)
                     "trigger" "click"
                     "placement" "bottom"}
    [:> popover-children {:children trigger}]])
 
 (defn custom-popover []
-  (let [!opened (r/atom false)]
+  (let [!opened (reag/atom false)]
     (fn [trigger over]
       [:div {:style {:position "relative"}}
        (trigger (fn [] (reset! !opened true)))
@@ -93,9 +93,34 @@
                                  (on-change (.. e -target -checked)))}
    label])
 
+(defn radio-group [{:keys [value options on-change]}]
+  (into
+   [:> (.-Group antd/Radio) {:value (name value)
+                             :onChange (fn [e]
+                                         (on-change (keyword (.. e -target -value))))}]
+   (map (fn [opt] [:> (.-Button antd/Radio) {:value (name (:value opt))} (:label opt)]) options)))
+
 (defn button [{:keys [on-click]} text]
   [:> antd/Button {:onClick on-click}
    text])
+
+(defn select [{:keys [value size on-change block options]}]
+  (reag/with-let [!ref (atom nil)]
+    [:> antd/Select {:value value
+                     :ref (fn [ref] (reset! !ref ref))
+                     :options (clj->js (map-indexed (fn [idx v] (assoc v :index idx)) options))
+                     :size (case size
+                             :sm "small"
+                             :lg "large"
+                             :md "middle"
+                             nil)
+                     :style {:width (when block "100%")}
+                     :on-change (fn [_ option]
+                                 ;; after select option, select has focus and pressing hotkeys doesn't work + any key lead to select opening
+                                 ;; todo: find better way?
+                                  (when-let [value (some-> (nth options (.-index option)) :value)]
+                                    (.. @!ref blur)
+                                    (on-change value)))}]))
 
 (defn icon-button [{:keys [src icon-theme title active disabled size on-click]}]
   [:button (merge {:className "icon-button"
@@ -177,7 +202,7 @@
                       :onCancel on-cancel
                       :cancelText cancel-text
                       :footer (fn [_ props]
-                                (r/as-element
+                                (reag/as-element
                                  (into [:div {:style {:display :flex :gap "6px"}}]
                                        (concat
                                         [(into [:div {:style {:display "flex" :gap "6px" :margin-right "auto"}}]

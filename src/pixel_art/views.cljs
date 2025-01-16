@@ -8,7 +8,8 @@
    [clojure.string :as string]
    [pixel-art.canvas :as canvas]
    [pixel-art.events :as events]
-   [pixel-art.export :as export]
+   [pixel-art.export.events :as export]
+   [pixel-art.export.views :refer [export-modal]]
    [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
    [pixel-art.model.color :as color]
    [pixel-art.model.sprite :as sprite]
@@ -26,11 +27,10 @@
    [pixel-art.views.constants :refer [drawing-border
                                       preview-container-bg-color
                                       transparent-color-img]]
-   [pixel-art.views.preview :refer [preview-image previews-container
-                                    previews-grid-items]]
+   [pixel-art.views.preview :refer [preview-image]]
    [pixel-art.views.ui-kit :refer [button checkbox custom-popover form
-                                   form-item icon-button input-number
-                                   input-text modal popover slider space title
+                                   form-item icon-button input-number modal
+                                   popover select slider space title
                                    typography use-theme-token]]
    [re-frame.core :as re-frame]
    [re-frame.db :as db]
@@ -286,24 +286,6 @@
                             (. handler-ref -current)))
     {:handler-ref handler-ref
      :container-ref container-ref}))
-
-(defn select [{:keys [value size on-change block options]}]
-  (r/with-let [!ref (atom nil)]
-    [:> antd/Select {:value value
-                     :ref (fn [ref] (reset! !ref ref))
-                     :options (clj->js (map-indexed (fn [idx v] (assoc v :index idx)) options))
-                     :size (case size
-                             :sm "small"
-                             :lg "large"
-                             :md "middle"
-                             nil)
-                     :style {:width (when block "100%")}
-                     :on-change (fn [_ option]
-                                 ;; after select option, select has focus and pressing hotkeys doesn't work + any key lead to select opening
-                                 ;; todo: find better way?
-                                  (when-let [value (some-> (nth options (.-index option)) :value)]
-                                    (.. @!ref blur)
-                                    (on-change value)))}]))
 
 (def-func-component sprite-preview-modal-component []
   (let [{:keys [size displayed-frame-idx frame-imgs]} @(re-frame/subscribe [::subs/sprite-preview])
@@ -984,128 +966,6 @@
             :on-click close}])
    (fn [close]
      [current-color-selection-color-picker {:value value :on-change on-change} close])])
-
-;; export import
-
-(defn export-common-settings-fields [{:keys [common-settings type-options]}]
-  (let [layers @(re-frame/subscribe [::subs/layers])
-        layer-options (concat
-                       [{:label "Visible layers" :value {:type :visible}}
-                        {:label "Selected layers" :value {:type :selected}}]
-                       (map-indexed (fn [idx l] {:label (:name l) :value {:type :layer :idx idx}}) layers))]
-    [[form-item {:label "Frames"
-                 :control [select {:value (:frames common-settings)
-                                   :options [{:label "All frames" :value :all}
-                                             {:label "Selected frames" :value :selected}]
-                                   :on-change (fn [value]
-                                                (re-frame/dispatch [::export/set-settings-option :frames value]))}]}]
-     [form-item {:label "Layers"
-                 :control [select {:value (:layers common-settings)
-                                   :options layer-options
-                                   :on-change (fn [value]
-                                                (re-frame/dispatch [::export/set-settings-option :layers value]))}]}]
-     [form-item {:label "Direction"
-                 :control [select {:value (:direction common-settings)
-                                   :options [{:label "Forward" :value :forward}
-                                             {:label "Backwards" :value :backwards}]
-                                   :on-change (fn [value]
-                                                (re-frame/dispatch [::export/set-settings-option :direction value]))}]}]
-     [form-item {:label "Frame scale"
-                 :control [slider {:value (:scale common-settings)
-                                   :min export/min-scale
-                                   :max export/max-scale
-                                   :block true
-                                   :step 1
-                                   :on-change (fn [value]
-                                                (re-frame/dispatch [::export/set-settings-option :scale value]))}]}]
-     [form-item {:label "Frame size"
-                 :control [:<> (str (-> common-settings :scaled-frame-size :width)
-                                    "x"
-                                    (-> common-settings :scaled-frame-size :height))
-                           [:br]]}]
-     [form-item {:label "File"
-                 :control [input-text {:value (:file-name common-settings)
-                                       :on-blur (fn [value]
-                                                  (re-frame/dispatch [::export/set-settings-option :file-name value]))}]}]
-     [form-item {:label "Type"
-                 :control [select {:value (:file-type common-settings)
-                                   :options type-options
-                                   :on-change (fn [value]
-                                                (re-frame/dispatch [::export/set-settings-option :file-type value]))}]}]
-     [form-item {:label "Split layers"
-                 :control [checkbox {:value (:split-layers common-settings)
-                                     :on-change (fn [value]
-                                                  (re-frame/dispatch [::export/set-settings-option :split-layers value]))}]}]]))
-
-(defn export-image-settings-form []
-  (let [image-settings @(re-frame/subscribe [::subs/export-image-settings])]
-    (into [form]
-          (into
-           (export-common-settings-fields
-            {:common-settings image-settings
-             :type-options [{:label "png" :value :png}
-                            {:label "gif" :value :gif}]})
-           (when (= (:file-type image-settings) :gif)
-             [[form-item
-               "Never repeat" [checkbox {:value (not (:repeat image-settings))
-                                         :on-change (fn [value]
-                                                      (re-frame/dispatch [::export/set-settings-option :repeat (not value)]))}]]])))))
-
-(defn export-spritesheet-settings-form []
-  (let [settings @(re-frame/subscribe [::subs/export-spritesheet-settings])]
-    (into [form]
-          (into
-           [[form-item {:label "Columns"
-                        :control [input-number {:value (:columns settings)
-                                                :block true
-                                                :on-blur (fn [value]
-                                                           (re-frame/dispatch [::export/set-settings-option :columns value]))}]}]
-            [form-item {:label "Rows"
-                        :control [:div (:rows settings)]}]]
-           (export-common-settings-fields
-            {:common-settings settings
-             :type-options [{:label "png" :value :png}]})))))
-
-(defn radio-group [{:keys [value options on-change]}]
-  (into
-   [:> (.-Group antd/Radio) {:value (name value)
-                             :onChange (fn [e]
-                                         (on-change (keyword (.. e -target -value))))}]
-   (map (fn [opt] [:> (.-Button antd/Radio) {:value (name (:value opt))} (:label opt)]) options)))
-
-(defn export-modal []
-  (when @(re-frame/subscribe [::subs/export-modal-opened])
-    (let [current-tab @(re-frame/subscribe [::subs/export-current-tab])
-          exporting @(re-frame/subscribe [::subs/exporting])
-          export-settings-valid? @(re-frame/subscribe [::subs/export-settings-valid?])
-          spritesheet-settings @(re-frame/subscribe [::subs/export-spritesheet-settings])
-          preview @(re-frame/subscribe [::subs/export-preview])]
-      [modal {:title "Export"
-              :size :lg
-              :on-cancel (fn []
-                           (re-frame/dispatch [::export/set-opened false]))
-              :ok-text "Export"
-              :ok-disabled (or exporting (not export-settings-valid?))
-              :on-ok (fn []
-                       (re-frame/dispatch [::export/export]))}
-
-       [space {:direction "vertical" :block true}
-        [radio-group {:value current-tab
-                      :options [{:value :image :label "Image"}
-                                {:value :spritesheet :label "Spritesheet"}]
-                      :on-change (fn [tab]
-                                   (re-frame/dispatch [::export/select-tab tab]))}]
-
-        [previews-container {:loading (:generation preview)}
-         (case current-tab
-           :spritesheet [preview-image (:data preview) {:height (* (:rows spritesheet-settings) 100)
-                                                        :margin "auto"}]
-           :image [previews-grid-items (:data preview)])]
-
-        [:div {:style {:display :grid}}
-         (case current-tab
-           :image [export-image-settings-form]
-           :spritesheet [export-spritesheet-settings-form])]]])))
 
 ;; -----------------
 

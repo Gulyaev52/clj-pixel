@@ -1,6 +1,6 @@
 (ns pixel-art.db
   (:require
-   [pixel-art.export :as export]
+   [pixel-art.export.events :as export]
    [pixel-art.history :as history]
    [pixel-art.model.sprite :as sprite]
    [pixel-art.new-project-modal :as new-project-modal]

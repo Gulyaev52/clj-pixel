@@ -1,4 +1,4 @@
-(ns pixel-art.export
+(ns pixel-art.export.events
   (:require
    ["./gif$default" :as create-gif]
    ["./jszip$default" :as jszip]
@@ -30,7 +30,7 @@
    {:columns 1}
    :exporting false})
 
-(defn get-cels-for-rendering [settings sprite]
+(defn- get-cels-for-rendering [settings sprite]
   (let [selected-poses (sprite/get-selected-cels-pos sprite)]
     (as-> (sprite/get-denormalized-cels sprite) $
       (if (= (:frames settings) :selected)
@@ -57,7 +57,7 @@
         (reverse $)
         $))))
 
-(defn adjust-columns-if-need [columns db]
+(defn- adjust-columns-if-need [columns db]
   (let [cels-for-rendering (get-cels-for-rendering (-> db :export :common-settings) (-> db :sprite))]
     (min (max 1 columns) (count cels-for-rendering))))
 
@@ -280,10 +280,3 @@
                                            (re-frame/dispatch (conj on-finish blob-as-base64)))))
                                (re-frame/dispatch (conj on-finish blob))))))
      (. gif (render)))))
-
-;; todo
-;; баги
-;; 1) чёрный цвет в гифке
-
-;; 13) оптимизация для слинкованых ячеек
-;; 5) избавиться от повторения упоминаний :image, :spritesheet(кнопки, сеттинги)
