@@ -3,7 +3,8 @@
            reagent.core/with-let clojure.core/let
            pixel-art.reagent/def-func-component clojure.core/defn
            snitch.core/defn* clojure.core/defn
-           snitch.core/*let clojure.core/let}
+           snitch.core/*let clojure.core/let
+           pixel-art.views.reagent/def-func-component clojure.core/defn}
  :linters {:unresolved-symbol {:exclude [goog.DEBUG]}
            :unused-namespace {:exclude [cljs.repl]}
            :unused-referred-var {:exclude {cljs.repl [Error->map

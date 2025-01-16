@@ -1,0 +1,160 @@
+(ns pixel-art.views.ui-kit
+  (:require
+   ["antd" :as antd]
+   [react :as react]
+   [reagent.core :as r]
+   [sc.api])
+  (:require-macros [pixel-art.views.reagent :refer [def-func-component]]))
+
+(defn use-theme-token []
+  (.. antd/theme useToken -token))
+
+(defn typography
+  ([text] (typography {} text))
+  ([props title] [:> antd/Typography props title]))
+
+(defn space [& children]
+  (let [props (first children)
+        items (if (map? props)
+                (rest children)
+                children)]
+    (into [:> antd/Space (if (map? props)
+                           (merge (dissoc props :block)
+                                  (when (:block props)
+                                    {:style {:width "100%"}}))
+                           {})]
+          items)))
+
+(defn title
+  ([text] (title text {}))
+  ([props title] [:> (. antd/Typography -Title)
+                  (assoc-in props [:style :margin-top] 0) ;; todo: fix
+                  title]))
+
+(defn form [& items]
+  (into [space {:direction "vertical" :style {:width "100%"}}] items))
+
+(defn form-item [{:keys [label control]}]
+  [:div {:style {:display "grid"
+                 :grid-template-columns "1fr 1fr"
+                 :align-items "center"}}
+   [typography label]
+   control])
+
+;; todo: comment
+(defn- popover-children [props]
+  (r/as-element (. props (children (. props -onClick)))))
+
+(defn popover [trigger content]
+  [:> antd/Popover {"content" (r/as-element content)
+                    "trigger" "click"
+                    "placement" "bottom"}
+   [:> popover-children {:children trigger}]])
+
+(defn custom-popover []
+  (let [!opened (r/atom false)]
+    (fn [trigger over]
+      [:div {:style {:position "relative"}}
+       (trigger (fn [] (reset! !opened true)))
+       (when @!opened
+         [:div
+          [:div {:style {:position "fixed"
+                         :z-index 100
+                         :top "0px"
+                         :right "0px"
+                         :bottom "0px"
+                         :left "0px"}
+                 :on-click (fn []
+                             (reset! !opened false))}]
+          [:div {:style {:position "absolute" :z-index 101 :bottom "calc(100% + 5px)"}}
+           (over (fn [] (reset! !opened false)))]])])))
+
+(defn slider [{:keys [value label block min max step style on-change]}]
+  [:div {:style {:display :flex
+                 :align-items :center
+                 :width (if block "100%" "250px")
+                 :gap "8px"
+                 :font-size "13px"}}
+   [:div {:style {:display :flex :gap "4px"}}
+    [typography label]
+    [typography {:style {:white-space "nowrap" :width "20px"}} ;; fixed width is used to avoid slider jumping when value width is changed
+     (str "(" value ")")]]
+   [:> antd/Slider {:value value
+                    :min min
+                    :max max
+                    :step (or step 1)
+                    :style (merge {:user-select "none" :flex-grow 1} style)
+                    :onChange (fn [value]
+                                (on-change value))}]])
+
+(defn checkbox [{:keys [value on-change label]}]
+  [:> antd/Checkbox {:checked value
+                     :onChange (fn [e]
+                                 (on-change (.. e -target -checked)))}
+   label])
+
+(defn button [{:keys [on-click]} text]
+  [:> antd/Button {:onClick on-click}
+   text])
+
+(defn icon-button [{:keys [src icon-theme title active disabled size on-click]}]
+  [:button (merge {:className "icon-button"
+                   :style (merge
+                           {:border "none"
+                            :outline "none"
+                            :padding 0
+                            :background-color (if active "rgba(255,255,255,.2)" "transparent")
+                            :border-radius "4px"
+                            :opacity (if disabled "0.4" 1)
+                            :cursor (if disabled "default" "pointer")}
+                           (cond
+                             (= size :sm)
+                             {:width "28px" :height "28px" :min-height "28px" :min-width "28px"}
+                             (= size :xs)
+                             {:width "18px" :height "18px" :min-height "18px" :min-width "18px"}
+                             :else
+                             {:width "100%" :height "100%"}))
+                   :title title
+                   :disabled disabled
+                   :on-click on-click})
+   [:div {:style {:width "100%"
+                  :height "100%"
+                  :mask-image (str "url(./imgs/" (name src) ".svg)")
+                  :mask-repeat "no-repeat"
+                  :mask-position "center"
+                  :mask-size "70%"
+                  :background-color (case (or icon-theme :light)
+                                      :light "white"
+                                      :dark "black")}}]])
+
+;; todo: integer input number
+(def-func-component input-number [{:keys [value min max block on-blur]}]
+  (let [[curr-value set-curr-value] (react/useState value)]
+    (react/useEffect (fn []
+                       (set-curr-value value))
+                     (array value))
+    [:> antd/InputNumber {:value curr-value
+                          :min (or min 1)
+                          :step 1
+                          :max max
+                          :style {:width (when block "100%")}
+                          :onChange (fn [value]
+                                      (set-curr-value value))
+                          :onBlur (fn []
+                                    (let [new-value (let [res (. js/Number (parseInt curr-value))]
+                                                      (if (js/isNaN res) nil res))]
+                                      (set-curr-value new-value)
+                                      (on-blur new-value)))}]))
+
+(def-func-component input-text [{:keys [value on-blur]}]
+  (let [[curr-value set-curr-value] (react/useState value)]
+    (react/useEffect (fn []
+                       (set-curr-value value))
+                     (array value))
+    [:> antd/Input {:value curr-value
+                    :onChange (fn [e]
+                                (set-curr-value (.. e -target -value)))
+                    :onBlur (fn []
+                              (on-blur curr-value))
+                    :onPressEnter (fn []
+                                    (on-blur curr-value))}]))

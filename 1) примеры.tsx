@@ -1,5 +1,6 @@
 16) сделать ручное сохранение?
 image rendering pixelated. превью и сам если отдаляешь. нарисуй квадрат
+  https://github.com/Gulyaev52/clj-pixel/commit/69d1382d79f9772d08ab125e1ddd74313d703ff8
 zoom
   большой экран
   4на4 отдалить по максимуму по краю
