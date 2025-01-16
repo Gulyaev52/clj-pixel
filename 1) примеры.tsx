@@ -1,6 +1,10 @@
 events -> db ?
 export layers
 export -> export modal
+events импортируются по имени модуля хотя во вью events
+
+todo: в подписку
+
 
 16) сделать ручное сохранение?
 image rendering pixelated. превью и сам если отдаляешь. нарисуй квадрат

@@ -10,8 +10,8 @@
    [pixel-art.events :as events]
    [pixel-art.export.events :as export]
    [pixel-art.export.views :refer [export-modal]]
-   [pixel-art.keyboard-shortcuts-modal.views :refer [keyboard-shortcuts-modal]]
    [pixel-art.keyboard-shortcuts-modal.events :as keyboard-shortcuts-modal]
+   [pixel-art.keyboard-shortcuts-modal.views :refer [keyboard-shortcuts-modal]]
    [pixel-art.model.color :as color]
    [pixel-art.model.sprite :as sprite]
    [pixel-art.new-project-modal.events :as new-project-modal]
@@ -20,7 +20,8 @@
    [pixel-art.palette :as palette :refer [deletable-palette?]]
    [pixel-art.project-save-load :as project-save-load]
    [pixel-art.project-settings :as project-settings]
-   [pixel-art.sprite-preview :as sprite-preview]
+   [pixel-art.sprite-preview.events :as sprite-preview.events]
+   [pixel-art.sprite-preview.views :refer [sprite-preview-modal]]
    [pixel-art.sprite-resizer.events :as sprite-resizer]
    [pixel-art.sprite-resizer.views :refer [sprite-resizer-modal]]
    [pixel-art.subs :as subs]
@@ -289,37 +290,6 @@
     {:handler-ref handler-ref
      :container-ref container-ref}))
 
-(def-func-component sprite-preview-modal-component []
-  (let [{:keys [size displayed-frame-idx frame-imgs]} @(re-frame/subscribe [::subs/sprite-preview])
-        sprite-size @(re-frame/subscribe [::subs/sprite-size])
-        frame-img (or (get frame-imgs displayed-frame-idx nil) (get frame-imgs 0))
-        image-size (case size
-                     :1x sprite-size
-                     :2x (update-vals sprite-size #(* % 2))
-                     :4x (update-vals sprite-size #(* % 4))
-                     :default {:width 512 :height 512})
-        _ (react/useEffect (fn []
-                             (.. js/document (addEventListener "keydown" (fn [e]
-                                                                           (when (= (.. e -code) "Escape")
-                                                                             (re-frame/dispatch [::sprite-preview/close]))))))
-                           (array))]
-    [:div {:style {:position "fixed"
-                   :display "flex"
-                   :z-index 1000
-                   :alignItems "center"
-                   :justifyContent "center"
-                   :left 0
-                   :right 0
-                   :bottom 0
-                   :top 0
-                   :backgroundColor "rgba(37, 37, 37, 0.9)"}}
-     [preview-image frame-img {:height (:height image-size)}]]))
-
-(defn sprite-preview-modal []
-  (let [opened (:opened @(re-frame/subscribe [::subs/sprite-preview]))]
-    (when opened
-      [sprite-preview-modal-component])))
-
 (defn onion-skin-settings []
   (let [onion-skin @(re-frame/subscribe [::subs/onion-skin])]
     [form
@@ -454,7 +424,7 @@
      [:div {:style {:display :flex}}
       [:<>
        [sprite-preview-modal]
-       [button {:on-click (fn [] (re-frame/dispatch [::sprite-preview/open]))} "Show preview"]]
+       [button {:on-click (fn [] (re-frame/dispatch [::sprite-preview.events/open]))} "Show preview"]]
       [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
        [typography "Duration (ms)"]
        [input-number {:value (:duration current-frame)

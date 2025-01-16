@@ -8,7 +8,7 @@
    [pixel-art.onion-skin :as onion-skin]
    [pixel-art.palette :as palette]
    [pixel-art.project-settings :as project-settings]
-   [pixel-art.sprite-preview :as preview]
+   [pixel-art.sprite-preview.events :as sprite-preview]
    [pixel-art.sprite-resizer.events :as sprite-resizer]
    [pixel-art.tool.core :as tool]
    [sc.api]))
@@ -33,7 +33,7 @@
     :selection-manager {}
     :onion-skin (onion-skin/init)
     :history (history/init {:sprite sprite})
-    :sprite-preview (preview/init)
+    :sprite-preview (sprite-preview/init)
     :pixels-grid-enabled (if (some? pixels-grid-enabled) pixels-grid-enabled true)
     :palettes (palette/init palettes)
     :keyboard-shortcuts-modal (keyboard-shortcuts-modal/init)
