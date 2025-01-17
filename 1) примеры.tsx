@@ -1,6 +1,8 @@
 :draw-preview ;; todo: вынести в fx
 ;; todo: в drawing?
 ;; todo: в другие хелперы?
+подумать над разделением на слои
+project-settings/get-initial-drawing-settings в drawing
 
 events -> db ?
 export layers
