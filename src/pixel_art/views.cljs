@@ -1,6 +1,6 @@
 (ns pixel-art.views
   (:require
-   ["./react-dnd-scrolling" :as react-dnd-scrolling]
+   ["./views/react-dnd-scrolling" :as react-dnd-scrolling]
    ["antd" :as antd]
    ["react-dnd" :as react-dnd]
    ["react-dnd-html5-backend" :as react-dnd-html5-backend]
