@@ -5,7 +5,7 @@
    [pixel-art.model.sprite :as sprite]
    [pixel-art.new-project-modal.events :as new-project-modal]
    [pixel-art.keyboard-shortcuts-modal.events :as keyboard-shortcuts-modal]
-   [pixel-art.onion-skin :as onion-skin]
+   [pixel-art.onion-skin.events :as onion-skin]
    [pixel-art.project-settings :as project-settings]
    [pixel-art.sprite-preview.events :as sprite-preview]
    [pixel-art.sprite-resizer.events :as sprite-resizer]

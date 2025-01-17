@@ -15,7 +15,9 @@
    [pixel-art.model.sprite :as sprite]
    [pixel-art.new-project-modal.events :as new-project-modal]
    [pixel-art.new-project-modal.views :refer [new-project-modal]]
-   [pixel-art.onion-skin :as onion-skin]
+   [pixel-art.onion-skin.events :as onion-skin.events]
+   [pixel-art.onion-skin.subs :as onion-skin.subs]
+   [pixel-art.onion-skin.views :refer [onion-skin-settings use-draw-onion-skin]]
    [pixel-art.palette.views :refer [palettes-section]]
    [pixel-art.project-save-load :as project-save-load]
    [pixel-art.project-settings :as project-settings]
@@ -32,9 +34,9 @@
                                       transparent-color-img]]
    [pixel-art.views.preview :refer [preview-image]]
    [pixel-art.views.ui-kit :refer [button checkbox custom-popover
-                                   file-uploader form form-item icon-button
-                                   input-number popover select slider space
-                                   typography use-theme-token]]
+                                   file-uploader icon-button input-number
+                                   popover slider space typography
+                                   use-theme-token]]
    [pixel-art.views.use-vertical-resizer :refer [use-vertical-resizer]]
    [re-frame.core :as re-frame]
    [re-frame.db :as db]
@@ -249,37 +251,6 @@
        :right 0
        :transform "translateX(50%)"}]]))
 
-(defn onion-skin-settings []
-  (let [onion-skin @(re-frame/subscribe [::subs/onion-skin])]
-    [form
-     [form-item {:label "Previous Frames"
-                 :control [input-number {:min 0
-                                         :value (:prev (:frames-count onion-skin))
-                                         :block true
-                                         :on-blur (fn [value]
-                                                    (re-frame/dispatch [::onion-skin/set-frames-count (assoc (:frames-count onion-skin)
-                                                                                                             :prev
-                                                                                                             value)]))}]}]
-     [form-item {:label "Next Frames"
-                 :control [input-number {:min 0
-                                         :value (:next (:frames-count onion-skin))
-                                         :block true
-                                         :on-blur (fn [value]
-                                                    (re-frame/dispatch [::onion-skin/set-frames-count (assoc (:frames-count onion-skin)
-                                                                                                             :next
-                                                                                                             value)]))}]}]
-     [form-item {:label "Opacity"
-                 :control [slider {:min 0 :max 1 :step 0.1
-                                   :value (:opacity onion-skin)
-                                   :block true
-                                   :on-change (fn [v] (re-frame/dispatch [::onion-skin/set-opacity v]))}]}]
-     [form-item {:label "Position"
-                 :control [select {:value (:position onion-skin)
-                                   :options [{:value :front :label "in front of sprite"}
-                                             {:value :behind :label "behind sprite"}]
-                                   :on-change (fn [v]
-                                                (re-frame/dispatch [::onion-skin/set-position v]))}]}]]))
-
 (defn timeline-panel-section [title children]
   [:> antd/Card {:size "small"}
    [space
@@ -288,7 +259,7 @@
           children)]])
 
 (defn timeline-panel-toolbar [{:keys [disabled-actions all-frames-duration current-frame]}]
-  (let [onion-skin-enabled @(re-frame/subscribe [::subs/onion-skin-enabled])]
+  (let [onion-skin-enabled @(re-frame/subscribe [::onion-skin.subs/enabled])]
     [:div {:style {:display "flex" :justify-content "space-between"}}
      [space
       [timeline-panel-section "Frames" [[icon-button {:src :add
@@ -371,7 +342,7 @@
        [[icon-button {:src (if onion-skin-enabled :layers-off :layers)
                       :title (if onion-skin-enabled "disable onion skin" "enable onion skin")
                       :size :sm
-                      :on-click (fn [] (re-frame/dispatch [::onion-skin/set-enabled (not onion-skin-enabled)]))}]
+                      :on-click (fn [] (re-frame/dispatch [::onion-skin.events/set-enabled (not onion-skin-enabled)]))}]
         [popover
          (fn [open]
            [icon-button {:src :cog
@@ -545,29 +516,20 @@
         scaled-sprite-size (update-vals sprite-size #(* scale %))
         drawing-container-size @(re-frame/subscribe [::subs/drawing-container-size])
         viewport-scroll @(re-frame/subscribe [::subs/viewport-scroll])
-        onion-skin @(re-frame/subscribe [::subs/onion-skin])]
+        onion-skin @(re-frame/subscribe [::onion-skin.subs/onion-skin])]
     (react/useEffect (fn []
                        (when sprite
                          (canvas/clear-canvases (vec (. js/document (getElementsByClassName "layer"))))
                          (canvas/draw-frame (sprite/get-current-frame-idx sprite) sprite)))
-                     (array sprite)) ;; todo: optimize
-    (react/useEffect (fn []
-                       (when (and (:enabled onion-skin) (.-current onion-skin-ref))
-                         (onion-skin/draw-onion-skin (.-current onion-skin-ref) sprite))
-                       (fn []
-                         (when (.-current onion-skin-ref)
-                           (onion-skin/hide-onion-skin (.-current onion-skin-ref)))))
-                     (to-array (flatten (concat [onion-skin]
-                                                [onion-skin-ref]
-                                                (onion-skin/get-onion-skin-frames sprite (:frames-count onion-skin))))))
+                     (array sprite)) ;; todo: optimize 
     (react/useLayoutEffect (fn []
                              (when-let [current (.-current viewport-ref)]
                                (set! (.. current -scrollTop) (:y viewport-scroll))
                                (set! (.. current -scrollLeft) (:x viewport-scroll)))
                              (fn []))
                            (array viewport-scroll viewport-ref))
-
     (use-zoom viewport-ref)
+    (use-draw-onion-skin sprite onion-skin onion-skin-ref)
 
     [:div {:id "viewport"
            :ref viewport-ref

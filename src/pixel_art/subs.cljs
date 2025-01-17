@@ -1,11 +1,11 @@
 (ns pixel-art.subs
   (:require
    [pixel-art.model.sprite :as sprite]
+   [pixel-art.onion-skin.subs :as onion-skin.subs]
    [pixel-art.project-settings :as project-settings]
    [pixel-art.tool.utils :refer [get-tool-options]]
    [pixel-art.utils.coll :as coll]
-   [re-frame.core :as re-frame]
-   [pixel-art.onion-skin :as onion-skin]))
+   [re-frame.core :as re-frame]))
 
 ;; todo: добавить комментарий почему картинкой
 (re-frame/reg-sub
@@ -63,16 +63,6 @@
    (get-tool-options db)))
 
 (re-frame/reg-sub
- ::onion-skin
- (fn [db]
-   (:onion-skin db)))
-
-(re-frame/reg-sub
- ::onion-skin-enabled
- (fn [db]
-   (:enabled (:onion-skin db))))
-
-(re-frame/reg-sub
  ::primary-color
  (fn [db]
    (:primary-color db)))
@@ -112,15 +102,14 @@
 ;; empty
 (re-frame/reg-sub
  ::timeline
- (fn [db]
-   (def db db)
-   (let [{:keys [sprite]} db
-         {:keys [layers frames]} sprite
+ (fn []
+   (let [sprite (re-frame/subscribe [::sprite])
+         onion-skin-frames-idx (re-frame/subscribe [::onion-skin.subs/frames-idx])]
+     [sprite onion-skin-frames-idx]))
+ (fn [[sprite onion-skin-frames-idx]]
+   (let [{:keys [layers frames]} sprite
          selected-cels-pos (sprite/get-selected-cels-pos sprite)
-         current-cel-pos (sprite/get-current-cel-pos sprite)
-         onion-skin (:onion-skin db)
-         onion-skin-frames-idx (when (:enabled onion-skin)
-                                 (onion-skin/get-onion-skin-frames-idx (:sprite db) (:frames-count onion-skin)))]
+         current-cel-pos (sprite/get-current-cel-pos sprite)]
      {:cels (sprite/get-cels-with-pos-as-coll sprite)
       :layers (map-indexed (fn [idx layer]
                              (merge layer {:current (= idx (:layer-idx current-cel-pos))
