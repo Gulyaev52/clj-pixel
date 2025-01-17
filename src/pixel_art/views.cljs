@@ -35,6 +35,7 @@
                                    file-uploader form form-item icon-button
                                    input-number popover select slider space
                                    typography use-theme-token]]
+   [pixel-art.views.use-vertical-resizer :refer [use-vertical-resizer]]
    [re-frame.core :as re-frame]
    [re-frame.db :as db]
    [react :as react]
@@ -248,47 +249,6 @@
        :right 0
        :transform "translateX(50%)"}]]))
 
-(defn vertical-resizer []
-  (let [container-ref (react/useRef)
-        handler-ref (react/useRef)
-        initial-info-ref (react/useRef)]
-    (react/useEffect (fn []
-                       (when (and (. container-ref -current)
-                                  (. handler-ref -current))
-                         (let [mousemove-handler (fn [e]
-                                                   (. e preventDefault)
-                                                   (. e stopPropagation)
-                                                   (set! (.. js/document -body -style -pointerEvents) "none")
-                                                   (set! (.. js/document -body -style -userSelect) "none")
-                                                   (let [{:keys [mousedown-pos container-height]} (. initial-info-ref -current)
-                                                         height-diff (-> (merge-with -
-                                                                                     {:x (. e -clientX) :y (. e -clientY)}
-                                                                                     mousedown-pos)
-                                                                         :y)]
-                                                     (set! (.. container-ref -current -style -height)
-                                                           (str (max (- container-height height-diff) 0) "px"))))
-                               mousedown-handler (fn [e]
-                                                   (set! (. initial-info-ref -current) {:mousedown-pos {:x (. e -clientX) :y (. e -clientY)}
-                                                                                        :container-height (.. container-ref -current -offsetHeight)})
-                                                   (. js/window (addEventListener "mousemove" mousemove-handler))
-                                                   (. js/window (addEventListener "mouseup" (fn mouseup []
-                                                                                              (set! (.. js/document -body -style -pointerEvents) "")
-                                                                                              (set! (.. js/document -body -style -userSelect) "")
-                                                                                              (. js/window (removeEventListener "mousemove" mousemove-handler))
-                                                                                              (. js/window (removeEventListener "mouseup" mouseup))))))]
-                           (.. handler-ref
-                               -current
-                               (addEventListener "mousedown" mousedown-handler))
-                           (fn []
-                             (when (. handler-ref -current)
-                               (.. handler-ref
-                                   -current
-                                   (removeEventListener "mousedown" mousedown-handler)))))))
-                     (array (. container-ref -current)
-                            (. handler-ref -current)))
-    {:handler-ref handler-ref
-     :container-ref container-ref}))
-
 (defn onion-skin-settings []
   (let [onion-skin @(re-frame/subscribe [::subs/onion-skin])]
     [form
@@ -446,7 +406,7 @@
         cels-by-layers (-> cels
                            (#(group-by (fn [c] (-> c :pos :layer-idx)) %))
                            (update-vals (fn [cels] (sort-by #(-> % :pos :frame-idx) cels))))
-        vertical-resizer-refs (vertical-resizer)
+        vertical-resizer-refs (use-vertical-resizer)
 
         timeline-container-ref (react/useRef)
         theme-token (use-theme-token)
