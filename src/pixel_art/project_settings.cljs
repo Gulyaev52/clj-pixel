@@ -63,14 +63,19 @@
 
 ;; todo: rename
 ;; todo: а надо ли это? мб просто вызвать scrollIntoView
+;; todo: в drawing?
 (defn get-initial-drawing-settings [sprite-size viewport-size]
   (let [scale (get-initial-scale sprite-size viewport-size)
         canvas-size (update-vals sprite-size #(* % scale))
         empty-space-dim (max 1500 (:width viewport-size))
         drawing-container-size (update-vals canvas-size #(+ % empty-space-dim))
         viewport-scroll (get-viewport-scroll-pos-to-center canvas-size drawing-container-size viewport-size)]
-    {:scale scale :drawing-container-size drawing-container-size :viewport-scroll viewport-scroll}))
+    {:scale scale
+     :drawing-container-size drawing-container-size
+     :viewport-scroll viewport-scroll
+     :viewport-size viewport-size}))
 
+;; todo: в другие хелперы?
 (defn set-sprite [db sprite {:keys [prev-sprite viewport-size]}]
   (-> db
       (assoc :sprite sprite)

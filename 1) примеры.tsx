@@ -1,3 +1,7 @@
+:draw-preview ;; todo: вынести в fx
+;; todo: в drawing?
+;; todo: в другие хелперы?
+
 events -> db ?
 export layers
 export -> export modal

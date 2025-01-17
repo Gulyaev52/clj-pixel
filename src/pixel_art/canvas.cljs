@@ -1,4 +1,4 @@
-(ns pixel-art.canvas
+(ns pixel-art.canvas ;; todo: разделить
   (:require
    [pixel-art.model.sprite :as sprite]
    [pixel-art.utils.geometry :as geometry]
