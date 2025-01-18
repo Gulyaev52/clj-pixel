@@ -2,7 +2,7 @@
   (:require
    [pixel-art.new-project-modal.events :as events]
    [pixel-art.new-project-modal.subs :as subs]
-   [pixel-art.project-save-load :as project-save-load]
+   [pixel-art.project-save-load.events :as project-save-load.events]
    [pixel-art.views.ui-kit :refer [button file-uploader form form-item
                                    input-number modal]]
    [re-frame.core :as re-frame]))
@@ -18,7 +18,7 @@
               :on-ok (fn []
                        (re-frame/dispatch [::events/create]))
               :additional-buttons [[file-uploader {:on-upload (fn [file-desc]
-                                                                (re-frame/dispatch [::project-save-load/load-from-file file-desc]))}
+                                                                (re-frame/dispatch [::project-save-load.events/load-from-file file-desc]))}
                                     (fn [on-click]
                                       [button {:on-click on-click}
                                        "Open project"])]

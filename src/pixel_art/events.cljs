@@ -5,7 +5,7 @@
    [pixel-art.utils.fx]
    [pixel-art.drawing.events]
    [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
-   [pixel-art.project-save-load]
+   [pixel-art.project-save-load.events]
    [pixel-art.project-settings :as project-settings]
    [pixel-art.re-pressed.core :as rp]
    [pixel-art.tool.core :as tool]

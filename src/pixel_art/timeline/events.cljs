@@ -5,12 +5,10 @@
    [pixel-art.model.frame :as frame]
    [pixel-art.model.layer :as layer]
    [pixel-art.model.sprite :as sprite]
-   [pixel-art.project-save-load]
    [pixel-art.project-settings :as project-settings]
    [pixel-art.tool.core :as tool]
    [pixel-art.tool.utils :refer [commit-changes-and-init-tool]]
-   [re-frame.core :as re-frame]
-   [re-frame.db]))
+   [re-frame.core :as re-frame]))
 
 (re-frame/reg-event-fx
  ::add-frame

@@ -15,7 +15,7 @@
    [pixel-art.new-project-modal.events :as new-project-modal]
    [pixel-art.new-project-modal.views :refer [new-project-modal]]
    [pixel-art.palette.views :refer [palettes-section]]
-   [pixel-art.project-save-load :as project-save-load]
+   [pixel-art.project-save-load.events :as project-save-load.events]
    [pixel-art.sprite-resizer.events :as sprite-resizer]
    [pixel-art.sprite-resizer.views :refer [sprite-resizer-modal]]
    [pixel-art.subs :as subs]
@@ -156,10 +156,10 @@
       [new-project-modal]
       [button {:on-click (fn [] (re-frame/dispatch [::new-project-modal/set-opened true]))}
        "New project"]]
-     [button {:on-click (fn [] (re-frame/dispatch [::project-save-load/save-as-file]))}
+     [button {:on-click (fn [] (re-frame/dispatch [::project-save-load.events/save-as-file]))}
       "Save project as file"]
      [file-uploader {:on-upload (fn [file-desc]
-                                  (re-frame/dispatch [::project-save-load/load-from-file file-desc]))}
+                                  (re-frame/dispatch [::project-save-load.events/load-from-file file-desc]))}
       (fn [on-click]
         [button {:on-click on-click}
          "Load project from file"])]

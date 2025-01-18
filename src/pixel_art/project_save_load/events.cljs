@@ -1,4 +1,4 @@
-(ns pixel-art.project-save-load
+(ns pixel-art.project-save-load.events
   (:require [re-frame.core :as re-frame]
             [pixel-art.sprite-serialization :as sprite-serialization]))
 
