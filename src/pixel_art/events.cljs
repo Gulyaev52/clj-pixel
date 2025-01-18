@@ -2,7 +2,7 @@
   (:require
    [pixel-art.backup :as backup]
    [pixel-art.db :as db]
-   [pixel-art.fx]
+   [pixel-art.utils.fx]
    [pixel-art.drawing.events]
    [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
    [pixel-art.project-save-load]
@@ -102,27 +102,3 @@
  ::set-current-color
  (fn [{:keys [db]} [_ type color]]
    {:db (assoc db type color)}))
-
-(re-frame/reg-fx
- :show-alert
- (fn [message]
-   (js/alert message)))
-
-(re-frame/reg-fx
- :show-confirm
- (fn [message on-confirm]
-   (when (js/confirm message)
-     (re-frame/dispatch on-confirm))))
-
-(re-frame/reg-fx
- :download-file
- (fn [{:keys [file-name content content-type]}]
-   (let [data-blob (if (= content-type :json) ;; todo: remove json
-                     (js/Blob. #js [content] #js {:type "application/json"})
-                     content)
-         link (.createElement js/document "a")]
-     (set! (.-href link) (.createObjectURL js/URL data-blob))
-     (.setAttribute link "download" file-name)
-     (.appendChild (.-body js/document) link)
-     (.click link)
-     (.removeChild (.-body js/document) link))))

@@ -1,7 +1,6 @@
 (ns pixel-art.timeline.events
   (:require
    [pixel-art.drawing.events]
-   [pixel-art.fx]
    [pixel-art.history :as history]
    [pixel-art.model.frame :as frame]
    [pixel-art.model.layer :as layer]
@@ -11,8 +10,7 @@
    [pixel-art.tool.core :as tool]
    [pixel-art.tool.utils :refer [commit-changes-and-init-tool]]
    [re-frame.core :as re-frame]
-   [re-frame.db]
-   [sc.api]))
+   [re-frame.db]))
 
 (re-frame/reg-event-fx
  ::add-frame
