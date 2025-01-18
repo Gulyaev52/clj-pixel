@@ -20,36 +20,36 @@
      :pen pen/init
      :eraser eraser/init
      :color-picker color-picker/init
-     :rectangle rectangle/init
-     :circle circle/init
+     :rectangle (:init rectangle/tool)
+     :circle (:init circle/tool)
+     :line (:init line/tool)
      :rectangle-selection rectangle-selection/init
      :shape-selection shape-selection/init
      :bucket bucket/init
-     :shading shading/init
-     :line line/init)))
+     :shading shading/init)))
 
 (def options-specs
   {:pen pen/options-spec
    :eraser eraser/options-spec
    :color-picker color-picker/options-spec
-   :rectangle rectangle/options-spec
-   :circle circle/options-spec
+   :rectangle (:options-spec rectangle/tool)
+   :circle (:options-spec circle/tool)
+   :line (:options-spec line/tool)
    :rectangle-selection rectangle-selection/options-spec
    :shape-selection shape-selection/options-spec
    :bucket bucket/options-spec
-   :shading shading/options-spec
-   :line line/options-spec})
+   :shading shading/options-spec})
 
 (defn handle-mouse-event [db event]
   ((case (-> db :tool :type)
      :pen pen/handle-mouse-event
      :eraser eraser/handle-mouse-event
      :color-picker color-picker/handle-mouse-event
-     :rectangle rectangle/handle-mouse-event
-     :circle circle/handle-mouse-event
+     :rectangle (:handle-mouse-event rectangle/tool)
+     :line (:handle-mouse-event line/tool)
+     :circle (:handle-mouse-event circle/tool)
      :rectangle-selection rectangle-selection/handle-mouse-event
      :shape-selection shape-selection/handle-mouse-event
      :bucket bucket/handle-mouse-event
-     :shading shading/handle-mouse-event
-     :line line/handle-mouse-event)
+     :shading shading/handle-mouse-event)
    db event))
