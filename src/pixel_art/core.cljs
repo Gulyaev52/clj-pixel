@@ -3,7 +3,7 @@
    [reagent.dom :as rdom]
    [re-frame.core :as re-frame]
    [pixel-art.events :as events]
-   [pixel-art.events.event-collector]
+   [pixel-art.utils.event-collector]
    [pixel-art.views :as views]
    [pixel-art.config :as config]))
 

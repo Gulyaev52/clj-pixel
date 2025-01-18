@@ -1,4 +1,4 @@
-(ns pixel-art.events.event-collector
+(ns pixel-art.utils.event-collector
   (:require [re-frame.core :as re-frame]))
 
 (def event-store (atom (list)))

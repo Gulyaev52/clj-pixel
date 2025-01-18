@@ -5,7 +5,7 @@
             [day8.re-frame.test :as rf-test]
             [pixel-art.canvas :as canvas]
             [pixel-art.events :as events]
-            [pixel-art.events.event-collector :as event-collector]
+            [pixel-art.utils.event-collector :as event-collector]
             [pixel-art.export :as export]
             [pixel-art.model.cel :as cel]
             [pixel-art.model.color :as color]

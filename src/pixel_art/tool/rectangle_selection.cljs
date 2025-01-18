@@ -2,7 +2,6 @@
   (:require
    [clojure.set]
    [pixel-art.canvas :as canvas]
-   [pixel-art.events.event-collector]
    [pixel-art.model.cel :as cel]
    [pixel-art.model.color :as color]
    [pixel-art.model.sprite :as sprite]
