@@ -1,37 +1,18 @@
 (ns pixel-art.tool.eraser
-  (:require [pixel-art.model.color :refer [transparent-color-int]]
-            [pixel-art.tool.utils :refer [commit-changes-and-init-tool
-                                          get-tool-options resize-pixel]]))
+  (:require
+   [pixel-art.model.color :refer [transparent-color-int]]
+   [pixel-art.tool.options-spec :as options-spec]
+   [pixel-art.tool.simple-pen :as simple-pen]
+   [pixel-art.tool.utils :refer [get-tool-options
+                                 resize-pixel]]))
 
-(defn init [] {:type :eraser :state {:changes {}}})
+(defn- draw [db event]
+  (let [{:keys [pixel-size]} (get-tool-options db)]
+    (->> (resize-pixel (:pos event) pixel-size)
+         (map (fn [p] [p transparent-color-int])))))
 
-(def options-spec
-  [{:type :slider
-    :field :pixel-size
-    :label "Pixel size"
-    :initial-value 1
-    :min 1
-    :max 64}])
-
-(defn handle-mouse-event [db event]
-  (let [{:keys [user-is-drawing]} db]
-    (cond
-      (or (= (:type event) :mouse-down)
-          (and (= (:type event) :mouse-move) user-is-drawing))
-      (let [{:keys [pixel-size]} (get-tool-options db)
-            new-pixels (->> (resize-pixel (:pos event) pixel-size)
-                            (map (fn [p] [p transparent-color-int])))]
-        {:db (update-in db [:tool :state :changes] #(merge % new-pixels))
-         :fx [[:clear-visual-effects]
-              [:draw-preview new-pixels]]})
-
-      (and (= (:type event) :mouse-move) (not user-is-drawing))
-      (let [{:keys [pixel-size]} (get-tool-options db)
-            points (resize-pixel (:pos event) pixel-size)]
-        {:db db
-         :fx [[:clear-visual-effects]
-              [:highlight-pixels points]]})
-
-      (= :mouse-up (:type event))
-      (let [changes (-> db :tool :state :changes)]
-        (commit-changes-and-init-tool db changes (init))))))
+(def tool
+  (simple-pen/make
+   {:type :eraser
+    :options-spec [options-spec/pixel-size]
+    :draw draw}))

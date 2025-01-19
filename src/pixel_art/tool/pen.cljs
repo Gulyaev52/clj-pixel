@@ -1,21 +1,10 @@
 (ns pixel-art.tool.pen
   (:require
-   [pixel-art.tool.utils :refer [commit-changes-and-init-tool
-                                 get-current-color get-tool-options
+   [pixel-art.tool.simple-pen :as simple-pen]
+   [pixel-art.tool.utils :refer [get-current-color get-tool-options
                                  resize-pixel]]
-   [pixel-art.utils.geometry :as geometry]))
-
-(defn init [] {:type :pen
-               :state {:changes {}
-                       :prev-pos nil}})
-
-(def options-spec
-  [{:type :slider
-    :field :pixel-size
-    :label "Pixel size"
-    :initial-value 1
-    :min 1
-    :max 64}])
+   [pixel-art.utils.geometry :as geometry]
+   [pixel-art.tool.options-spec :as options-spec]))
 
 (defn- get-interpolated-pixels
   "The pen movement is too fast for the mousemove frequency, there is a gap between the
@@ -28,31 +17,18 @@
     (geometry/get-line-pixels prev-pos pos)
     [pos]))
 
-(defn handle-mouse-event [db event]
-  (let [{:keys [user-is-drawing tool]} db]
-    (cond
-      (or (= (:type event) :mouse-down)
-          (and (= (:type event) :mouse-move) user-is-drawing))
-      (let [current-color (get-current-color db event)
-            {:keys [pixel-size]} (get-tool-options db)
-            pos (:pos event)
-            state (:state tool)
-            new-pixels (->>
-                        (get-interpolated-pixels (-> tool :state :prev-pos) pos)
-                        (mapcat #(resize-pixel % pixel-size))
-                        (map (fn [p] [p current-color])))]
-        {:db (assoc-in db [:tool :state] {:changes (merge (:changes state) new-pixels)
-                                          :prev-pos pos})
-         :fx [[:clear-visual-effects]
-              [:draw-preview new-pixels]]})
+(defn- draw [db event]
+  (let [{:keys [tool]} db
+        current-color (get-current-color db event)
+        {:keys [pixel-size]} (get-tool-options db)
+        pos (:pos event)]
+    (->>
+     (get-interpolated-pixels (-> tool :state :prev-pos) pos)
+     (mapcat #(resize-pixel % pixel-size))
+     (map (fn [p] [p current-color])))))
 
-      (and (= (:type event) :mouse-move) (not user-is-drawing))
-      (let [{:keys [pixel-size]} (get-tool-options db)
-            points (resize-pixel (:pos event) pixel-size)]
-        {:db db
-         :fx [[:clear-visual-effects]
-              [:highlight-pixels points]]})
-
-      (= :mouse-up (:type event))
-      (let [changes (-> db :tool :state :changes)]
-        (commit-changes-and-init-tool db changes (init))))))
+(def tool
+  (simple-pen/make
+   {:type :pen
+    :options-spec [options-spec/pixel-size]
+    :draw draw}))

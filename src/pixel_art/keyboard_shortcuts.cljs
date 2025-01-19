@@ -1,8 +1,8 @@
 (ns pixel-art.keyboard-shortcuts
   (:require [pixel-art.tool.core :as tool]
-            [clojure.set :as set]
-            [pixel-art.tool.rectangle-selection :as rectangle-selection]
+            [pixel-art.tool.selection :as tool.selection]
             [pixel-art.history.events :as history]
+            [clojure.set :as set]
             [clojure.string :as string]))
 
 (def shortcuts-by-types
@@ -33,26 +33,26 @@
            :prevent-default-keys true}]
    :selection [{:label "cut selection"
                 :keys [{:ctrlKey true :key "x"}]
-                :action [::rectangle-selection/cut-selection]
+                :action [::tool.selection/cut-selection]
                 :prevent-default-keys true}
                {:label "copy selection"
                 :keys [{:key "c"
                         :ctrlKey true}]
-                :action [::rectangle-selection/copy-selection]
+                :action [::tool.selection/copy-selection]
                 :prevent-default-keys true}
                {:label "past selection"
                 :keys [{:key "v"
                         :ctrlKey true}]
-                :action [::rectangle-selection/past-selection]
+                :action [::tool.selection/past-selection]
                 :prevent-default-keys true}
                {:label "delete selection"
                 :keys [{:key "delete"}
                        {:key "backspace"}]
-                :action [::rectangle-selection/delete-selection]
+                :action [::tool.selection/delete-selection]
                 :prevent-default-keys true}
                {:label "commit selection"
                 :keys [{:key "enter"}]
-                :action [::rectangle-selection/commit-selection]
+                :action [::tool.selection/commit-selection]
                 :prevent-default-keys true}]})
 (let [diff (set/difference (set tool/types) (set (map :tool (:tools shortcuts-by-types))))]
   (assert (= diff #{}) (str (vec diff) " don't have hotkeys")))
