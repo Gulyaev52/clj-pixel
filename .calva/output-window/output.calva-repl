@@ -53,385 +53,1381 @@ clj꞉shadow.user꞉> 
 nil
 "Please see https://calva.io/output/#about-stdout-in-the-repl-window
 about why stdout printed to this file is prepended with `;` to be line comments."
-clj꞉user꞉> 
+cljs꞉user꞉> 
 ; Jack-in done.
-clj꞉user꞉> 
+cljs꞉user꞉> 
 ; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 4 compiled, 0 warnings, 1,32s)
+; [:app] Build completed. (3461 files, 19 compiled, 6 warnings, 1,08s)
+; 
+; ------ WARNING #1 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:108:3
+; --------------------------------------------------------------------------------
+;  105 |    text])
+;  106 | 
+;  107 | (defn select [{:keys [value size on-change block options]}]
+;  108 |   (reag/with-let [!ref (atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18379 -generation)
+; --------------------------------------------------------------------------------
+;  109 |     [:> antd/Select {:value value
+;  110 |                      :ref (fn [ref] (reset! !ref ref))
+;  111 |                      :options (clj->js (map-indexed (fn [idx v] (assoc v :index idx)) options))
+;  112 |                      :size (case size
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #2 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:216:3
+; --------------------------------------------------------------------------------
+;  213 |      children)))
+;  214 | 
+;  215 | (defn file-uploader [{:keys [on-upload accept]} render-button]
+;  216 |   (reag/with-let [!input-ref (reag/atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18467 -generation)
+; --------------------------------------------------------------------------------
+;  217 |     [:span
+;  218 |      [:input {:type "file"
+;  219 |               :accept accept
+;  220 |               :ref (fn [ref] (reset! !input-ref ref))
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #3 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:41:62
+; --------------------------------------------------------------------------------
+;   38 |                                           "drop" on-drop
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+; --------------------------------------------------------------------^-----------
+;  Cannot infer target type in expression (. monitor isOver)
+; --------------------------------------------------------------------------------
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #4 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:42:66
+; --------------------------------------------------------------------------------
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor canDrop)
+; --------------------------------------------------------------------------------
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+;   46 |                             :z-index 1
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #5 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:92:66
+; --------------------------------------------------------------------------------
+;   89 |                                      #js {"type" "frame"
+;   90 |                                           "item" frame
+;   91 |                                           "collect" (fn [monitor]
+;   92 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;   93 |         theme-token (use-theme-token)]
+;   94 |     [:div {:style {:position "sticky"
+;   95 |                    :top 0
+;   96 |                    :background-color (.-colorBgContainer theme-token)
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #6 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:138:66
+; --------------------------------------------------------------------------------
+;  135 |                                      #js {"type" "cel"
+;  136 |                                           "item" cel
+;  137 |                                           "collect" (fn [monitor]
+;  138 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;  139 |         cel-preview (react/useMemo (fn []
+;  140 |                                      (canvas/generate-data-url #(canvas/draw-cel cel %)
+;  141 |                                                                (:size cel)))
+;  142 |                                    (array cel))
+; --------------------------------------------------------------------------------
 ; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 2 compiled, 0 warnings, 1,08s)
+; [:app] Build failure:
+; ------ ERROR -------------------------------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/tool/utils.cljs:49:7
+; --------------------------------------------------------------------------------
+;   46 |                                                mouse-up]}]
+;   47 |   (fn handle-mouse-event [db event]
+;   48 |     (let [{:keys [user-is-drawing]} db]
+;   49 |       (cond
+; -------------^------------------------------------------------------------------
+; Encountered error when macroexpanding cljs.core/cond.
+; IllegalArgumentException: cond requires an even number of forms
+; 	clojure.core/cond (core.clj:585)
+; 	clojure.core/cond (core.clj:576)
+; 	clojure.core/apply (core.clj:671)
+; 	clojure.core/apply (core.clj:662)
+; 	cljs.analyzer/macroexpand-1*/fn--3704 (analyzer.cljc:4025)
+; 	cljs.analyzer/macroexpand-1* (analyzer.cljc:4023)
+; 	cljs.analyzer/macroexpand-1* (analyzer.cljc:4010)
+; 	cljs.analyzer/macroexpand-1 (analyzer.cljc:4074)
+; 	cljs.analyzer/macroexpand-1 (analyzer.cljc:4070)
+; 	cljs.analyzer/analyze-seq (analyzer.cljc:4107)
+; 	cljs.analyzer/analyze-seq (analyzer.cljc:4087)
+; 	cljs.analyzer/analyze-form (analyzer.cljc:4296)
+; 	cljs.analyzer/analyze-form (analyzer.cljc:4293)
+; 	cljs.analyzer/analyze* (analyzer.cljc:4349)
+; 	cljs.analyzer/analyze* (analyzer.cljc:4341)
+; 	cljs.analyzer/analyze (analyzer.cljc:4369)
+; 	cljs.analyzer/analyze (analyzer.cljc:4352)
+; 	cljs.analyzer/analyze (analyzer.cljc:4362)
+; 	cljs.analyzer/analyze (analyzer.cljc:4352)
+; 	cljs.analyzer/analyze (analyzer.cljc:4360)
+; 	cljs.analyzer/analyze (analyzer.cljc:4352)
+; 	cljs.analyzer/fn--2751/fn--2759 (analyzer.cljc:1760)
+; 	cljs.analyzer/fn--2751 (analyzer.cljc:1760)
+; 	cljs.analyzer/fn--2751 (analyzer.cljc:1752)
+; 	clojure.lang.MultiFn.invoke (MultiFn.java:252)
+; 	cljs.analyzer/analyze-seq* (analyzer.cljc:4080)
+; 	cljs.analyzer/analyze-seq* (analyzer.cljc:4078)
+; 	cljs.analyzer/analyze-seq*-wrap (analyzer.cljc:4085)
+; 	cljs.analyzer/analyze-seq*-wrap (analyzer.cljc:4083)
+; 	cljs.analyzer/analyze-seq (analyzer.cljc:4109)
+; 	cljs.analyzer/analyze-seq (analyzer.cljc:4087)
+; 	cljs.analyzer/analyze-form (analyzer.cljc:4296)
+; 	cljs.analyzer/analyze-form (analyzer.cljc:4293)
+; 	cljs.analyzer/analyze* (analyzer.cljc:4349)
+; 	cljs.analyzer/analyze* (analyzer.cljc:4341)
+; 	cljs.analyzer/analyze (analyzer.cljc:4369)
+; 	cljs.analyzer/analyze (analyzer.cljc:4352)
+; 	cljs.analyzer/analyze-seq (analyzer.cljc:4110)
+; 	cljs.analyzer/analyze-seq (analyzer.cljc:4087)
+; 	cljs.analyzer/analyze-form (analyzer.cljc:4296)
+; 	cljs.analyzer/analyze-form (analyzer.cljc:4293)
+; 	cljs.analyzer/analyze* (analyzer.cljc:4349)
+; 	cljs.analyzer/analyze* (analyzer.cljc:4341)
+; 	cljs.analyzer/analyze (analyzer.cljc:4369)
+; 	cljs.analyzer/analyze (analyzer.cljc:4352)
+; 	cljs.analyzer/analyze (analyzer.cljc:4362)
+; 	cljs.analyzer/analyze (analyzer.cljc:4352)
+; 	cljs.analyzer/analyze (analyzer.cljc:4360)
+; 	cljs.analyzer/analyze (analyzer.cljc:4352)
+; 	cljs.analyzer/fn--2751/fn--2759 (analyzer.cljc:1760)
+; 	cljs.analyzer/fn--2751 (analyzer.cljc:1760)
+; 	cljs.analyzer/fn--2751 (analyzer.cljc:1752)
+; 	clojure.lang.MultiFn.invoke (MultiFn.java:252)
+; 	cljs.analyzer/analyze-seq* (analyzer.cljc:4080)
+; 	cljs.analyzer/analyze-seq* (analyzer.cljc:4078)
+; 	cljs.analyzer/analyze-seq*-wrap (analyzer.cljc:4085)
+; 	cljs.analyzer/analyze-seq*-wrap (analyzer.cljc:4083)
+; 	cljs.analyzer/analyze-seq (analyzer.cljc:4109)
+; 	cljs.analyzer/analyze-seq (analyzer.cljc:4087)
+; 	cljs.analyzer/analyze-form (analyzer.cljc:4296)
+; 	cljs.analyzer/analyze-form (analyzer.cljc:4293)
+; 	cljs.analyzer/analyze* (analyzer.cljc:4349)
+; 	cljs.analyzer/analyze* (analyzer.cljc:4341)
+; 	cljs.analyzer/analyze (analyzer.cljc:4369)
+; 	cljs.analyzer/analyze (analyzer.cljc:4352)
+; 	cljs.analyzer/analyze-seq (analyzer.cljc:4110)
+; 	cljs.analyzer/analyze-seq (analyzer.cljc:4087)
+; 	cljs.analyzer/analyze-form (analyzer.cljc:4296)
+; 	cljs.analyzer/analyze-form (analyzer.cljc:4293)
+; 	cljs.analyzer/analyze* (analyzer.cljc:4349)
+; 	cljs.analyzer/analyze* (analyzer.cljc:4341)
+; 	cljs.analyzer/analyze (analyzer.cljc:4369)
+; 	cljs.analyzer/analyze (analyzer.cljc:4352)
+; 	cljs.analyzer/analyze (analyzer.cljc:4362)
+; 	cljs.analyzer/analyze (analyzer.cljc:4352)
+; 	cljs.analyzer/analyze (analyzer.cljc:4360)
+; 	cljs.analyzer/analyze (analyzer.cljc:4352)
+; 	cljs.analyzer/fn--2751/fn--2759 (analyzer.cljc:1760)
+; 	cljs.analyzer/fn--2751 (analyzer.cljc:1760)
+; 	cljs.analyzer/fn--2751 (analyzer.cljc:1752)
+; 
+; --------------------------------------------------------------------------------
+;   50 |         (and (= (:type event) :mouse-move) (not user-is-drawing))
+;   51 |         (let [{:keys [pixel-size]} (get-tool-options db)
+;   52 |               points (if pixel-size
+;   53 |                        (resize-pixel (:pos event) pixel-size)
+; --------------------------------------------------------------------------------
+; 
 ; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 2 compiled, 0 warnings, 1,12s)
+; [:app] Build completed. (3461 files, 1 compiled, 6 warnings, 0,81s)
+; 
+; ------ WARNING #1 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:108:3
+; --------------------------------------------------------------------------------
+;  105 |    text])
+;  106 | 
+;  107 | (defn select [{:keys [value size on-change block options]}]
+;  108 |   (reag/with-let [!ref (atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18379 -generation)
+; --------------------------------------------------------------------------------
+;  109 |     [:> antd/Select {:value value
+;  110 |                      :ref (fn [ref] (reset! !ref ref))
+;  111 |                      :options (clj->js (map-indexed (fn [idx v] (assoc v :index idx)) options))
+;  112 |                      :size (case size
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #2 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:216:3
+; --------------------------------------------------------------------------------
+;  213 |      children)))
+;  214 | 
+;  215 | (defn file-uploader [{:keys [on-upload accept]} render-button]
+;  216 |   (reag/with-let [!input-ref (reag/atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18467 -generation)
+; --------------------------------------------------------------------------------
+;  217 |     [:span
+;  218 |      [:input {:type "file"
+;  219 |               :accept accept
+;  220 |               :ref (fn [ref] (reset! !input-ref ref))
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #3 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:41:62
+; --------------------------------------------------------------------------------
+;   38 |                                           "drop" on-drop
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+; --------------------------------------------------------------------^-----------
+;  Cannot infer target type in expression (. monitor isOver)
+; --------------------------------------------------------------------------------
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #4 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:42:66
+; --------------------------------------------------------------------------------
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor canDrop)
+; --------------------------------------------------------------------------------
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+;   46 |                             :z-index 1
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #5 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:92:66
+; --------------------------------------------------------------------------------
+;   89 |                                      #js {"type" "frame"
+;   90 |                                           "item" frame
+;   91 |                                           "collect" (fn [monitor]
+;   92 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;   93 |         theme-token (use-theme-token)]
+;   94 |     [:div {:style {:position "sticky"
+;   95 |                    :top 0
+;   96 |                    :background-color (.-colorBgContainer theme-token)
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #6 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:138:66
+; --------------------------------------------------------------------------------
+;  135 |                                      #js {"type" "cel"
+;  136 |                                           "item" cel
+;  137 |                                           "collect" (fn [monitor]
+;  138 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;  139 |         cel-preview (react/useMemo (fn []
+;  140 |                                      (canvas/generate-data-url #(canvas/draw-cel cel %)
+;  141 |                                                                (:size cel)))
+;  142 |                                    (array cel))
+; --------------------------------------------------------------------------------
 ; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 2 compiled, 0 warnings, 1,06s)
-#object[Function]
-clj꞉pixel-art.views꞉> 
+; [:app] Build completed. (3461 files, 5 compiled, 6 warnings, 1,53s)
+; 
+; ------ WARNING #1 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:108:3
+; --------------------------------------------------------------------------------
+;  105 |    text])
+;  106 | 
+;  107 | (defn select [{:keys [value size on-change block options]}]
+;  108 |   (reag/with-let [!ref (atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18379 -generation)
+; --------------------------------------------------------------------------------
+;  109 |     [:> antd/Select {:value value
+;  110 |                      :ref (fn [ref] (reset! !ref ref))
+;  111 |                      :options (clj->js (map-indexed (fn [idx v] (assoc v :index idx)) options))
+;  112 |                      :size (case size
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #2 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:216:3
+; --------------------------------------------------------------------------------
+;  213 |      children)))
+;  214 | 
+;  215 | (defn file-uploader [{:keys [on-upload accept]} render-button]
+;  216 |   (reag/with-let [!input-ref (reag/atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18467 -generation)
+; --------------------------------------------------------------------------------
+;  217 |     [:span
+;  218 |      [:input {:type "file"
+;  219 |               :accept accept
+;  220 |               :ref (fn [ref] (reset! !input-ref ref))
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #3 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:41:62
+; --------------------------------------------------------------------------------
+;   38 |                                           "drop" on-drop
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+; --------------------------------------------------------------------^-----------
+;  Cannot infer target type in expression (. monitor isOver)
+; --------------------------------------------------------------------------------
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #4 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:42:66
+; --------------------------------------------------------------------------------
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor canDrop)
+; --------------------------------------------------------------------------------
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+;   46 |                             :z-index 1
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #5 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:92:66
+; --------------------------------------------------------------------------------
+;   89 |                                      #js {"type" "frame"
+;   90 |                                           "item" frame
+;   91 |                                           "collect" (fn [monitor]
+;   92 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;   93 |         theme-token (use-theme-token)]
+;   94 |     [:div {:style {:position "sticky"
+;   95 |                    :top 0
+;   96 |                    :background-color (.-colorBgContainer theme-token)
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #6 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:138:66
+; --------------------------------------------------------------------------------
+;  135 |                                      #js {"type" "cel"
+;  136 |                                           "item" cel
+;  137 |                                           "collect" (fn [monitor]
+;  138 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;  139 |         cel-preview (react/useMemo (fn []
+;  140 |                                      (canvas/generate-data-url #(canvas/draw-cel cel %)
+;  141 |                                                                (:size cel)))
+;  142 |                                    (array cel))
+; --------------------------------------------------------------------------------
 ; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 2 compiled, 0 warnings, 1,19s)
+; [:app] Build completed. (3461 files, 2 compiled, 6 warnings, 1,26s)
+; 
+; ------ WARNING #1 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:108:3
+; --------------------------------------------------------------------------------
+;  105 |    text])
+;  106 | 
+;  107 | (defn select [{:keys [value size on-change block options]}]
+;  108 |   (reag/with-let [!ref (atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18379 -generation)
+; --------------------------------------------------------------------------------
+;  109 |     [:> antd/Select {:value value
+;  110 |                      :ref (fn [ref] (reset! !ref ref))
+;  111 |                      :options (clj->js (map-indexed (fn [idx v] (assoc v :index idx)) options))
+;  112 |                      :size (case size
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #2 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:216:3
+; --------------------------------------------------------------------------------
+;  213 |      children)))
+;  214 | 
+;  215 | (defn file-uploader [{:keys [on-upload accept]} render-button]
+;  216 |   (reag/with-let [!input-ref (reag/atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18467 -generation)
+; --------------------------------------------------------------------------------
+;  217 |     [:span
+;  218 |      [:input {:type "file"
+;  219 |               :accept accept
+;  220 |               :ref (fn [ref] (reset! !input-ref ref))
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #3 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:41:62
+; --------------------------------------------------------------------------------
+;   38 |                                           "drop" on-drop
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+; --------------------------------------------------------------------^-----------
+;  Cannot infer target type in expression (. monitor isOver)
+; --------------------------------------------------------------------------------
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #4 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:42:66
+; --------------------------------------------------------------------------------
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor canDrop)
+; --------------------------------------------------------------------------------
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+;   46 |                             :z-index 1
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #5 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:92:66
+; --------------------------------------------------------------------------------
+;   89 |                                      #js {"type" "frame"
+;   90 |                                           "item" frame
+;   91 |                                           "collect" (fn [monitor]
+;   92 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;   93 |         theme-token (use-theme-token)]
+;   94 |     [:div {:style {:position "sticky"
+;   95 |                    :top 0
+;   96 |                    :background-color (.-colorBgContainer theme-token)
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #6 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:138:66
+; --------------------------------------------------------------------------------
+;  135 |                                      #js {"type" "cel"
+;  136 |                                           "item" cel
+;  137 |                                           "collect" (fn [monitor]
+;  138 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;  139 |         cel-preview (react/useMemo (fn []
+;  140 |                                      (canvas/generate-data-url #(canvas/draw-cel cel %)
+;  141 |                                                                (:size cel)))
+;  142 |                                    (array cel))
+; --------------------------------------------------------------------------------
 ; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 2 compiled, 0 warnings, 1,08s)
+; [:app] Build completed. (3461 files, 19 compiled, 6 warnings, 0,96s)
+; 
+; ------ WARNING #1 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:108:3
+; --------------------------------------------------------------------------------
+;  105 |    text])
+;  106 | 
+;  107 | (defn select [{:keys [value size on-change block options]}]
+;  108 |   (reag/with-let [!ref (atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18379 -generation)
+; --------------------------------------------------------------------------------
+;  109 |     [:> antd/Select {:value value
+;  110 |                      :ref (fn [ref] (reset! !ref ref))
+;  111 |                      :options (clj->js (map-indexed (fn [idx v] (assoc v :index idx)) options))
+;  112 |                      :size (case size
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #2 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:216:3
+; --------------------------------------------------------------------------------
+;  213 |      children)))
+;  214 | 
+;  215 | (defn file-uploader [{:keys [on-upload accept]} render-button]
+;  216 |   (reag/with-let [!input-ref (reag/atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18467 -generation)
+; --------------------------------------------------------------------------------
+;  217 |     [:span
+;  218 |      [:input {:type "file"
+;  219 |               :accept accept
+;  220 |               :ref (fn [ref] (reset! !input-ref ref))
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #3 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:41:62
+; --------------------------------------------------------------------------------
+;   38 |                                           "drop" on-drop
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+; --------------------------------------------------------------------^-----------
+;  Cannot infer target type in expression (. monitor isOver)
+; --------------------------------------------------------------------------------
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #4 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:42:66
+; --------------------------------------------------------------------------------
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor canDrop)
+; --------------------------------------------------------------------------------
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+;   46 |                             :z-index 1
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #5 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:92:66
+; --------------------------------------------------------------------------------
+;   89 |                                      #js {"type" "frame"
+;   90 |                                           "item" frame
+;   91 |                                           "collect" (fn [monitor]
+;   92 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;   93 |         theme-token (use-theme-token)]
+;   94 |     [:div {:style {:position "sticky"
+;   95 |                    :top 0
+;   96 |                    :background-color (.-colorBgContainer theme-token)
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #6 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:138:66
+; --------------------------------------------------------------------------------
+;  135 |                                      #js {"type" "cel"
+;  136 |                                           "item" cel
+;  137 |                                           "collect" (fn [monitor]
+;  138 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;  139 |         cel-preview (react/useMemo (fn []
+;  140 |                                      (canvas/generate-data-url #(canvas/draw-cel cel %)
+;  141 |                                                                (:size cel)))
+;  142 |                                    (array cel))
+; --------------------------------------------------------------------------------
 ; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 2 compiled, 0 warnings, 0,54s)
+; [:app] Build completed. (3461 files, 19 compiled, 6 warnings, 0,98s)
+; 
+; ------ WARNING #1 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:108:3
+; --------------------------------------------------------------------------------
+;  105 |    text])
+;  106 | 
+;  107 | (defn select [{:keys [value size on-change block options]}]
+;  108 |   (reag/with-let [!ref (atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18379 -generation)
+; --------------------------------------------------------------------------------
+;  109 |     [:> antd/Select {:value value
+;  110 |                      :ref (fn [ref] (reset! !ref ref))
+;  111 |                      :options (clj->js (map-indexed (fn [idx v] (assoc v :index idx)) options))
+;  112 |                      :size (case size
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #2 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:216:3
+; --------------------------------------------------------------------------------
+;  213 |      children)))
+;  214 | 
+;  215 | (defn file-uploader [{:keys [on-upload accept]} render-button]
+;  216 |   (reag/with-let [!input-ref (reag/atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18467 -generation)
+; --------------------------------------------------------------------------------
+;  217 |     [:span
+;  218 |      [:input {:type "file"
+;  219 |               :accept accept
+;  220 |               :ref (fn [ref] (reset! !input-ref ref))
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #3 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:41:62
+; --------------------------------------------------------------------------------
+;   38 |                                           "drop" on-drop
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+; --------------------------------------------------------------------^-----------
+;  Cannot infer target type in expression (. monitor isOver)
+; --------------------------------------------------------------------------------
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #4 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:42:66
+; --------------------------------------------------------------------------------
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor canDrop)
+; --------------------------------------------------------------------------------
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+;   46 |                             :z-index 1
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #5 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:92:66
+; --------------------------------------------------------------------------------
+;   89 |                                      #js {"type" "frame"
+;   90 |                                           "item" frame
+;   91 |                                           "collect" (fn [monitor]
+;   92 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;   93 |         theme-token (use-theme-token)]
+;   94 |     [:div {:style {:position "sticky"
+;   95 |                    :top 0
+;   96 |                    :background-color (.-colorBgContainer theme-token)
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #6 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:138:66
+; --------------------------------------------------------------------------------
+;  135 |                                      #js {"type" "cel"
+;  136 |                                           "item" cel
+;  137 |                                           "collect" (fn [monitor]
+;  138 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;  139 |         cel-preview (react/useMemo (fn []
+;  140 |                                      (canvas/generate-data-url #(canvas/draw-cel cel %)
+;  141 |                                                                (:size cel)))
+;  142 |                                    (array cel))
+; --------------------------------------------------------------------------------
 ; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 3 compiled, 0 warnings, 0,98s)
+; [:app] Build completed. (3461 files, 19 compiled, 6 warnings, 0,98s)
+; 
+; ------ WARNING #1 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:108:3
+; --------------------------------------------------------------------------------
+;  105 |    text])
+;  106 | 
+;  107 | (defn select [{:keys [value size on-change block options]}]
+;  108 |   (reag/with-let [!ref (atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18379 -generation)
+; --------------------------------------------------------------------------------
+;  109 |     [:> antd/Select {:value value
+;  110 |                      :ref (fn [ref] (reset! !ref ref))
+;  111 |                      :options (clj->js (map-indexed (fn [idx v] (assoc v :index idx)) options))
+;  112 |                      :size (case size
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #2 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:216:3
+; --------------------------------------------------------------------------------
+;  213 |      children)))
+;  214 | 
+;  215 | (defn file-uploader [{:keys [on-upload accept]} render-button]
+;  216 |   (reag/with-let [!input-ref (reag/atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18467 -generation)
+; --------------------------------------------------------------------------------
+;  217 |     [:span
+;  218 |      [:input {:type "file"
+;  219 |               :accept accept
+;  220 |               :ref (fn [ref] (reset! !input-ref ref))
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #3 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:41:62
+; --------------------------------------------------------------------------------
+;   38 |                                           "drop" on-drop
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+; --------------------------------------------------------------------^-----------
+;  Cannot infer target type in expression (. monitor isOver)
+; --------------------------------------------------------------------------------
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #4 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:42:66
+; --------------------------------------------------------------------------------
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor canDrop)
+; --------------------------------------------------------------------------------
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+;   46 |                             :z-index 1
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #5 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:92:66
+; --------------------------------------------------------------------------------
+;   89 |                                      #js {"type" "frame"
+;   90 |                                           "item" frame
+;   91 |                                           "collect" (fn [monitor]
+;   92 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;   93 |         theme-token (use-theme-token)]
+;   94 |     [:div {:style {:position "sticky"
+;   95 |                    :top 0
+;   96 |                    :background-color (.-colorBgContainer theme-token)
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #6 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:138:66
+; --------------------------------------------------------------------------------
+;  135 |                                      #js {"type" "cel"
+;  136 |                                           "item" cel
+;  137 |                                           "collect" (fn [monitor]
+;  138 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;  139 |         cel-preview (react/useMemo (fn []
+;  140 |                                      (canvas/generate-data-url #(canvas/draw-cel cel %)
+;  141 |                                                                (:size cel)))
+;  142 |                                    (array cel))
+; --------------------------------------------------------------------------------
 ; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 3 compiled, 0 warnings, 1,08s)
+; [:app] Build completed. (3461 files, 5 compiled, 6 warnings, 1,53s)
+; 
+; ------ WARNING #1 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:108:3
+; --------------------------------------------------------------------------------
+;  105 |    text])
+;  106 | 
+;  107 | (defn select [{:keys [value size on-change block options]}]
+;  108 |   (reag/with-let [!ref (atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18379 -generation)
+; --------------------------------------------------------------------------------
+;  109 |     [:> antd/Select {:value value
+;  110 |                      :ref (fn [ref] (reset! !ref ref))
+;  111 |                      :options (clj->js (map-indexed (fn [idx v] (assoc v :index idx)) options))
+;  112 |                      :size (case size
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #2 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:216:3
+; --------------------------------------------------------------------------------
+;  213 |      children)))
+;  214 | 
+;  215 | (defn file-uploader [{:keys [on-upload accept]} render-button]
+;  216 |   (reag/with-let [!input-ref (reag/atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18467 -generation)
+; --------------------------------------------------------------------------------
+;  217 |     [:span
+;  218 |      [:input {:type "file"
+;  219 |               :accept accept
+;  220 |               :ref (fn [ref] (reset! !input-ref ref))
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #3 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:41:62
+; --------------------------------------------------------------------------------
+;   38 |                                           "drop" on-drop
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+; --------------------------------------------------------------------^-----------
+;  Cannot infer target type in expression (. monitor isOver)
+; --------------------------------------------------------------------------------
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #4 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:42:66
+; --------------------------------------------------------------------------------
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor canDrop)
+; --------------------------------------------------------------------------------
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+;   46 |                             :z-index 1
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #5 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:92:66
+; --------------------------------------------------------------------------------
+;   89 |                                      #js {"type" "frame"
+;   90 |                                           "item" frame
+;   91 |                                           "collect" (fn [monitor]
+;   92 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;   93 |         theme-token (use-theme-token)]
+;   94 |     [:div {:style {:position "sticky"
+;   95 |                    :top 0
+;   96 |                    :background-color (.-colorBgContainer theme-token)
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #6 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:138:66
+; --------------------------------------------------------------------------------
+;  135 |                                      #js {"type" "cel"
+;  136 |                                           "item" cel
+;  137 |                                           "collect" (fn [monitor]
+;  138 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;  139 |         cel-preview (react/useMemo (fn []
+;  140 |                                      (canvas/generate-data-url #(canvas/draw-cel cel %)
+;  141 |                                                                (:size cel)))
+;  142 |                                    (array cel))
+; --------------------------------------------------------------------------------
 ; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 3 compiled, 0 warnings, 1,02s)
-{:enabled true,
- :position :front,
- :opacity 0.3,
- :frames-count {:prev 1, :next 1}}
-clj꞉pixel-art.views꞉> 
-#'pixel-art.views/onion-skin
-clj꞉pixel-art.views꞉> 
-{:enabled true,
- :position :front,
- :opacity 0.3,
- :frames-count {:prev 1, :next 1}}
-clj꞉pixel-art.views꞉> 
-{:enabled true,
- :position :front,
- :opacity 0.3,
- :frames-count {:prev 1, :next 1}}
-clj꞉pixel-art.views꞉> 
-{:prev 1, :next 1}
-clj꞉pixel-art.views꞉> 
-{:size {:width 4, :height 4},
- :frames
- [{:duration 100} {:duration 100}],
- :cels
- [[{:size {:width 4, :height 4},
-    :current false,
-    :selected false,
-    :pixels
-    [4278190335
-     4278190335
-     4278190335
-     4278190335
-     4278190335
-     4278190335
-     4278190080
-     4278190335
-     4278190080
-     4278190080
-     4278190335
-     4278190335
-     4278190080
-     0
-     0
-     0]}]
-  [{:pixels
-    [0
-     4278190080
-     0
-     0
-     0
-     4278190080
-     0
-     0
-     4278190080
-     4278190080
-     4278190080
-     0
-     4278190080
-     4278190080
-     4278190080
-     4278190080],
-    :size {:width 4, :height 4},
-    :current true,
-    :selected true}]],
- :layers
- [{:visible? true,
-   :automatic-linking? false,
-   :name "Layer 1"}]}
-clj꞉pixel-art.views꞉> 
-#'pixel-art.views/sprite
-clj꞉pixel-art.views꞉> 
-{:size {:width 4, :height 4},
- :frames
- [{:duration 100} {:duration 100}],
- :cels
- [[{:size {:width 4, :height 4},
-    :current false,
-    :selected false,
-    :pixels
-    [4278190335
-     4278190335
-     4278190335
-     4278190335
-     4278190335
-     4278190335
-     4278190080
-     4278190335
-     4278190080
-     4278190080
-     4278190335
-     4278190335
-     4278190080
-     0
-     0
-     0]}]
-  [{:pixels
-    [0
-     4278190080
-     0
-     0
-     0
-     4278190080
-     0
-     0
-     4278190080
-     4278190080
-     4278190080
-     0
-     4278190080
-     4278190080
-     4278190080
-     4278190080],
-    :size {:width 4, :height 4},
-    :current true,
-    :selected true}]],
- :layers
- [{:visible? true,
-   :automatic-linking? false,
-   :name "Layer 1"}]}
-clj꞉pixel-art.views꞉> 
-[{:enabled true,
-  :position :front,
-  :opacity 0.3,
-  :frames-count {:prev 1, :next 1}}
- [{:size {:width 4, :height 4},
-   :current false,
-   :selected false,
-   :pixels
-   [4278190335
-    4278190335
-    4278190335
-    4278190335
-    4278190335
-    4278190335
-    4278190080
-    4278190335
-    4278190080
-    4278190080
-    4278190335
-    4278190335
-    4278190080
-    0
-    0
-    0]}]]
-clj꞉pixel-art.views꞉> 
-2
-clj꞉pixel-art.views꞉> 
-([{:size {:width 4, :height 4},
-   :current false,
-   :selected false,
-   :pixels
-   [4278190335
-    4278190335
-    4278190335
-    4278190335
-    4278190335
-    4278190335
-    4278190080
-    4278190335
-    4278190080
-    4278190080
-    4278190335
-    4278190335
-    4278190080
-    0
-    0
-    0]}])
-clj꞉pixel-art.views꞉> 
-#js [[{:enabled true, :position :front, :opacity 0.3, :frames-count {:prev 1, :next 1}} [{:size {:width 4, :height 4}, :current false, :selected false, :pixels [4278190335 4278190335 4278190335 4278190335 4278190335 4278190335 4278190080 4278190335 4278190080 4278190080 4278190335 4278190335 4278190080 0 0 0]}]]]
-clj꞉pixel-art.views꞉> 
+; [:app] Build completed. (3461 files, 5 compiled, 6 warnings, 1,59s)
+; 
+; ------ WARNING #1 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:108:3
+; --------------------------------------------------------------------------------
+;  105 |    text])
+;  106 | 
+;  107 | (defn select [{:keys [value size on-change block options]}]
+;  108 |   (reag/with-let [!ref (atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18379 -generation)
+; --------------------------------------------------------------------------------
+;  109 |     [:> antd/Select {:value value
+;  110 |                      :ref (fn [ref] (reset! !ref ref))
+;  111 |                      :options (clj->js (map-indexed (fn [idx v] (assoc v :index idx)) options))
+;  112 |                      :size (case size
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #2 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:216:3
+; --------------------------------------------------------------------------------
+;  213 |      children)))
+;  214 | 
+;  215 | (defn file-uploader [{:keys [on-upload accept]} render-button]
+;  216 |   (reag/with-let [!input-ref (reag/atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18467 -generation)
+; --------------------------------------------------------------------------------
+;  217 |     [:span
+;  218 |      [:input {:type "file"
+;  219 |               :accept accept
+;  220 |               :ref (fn [ref] (reset! !input-ref ref))
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #3 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:41:62
+; --------------------------------------------------------------------------------
+;   38 |                                           "drop" on-drop
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+; --------------------------------------------------------------------^-----------
+;  Cannot infer target type in expression (. monitor isOver)
+; --------------------------------------------------------------------------------
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #4 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:42:66
+; --------------------------------------------------------------------------------
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor canDrop)
+; --------------------------------------------------------------------------------
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+;   46 |                             :z-index 1
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #5 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:92:66
+; --------------------------------------------------------------------------------
+;   89 |                                      #js {"type" "frame"
+;   90 |                                           "item" frame
+;   91 |                                           "collect" (fn [monitor]
+;   92 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;   93 |         theme-token (use-theme-token)]
+;   94 |     [:div {:style {:position "sticky"
+;   95 |                    :top 0
+;   96 |                    :background-color (.-colorBgContainer theme-token)
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #6 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:138:66
+; --------------------------------------------------------------------------------
+;  135 |                                      #js {"type" "cel"
+;  136 |                                           "item" cel
+;  137 |                                           "collect" (fn [monitor]
+;  138 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;  139 |         cel-preview (react/useMemo (fn []
+;  140 |                                      (canvas/generate-data-url #(canvas/draw-cel cel %)
+;  141 |                                                                (:size cel)))
+;  142 |                                    (array cel))
+; --------------------------------------------------------------------------------
 ; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 2 compiled, 0 warnings, 1,09s)
+; [:app] Build completed. (3461 files, 3 compiled, 6 warnings, 1,62s)
+; 
+; ------ WARNING #1 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:108:3
+; --------------------------------------------------------------------------------
+;  105 |    text])
+;  106 | 
+;  107 | (defn select [{:keys [value size on-change block options]}]
+;  108 |   (reag/with-let [!ref (atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18379 -generation)
+; --------------------------------------------------------------------------------
+;  109 |     [:> antd/Select {:value value
+;  110 |                      :ref (fn [ref] (reset! !ref ref))
+;  111 |                      :options (clj->js (map-indexed (fn [idx v] (assoc v :index idx)) options))
+;  112 |                      :size (case size
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #2 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:216:3
+; --------------------------------------------------------------------------------
+;  213 |      children)))
+;  214 | 
+;  215 | (defn file-uploader [{:keys [on-upload accept]} render-button]
+;  216 |   (reag/with-let [!input-ref (reag/atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18467 -generation)
+; --------------------------------------------------------------------------------
+;  217 |     [:span
+;  218 |      [:input {:type "file"
+;  219 |               :accept accept
+;  220 |               :ref (fn [ref] (reset! !input-ref ref))
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #3 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:41:62
+; --------------------------------------------------------------------------------
+;   38 |                                           "drop" on-drop
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+; --------------------------------------------------------------------^-----------
+;  Cannot infer target type in expression (. monitor isOver)
+; --------------------------------------------------------------------------------
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #4 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:42:66
+; --------------------------------------------------------------------------------
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor canDrop)
+; --------------------------------------------------------------------------------
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+;   46 |                             :z-index 1
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #5 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:92:66
+; --------------------------------------------------------------------------------
+;   89 |                                      #js {"type" "frame"
+;   90 |                                           "item" frame
+;   91 |                                           "collect" (fn [monitor]
+;   92 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;   93 |         theme-token (use-theme-token)]
+;   94 |     [:div {:style {:position "sticky"
+;   95 |                    :top 0
+;   96 |                    :background-color (.-colorBgContainer theme-token)
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #6 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:138:66
+; --------------------------------------------------------------------------------
+;  135 |                                      #js {"type" "cel"
+;  136 |                                           "item" cel
+;  137 |                                           "collect" (fn [monitor]
+;  138 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;  139 |         cel-preview (react/useMemo (fn []
+;  140 |                                      (canvas/generate-data-url #(canvas/draw-cel cel %)
+;  141 |                                                                (:size cel)))
+;  142 |                                    (array cel))
+; --------------------------------------------------------------------------------
 ; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 2 compiled, 0 warnings, 1,04s)
+; [:app] Build completed. (3461 files, 2 compiled, 6 warnings, 1,28s)
+; 
+; ------ WARNING #1 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:108:3
+; --------------------------------------------------------------------------------
+;  105 |    text])
+;  106 | 
+;  107 | (defn select [{:keys [value size on-change block options]}]
+;  108 |   (reag/with-let [!ref (atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18379 -generation)
+; --------------------------------------------------------------------------------
+;  109 |     [:> antd/Select {:value value
+;  110 |                      :ref (fn [ref] (reset! !ref ref))
+;  111 |                      :options (clj->js (map-indexed (fn [idx v] (assoc v :index idx)) options))
+;  112 |                      :size (case size
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #2 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:216:3
+; --------------------------------------------------------------------------------
+;  213 |      children)))
+;  214 | 
+;  215 | (defn file-uploader [{:keys [on-upload accept]} render-button]
+;  216 |   (reag/with-let [!input-ref (reag/atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18467 -generation)
+; --------------------------------------------------------------------------------
+;  217 |     [:span
+;  218 |      [:input {:type "file"
+;  219 |               :accept accept
+;  220 |               :ref (fn [ref] (reset! !input-ref ref))
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #3 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:41:62
+; --------------------------------------------------------------------------------
+;   38 |                                           "drop" on-drop
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+; --------------------------------------------------------------------^-----------
+;  Cannot infer target type in expression (. monitor isOver)
+; --------------------------------------------------------------------------------
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #4 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:42:66
+; --------------------------------------------------------------------------------
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor canDrop)
+; --------------------------------------------------------------------------------
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+;   46 |                             :z-index 1
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #5 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:92:66
+; --------------------------------------------------------------------------------
+;   89 |                                      #js {"type" "frame"
+;   90 |                                           "item" frame
+;   91 |                                           "collect" (fn [monitor]
+;   92 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;   93 |         theme-token (use-theme-token)]
+;   94 |     [:div {:style {:position "sticky"
+;   95 |                    :top 0
+;   96 |                    :background-color (.-colorBgContainer theme-token)
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #6 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:138:66
+; --------------------------------------------------------------------------------
+;  135 |                                      #js {"type" "cel"
+;  136 |                                           "item" cel
+;  137 |                                           "collect" (fn [monitor]
+;  138 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;  139 |         cel-preview (react/useMemo (fn []
+;  140 |                                      (canvas/generate-data-url #(canvas/draw-cel cel %)
+;  141 |                                                                (:size cel)))
+;  142 |                                    (array cel))
+; --------------------------------------------------------------------------------
 ; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 2 compiled, 0 warnings, 1,15s)
+; [:app] Build completed. (3461 files, 2 compiled, 6 warnings, 1,47s)
+; 
+; ------ WARNING #1 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:108:3
+; --------------------------------------------------------------------------------
+;  105 |    text])
+;  106 | 
+;  107 | (defn select [{:keys [value size on-change block options]}]
+;  108 |   (reag/with-let [!ref (atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18379 -generation)
+; --------------------------------------------------------------------------------
+;  109 |     [:> antd/Select {:value value
+;  110 |                      :ref (fn [ref] (reset! !ref ref))
+;  111 |                      :options (clj->js (map-indexed (fn [idx v] (assoc v :index idx)) options))
+;  112 |                      :size (case size
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #2 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:216:3
+; --------------------------------------------------------------------------------
+;  213 |      children)))
+;  214 | 
+;  215 | (defn file-uploader [{:keys [on-upload accept]} render-button]
+;  216 |   (reag/with-let [!input-ref (reag/atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18467 -generation)
+; --------------------------------------------------------------------------------
+;  217 |     [:span
+;  218 |      [:input {:type "file"
+;  219 |               :accept accept
+;  220 |               :ref (fn [ref] (reset! !input-ref ref))
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #3 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:41:62
+; --------------------------------------------------------------------------------
+;   38 |                                           "drop" on-drop
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+; --------------------------------------------------------------------^-----------
+;  Cannot infer target type in expression (. monitor isOver)
+; --------------------------------------------------------------------------------
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #4 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:42:66
+; --------------------------------------------------------------------------------
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor canDrop)
+; --------------------------------------------------------------------------------
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+;   46 |                             :z-index 1
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #5 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:92:66
+; --------------------------------------------------------------------------------
+;   89 |                                      #js {"type" "frame"
+;   90 |                                           "item" frame
+;   91 |                                           "collect" (fn [monitor]
+;   92 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;   93 |         theme-token (use-theme-token)]
+;   94 |     [:div {:style {:position "sticky"
+;   95 |                    :top 0
+;   96 |                    :background-color (.-colorBgContainer theme-token)
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #6 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:138:66
+; --------------------------------------------------------------------------------
+;  135 |                                      #js {"type" "cel"
+;  136 |                                           "item" cel
+;  137 |                                           "collect" (fn [monitor]
+;  138 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;  139 |         cel-preview (react/useMemo (fn []
+;  140 |                                      (canvas/generate-data-url #(canvas/draw-cel cel %)
+;  141 |                                                                (:size cel)))
+;  142 |                                    (array cel))
+; --------------------------------------------------------------------------------
 ; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 2 compiled, 0 warnings, 1,05s)
-{:size {:width 4, :height 4},
- :frames
- [{:duration 100}
-  {:duration 100}
-  {:duration 100}
-  {:duration 100}],
- :cels
- [[{:size {:width 4, :height 4},
-    :current false,
-    :selected false,
-    :pixels
-    [4278190335
-     4278190335
-     4278190335
-     4278190335
-     4278190335
-     4278190335
-     4278190080
-     4278190335
-     4278190080
-     4278190080
-     4278190335
-     4278190335
-     4278190080
-     0
-     0
-     0]}]
-  [{:size {:width 4, :height 4},
-    :current true,
-    :selected true,
-    :pixels
-    [4278190080
-     4278190080
-     0
-     4278190080
-     0
-     4278190080
-     0
-     4278190080
-     4278190080
-     4278190080
-     4278190080
-     4278190080
-     4278190080
-     4278190080
-     4278190080
-     4278190080]}]
-  [{:pixels
-    [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0],
-    :size {:width 4, :height 4},
-    :current false,
-    :selected false}]
-  [{:pixels
-    [4278190080
-     4278190080
-     0
-     0
-     0
-     0
-     4278190080
-     0
-     4278190080
-     4278190080
-     0
-     0
-     0
-     0
-     4278190080
-     0],
-    :size {:width 4, :height 4},
-    :current false,
-    :selected false}]],
- :layers
- [{:visible? true,
-   :automatic-linking? false,
-   :name "Layer 1"}]}
-clj꞉pixel-art.views꞉> 
-([{:size {:width 4, :height 4},
-   :current false,
-   :selected false,
-   :pixels
-   [4278190335
-    4278190335
-    4278190335
-    4278190335
-    4278190335
-    4278190335
-    4278190080
-    4278190335
-    4278190080
-    4278190080
-    4278190335
-    4278190335
-    4278190080
-    0
-    0
-    0]}]
- [{:pixels
-   [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0],
-   :size {:width 4, :height 4},
-   :current false,
-   :selected false}])
-clj꞉pixel-art.views꞉> 
-([{:pixels [4278190080 0 0 0],
-   :size {:width 2, :height 2},
-   :current false,
-   :selected false}])
-clj꞉pixel-art.views꞉> 
-([{:pixels [4278190080 0 0 0],
-   :size {:width 2, :height 2},
-   :current false,
-   :selected false}])
-clj꞉pixel-art.views꞉> 
-[{:enabled true,
-  :position :front,
-  :opacity 0.3,
-  :frames-count {:prev 1, :next 1}}
- [{:pixels [4278190080 0 0 0],
-   :size {:width 2, :height 2},
-   :current false,
-   :selected false}]]
-clj꞉pixel-art.views꞉> 
-({:enabled true,
-  :position :front,
-  :opacity 0.3,
-  :frames-count {:prev 1, :next 1}}
- [{:pixels [4278190080 0 0 0],
-   :size {:width 2, :height 2},
-   :current false,
-   :selected false}])
-clj꞉pixel-art.views꞉> 
-#js [({:enabled true, :position :front, :opacity 0.3, :frames-count {:prev 1, :next 1}} {:pixels [4278190080 0 0 0], :size {:width 2, :height 2}, :current false, :selected false})]
-clj꞉pixel-art.views꞉> 
-({:enabled true,
-  :position :front,
-  :opacity 0.3,
-  :frames-count {:prev 1, :next 1}}
- {:pixels [4278190080 0 0 0],
-  :size {:width 2, :height 2},
-  :current false,
-  :selected false})
-clj꞉pixel-art.views꞉> 
-; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 2 compiled, 0 warnings, 1,12s)
-#{0}
-clj꞉pixel-art.views꞉> 
-([{:pixels [4278190080 0 0 0],
-   :size {:width 2, :height 2},
-   :current false,
-   :selected false}])
-clj꞉pixel-art.views꞉> 
-({:enabled true,
-  :position :front,
-  :opacity 0.3,
-  :frames-count {:prev 1, :next 1}}
- {:pixels [4278190080 0 0 0],
-  :size {:width 2, :height 2},
-  :current false,
-  :selected false})
-clj꞉pixel-art.views꞉> 
-#js [({:enabled true, :position :front, :opacity 0.3, :frames-count {:prev 1, :next 1}} {:pixels [4278190080 0 0 0], :size {:width 2, :height 2}, :current false, :selected false})]
-clj꞉pixel-art.views꞉> 
-#js [{:enabled true, :position :front, :opacity 0.3, :frames-count {:prev 1, :next 1}} {:pixels [4278190080 0 0 0], :size {:width 2, :height 2}, :current false, :selected false}]
-clj꞉pixel-art.views꞉> 
-; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 2 compiled, 0 warnings, 1,03s)
-#{1 4 3}
-clj꞉pixel-art.views꞉> 
-; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 2 compiled, 0 warnings, 1,12s)
-; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 3 compiled, 0 warnings, 1,07s)
-; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 2 compiled, 0 warnings, 1,15s)
-; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 2 compiled, 0 warnings, 1,08s)
-; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 2 compiled, 0 warnings, 1,21s)
-; [:app] Compiling ...
-; [:app] Build completed. (3430 files, 2 compiled, 0 warnings, 1,07s)
+; [:app] Build completed. (3461 files, 2 compiled, 6 warnings, 1,42s)
+; 
+; ------ WARNING #1 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:108:3
+; --------------------------------------------------------------------------------
+;  105 |    text])
+;  106 | 
+;  107 | (defn select [{:keys [value size on-change block options]}]
+;  108 |   (reag/with-let [!ref (atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18379 -generation)
+; --------------------------------------------------------------------------------
+;  109 |     [:> antd/Select {:value value
+;  110 |                      :ref (fn [ref] (reset! !ref ref))
+;  111 |                      :options (clj->js (map-indexed (fn [idx v] (assoc v :index idx)) options))
+;  112 |                      :size (case size
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #2 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/views/ui_kit.cljs:216:3
+; --------------------------------------------------------------------------------
+;  213 |      children)))
+;  214 | 
+;  215 | (defn file-uploader [{:keys [on-upload accept]} render-button]
+;  216 |   (reag/with-let [!input-ref (reag/atom nil)]
+; ---------^----------------------------------------------------------------------
+;  Cannot infer target type in expression (. with-let18467 -generation)
+; --------------------------------------------------------------------------------
+;  217 |     [:span
+;  218 |      [:input {:type "file"
+;  219 |               :accept accept
+;  220 |               :ref (fn [ref] (reset! !input-ref ref))
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #3 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:41:62
+; --------------------------------------------------------------------------------
+;   38 |                                           "drop" on-drop
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+; --------------------------------------------------------------------^-----------
+;  Cannot infer target type in expression (. monitor isOver)
+; --------------------------------------------------------------------------------
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #4 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:42:66
+; --------------------------------------------------------------------------------
+;   39 |                                           "canDrop" can-drop
+;   40 |                                           "collect" (fn [monitor]
+;   41 |                                                       {:over (.. monitor isOver)
+;   42 |                                                        :can-drop (.. monitor canDrop)})})]
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor canDrop)
+; --------------------------------------------------------------------------------
+;   43 |     (when can-drop
+;   44 |       [:div {:ref ref
+;   45 |              :style (merge {:position "absolute"
+;   46 |                             :z-index 1
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #5 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:92:66
+; --------------------------------------------------------------------------------
+;   89 |                                      #js {"type" "frame"
+;   90 |                                           "item" frame
+;   91 |                                           "collect" (fn [monitor]
+;   92 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;   93 |         theme-token (use-theme-token)]
+;   94 |     [:div {:style {:position "sticky"
+;   95 |                    :top 0
+;   96 |                    :background-color (.-colorBgContainer theme-token)
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #6 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/timeline/views.cljs:138:66
+; --------------------------------------------------------------------------------
+;  135 |                                      #js {"type" "cel"
+;  136 |                                           "item" cel
+;  137 |                                           "collect" (fn [monitor]
+;  138 |                                                       {:dragging (.. monitor isDragging)})}))
+; ------------------------------------------------------------------------^-------
+;  Cannot infer target type in expression (. monitor isDragging)
+; --------------------------------------------------------------------------------
+;  139 |         cel-preview (react/useMemo (fn []
+;  140 |                                      (canvas/generate-data-url #(canvas/draw-cel cel %)
+;  141 |                                                                (:size cel)))
+;  142 |                                    (array cel))
+; --------------------------------------------------------------------------------
+; nREPL Connection was closed

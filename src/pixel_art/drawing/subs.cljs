@@ -17,8 +17,8 @@
    (some? (:start-viewport-scroll db))))
 
 (re-frame/reg-sub
- ::user-is-drawing
- (fn [db] (:user-is-drawing db)))
+ ::mouse-was-down ;; todo: rename?
+ (fn [db] (some? (:initial-mouse-down-pos db))))
 
 (re-frame/reg-sub
  ::mouse-pos

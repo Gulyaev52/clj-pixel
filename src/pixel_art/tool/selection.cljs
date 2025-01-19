@@ -2,7 +2,8 @@
   (:require
    [pixel-art.canvas :as canvas]
    [pixel-art.model.color :as color]
-   [pixel-art.tool.utils :refer [commit-changes-and-init-tool]]
+   [pixel-art.tool.utils :refer [commit-changes-and-init-tool
+                                 make-default-handle-mouse-event]]
    [pixel-art.utils.geometry :as geometry]
    [re-frame.core :as re-frame]
    [re-frame.db :as db]))
@@ -37,57 +38,59 @@
    :init (fn [] (init type))
    :handle-mouse-event
    (fn [db event]
-     (let [{:keys [tool initial-mouse-down-pos user-is-drawing]} db]
-       (case (-> tool :state :mode)
+     (let [{:keys [tool initial-mouse-down-pos]} db]
+       (case (-> db :tool :state :mode)
          :select
-         (cond
-           (or (= (:type event) :mouse-down)
-               (and (not get-selection-only-on-mouse-down)
-                    (= (:type event) :mouse-move)
-                    user-is-drawing))
-           (let [selection-image (get-selection db event)]
-             {:db db
-              :fx [[:clear-visual-effects]
-                   [:highlight-selection selection-image]]})
-
-           (= :mouse-up (:type event))
-           (let [selection-image (get-selection db event)
-                 tool (assoc tool :state {:mode :move-selection
-                                          :initial-selection-image selection-image
-                                          :selection-image selection-image
-                                          :changes []})]
-             {:db (assoc db :tool tool)})
-
-           (and (= (:type event) :mouse-move) (not user-is-drawing))
-           {:db db
-            :fx [[:clear-visual-effects]
-                 [:highlight-pixels [(:pos event)]]]}
-
-           :else {:db db})
+         ((make-default-handle-mouse-event
+           {:mouse-down
+            (fn [db event]
+              (let [selection-image (get-selection db event)]
+                {:db db
+                 :fx [[:clear-visual-effects]
+                      [:highlight-selection selection-image]]}))
+            :mouse-down-or-mouse-down-and-move
+            (fn [db event]
+              (if (not get-selection-only-on-mouse-down)
+                (let [selection-image (get-selection db event)]
+                  {:db db
+                   :fx [[:clear-visual-effects]
+                        [:highlight-selection selection-image]]})
+                {:db db}))
+            :mouse-up
+            (fn [db event]
+              (let [selection-image (get-selection db event)
+                    tool (assoc tool :state {:mode :move-selection
+                                             :initial-selection-image selection-image
+                                             :selection-image selection-image
+                                             :changes []})]
+                {:db (assoc db :tool tool)}))})
+          db event)
 
          :move-selection
-         (cond
-           (= (:type event) :mouse-down)
-           (if (not (contains? (-> tool :state :selection-image) (:pos event)))
-             (commit-moved-selection db)
-             {:db db})
-
-           (and (= (:type event) :mouse-move) user-is-drawing)
-           (let [{:keys [changes]} (move-selection tool initial-mouse-down-pos event)]
-             {:db (assoc-in db [:tool :state :changes] changes)
-              :fx [[:clear-visual-effects]
-                   [:clear-preview]
-                   [:draw-preview changes]]})
-
-           (= (:type event) :mouse-up)
-           (let [{:keys [changes moved-selection-image]} (move-selection tool initial-mouse-down-pos event)
-                 updated-tool (-> tool
-                                  (assoc-in [:state :selection-image] moved-selection-image)
-                                  (assoc-in [:state :changes] changes))]
-             {:db (assoc db :tool updated-tool)
-              :fx [[:clear-preview]
-                   [:draw-preview changes]
-                   [:highlight-selection moved-selection-image]]})))))})
+         ((make-default-handle-mouse-event
+           {:mouse-down
+            (fn [db event]
+              (if (not (contains? (-> tool :state :selection-image) (:pos event)))
+                (commit-moved-selection db)
+                {:db db}))
+            :mouse-down-and-move
+            (fn [db event]
+              (let [{:keys [changes]} (move-selection tool initial-mouse-down-pos event)]
+                {:db (assoc-in db [:tool :state :changes] changes)
+                 :fx [[:clear-visual-effects]
+                      [:clear-preview]
+                      [:draw-preview changes]]}))
+            :mouse-up
+            (fn [db event]
+              (let [{:keys [changes moved-selection-image]} (move-selection tool initial-mouse-down-pos event)
+                    updated-tool (-> tool
+                                     (assoc-in [:state :selection-image] moved-selection-image)
+                                     (assoc-in [:state :changes] changes))]
+                {:db (assoc db :tool updated-tool)
+                 :fx [[:clear-preview]
+                      [:draw-preview changes]
+                      [:highlight-selection moved-selection-image]]}))})
+          db event))))})
 
 (defn copy-selection [db]
   (let [{:keys [selection-image]} (-> db :tool :state)]

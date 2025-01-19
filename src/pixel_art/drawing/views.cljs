@@ -73,7 +73,7 @@
   (let [viewport-ref (react/useRef)
         onion-skin-ref (react/useRef)
         panning @(re-frame/subscribe [::subs/panning])
-        user-is-drawing @(re-frame/subscribe [::subs/user-is-drawing])
+        mouse-was-down @(re-frame/subscribe [::subs/mouse-was-down])
         layers @(re-frame/subscribe [::common-subs/layers])
         pixels-grid-cel-img @(re-frame/subscribe [::subs/pixels-grid-cel-img])
         scale @(re-frame/subscribe [::subs/scale])
@@ -142,10 +142,10 @@
                                 (.. js/document (addEventListener "mousemove" mouse-move))
                                 (.. js/document (addEventListener "mouseup" mouse-up)))))
            :on-mouse-leave (fn [event]
-                             (when-not (or user-is-drawing panning)
+                             (when-not (or mouse-was-down panning)
                                (re-frame/dispatch [::events/handle-mouse-event :mouse-move nil (is-right-button? event)])))
            :on-mouse-move (fn [event]
-                            (when-not (or user-is-drawing panning)
+                            (when-not (or mouse-was-down panning)
                               (let [mouse-pos (canvas-pos->frame-pos event scale)]
                                 (when (not= mouse-pos @!last-mouse-pos)
                                   (reset! !last-mouse-pos mouse-pos)
