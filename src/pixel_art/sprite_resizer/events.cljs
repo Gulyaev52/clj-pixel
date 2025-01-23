@@ -27,7 +27,6 @@
  ::resize
  [(re-frame/inject-cofx :viewport-size)]
  (fn [{:keys [db viewport-size]}]
-   (println viewport-size)
    (let [{:keys [sprite] {:keys [settings]} :sprite-resizer} db
          resized-sprite (resize-sprite sprite settings)]
      {:db (-> db

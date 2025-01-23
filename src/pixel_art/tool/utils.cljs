@@ -39,43 +39,33 @@
   (resize-pixel {:x 3 :y 3} 2)
   (resize-pixel {:x 3 :y 3} 3))
 
-;; todo: find a better name?
-(defn make-default-handle-mouse-event [{:keys [mouse-down
-                                               mouse-down-or-mouse-down-and-move
-                                               mouse-down-and-move
-                                               mouse-up]}]
-  (fn handle-mouse-event [db event]
-    (let [mouse-was-down? (some? (:initial-mouse-down-pos db))
-          mouse-down? (= (:type event) :mouse-down)
-          mouse-move? (= (:type event) :mouse-move)
-          mouse-up? (= (:type event) :mouse-move)]
-      (cond
-        (and mouse-move? (not mouse-was-down?))
-        (let [{:keys [pixel-size]} (get-tool-options db)
-              points (if pixel-size
-                       (resize-pixel (:pos event) pixel-size)
-                       [(:pos event)])]
-          {:db db
-           :fx [[:clear-visual-effects]
-                [:highlight-pixels points]]})
-
-        mouse-down?
-        (let [res (when-let [f (or mouse-down mouse-down-or-mouse-down-and-move)]
-                    (f db event))]
-          {:db (or (:db res) db)
-           :fx (into [[:clear-visual-effects]]
-                     (:fx res))})
-
-        (and mouse-move? mouse-was-down?)
-        (let [res (when-let [f (or mouse-down-and-move mouse-down-or-mouse-down-and-move)]
-                    (f db event))]
-          {:db (or (:db res) db)
-           :fx (:fx res)})
-
-        mouse-up?
-        (let [res (when mouse-up (mouse-up db event))]
-          {:db (or (:db res) db)
-           :fx (:fx res)})
-
-        :else
-        {:db db}))))
+(defn with-highlight-cel-under-cursor [events-handlers]
+  (merge
+   events-handlers
+   {:mouse-move
+    (fn [db event]
+      (let [{:keys [pixel-size]} (get-tool-options db)
+            points (if pixel-size
+                     (resize-pixel (:pos event) pixel-size)
+                     [(:pos event)])
+            handler-res (when-let [f (:mouse-move events-handlers)] (f db event))]
+        {:db (or (:db handler-res) db)
+         :fx (into [[:clear-visual-effects]
+                    [:highlight-pixels points]]
+                   (:fx handler-res))}))
+    :mouse-down
+    (fn [db event]
+      (let [handler-res (when-let [f (:mouse-down events-handlers)]
+                          (f db event))]
+        {:db (or (:db handler-res) db)
+         :fx (into [[:clear-visual-effects]]
+                   (:fx handler-res))}))
+    :mouse-down-or-mouse-down-and-move ;; todo: refactor this
+    (fn [db event]
+      (let [handler-res (when-let [f (or (:mouse-down-or-mouse-down-and-move events-handlers)
+                                         (:mouse-down events-handlers)
+                                         (:mouse-down-and-move events-handlers))]
+                          (f db event))]
+        {:db (or (:db handler-res) db)
+         :fx (into [[:clear-visual-effects]]
+                   (:fx handler-res))}))}))

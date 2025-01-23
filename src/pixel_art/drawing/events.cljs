@@ -13,22 +13,38 @@
 (re-frame/reg-event-fx
  ::handle-mouse-event
  (fn [{:keys [db]} [_ event-type mouse-pos right-button]]
-   (let [event {:type event-type :pos mouse-pos :right-button right-button}]
+   (let [event {:type event-type :pos mouse-pos :right-button right-button}
+         tool-events-handlers (tool/get-events-handlers db)]
+     (println (-> db :tool :type) tool-events-handlers)
      (case event-type
        :mouse-down
-       (-> (assoc db
-                  :initial-mouse-down-pos (:pos event)
-                  :mouse-pos (:pos event))
-           (tool/handle-mouse-event event))
+       (let [updated-db (assoc db
+                               :initial-mouse-down-pos (:pos event)
+                               :mouse-pos (:pos event))
+             handler (or (:mouse-down-or-mouse-down-and-move tool-events-handlers)
+                         (:mouse-down tool-events-handlers))]
+         (println "mouse-down" handler)
+         (if handler
+           (handler updated-db event)
+           {:db updated-db}))
 
        :mouse-move
-       (-> (assoc db :mouse-pos (:pos event))
-           (tool/handle-mouse-event event))
+       (let [updated-db (assoc db :mouse-pos (:pos event))
+             handler (or (when (:initial-mouse-down-pos db)
+                           (or (:mouse-down-or-mouse-down-and-move tool-events-handlers)
+                               (:mouse-down-and-move tool-events-handlers)))
+                         (:mouse-move tool-events-handlers))]
+         (if handler
+           (handler updated-db event)
+           {:db updated-db}))
 
        :mouse-up
-       (-> (assoc db :mouse-pos (:pos event))
-           (tool/handle-mouse-event event)
-           (assoc-in [:db :initial-mouse-down-pos] nil))))))
+       (let [updated-db (assoc db :mouse-pos (:pos event))
+             handler (:mouse-up tool-events-handlers)]
+         (if handler
+           (-> (handler updated-db event)
+               (assoc-in [:db :initial-mouse-down-pos] nil))
+           {:db (assoc updated-db :initial-mouse-down-pos nil)}))))))
 
 (re-frame/reg-event-fx
  ::enable-pixels-grid

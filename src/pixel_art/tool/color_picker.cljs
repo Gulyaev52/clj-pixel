@@ -2,17 +2,16 @@
   (:require
    [pixel-art.model.cel :as cel]
    [pixel-art.tool.utils :refer [get-current-cel get-current-color-type
-                                 make-default-handle-mouse-event]]))
-
-(defn- init [] {:type :color-picker})
+                                 with-highlight-cel-under-cursor]]))
 
 (def tool
   {:type :color-picker
-   :init init
+   :init (fn [] {:type :color-picker})
    :options-spec []
-   :handle-mouse-event
-   (make-default-handle-mouse-event
-    {:mouse-down (fn [db event]
-                   (let [color (->> (get-current-cel db)
-                                    (cel/get-pixel (:pos event)))]
-                     {:db (assoc db (get-current-color-type (:right-button event)) color)}))})})
+   :get-events-handlers
+   (fn []
+     (with-highlight-cel-under-cursor
+       {:mouse-down (fn [db event]
+                      (let [color (->> (get-current-cel db)
+                                       (cel/get-pixel (:pos event)))]
+                        {:db (assoc db (get-current-color-type (:right-button event)) color)}))}))})

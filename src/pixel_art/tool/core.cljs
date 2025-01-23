@@ -26,7 +26,7 @@
 
 (def types (map :type tools))
 
-(def tools-m (zipmap types tools))
+(def tools-m (zipmap types tools)) ;; todo: remove
 
 (def options-specs (zipmap types
                            (map :options-spec tools)))
@@ -35,6 +35,5 @@
   (let [init-fn (:init (tools-m tool-type))]
     (init-fn)))
 
-(defn handle-mouse-event [db event]
-  (let [handle-mouse-event-fn (:handle-mouse-event (tools-m (-> db :tool :type)))]
-    (handle-mouse-event-fn db event)))
+(defn get-events-handlers [db]
+  ((:get-events-handlers (tools-m (-> db :tool :type))) db))

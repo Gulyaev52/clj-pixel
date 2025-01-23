@@ -37,7 +37,7 @@
                                          {"accept" accept
                                           "drop" on-drop
                                           "canDrop" can-drop
-                                          "collect" (fn [monitor]
+                                          "collect" (fn [^js monitor]
                                                       {:over (.. monitor isOver)
                                                        :can-drop (.. monitor canDrop)})})]
     (when can-drop
@@ -88,7 +88,7 @@
   (let [[_ ref] (react-dnd/useDrag (fn []
                                      #js {"type" "frame"
                                           "item" frame
-                                          "collect" (fn [monitor]
+                                          "collect" (fn [^js monitor]
                                                       {:dragging (.. monitor isDragging)})}))
         theme-token (use-theme-token)]
     [:div {:style {:position "sticky"
@@ -134,7 +134,7 @@
   (let [[_ ref] (react-dnd/useDrag (fn []
                                      #js {"type" "cel"
                                           "item" cel
-                                          "collect" (fn [monitor]
+                                          "collect" (fn [^js monitor]
                                                       {:dragging (.. monitor isDragging)})}))
         cel-preview (react/useMemo (fn []
                                      (canvas/generate-data-url #(canvas/draw-cel cel %)

@@ -1,8 +1,24 @@
+одновременное указываение :mouse-down и :mouse-down-or-mouse-down-and-move and :mouse-down-and-mouse-move
+  :mouse-down-or-mouse-down-and-move в selection
+
+highlight pixels after drop selection
+draw
+::user-is-drawing ;; todo: rename?
+mouse move вне.
+shape tool
+
+tools
+  with-hightlight-pixels
+    сравнить handle event и как сделано в pixels
+  ;;user-is-drawing ?
+
 :draw-preview ;; todo: вынести в fx
 ;; todo: в drawing?
 ;; todo: в другие хелперы?
 подумать над разделением на слои
 project-settings/get-initial-drawing-settings в drawing
+
+
 
 events -> db ?
 export layers
