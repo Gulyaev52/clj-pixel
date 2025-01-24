@@ -10,6 +10,14 @@
    [re-frame.core :as re-frame]
    [re-frame.db :as db]))
 
+(defn run-events-handlers [events events-handlers db event]
+  (->> (keep #(get events-handlers %) events)
+       (reduce (fn [res h]
+                 (let [new-res (h (:db res) event)]
+                   {:db (:db new-res)
+                    :fx (into (:fx res) (:fx new-res))}))
+               {:db db :fx []})))
+
 (re-frame/reg-event-fx
  ::handle-mouse-event
  (fn [{:keys [db]} [_ event-type mouse-pos right-button]]
@@ -19,30 +27,24 @@
        :mouse-down
        (let [updated-db (assoc db
                                :initial-mouse-down-pos (:pos event)
-                               :mouse-pos (:pos event))
-             handler (or (:mouse-down-or-mouse-down-and-move tool-events-handlers)
-                         (:mouse-down tool-events-handlers))]
-         (if handler
-           (handler updated-db event)
-           {:db updated-db}))
+                               :mouse-pos (:pos event))]
+         (run-events-handlers [:mouse-down :mouse-down-or-mouse-down-and-move] tool-events-handlers updated-db event))
 
        :mouse-move
-       (let [updated-db (assoc db :mouse-pos (:pos event))
-             handler (or (when (:initial-mouse-down-pos db)
-                           (or (:mouse-down-or-mouse-down-and-move tool-events-handlers)
-                               (:mouse-down-and-move tool-events-handlers)))
-                         (:mouse-move tool-events-handlers))]
-         (if handler
-           (handler updated-db event)
-           {:db updated-db}))
+       (let [updated-db (assoc db :mouse-pos (:pos event))]
+         (run-events-handlers (into [:mouse-move] (when (:initial-mouse-down-pos updated-db)
+                                                    [:mouse-down-or-mouse-down-and-move :mouse-down-and-move]))
+                              tool-events-handlers
+                              updated-db
+                              event))
 
        :mouse-up
-       (let [updated-db (assoc db :mouse-pos (:pos event))
-             handler (:mouse-up tool-events-handlers)]
-         (if handler
-           (-> (handler updated-db event)
-               (assoc-in [:db :initial-mouse-down-pos] nil))
-           {:db (assoc updated-db :initial-mouse-down-pos nil)}))))))
+       (let [updated-db (assoc db :mouse-pos (:pos event))]
+         (-> (run-events-handlers [:mouse-up]
+                                  tool-events-handlers
+                                  updated-db
+                                  event)
+             (assoc-in [:db :initial-mouse-down-pos] nil)))))))
 
 (re-frame/reg-event-fx
  ::enable-pixels-grid
