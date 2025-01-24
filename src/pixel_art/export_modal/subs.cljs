@@ -1,6 +1,6 @@
-(ns pixel-art.export.subs
+(ns pixel-art.export-modal.subs
   (:require
-   [pixel-art.export.events :as events]
+   [pixel-art.export-modal.events :as events]
    [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub

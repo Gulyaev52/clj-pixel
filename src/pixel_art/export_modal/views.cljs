@@ -1,8 +1,8 @@
-(ns pixel-art.export.views
+(ns pixel-art.export-modal.views
   (:require
-   [pixel-art.export.events :as events]
+   [pixel-art.export-modal.events :as events]
    [pixel-art.subs :as common-subs]
-   [pixel-art.export.subs :as subs]
+   [pixel-art.export-modal.subs :as subs]
    [pixel-art.views.preview :refer [preview-image previews-container
                                     previews-grid-items]]
    [pixel-art.views.ui-kit :refer [checkbox form

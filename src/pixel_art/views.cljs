@@ -7,8 +7,8 @@
    [pixel-art.drawing.events :as drawing.events]
    [pixel-art.drawing.views :refer [drawing drawing-info]]
    [pixel-art.events :as events]
-   [pixel-art.export.events :as export.events]
-   [pixel-art.export.views :refer [export-modal]]
+   [pixel-art.export-modal.events :as export-modal.events]
+   [pixel-art.export-modal.views :refer [export-modal]]
    [pixel-art.keyboard-shortcuts-modal.events :as keyboard-shortcuts-modal.events]
    [pixel-art.keyboard-shortcuts-modal.views :refer [keyboard-shortcuts-modal]]
    [pixel-art.model.color :as color]
@@ -164,7 +164,7 @@
         [button {:on-click on-click}
          "Load project from file"])]
      [:<>
-      [button {:on-click (fn [] (re-frame/dispatch [::export.events/set-opened true]))}
+      [button {:on-click (fn [] (re-frame/dispatch [::export-modal.events/set-opened true]))}
        "Open project export panel"]
       [export-modal]]
      [:<>

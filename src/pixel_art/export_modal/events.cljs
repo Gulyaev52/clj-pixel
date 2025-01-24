@@ -1,4 +1,4 @@
-(ns pixel-art.export.events
+(ns pixel-art.export-modal.events
   (:require
    ["./gif$default" :as create-gif]
    ["./jszip$default" :as jszip]

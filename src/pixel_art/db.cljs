@@ -1,6 +1,6 @@
 (ns pixel-art.db
   (:require
-   [pixel-art.export.events :as export.events]
+   [pixel-art.export-modal.events :as export-modal.events]
    [pixel-art.history :as history.events]
    [pixel-art.new-project-modal.events :as new-project-modal.events]
    [pixel-art.keyboard-shortcuts-modal.events :as keyboard-shortcuts-modal.events]
@@ -33,6 +33,6 @@
     :sprite-preview (sprite-preview.events/init)
     :palettes palettes
     :keyboard-shortcuts-modal (keyboard-shortcuts-modal.events/init)
-    :export (export.events/init)
+    :export (export-modal.events/init)
     :sprite-resizer (sprite-resizer.events/init)}
    (project-settings.events/get-initial-drawing-settings (:size sprite) viewport-size)))
