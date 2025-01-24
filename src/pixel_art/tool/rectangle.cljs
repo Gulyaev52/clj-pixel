@@ -18,20 +18,19 @@
        (mapcat #(resize-pixel % pixel-size)) ;; todo: optimize
        dedupe))
 
-(defn- draw [db event]
-  (let [{:keys [initial-mouse-down-pos]} db
-        current-color (get-current-color db event)
-        {:keys [pixel-size fill]} (get-tool-options db)
-        rectangle-points (if fill
-                           (get-filled-rectangle-points initial-mouse-down-pos (:pos event) pixel-size)
-                           (get-outline-rectangle-points initial-mouse-down-pos (:pos event) pixel-size))]
-    (->> rectangle-points
-         (map (fn [p] [p current-color])))))
-
 (def tool
   (shape/make
    {:type :rectangle
     :options-spec [options-spec/pixel-size
                    (options-spec/make-checkbox {:field :fill :label "Fill"})
                    (options-spec/make-checkbox {:field :keep-ratio :label "Keep ration"})]
-    :draw draw}))
+    :get-points
+    (fn [db event]
+      (let [{:keys [initial-mouse-down-pos]} db
+            current-color (get-current-color db event)
+            {:keys [pixel-size fill]} (get-tool-options db)
+            rectangle-points (if fill
+                               (get-filled-rectangle-points initial-mouse-down-pos (:pos event) pixel-size)
+                               (get-outline-rectangle-points initial-mouse-down-pos (:pos event) pixel-size))]
+        (->> rectangle-points
+             (map (fn [p] [p current-color])))))}))

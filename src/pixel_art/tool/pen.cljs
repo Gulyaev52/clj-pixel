@@ -17,18 +17,17 @@
     (geometry/get-line-pixels prev-pos pos)
     [pos]))
 
-(defn- draw [db event]
-  (let [{:keys [tool]} db
-        current-color (get-current-color db event)
-        {:keys [pixel-size]} (get-tool-options db)
-        pos (:pos event)]
-    (->>
-     (get-interpolated-pixels (-> tool :state :prev-pos) pos)
-     (mapcat #(resize-pixel % pixel-size))
-     (map (fn [p] [p current-color])))))
-
 (def tool
   (simple-pen/make
    {:type :pen
     :options-spec [options-spec/pixel-size]
-    :draw draw}))
+    :get-points
+    (fn [db event]
+      (let [{:keys [tool]} db
+            current-color (get-current-color db event)
+            {:keys [pixel-size]} (get-tool-options db)
+            pos (:pos event)]
+        (->>
+         (get-interpolated-pixels (-> tool :state :prev-pos) pos)
+         (mapcat #(resize-pixel % pixel-size))
+         (map (fn [p] [p current-color])))))}))

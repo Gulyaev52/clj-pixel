@@ -8,20 +8,6 @@
    [pixel-art.tool.utils :refer [get-tool-options
                                  resize-pixel]]))
 
-(defn- draw [db event]
-  (let [{:keys [pixel-size amount lighten]} (get-tool-options db)
-        {:keys [sprite]} db
-        current-cel (sprite/get-current-cel sprite)]
-    (->> (resize-pixel (:pos event) pixel-size)
-         (keep (fn [pos]
-                 (let [color (cel/get-pixel pos current-cel)]
-                   (when-not (= color color/transparent-color-int)
-                     (let [tcolor (color/->tinycolor color)]
-                       (if lighten
-                         (. tcolor (lighten amount))
-                         (. tcolor (darken amount)))
-                       [pos (color/int tcolor)]))))))))
-
 (def tool
   (simple-pen/make
    {:type :shading
@@ -33,4 +19,17 @@
                                               :max 100})
                    (options-spec/make-checkbox {:field :lighten
                                                 :label "Lighten"})]
-    :draw draw}))
+    :get-points
+    (fn [db event]
+      (let [{:keys [pixel-size amount lighten]} (get-tool-options db)
+            {:keys [sprite]} db
+            current-cel (sprite/get-current-cel sprite)]
+        (->> (resize-pixel (:pos event) pixel-size)
+             (keep (fn [pos]
+                     (let [color (cel/get-pixel pos current-cel)]
+                       (when-not (= color color/transparent-color-int)
+                         (let [tcolor (color/->tinycolor color)]
+                           (if lighten
+                             (. tcolor (lighten amount))
+                             (. tcolor (darken amount)))
+                           [pos (color/int tcolor)]))))))))}))

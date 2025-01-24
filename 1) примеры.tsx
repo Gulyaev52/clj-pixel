@@ -1,9 +1,8 @@
-одновременное указываение :mouse-down и :mouse-down-or-mouse-down-and-move and :mouse-down-and-mouse-move
-  :mouse-down-or-mouse-down-and-move в selection
+отрефакторить
+  db_ event
+  (run-events-handlers [:mouse-down :mouse-down-or-mouse-down-and-move] tool-events-handlers updated-db event)
 
-highlight pixels after drop selection
 draw
-::user-is-drawing ;; todo: rename?
 mouse move вне.
 shape tool
 

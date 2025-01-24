@@ -3,7 +3,7 @@
    [pixel-art.tool.utils :refer [commit-changes-and-init-tool
                                  with-highlight-cel-under-cursor]])) ;; todo: rename
 
-(defn make [{:keys [type options-spec draw]}]
+(defn make [{:keys [type options-spec get-points]}]
   (let [init (fn init [] {:type type
                           :state {:changes {}
                                   :prev-pos nil}})]
@@ -15,12 +15,12 @@
        (with-highlight-cel-under-cursor
          {:mouse-down-or-mouse-down-and-move
           (fn [db event]
-            (let [new-pixels (draw db event)
+            (let [points (get-points db event)
                   prev-changes (-> db :tool :state :changes)
-                  tool-updated-state {:changes (merge prev-changes new-pixels)
+                  tool-updated-state {:changes (merge prev-changes points)
                                       :prev-pos (:pos event)}]
               {:db (assoc-in db [:tool :state] tool-updated-state)
-               :fx [[:draw-preview new-pixels]]}))
+               :fx [[:draw-preview points]]}))
           :mouse-up (fn [db]
                       (let [changes (-> db :tool :state :changes)]
                         (commit-changes-and-init-tool db changes (init))))}))}))

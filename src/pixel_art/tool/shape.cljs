@@ -3,7 +3,7 @@
    [pixel-art.tool.utils :refer [commit-changes-and-init-tool
                                  with-highlight-cel-under-cursor]]))
 
-(defn make [{:keys [type options-spec draw]}] ;; todo: draw -> get-points
+(defn make [{:keys [type options-spec get-points]}] ;; todo: draw -> get-points
   (let [init (fn [] {:type type})]
     {:type type
      :init init
@@ -15,8 +15,8 @@
           (fn [db event]
             {:db db
              :fx [[:clear-preview]
-                  [:draw-preview (draw db event)]]})
+                  [:draw-preview (get-points db event)]]})
           :mouse-up
           (fn [db event]
-            (let [rectangle-image (draw db event)]
+            (let [rectangle-image (get-points db event)]
               (commit-changes-and-init-tool db rectangle-image (init))))}))}))
