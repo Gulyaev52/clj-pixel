@@ -38,7 +38,7 @@
   {:type type
    :init (fn [] (init type))
    :get-events-handlers
-   (fn [db_ event]
+   (fn [db_]
      (let [{:keys [tool initial-mouse-down-pos]} db_]
        (case (-> db_ :tool :state :mode)
          :select
@@ -86,8 +86,7 @@
               {:db (assoc db :tool updated-tool)
                :fx [[:clear-preview]
                     [:draw-preview changes]
-                    [:highlight-selection moved-selection-image]]}))}
-         db event)))})
+                    [:highlight-selection moved-selection-image]]}))})))})
 
 (defn copy-selection [db]
   (let [{:keys [selection-image]} (-> db :tool :state)]
