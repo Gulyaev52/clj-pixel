@@ -2,29 +2,17 @@
   db_ event
   (run-events-handlers [:mouse-down :mouse-down-or-mouse-down-and-move] tool-events-handlers updated-db event)
 
-draw
-mouse move вне.
-shape tool
-
-tools
-  with-hightlight-pixels
-    сравнить handle event и как сделано в pixels
-  ;;user-is-drawing ?
-
 :draw-preview ;; todo: вынести в fx
 ;; todo: в drawing?
 ;; todo: в другие хелперы?
-подумать над разделением на слои
 project-settings/get-initial-drawing-settings в drawing
-
-
 
 events -> db ?
 export layers
 export -> export modal
 events импортируются по имени модуля хотя во вью events
-
 todo: в подписку
+17) подумать над разделением на слои
 
 
 16) сделать ручное сохранение?

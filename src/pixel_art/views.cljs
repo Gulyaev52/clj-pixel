@@ -7,16 +7,16 @@
    [pixel-art.drawing.events :as drawing.events]
    [pixel-art.drawing.views :refer [drawing drawing-info]]
    [pixel-art.events :as events]
-   [pixel-art.export.events :as export]
+   [pixel-art.export.events :as export.events]
    [pixel-art.export.views :refer [export-modal]]
-   [pixel-art.keyboard-shortcuts-modal.events :as keyboard-shortcuts-modal]
+   [pixel-art.keyboard-shortcuts-modal.events :as keyboard-shortcuts-modal.events]
    [pixel-art.keyboard-shortcuts-modal.views :refer [keyboard-shortcuts-modal]]
    [pixel-art.model.color :as color]
-   [pixel-art.new-project-modal.events :as new-project-modal]
+   [pixel-art.new-project-modal.events :as new-project-modal.events]
    [pixel-art.new-project-modal.views :refer [new-project-modal]]
    [pixel-art.palette.views :refer [palettes-section]]
    [pixel-art.project-save-load.events :as project-save-load.events]
-   [pixel-art.sprite-resizer.events :as sprite-resizer]
+   [pixel-art.sprite-resizer.events :as sprite-resizer.events]
    [pixel-art.sprite-resizer.views :refer [sprite-resizer-modal]]
    [pixel-art.subs :as subs]
    [pixel-art.timeline.views :refer [timeline-panel]]
@@ -154,7 +154,7 @@
                    :border-bottom (str "1px solid " (.-colorBorder theme-token))}}
      [:<>
       [new-project-modal]
-      [button {:on-click (fn [] (re-frame/dispatch [::new-project-modal/set-opened true]))}
+      [button {:on-click (fn [] (re-frame/dispatch [::new-project-modal.events/set-opened true]))}
        "New project"]]
      [button {:on-click (fn [] (re-frame/dispatch [::project-save-load.events/save-as-file]))}
       "Save project as file"]
@@ -164,15 +164,15 @@
         [button {:on-click on-click}
          "Load project from file"])]
      [:<>
-      [button {:on-click (fn [] (re-frame/dispatch [::export/set-opened true]))}
+      [button {:on-click (fn [] (re-frame/dispatch [::export.events/set-opened true]))}
        "Open project export panel"]
       [export-modal]]
      [:<>
       [sprite-resizer-modal]
-      [button {:on-click (fn [] (re-frame/dispatch [::sprite-resizer/set-opened true]))} "Resize canvas"]]
+      [button {:on-click (fn [] (re-frame/dispatch [::sprite-resizer.events/set-opened true]))} "Resize canvas"]]
      [:<>
       [keyboard-shortcuts-modal]
-      [button {:on-click (fn [] (re-frame/dispatch [::keyboard-shortcuts-modal/set-opened true]))} "Keyboard shortcuts"]]
+      [button {:on-click (fn [] (re-frame/dispatch [::keyboard-shortcuts-modal.events/set-opened true]))} "Keyboard shortcuts"]]
      [checkbox {:value pixels-grid-enabled
                 :label "Grid"
                 :on-change (fn [checked] (re-frame/dispatch [::drawing.events/enable-pixels-grid checked]))}]
