@@ -106,21 +106,23 @@
 
 (defn select [{:keys [value size on-change block options]}]
   (reag/with-let [!ref (atom nil)]
-    [:> antd/Select {:value value
-                     :ref (fn [ref] (reset! !ref ref))
-                     :options (clj->js (map-indexed (fn [idx v] (assoc v :index idx)) options))
-                     :size (case size
-                             :sm "small"
-                             :lg "large"
-                             :md "middle"
-                             nil)
-                     :style {:width (when block "100%")}
-                     :on-change (fn [_ option]
+    (let [options-with-idx (map-indexed (fn [idx v] (assoc v :value idx)) options) ;; todo: we cannot use cljs object as value so we need this hack with index
+          value-idx (.indexOf (mapv :value options) value)]
+      [:> antd/Select {:value value-idx
+                       :ref (fn [ref] (reset! !ref ref))
+                       :options (clj->js options-with-idx)
+                       :size (case size
+                               :sm "small"
+                               :lg "large"
+                               :md "middle"
+                               nil)
+                       :style {:width (when block "100%")}
+                       :on-change (fn [_ option]
                                  ;; after select option, select has focus and pressing hotkeys doesn't work + any key lead to select opening
                                  ;; todo: find better way?
-                                  (when-let [value (some-> (nth options (.-index option)) :value)]
-                                    (.. @!ref blur)
-                                    (on-change value)))}]))
+                                    (when-let [value (some-> (nth options (.-value option)) :value)]
+                                      (.. @!ref blur)
+                                      (on-change value)))}])))
 
 (defn icon-button [{:keys [src icon-theme title active disabled size on-click]}]
   [:button (merge {:className "icon-button"
