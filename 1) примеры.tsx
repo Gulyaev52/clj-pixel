@@ -8,10 +8,6 @@
 project-settings/get-initial-drawing-settings в drawing
 
 events -> db ?
-export layers
-export -> export modal
-events импортируются по имени модуля хотя во вью events
-todo: в подписку
 17) подумать над разделением на слои
 
 
