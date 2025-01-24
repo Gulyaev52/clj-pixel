@@ -13,7 +13,8 @@
        (filter (fn [[_ color]] (not= color color/transparent-color-int)))
        (into {})))
 
-(defn- init [type] {:type type :state {:mode :select}})
+(defn- init [type] {:type type :state {:mode :select
+                                       :user-is-making-selection false}})
 
 (defn- commit-moved-selection [db]
   (let [changes (-> db :tool :state :changes)
@@ -37,33 +38,31 @@
   {:type type
    :init (fn [] (init type))
    :get-events-handlers
-   (fn [db event]
-     (let [{:keys [tool initial-mouse-down-pos]} db]
-       (case (-> db :tool :state :mode)
+   (fn [db_ event]
+     (let [{:keys [tool initial-mouse-down-pos]} db_]
+       (case (-> db_ :tool :state :mode)
          :select
          (with-highlight-cel-under-cursor
-           {:mouse-down
-            (fn [db event]
-              (let [selection-image (get-selection db event)]
-                {:db db
-                 :fx [[:clear-visual-effects]
-                      [:highlight-selection selection-image]]}))
-            :mouse-down-or-mouse-down-and-move
+           {:mouse-down-or-mouse-down-and-move
             (fn [db event]
               (if (not get-selection-only-on-mouse-down)
-                (let [selection-image (get-selection db event)]
-                  {:db db
+                (let [selection-image (get-selection db event)
+                      updated-tool (assoc-in (:tool db) [:state :user-is-making-selection] true) ;; когда меняется мод с move-selection -> select, то происходит up event и снова создаётся селектион
+                      ]
+                  {:db (assoc db :tool updated-tool)
                    :fx [[:clear-visual-effects]
                         [:highlight-selection selection-image]]})
                 {:db db}))
             :mouse-up
             (fn [db event]
-              (let [selection-image (get-selection db event)
-                    tool (assoc tool :state {:mode :move-selection
-                                             :initial-selection-image selection-image
-                                             :selection-image selection-image
-                                             :changes []})]
-                {:db (assoc db :tool tool)}))})
+              (if (-> db :tool :state :user-is-making-selection)
+                (let [selection-image (get-selection db event)
+                      tool (assoc tool :state {:mode :move-selection
+                                               :initial-selection-image selection-image
+                                               :selection-image selection-image
+                                               :changes []})]
+                  {:db (assoc db :tool tool)})
+                {:db db}))})
 
          :move-selection
          {:mouse-down

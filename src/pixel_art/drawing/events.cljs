@@ -15,7 +15,6 @@
  (fn [{:keys [db]} [_ event-type mouse-pos right-button]]
    (let [event {:type event-type :pos mouse-pos :right-button right-button}
          tool-events-handlers (tool/get-events-handlers db)]
-     (println (-> db :tool :type) tool-events-handlers)
      (case event-type
        :mouse-down
        (let [updated-db (assoc db
@@ -23,7 +22,6 @@
                                :mouse-pos (:pos event))
              handler (or (:mouse-down-or-mouse-down-and-move tool-events-handlers)
                          (:mouse-down tool-events-handlers))]
-         (println "mouse-down" handler)
          (if handler
            (handler updated-db event)
            {:db updated-db}))
