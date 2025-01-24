@@ -14,24 +14,24 @@
 (re-frame/reg-sub
  ::settings-valid?
  (fn [db]
-   (not (empty? (-> db :export :common-settings :file-name)))))
+   (not (empty? (-> db :export-modal :common-settings :file-name)))))
 
 (re-frame/reg-sub
  ::preview
  (fn [db]
-   (-> db :export :preview)))
+   (-> db :export-modal :preview)))
 
 (re-frame/reg-sub
  ::exporting
  (fn [db]
-   (-> db :export :exporting)))
+   (-> db :export-modal :exporting)))
 
 (re-frame/reg-sub
  ::current-tab
  (fn [db]
-   (-> db :export :current-tab)))
+   (-> db :export-modal :current-tab)))
 
 (re-frame/reg-sub
  ::modal-opened
  (fn [db]
-   (-> db :export :opened)))
+   (-> db :export-modal :opened)))

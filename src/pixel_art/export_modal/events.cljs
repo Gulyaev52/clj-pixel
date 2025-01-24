@@ -58,18 +58,18 @@
         $))))
 
 (defn- adjust-columns-if-need [columns db]
-  (let [cels-for-rendering (get-cels-for-rendering (-> db :export :common-settings) (-> db :sprite))]
+  (let [cels-for-rendering (get-cels-for-rendering (-> db :export-modal :common-settings) (-> db :sprite))]
     (min (max 1 columns) (count cels-for-rendering))))
 
 (defn get-common-settings-res [db]
-  (let [common-settings (-> db :export :common-settings)
+  (let [common-settings (-> db :export-modal :common-settings)
         sprite-size (-> db :sprite sprite/get-size)
         scaled-frame-size (update-vals sprite-size #(. js/Math (round (* (:scale common-settings) %))))]
     (assoc common-settings :scaled-frame-size scaled-frame-size)))
 
 (defn get-spritesheet-settings [db]
   (let [common-settings (get-common-settings-res db)
-        spritesheet-settings (-> db :export :spritesheet-settings)
+        spritesheet-settings (-> db :export-modal :spritesheet-settings)
         rows (->> (get-cels-for-rendering common-settings (-> db :sprite)) ;; todo: pass it as arg?
                   (partition-all (:columns spritesheet-settings))
                   count)]
@@ -79,12 +79,12 @@
 
 (defn get-image-settings [db]
   (let [common-settings (get-common-settings-res db)]
-    (merge common-settings (-> db :export :image-settings))))
+    (merge common-settings (-> db :export-modal :image-settings))))
 
-(defn generate-preview [db] ;; todo: вынести эти в подписку?
-  (let [db (assoc-in db [:export :preview :generation] true)
-        {:keys [sprite export]} db]
-    (case (:current-tab export)
+(defn generate-preview [db]
+  (let [db (assoc-in db [:export-modal :preview :generation] true)
+        {:keys [sprite export-modal]} db]
+    (case (:current-tab export-modal)
       :spritesheet
       (let [settings (get-spritesheet-settings db)
             size (sprite/get-size sprite)
@@ -94,7 +94,7 @@
                      (map #(canvas/draw-cels-on-single-canvas % (canvas/create-canvas size)))
                      (canvas/combine size spritesheet-size (:columns settings))
                      (#(canvas/to-data-url % "png")))]
-        {:db (assoc-in db [:export :preview] {:data img :generation false})})
+        {:db (assoc-in db [:export-modal :preview] {:data img :generation false})})
 
       :image
       (let [settings (get-image-settings db)
@@ -107,7 +107,7 @@
         (case (:file-type settings)
           :png
           (let [data (map #(canvas/to-data-url (:canvas %) "png") rendered-frames)]
-            {:db (assoc-in db [:export :preview] {:data data :generation false})})
+            {:db (assoc-in db [:export-modal :preview] {:data data :generation false})})
 
           :gif
           {:db db
@@ -122,18 +122,18 @@
  (fn [{:keys [db]} [_ opened]]
    (if opened
      (-> db
-         (assoc-in [:export :opened] opened)
-         (update-in [:export :spritesheet-settings :columns]
+         (assoc-in [:export-modal :opened] opened)
+         (update-in [:export-modal :spritesheet-settings :columns]
                     #(adjust-columns-if-need % db))
          generate-preview)
-     {:db (assoc-in db [:export :opened] opened)})))
+     {:db (assoc-in db [:export-modal :opened] opened)})))
 
 (re-frame/reg-event-fx
  ::select-tab
  (fn [{:keys [db]} [_ tab]]
    (-> (cond-> db
-         true (assoc-in [:export :current-tab] tab)
-         (= tab :spritesheet) (update-in [:export :common-settings :file-type]
+         true (assoc-in [:export-modal :current-tab] tab)
+         (= tab :spritesheet) (update-in [:export-modal :common-settings :file-type]
                                          #(if (= % :gif) :png %)))
        generate-preview)))
 
@@ -142,13 +142,13 @@
  (fn [{:keys [db]} [_ option-key value]]
    (-> (case option-key
          :columns (-> db
-                      (assoc-in [:export :spritesheet-settings option-key] value))
+                      (assoc-in [:export-modal :spritesheet-settings option-key] value))
          :repeat (-> db
-                     (assoc-in [:export :image-settings option-key] value))
+                     (assoc-in [:export-modal :image-settings option-key] value))
          (-> db
-             (assoc-in [:export :common-settings option-key] value)))
+             (assoc-in [:export-modal :common-settings option-key] value)))
        (#(if (some #{option-key} [:columns :frames :layers :split-layers])
-           (update-in % [:export :spritesheet-settings :columns]
+           (update-in % [:export-modal :spritesheet-settings :columns]
                       (fn [value] (adjust-columns-if-need value %)))
            %))
        (#(if-not (some #{option-key} [:file-name :scale])
@@ -158,9 +158,9 @@
 (re-frame/reg-event-fx
  ::export
  (fn [{:keys [db]}]
-   (let [db (assoc-in db [:export :exporting] true)
-         {:keys [sprite export]} db]
-     (case (:current-tab export)
+   (let [db (assoc-in db [:export-modal :exporting] true)
+         {:keys [sprite export-modal]} db]
+     (case (:current-tab export-modal)
        :spritesheet
        (let [settings (get-spritesheet-settings db)
              size (sprite/get-size sprite)
@@ -219,13 +219,13 @@
 (re-frame/reg-event-fx
  ::download-generated-blob
  (fn [{:keys [db]} [_ file-name blob]]
-   {:db (assoc-in db [:export :exporting] false)
+   {:db (assoc-in db [:export-modal :exporting] false)
     :fx [[:download-file {:file-name file-name :content blob}]]}))
 
 (re-frame/reg-event-fx
  ::generate-gif-preview-success
  (fn [{:keys [db]} [_ gif]]
-   {:db (assoc-in db [:export :preview] {:data [gif] :generation false})}))
+   {:db (assoc-in db [:export-modal :preview] {:data [gif] :generation false})}))
 
 (re-frame/reg-fx
  ::generate-zip

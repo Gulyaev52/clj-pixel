@@ -33,6 +33,6 @@
     :sprite-preview (sprite-preview.events/init)
     :palettes palettes
     :keyboard-shortcuts-modal (keyboard-shortcuts-modal.events/init)
-    :export (export-modal.events/init)
+    :export-modal (export-modal.events/init)
     :sprite-resizer (sprite-resizer.events/init)}
    (project-settings.events/get-initial-drawing-settings (:size sprite) viewport-size)))
