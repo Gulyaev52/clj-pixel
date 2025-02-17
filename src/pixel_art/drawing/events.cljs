@@ -2,6 +2,7 @@
   (:require
    [pixel-art.project-settings :as project-settings]
    [pixel-art.tool.core :as tool]
+   [pixel-art.drawing.fx]
    [re-frame.core :as re-frame]))
 
 (defn run-events-handlers [events events-handlers db event]

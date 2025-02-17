@@ -2,7 +2,6 @@
   db_ event
   (run-events-handlers [:mouse-down :mouse-down-or-mouse-down-and-move] tool-events-handlers updated-db event)
 
-:draw-preview ;; todo: вынести в fx
 ;; todo: в drawing?
 ;; todo: в другие хелперы?
 project-settings/get-initial-drawing-settings в drawing
@@ -17,7 +16,7 @@ image rendering pixelated. превью и сам если отдаляешь. �
 zoom
   большой экран
   4на4 отдалить по максимуму по краю
-иногда не сходятся грид и подсветка
+иногда не сходятся грид и подсветка 
 
 17) дизайн
 поправить тесты
@@ -46,7 +45,6 @@ transdusers?
 18) todos
 33) удалить .js
 34) подсказки про линкинг и днд
-19) рефакторинг тулов. simple pen
 
 
 улучшения:
