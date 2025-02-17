@@ -9,7 +9,7 @@
    [re-frame.db :as db]))
 
 (re-frame/reg-fx
- :draw-preview ;; todo: вынести в fx
+ :draw-preview
  (fn [changes]
    (let [size (-> @db/app-db :sprite :size)
          {transparent-changes true rest-changes false}
