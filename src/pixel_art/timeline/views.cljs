@@ -1,6 +1,6 @@
 (ns pixel-art.timeline.views
   (:require
-   ["../views/react-dnd-scrolling" :as react-dnd-scrolling]
+   ["react-dnd-scrolling" :as react-dnd-scrolling]
    ["antd" :as antd]
    ["react-dnd" :as react-dnd]
    [clojure.string :as string]

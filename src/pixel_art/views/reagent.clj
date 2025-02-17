@@ -6,5 +6,5 @@
     `(do
        (defn ~real-comp-name# ~args ~body)
        (def ~comp-name
-         (fn [props#]
-           [:f> ~real-comp-name# props#])))))
+         (fn [props# & args#]
+           (into [:f> ~real-comp-name# props#] args#))))))

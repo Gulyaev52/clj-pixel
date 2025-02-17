@@ -1,7 +1,6 @@
 (ns pixel-art.export-modal.events
   (:require
-   ["./gif$default" :as create-gif]
-   ["./jszip$default" :as jszip]
+   ["jszip" :as jszip]
    [clojure.string :as string]
    [pixel-art.canvas :as canvas]
    [pixel-art.model.sprite :as sprite]
@@ -230,7 +229,7 @@
 (re-frame/reg-fx
  ::generate-zip
  (fn [{:keys [files-desc on-finish]}]
-   (let [zip (jszip)]
+   (let [zip (jszip.)]
      (doseq [{:keys [file-name content]} files-desc]
        (. zip (file file-name content #js {"base64" true})))
      (.. zip
@@ -256,11 +255,12 @@
 (re-frame/reg-fx
  ::generate-gif
  (fn [{:keys [rendered-frames base64 repeat size on-finish]}]
-   (let [gif (create-gif (clj->js {"workers" 2
-                                   "quality" 1
-                                   "width" (:width size)
-                                   "height" (:height size)
-                                   "repeat" (if repeat 0 -1)}))
+   (let [GIF (. js/window -GIF)
+         gif (GIF. (clj->js {"workers" 2
+                             "quality" 1
+                             "width" (:width size)
+                             "height" (:height size)
+                             "repeat" (if repeat 0 -1)}))
 
          frame-with-background-canvas (canvas/create-canvas size)
          frame-with-background-canvas-ctx (. frame-with-background-canvas (getContext "2d"))]
