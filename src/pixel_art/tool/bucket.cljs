@@ -6,8 +6,7 @@
    [pixel-art.tool.utils :refer [commit-changes-and-init-tool
                                  get-current-color get-tool-options
                                  with-highlight-cel-under-cursor]]
-   [pixel-art.utils.geometry :as geometry]
-   [sc.api :as api]))
+   [pixel-art.utils.geometry :as geometry]))
 
 (defn- init [] {:type :bucket})
 
@@ -36,5 +35,4 @@
                                                    (:pixels current-cel)
                                                    target-color))
                             (mapv (fn [p] [p current-color])))]
-            (api/spy)
             (commit-changes-and-init-tool db points (init))))}))})

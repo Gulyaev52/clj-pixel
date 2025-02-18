@@ -1,36 +1,31 @@
 (ns pixel-art.tool.rectangle
   (:require
+   ["../utils/t.js" :as t]
    [pixel-art.tool.options-spec :as options-spec]
    [pixel-art.tool.shape :as shape]
-   [pixel-art.tool.utils :refer [get-current-color get-tool-options
-                                 resize-pixel]]
+   [pixel-art.tool.utils :refer [get-current-color get-tool-options]]
    [pixel-art.utils.geometry :as geometry]))
-
-(defn- get-filled-rectangle-points [initial-mouse-down-pos event-pos pixel-size]
-  (let [ordered-points (geometry/get-ordered-rectangle-points
-                        (concat (resize-pixel initial-mouse-down-pos pixel-size)
-                                (resize-pixel event-pos pixel-size)))]
-    (apply geometry/get-rectange-points (vals ordered-points))))
-
-;; todo: naming; outline, borders, empty
-(defn- get-outline-rectangle-points [initial-mouse-down-pos event-pos pixel-size]
-  (->> (geometry/get-rectange-border-points initial-mouse-down-pos event-pos)
-       (mapcat #(resize-pixel % pixel-size)) ;; todo: optimize
-       dedupe))
 
 (def tool
   (shape/make
    {:type :rectangle
     :options-spec [options-spec/pixel-size
-                   (options-spec/make-checkbox {:field :fill :label "Fill"})
                    (options-spec/make-checkbox {:field :keep-ratio :label "Keep ration"})]
     :get-points
     (fn [db event]
       (let [{:keys [initial-mouse-down-pos]} db
             current-color (get-current-color db event)
-            {:keys [pixel-size fill]} (get-tool-options db)
-            rectangle-points (if fill
-                               (get-filled-rectangle-points initial-mouse-down-pos (:pos event) pixel-size)
-                               (get-outline-rectangle-points initial-mouse-down-pos (:pos event) pixel-size))]
-        (->> rectangle-points
-             (map (fn [p] [p current-color])))))}))
+            {:keys [pixel-size]} (get-tool-options db)
+            {:keys [top-left bottom-right]} (geometry/get-ordered-rectangle-points [initial-mouse-down-pos (:pos event)])
+            x-top-left (:x top-left)
+            x-bottom-right (:x bottom-right)
+            y-top-left (:y top-left)
+            y-bottom-right (:y bottom-right)]
+        (t/fors (clj->js {:i1 x-top-left :i1Stop (inc x-bottom-right)
+                          :i2 y-top-left :i2Stop (inc y-bottom-right)
+                          :when (fn [x y]
+                                  (or (> x (- x-bottom-right pixel-size))
+                                      (< x (+ x-top-left pixel-size))
+                                      (> y (- y-bottom-right pixel-size))
+                                      (< y (+ y-top-left pixel-size))))})
+                (fn [x y] [{:x x :y y} current-color]))))}))

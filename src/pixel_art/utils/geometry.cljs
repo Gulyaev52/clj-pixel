@@ -1,6 +1,7 @@
 (ns pixel-art.utils.geometry
   (:require
    ["./shapeTool.js" :as shape-tool]
+   ["./t.js" :as t]
    [clojure.string :as string]))
 
 ;; todo: pixels?
@@ -11,19 +12,16 @@
    :bottom-right {:x (apply max (map :x points))
                   :y (apply max (map :y points))}})
 
-(defn get-rectange-border-points [p1 p2]
-  (let [{:keys [top-left bottom-right]} (get-ordered-rectangle-points [p1 p2])]
-    (for [x (range (:x top-left) (inc (:x bottom-right)))
-          y (range (:y top-left) (inc (:y bottom-right)))
-          :when (not (and (< (:x top-left) x (:x bottom-right))
-                          (< (:y top-left) y (:y bottom-right))))]
-      {:x x :y y})))
-
+;; todo: remove
 (defn get-rectange-points [p1 p2]
-  (let [{:keys [top-left bottom-right]} (get-ordered-rectangle-points [p1 p2])]
-    (for [x (range (:x top-left) (inc (:x bottom-right)))
-          y (range (:y top-left) (inc (:y bottom-right)))]
-      {:x x :y y})))
+  (let [{:keys [top-left bottom-right]} (get-ordered-rectangle-points [p1 p2])
+        x-top-left (:x top-left)
+        x-bottom-right (:x bottom-right)
+        y-top-left (:y top-left)
+        y-bottom-right (:y bottom-right)]
+    (t/fors (clj->js {:i1 x-top-left :i1Stop (inc x-bottom-right)
+                      :i2 y-top-left :i2Stop (inc y-bottom-right)})
+            (fn [x y] {:x x :y y}))))
 
 (defn display-points [points size]
   (let [{:keys [width]} size
@@ -90,8 +88,3 @@
       (js->clj :keywordize-keys true)
       ((fn [{:keys [col row]}] {:x col :y row}))))
 (comment (get-scaled-points {:x 0 :y 0} {:x 2 :y 2}))
-
-(defn get-circle-pixels [p1 p2 pixel-size]
-  (->> (shape-tool/getCirclePixels (:x p1) (:y p1) (:x p2) (:y p2) pixel-size)
-       js->clj
-       (map (fn [[x y]] {:x x :y y}))))

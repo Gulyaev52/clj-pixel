@@ -7,7 +7,7 @@ function getOrderedRectangleCoordinates (x0, y0, x1, y1) {
     };
 }
 
-export function getCirclePixels(x0, y0, x1, y1, penSize) {
+export function getCirclePixels(x0, y0, x1, y1, penSize, fn) {
     var coords = getOrderedRectangleCoordinates(x0, y0, x1, y1);
     var pixels = [];
     var xC = Math.round((coords.x0 + coords.x1) / 2);
@@ -26,18 +26,18 @@ export function getCirclePixels(x0, y0, x1, y1, penSize) {
       for (x = coords.x0 ; x <= xC ; x++) {
         angle = Math.acos((x - xC) / rX);
         y = Math.round(rY * Math.sin(angle) + yC);
-        pixels.push([x - evenX, y]);
-        pixels.push([x - evenX, 2 * yC - y - evenY]);
-        pixels.push([2 * xC - x, y]);
-        pixels.push([2 * xC - x, 2 * yC - y - evenY]);
+        pixels.push(fn(x - evenX, y));
+        pixels.push(fn(x - evenX, 2 * yC - y - evenY));
+        pixels.push(fn(2 * xC - x, y));
+        pixels.push(fn(2 * xC - x, 2 * yC - y - evenY));
       }
       for (y = coords.y0 ; y <= yC ; y++) {
         angle = Math.asin((y - yC) / rY);
         x = Math.round(rX * Math.cos(angle) + xC);
-        pixels.push([x, y - evenY]);
-        pixels.push([2 * xC - x - evenX, y - evenY]);
-        pixels.push([x, 2 * yC - y]);
-        pixels.push([2 * xC - x - evenX, 2 * yC - y]);
+        pixels.push(fn(x, y - evenY));
+        pixels.push(fn(2 * xC - x - evenX, y - evenY));
+        pixels.push(fn(x, 2 * yC - y));
+        pixels.push(fn(2 * xC - x - evenX, 2 * yC - y));
       }
       return pixels;
     }
@@ -60,10 +60,10 @@ export function getCirclePixels(x0, y0, x1, y1, penSize) {
           0.5) &&
           r < rX * rY / Math.sqrt(rY * rY * Math.pow(Math.cos(angle), 2) + rX * rX * Math.pow(Math.sin(angle), 2)) +
           0.5) {
-          pixels.push([xC + x, yC + y]);
-          pixels.push([xC - x - evenX, yC + y]);
-          pixels.push([xC + x, yC - y - evenY]);
-          pixels.push([xC - x - evenX, yC - y - evenY]);
+          pixels.push(fn(xC + x, yC + y));
+          pixels.push(fn(xC - x - evenX, yC + y));
+          pixels.push(fn(xC + x, yC - y - evenY));
+          pixels.push(fn(xC - x - evenX, yC - y - evenY));
         }
       }
     }
