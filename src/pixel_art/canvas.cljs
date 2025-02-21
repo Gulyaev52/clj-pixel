@@ -18,17 +18,9 @@
 
 ;; set-image-data
 (defn cel-pixels->image-data [image-data {:keys [pixels size]} skip-transparent-color]
-  (let [pixels-u32arr (js/Uint32Array. (.. image-data -data -buffer))]
-    (dotimes [idx (count pixels)]
-      (let [color (nth pixels idx)
-            add-color? (if skip-transparent-color
-                         (not= color color/transparent-color-int)
-                         true)]
-        (when add-color?
-          (aset pixels-u32arr idx (nth pixels idx)))))
-    (js/ImageData. (js/Uint8ClampedArray. (. pixels-u32arr -buffer))
-                   (:width size)
-                   (:height size))))
+  (js/ImageData. (js/Uint8ClampedArray. (. pixels -buffer))
+                 (:width size)
+                 (:height size)))
 
 ;; todo: не должны лежать здесь с остальными утилитами. set-image-data
 (defn draw-cel

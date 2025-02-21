@@ -1,10 +1,23 @@
 (ns pixel-art.model.cel
   (:require
    [pixel-art.model.color :as color]
-   [pixel-art.utils.geometry :as geometry]))
+   [pixel-art.utils.geometry :as geometry]
+   [sc.api :as api]))
+
+(extend-type js/Uint32Array
+  ICounted
+  (-count [this] (.-length this))
+  IIndexed
+  (-nth
+    ([coll n]
+     (aget coll n))
+    ([coll n not-found]
+     (or (aget coll n) not-found))))
 
 (defn create-pixels-coll [size]
-  (vec (repeat (* (:width size) (:height size)) color/transparent-color-int)))
+  (let [arr (js/Uint32Array. (* (:width size) (:height size)))]
+    (. arr (set (clj->js (repeat (* (:width size) (:height size)) color/transparent-color-int))))
+    arr))
 
 (defn pos->idx [pos width]
   (+ (:x pos) (* width (:y pos))))
@@ -14,14 +27,12 @@
    :y (. js/Math (floor (/ idx width)))})
 
 (defn update-pixels-coll [pixels-map size pixels]
-  (let [{:keys [width]} size]
-    (persistent! (reduce
-                  (fn [res [pos color]]
-                    (if (geometry/valid-point? pos size)
-                      (assoc! res (pos->idx pos width) color)
-                      res))
-                  (transient pixels)
-                  pixels-map))))
+  (let [{:keys [width]} size
+        copy (. pixels (slice))]
+    (doseq [[pos color] pixels-map]
+      (when (geometry/valid-point? pos size)
+        (aset copy (pos->idx pos width) color)))
+    copy))
 
 (defn create
   ([size]

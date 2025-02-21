@@ -1,3 +1,5 @@
+1) удалить t
+
 отрефакторить
   db_ event
   (run-events-handlers [:mouse-down :mouse-down-or-mouse-down-and-move] tool-events-handlers updated-db event)

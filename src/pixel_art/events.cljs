@@ -31,7 +31,7 @@
    (.. (backup/init-db+)
        (then backup/get-backup+)
        (then (fn [backup]
-               (re-frame/dispatch [:initialize-db backup])))
+               (re-frame/dispatch [:initialize-db])))
        (catch (fn []
                 (re-frame/dispatch [:initialize-db]))))))
 

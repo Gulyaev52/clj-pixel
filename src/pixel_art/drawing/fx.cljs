@@ -11,14 +11,22 @@
 (re-frame/reg-fx
  :draw-preview
  (fn [changes]
-   (let [size (-> @db/app-db :sprite :size)
-         {transparent-changes true rest-changes false}
-         (->> changes
-              (filter (fn [[pos]] (geometry/valid-point? pos size)))
-              (group-by (fn [[_ color]] (= color color/transparent-color-int))))]
-     (canvas/update-image-data (. js/document (getElementById "preview")) rest-changes)
-     (when (seq transparent-changes)
-       (canvas/update-image-data (. js/document (getElementById "current-layer")) transparent-changes)))))
+   (if (or (vector? changes) (map? changes) (seq? changes))
+     (let [size (-> @db/app-db :sprite :size)
+           {transparent-changes true rest-changes false}
+           (->> changes
+                (filter (fn [[pos]] (geometry/valid-point? pos size)))
+                (group-by (fn [[_ color]] (= color color/transparent-color-int))))]
+       (canvas/update-image-data (. js/document (getElementById "preview")) rest-changes)
+       (when (seq transparent-changes)
+         (canvas/update-image-data (. js/document (getElementById "current-layer")) transparent-changes)))
+     (let [size (-> @db/app-db :sprite :size)
+           ctx (. (. js/document (getElementById "preview"))
+                  (getContext "2d"))
+           data (js/ImageData. (js/Uint8ClampedArray. (. changes -buffer))
+                               (:width size)
+                               (:height size))]
+       (. ctx (putImageData data 0 0))))))
 
 (re-frame/reg-fx
  :clear-preview
