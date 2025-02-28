@@ -39,3 +39,9 @@ export const fors2 = ({ i1, i1Stop, i2, i2Stop, when }, createV) => {
         }
     }
 };
+
+export const posToIdx = (x, y, width) => {
+    if (x < width) {
+        return width * y + x;
+    }
+};

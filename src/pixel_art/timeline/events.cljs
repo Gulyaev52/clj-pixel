@@ -17,8 +17,8 @@
                        :duration
                        frame/create)]
      (-> db
-         (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                       (tool/init (-> db :tool :type)))
+         (commit-changes-and-init-tool
+          (tool/init (-> db :tool :type))) ;; todo: эту логику в функцию
          (update-in [:db :sprite] #(sprite/add-frame new-frame %))
          (update-in [:db] history/save-sprite)))))
 
@@ -26,8 +26,8 @@
  ::remove-frame
  (fn [{:keys [db]}]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] sprite/remove-frame)
        (update-in [:db] history/save-sprite))))
 
@@ -35,8 +35,8 @@
  ::duplicate-frame
  (fn [{:keys [db]}]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] sprite/duplicate-frame)
        (update-in [:db] history/save-sprite))))
 
@@ -44,16 +44,16 @@
  ::select-frame
  (fn [{:keys [db]} [_ idx]]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/select-frame idx %)))))
 
 (re-frame/reg-event-fx
  ::move-frame
  (fn [{:keys [db]} [_ from-idx to-idx]]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/move-frame from-idx to-idx %))
        (update-in [:db] history/save-sprite))))
 
@@ -61,8 +61,8 @@
  ::move-frame-left
  (fn [{:keys [db]}]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/move-frame-left (sprite/get-current-frame-idx %) %))
        (update-in [:db] history/save-sprite))))
 
@@ -70,8 +70,8 @@
  ::move-frame-right
  (fn [{:keys [db]}]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/move-frame-right (sprite/get-current-frame-idx %) %))
        (update-in [:db] history/save-sprite))))
 
@@ -81,8 +81,8 @@
    (let [layer-name (project-settings/get-layer-name :single (-> db :sprite :layers count))
          layer (layer/create layer-name)]
      (-> db
-         (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                       (tool/init (-> db :tool :type)))
+         (commit-changes-and-init-tool
+          (tool/init (-> db :tool :type)))
          (update-in [:db :sprite] #(sprite/add-layer layer %))
          (update-in [:db] history/save-sprite)))))
 
@@ -90,8 +90,8 @@
  ::duplicate-layer
  (fn [{:keys [db]}]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] sprite/duplicate-layer)
        (update-in [:db] history/save-sprite))))
 
@@ -99,8 +99,8 @@
  ::remove-layer
  (fn [{:keys [db]}]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/remove-layer (-> db :sprite sprite/get-current-layer-idx)
                                                       %))
        (update-in [:db] history/save-sprite))))
@@ -109,8 +109,8 @@
  ::merge-layer-with-below
  (fn [{:keys [db]}]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] sprite/merge-layer-with-below)
        (update-in [:db] history/save-sprite))))
 
@@ -118,8 +118,8 @@
  ::move-layer-up
  (fn [{:keys [db]}]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/move-layer-up (sprite/get-current-layer-idx %) %))
        (update-in [:db] history/save-sprite))))
 
@@ -127,8 +127,8 @@
  ::move-layer-down
  (fn [{:keys [db]}]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/move-layer-down (sprite/get-current-layer-idx %) %))
        (update-in [:db] history/save-sprite))))
 
@@ -136,8 +136,8 @@
  ::move-layer
  (fn [{:keys [db]} [_ from-idx to-idx]]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/move-layer from-idx to-idx %))
        (update-in [:db] history/save-sprite))))
 
@@ -145,8 +145,8 @@
  ::rename-layer
  (fn [{:keys [db]} [_ new-name]]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type))) ;; todo: нужно ли?
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type))) ;; todo: нужно ли?
        (update-in [:db :sprite] (fn [sprite]
                                   (sprite/update-layer (sprite/get-current-layer-idx sprite) #(assoc % :name new-name) sprite))))))
 
@@ -154,8 +154,8 @@
  ::toggle-all-layers-visibility
  (fn [{:keys [db]} [_]]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type))) ;; todo: нужно ли?
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type))) ;; todo: нужно ли?
        (update-in [:db :sprite] (fn [sprite]
                                   (let [layers (:layers sprite)
                                         some-visible? (some :visible? layers)
@@ -166,8 +166,8 @@
  ::toggle-layer-visibility
  (fn [{:keys [db]} [_ idx]]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type))) ;; todo: нужно ли?
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type))) ;; todo: нужно ли?
        (update-in [:db :sprite] (fn [sprite]
                                   (sprite/update-layer idx #(update % :visible? not) sprite))))))
 
@@ -175,8 +175,8 @@
  ::toggle-all-layers-automatic-linking
  (fn [{:keys [db]} [_]]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type))) ;; todo: нужно ли?
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type))) ;; todo: нужно ли?
        (update-in [:db :sprite] (fn [sprite]
                                   (let [layers (:layers sprite)
                                         some-automatic-linking? (some :automatic-linking? layers)
@@ -187,8 +187,8 @@
  ::toggle-layer-automatic-linking
  (fn [{:keys [db]} [_ idx]]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type))) ;; todo: нужно ли?
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type))) ;; todo: нужно ли?
        (update-in [:db :sprite] (fn [sprite]
                                   (sprite/update-layer idx #(update % :automatic-linking? not) sprite))))))
 
@@ -196,8 +196,8 @@
  ::move-cel
  (fn [{:keys [db]} [_ from-pos to-pos]]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/move-cel from-pos to-pos %))
        (update-in [:db] history/save-sprite))))
 
@@ -205,32 +205,32 @@
  ::select-layer
  (fn [{:keys [db]} [_ idx]]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/select-layer idx %)))))
 
 (re-frame/reg-event-fx
  ::select-only-1-cel
  (fn [{:keys [db]} [_ pos]]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/select-only-1-cel pos %)))))
 
 (re-frame/reg-event-fx
  ::toggle-cel-to-selection
  (fn [{:keys [db]} [_ pos]]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/toggle-cel-to-selection pos %)))))
 
 (re-frame/reg-event-fx
  ::add-cels-range-to-selection
  (fn [{:keys [db]} [_ pos]]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] #(sprite/add-cels-range-to-selection pos %)))))
 
 (re-frame/reg-event-fx
@@ -238,8 +238,8 @@
  (fn [{:keys [db]} [_]]
    (let [main-cel-pos (sprite/get-current-cel-pos (:sprite db))]
      (-> db
-         (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                       (tool/init (-> db :tool :type)))
+         (commit-changes-and-init-tool
+          (tool/init (-> db :tool :type)))
          (update-in [:db :sprite] #(sprite/link-selected-cels main-cel-pos %))
          (update-in [:db] history/save-sprite)))))
 
@@ -247,8 +247,8 @@
  ::unlink-selected-cels
  (fn [{:keys [db]}]
    (-> db
-       (commit-changes-and-init-tool (get-in db [:tool :state :changes])
-                                     (tool/init (-> db :tool :type)))
+       (commit-changes-and-init-tool
+        (tool/init (-> db :tool :type)))
        (update-in [:db :sprite] sprite/unlink-selected-cels)
        (update-in [:db] history/save-sprite))))
 

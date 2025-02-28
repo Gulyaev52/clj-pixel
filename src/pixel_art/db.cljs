@@ -20,7 +20,8 @@
 (defn get-db [{:keys [sprite palettes primary-color secondary-color pixels-grid-enabled new-project-modal-opened]} viewport-size]
   (merge
    {:size (:size sprite)
-    :preview (js/Uint32Array. (* (:width (:size sprite)) (:height (:size sprite))))
+    :preview nil
+    :visual-effects nil
     :pixels-grid-enabled (if (some? pixels-grid-enabled) pixels-grid-enabled true)
     :new-project-modal (new-project-modal.events/init new-project-modal-opened)
     :sprite sprite

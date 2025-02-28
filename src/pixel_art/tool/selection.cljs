@@ -3,6 +3,7 @@
    [pixel-art.canvas :as canvas]
    [pixel-art.model.color :as color]
    [pixel-art.tool.utils :refer [commit-changes-and-init-tool
+                                 commit-changes-and-init-tool2
                                  with-highlight-cel-under-cursor]]
    [pixel-art.utils.geometry :as geometry]
    [re-frame.core :as re-frame]
@@ -17,9 +18,8 @@
                                        :user-is-making-selection false}})
 
 (defn- commit-moved-selection [db]
-  (let [changes (-> db :tool :state :changes)
-        type (-> db :tool :type)]
-    (commit-changes-and-init-tool db changes (init type))))
+  (let [type (-> db :tool :type)]
+    (commit-changes-and-init-tool2 db (:preview db) (init type))))
 
 (defn- move-selection [tool initial-mouse-down-pos event]
   (let [offset-pos (merge-with - (:pos event) initial-mouse-down-pos)
@@ -102,9 +102,9 @@
         deleted-initial-selection (if pasted?
                                     {}
                                     (update-vals initial-selection-image (fn [_] color/transparent-color-int)))]
-    (commit-changes-and-init-tool db
-                                  deleted-initial-selection
-                                  {:type tool-type :state {:mode :select}})))
+    (commit-changes-and-init-tool2 db
+                                   deleted-initial-selection
+                                   {:type tool-type :state {:mode :select}})))
 
 (defn tool-has-selection? [db]
   (-> db :tool :state :selection-image))

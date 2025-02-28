@@ -2,7 +2,6 @@
   (:require
    [pixel-art.backup :as backup]
    [pixel-art.db :as db]
-   [pixel-art.utils.fx]
    [pixel-art.drawing.events]
    [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
    [pixel-art.project-save-load.events]
@@ -10,6 +9,8 @@
    [pixel-art.re-pressed.core :as rp]
    [pixel-art.tool.core :as tool]
    [pixel-art.tool.utils :refer [commit-changes-and-init-tool]]
+   [pixel-art.utils.fx]
+   [pixel-art.utils.interceptor :refer [on-paths-change]]
    [re-frame.core :as re-frame]
    [re-frame.db]
    [sc.api]))
@@ -70,8 +71,8 @@
    (let [initial-db (if settings
                       (db/get-db settings viewport-size)
                       (db/get-db (assoc project-settings/default-palettes-and-current-colors
-                                        :sprite (project-settings/create-empty-sprite {:width 64 :height 64})
-                                        :new-project-modal-opened true)
+                                        :sprite (project-settings/create-empty-sprite {:width 2 :height 2})
+                                        :new-project-modal-opened false)
                                  viewport-size))]
      {:db initial-db
       :fx [[:dispatch [::rp/add-keyboard-event-listener "keydown"]]
@@ -81,9 +82,7 @@
  ::select-tool
  (fn [{:keys [db]} [_ tool-type]]
    (let [tool (tool/init tool-type)]
-     (commit-changes-and-init-tool db
-                                   (get-in db [:tool :state :changes])
-                                   tool))))
+     (commit-changes-and-init-tool db tool))))
 
 (re-frame/reg-event-fx
  ::change-tool-option ;; todo: set

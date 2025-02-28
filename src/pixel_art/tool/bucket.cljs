@@ -3,7 +3,7 @@
    [pixel-art.model.cel :as cel]
    [pixel-art.model.sprite :as sprite]
    [pixel-art.tool.options-spec :as options-spec]
-   [pixel-art.tool.utils :refer [commit-changes-and-init-tool
+   [pixel-art.tool.utils :refer [commit-changes-and-init-tool2
                                  get-current-color get-tool-options
                                  with-highlight-cel-under-cursor]]
    [pixel-art.utils.geometry :as geometry]))
@@ -35,4 +35,4 @@
                                                    (:pixels current-cel)
                                                    target-color))
                             (mapv (fn [p] [p current-color])))]
-            (commit-changes-and-init-tool db points (init))))}))})
+            (commit-changes-and-init-tool2 db points (init))))}))})

@@ -39,11 +39,14 @@
          (string/join "\n")
          println)))
 
-(defn valid-point? [{:keys [x y]} {:keys [width height]}]
-  (and x y (>= x 0) (< x width) (>= y 0) (< y height)))
+(defn valid-point?
+  ([{:keys [x y]} {:keys [width height]}]
+   (and x y (>= x 0) (< x width) (>= y 0) (< y height)))
+  ([x y {:keys [width height]}]
+   (and x y (>= x 0) (< x width) (>= y 0) (< y height))))
 
 (defn pos->idx [x y width]
-  (+ x (* width y)))
+  (when (< x width) (+ x (* width y))))
 
 (defn flood-fill [start-pos size pixels target-color]
   (let [{:keys [width height]} size

@@ -1,4 +1,11 @@
-1) удалить t
+-1) pos->idx не правильно если отриц влево
+0) get-interpolated-pixels
+3) днд
+4) удалить t
+5) history
+6) переписать highlighted canvas так же как и превью
+7) bucket perf
+8) perf на добавление фрейма\слоя
 
 отрефакторить
   db_ event

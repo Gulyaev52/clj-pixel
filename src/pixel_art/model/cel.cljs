@@ -1,8 +1,7 @@
 (ns pixel-art.model.cel
   (:require
    [pixel-art.model.color :as color]
-   [pixel-art.utils.geometry :as geometry]
-   [sc.api :as api]))
+   [pixel-art.utils.geometry :as geometry]))
 
 (extend-type js/Uint32Array
   ICounted
@@ -48,6 +47,9 @@
 
 (defn set-pixels [pixels-map cel]
   (update cel :pixels #(update-pixels-coll pixels-map (:size cel) %)))
+
+(defn set-pixels2 [pixels cel]
+  (assoc cel :pixels pixels))
 
 (defn merge-cels [below-cel above-cel]
   (let [above-cel-pixels-map (->> (:pixels above-cel)
