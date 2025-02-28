@@ -13,7 +13,7 @@
     :options-spec [options-spec/pixel-size
                    (options-spec/make-checkbox {:field :fill :label "Fill"})
                    (options-spec/make-checkbox {:field :keep-ratio :label "Keep ration"})]
-    :get-points
+    :draw
     (fn [db event]
       (let [{:keys [initial-mouse-down-pos]} db
             current-color (get-current-color db event)

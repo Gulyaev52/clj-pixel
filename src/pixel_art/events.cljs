@@ -10,7 +10,6 @@
    [pixel-art.tool.core :as tool]
    [pixel-art.tool.utils :refer [commit-changes-and-init-tool]]
    [pixel-art.utils.fx]
-   [pixel-art.utils.interceptor :refer [on-paths-change]]
    [re-frame.core :as re-frame]
    [re-frame.db]
    [sc.api]))
@@ -71,7 +70,7 @@
    (let [initial-db (if settings
                       (db/get-db settings viewport-size)
                       (db/get-db (assoc project-settings/default-palettes-and-current-colors
-                                        :sprite (project-settings/create-empty-sprite {:width 512 :height 512})
+                                        :sprite (project-settings/create-empty-sprite {:width 10 :height 10})
                                         :new-project-modal-opened false)
                                  viewport-size))]
      {:db initial-db
