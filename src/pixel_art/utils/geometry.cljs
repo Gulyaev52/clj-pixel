@@ -1,7 +1,6 @@
 (ns pixel-art.utils.geometry
   (:require
    ["./shapeTool.js" :as shape-tool]
-   ["./t.js" :as t]
    [clojure.string :as string]))
 
 ;; todo: pixels?
@@ -11,17 +10,6 @@
               :y (apply min (map :y points))}
    :bottom-right {:x (apply max (map :x points))
                   :y (apply max (map :y points))}})
-
-;; todo: remove
-(defn get-rectange-points [p1 p2]
-  (let [{:keys [top-left bottom-right]} (get-ordered-rectangle-points [p1 p2])
-        x-top-left (:x top-left)
-        x-bottom-right (:x bottom-right)
-        y-top-left (:y top-left)
-        y-bottom-right (:y bottom-right)]
-    (t/fors (clj->js {:i1 x-top-left :i1Stop (inc x-bottom-right)
-                      :i2 y-top-left :i2Stop (inc y-bottom-right)})
-            (fn [x y] {:x x :y y}))))
 
 (defn display-points [points size]
   (let [{:keys [width]} size

@@ -1021,3 +1021,281 @@ cljs꞉pixel-art.events꞉> 
 ; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 1,61s)
 ; [:app] Compiling ...
 ; [:app] Build completed. (3458 files, 17 compiled, 0 warnings, 0,92s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 0,78s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 17 compiled, 0 warnings, 0,89s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 1,52s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 1,36s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 3 compiled, 0 warnings, 1,45s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 0,77s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 0,76s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 1 warnings, 0,78s)
+; 
+; ------ WARNING #1 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/model/preview.cljs:15:40
+; --------------------------------------------------------------------------------
+;   12 |     :size size}))
+;   13 | 
+;   14 | (defn set-color! [preview x y color]
+;   15 |   (aset preview (geometry/pos->idx x y (. preview -spriteWidth)) color))
+; ----------------------------------------------^---------------------------------
+;  Cannot infer target type in expression (. preview -spriteWidth)
+; --------------------------------------------------------------------------------
+;   16 | 
+;   17 | (defn clear [preview]
+;   18 |   (js/Uint32Array. (.-length preview)))
+;   19 | 
+; --------------------------------------------------------------------------------
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 1 warnings, 0,80s)
+; 
+; ------ WARNING #1 - :infer-warning ---------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/model/preview.cljs:15:40
+; --------------------------------------------------------------------------------
+;   12 |     :size size}))
+;   13 | 
+;   14 | (defn set-color! [preview x y color]
+;   15 |   (aset preview (geometry/pos->idx x y (. preview -spriteWidth)) color))
+; ----------------------------------------------^---------------------------------
+;  Cannot infer target type in expression (. preview -spriteWidth)
+; --------------------------------------------------------------------------------
+;   16 | 
+;   17 | (defn clear [preview]
+;   18 |   (js/Uint32Array. (.-length preview)))
+;   19 | 
+; --------------------------------------------------------------------------------
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 0,80s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 1,55s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 17 compiled, 0 warnings, 0,92s)
+{:pixels
+ #object [Uint32Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ...],
+ :size {:width 512, :height 512}}
+cljs꞉pixel-art.drawing.views꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 0,81s)
+512
+cljs꞉pixel-art.drawing.views꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 0,78s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 6 compiled, 0 warnings, 1,40s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 0,81s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 17 compiled, 0 warnings, 0,91s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 17 compiled, 0 warnings, 0,89s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 4 compiled, 0 warnings, 0,71s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 0,73s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 3 compiled, 0 warnings, 1,60s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 3 compiled, 0 warnings, 1,40s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 1 warnings, 0,94s)
+; 
+; ------ WARNING #1 - :fn-arity --------------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/tool/circle.cljs:30:11
+; --------------------------------------------------------------------------------
+;   27 |                                               (fn [x y] [{:x x :y y} current-color]))
+;   28 |             preview (get-preview-from-current-cel db)]
+;   29 |         (doseq [point points]
+;   30 |           (preview/set-color! point))
+; -----------------^--------------------------------------------------------------
+;  Wrong number of args (1) passed to pixel-art.model.preview/set-color!
+; --------------------------------------------------------------------------------
+;   31 |         preview))}))
+;   32 | 
+; --------------------------------------------------------------------------------
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 0,77s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 0,76s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 3 compiled, 0 warnings, 1,40s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 0,47s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 4 compiled, 0 warnings, 0,50s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 4 compiled, 0 warnings, 0,48s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 0,46s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 0,50s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 0,48s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 4 compiled, 0 warnings, 0,50s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 4 compiled, 0 warnings, 0,53s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 4 compiled, 0 warnings, 0,54s)
+nil
+; 
+; ------ WARNING - :fn-arity -----------------------------------------------------
+;  Resource: <eval>:1:1
+;  Wrong number of args (2) passed to cljs.core/assoc
+; --------------------------------------------------------------------------------
+; 
+; 
+; ------ WARNING - :undeclared-var -----------------------------------------------
+;  Resource: <eval>:1:17
+;  Use of undeclared Var pixel-art.tool.selection/preview
+; --------------------------------------------------------------------------------
+; 
+cljs꞉pixel-art.tool.selection꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 4 compiled, 0 warnings, 0,48s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 4 compiled, 0 warnings, 0,53s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 4 compiled, 0 warnings, 0,50s)
+nil
+cljs꞉pixel-art.tool.selection꞉> 
+#'pixel-art.tool.selection/highlight-selection
+cljs꞉pixel-art.tool.selection꞉> 
+[#'pixel-art.tool.selection/db #'pixel-art.tool.selection/selection #'pixel-art.tool.selection/size #'pixel-art.tool.selection/visual-effects]
+cljs꞉pixel-art.tool.selection꞉> 
+{{:x 0, :y 5} 4278190080,
+ {:x 1, :y 5} 4278190080,
+ {:x 2, :y 5} 0}
+cljs꞉pixel-art.tool.selection꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 4 compiled, 0 warnings, 0,53s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 4 compiled, 0 warnings, 0,53s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 4 compiled, 0 warnings, 0,56s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 4 compiled, 0 warnings, 0,50s)
+#'pixel-art.tool.selection/make
+cljs꞉pixel-art.tool.selection꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 0,48s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 0,46s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 4 compiled, 0 warnings, 0,48s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 4 compiled, 0 warnings, 0,53s)
+nil
+cljs꞉pixel-art.tool.selection꞉> 
+#'pixel-art.tool.selection/highlight-selection
+cljs꞉pixel-art.tool.selection꞉> 
+[#'pixel-art.tool.selection/db #'pixel-art.tool.selection/selection #'pixel-art.tool.selection/size #'pixel-art.tool.selection/visual-effects #'pixel-art.tool.selection/current-cel]
+cljs꞉pixel-art.tool.selection꞉> 
+{:width 10, :height 10}
+cljs꞉pixel-art.tool.selection꞉> 
+#object [Uint32Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1291845632 0 0 0 0 0 0 0 0 1291845632 1291845632 0 0 0 0 0 0 0 0 1291845632 0 0 0 0 0 0 0 0 0 1291845632 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ...]
+cljs꞉pixel-art.tool.selection꞉> 
+#object [Uint32Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1291845632 0 0 0 0 0 0 0 0 1291845632 1291845632 0 0 0 0 0 0 0 0 1291845632 0 0 0 0 0 0 0 0 0 1291845632 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ...]
+cljs꞉pixel-art.tool.selection꞉> 
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 4 compiled, 0 warnings, 0,52s)
+; [:app] Compiling ...
+; [:app] Build completed. (3458 files, 2 compiled, 0 warnings, 0,46s)
+; [:app] Compiling ...
+; [:app] Build failure:
+; The required namespace "pixel-art.drawing.fx" is not available, it was required by "pixel_art/drawing/events.cljs".
+; 
+; [:app] Compiling ...
+; [:app] Build completed. (3457 files, 5 compiled, 0 warnings, 0,95s)
+; [:app] Compiling ...
+; [:app] Build completed. (3457 files, 9 compiled, 0 warnings, 1,11s)
+; [:app] Compiling ...
+; [:app] Build completed. (3457 files, 9 compiled, 2 warnings, 1,01s)
+; 
+; ------ WARNING #1 - :fn-arity --------------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/canvas.cljs:43:9
+; --------------------------------------------------------------------------------
+;   40 |   (let [cels (sprite/get-frame-cels-with-layers frame-idx sprite)]
+;   41 |     (doseq [cel (reverse cels)]
+;   42 |       (when (-> cel :layer :visible?)
+;   43 |         (draw-cel cel canvas true))))
+; ---------------^----------------------------------------------------------------
+;  Wrong number of args (3) passed to pixel-art.canvas/draw-cel
+; --------------------------------------------------------------------------------
+;   44 |   canvas)
+;   45 | 
+;   46 | ;; todo: refactore above
+;   47 | (defn draw-cels-on-single-canvas [cels canvas]
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #2 - :fn-arity --------------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/canvas.cljs:49:5
+; --------------------------------------------------------------------------------
+;   46 | ;; todo: refactore above
+;   47 | (defn draw-cels-on-single-canvas [cels canvas]
+;   48 |   (doseq [cel (reverse cels)]
+;   49 |     (draw-cel cel canvas true))
+; -----------^--------------------------------------------------------------------
+;  Wrong number of args (3) passed to pixel-art.canvas/draw-cel
+; --------------------------------------------------------------------------------
+;   50 |   canvas)
+;   51 | 
+;   52 | (defn clear-canvas [canvas]
+;   53 |   (let [ctx (. canvas (getContext "2d"))]
+; --------------------------------------------------------------------------------
+; [:app] Compiling ...
+; [:app] Build completed. (3457 files, 9 compiled, 2 warnings, 0,98s)
+; 
+; ------ WARNING #1 - :fn-arity --------------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/canvas.cljs:43:9
+; --------------------------------------------------------------------------------
+;   40 |   (let [cels (sprite/get-frame-cels-with-layers frame-idx sprite)]
+;   41 |     (doseq [cel (reverse cels)]
+;   42 |       (when (-> cel :layer :visible?)
+;   43 |         (draw-cel cel canvas true))))
+; ---------------^----------------------------------------------------------------
+;  Wrong number of args (3) passed to pixel-art.canvas/draw-cel
+; --------------------------------------------------------------------------------
+;   44 |   canvas)
+;   45 | 
+;   46 | ;; todo: refactore above
+;   47 | (defn draw-cels-on-single-canvas [cels canvas]
+; --------------------------------------------------------------------------------
+; 
+; ------ WARNING #2 - :fn-arity --------------------------------------------------
+;  File: /home/kirill/projects/clj-pixel/src/pixel_art/canvas.cljs:49:5
+; --------------------------------------------------------------------------------
+;   46 | ;; todo: refactore above
+;   47 | (defn draw-cels-on-single-canvas [cels canvas]
+;   48 |   (doseq [cel (reverse cels)]
+;   49 |     (draw-cel cel canvas true))
+; -----------^--------------------------------------------------------------------
+;  Wrong number of args (3) passed to pixel-art.canvas/draw-cel
+; --------------------------------------------------------------------------------
+;   50 |   canvas)
+;   51 | 
+;   52 | (defn clear-canvas [canvas]
+;   53 |   (let [ctx (. canvas (getContext "2d"))]
+; --------------------------------------------------------------------------------
+; [:app] Compiling ...
+; [:app] Build completed. (3457 files, 9 compiled, 0 warnings, 1,00s)
+; [:app] Compiling ...
+; [:app] Build completed. (3457 files, 2 compiled, 0 warnings, 0,46s)
+; [:app] Compiling ...
+; [:app] Build completed. (3457 files, 4 compiled, 0 warnings, 0,52s)
+; [:app] Compiling ...
+; [:app] Build completed. (3457 files, 4 compiled, 0 warnings, 0,48s)
+; [:app] Compiling ...
+; [:app] Build completed. (3457 files, 4 compiled, 0 warnings, 0,52s)
+; [:app] Compiling ...
+; [:app] Build completed. (3457 files, 12 compiled, 0 warnings, 0,71s)
+; [:app] Compiling ...
+; [:app] Build completed. (3456 files, 12 compiled, 0 warnings, 0,58s)
+; [:app] Compiling ...
+; [:app] Build completed. (3456 files, 12 compiled, 0 warnings, 0,59s)

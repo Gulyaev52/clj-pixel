@@ -9,8 +9,7 @@
                                  get-preview-from-current-cel
                                  with-highlight-cel-under-cursor]]
    [pixel-art.utils.geometry :as geometry]
-   [re-frame.core :as re-frame]
-   [sc.api :as api]))
+   [re-frame.core :as re-frame]))
 
 (defn- remove-transparent-colors [selection-image]
   (->> selection-image
@@ -63,13 +62,14 @@
          (with-highlight-cel-under-cursor
            {:mouse-down-or-mouse-down-and-move
             (fn [db event]
-              (let [selection-image (get-selection db event)
-                    updated-tool (assoc-in (:tool db) [:state :user-is-making-selection] true) ;; без этого когда меняется мод с move-selection -> select, то происходит up event и снова создаётся селектион
-                    ]
-                (println selection-image)
-                {:db (-> db
-                         (assoc :tool updated-tool)
-                         (highlight-selection selection-image))}))
+              (if (not get-selection-only-on-mouse-down)
+                (let [selection-image (get-selection db event)
+                      updated-tool (assoc-in (:tool db) [:state :user-is-making-selection] true) ;; без этого когда меняется мод с move-selection -> select, то происходит up event и снова создаётся селектион
+                      ]
+                  {:db (-> db
+                           (assoc :tool updated-tool)
+                           (highlight-selection selection-image))})
+                {:db db}))
             :mouse-up
             (fn [db event]
               (if (-> db :tool :state :user-is-making-selection)
