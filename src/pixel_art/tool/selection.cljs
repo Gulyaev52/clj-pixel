@@ -4,7 +4,7 @@
    [pixel-art.model.color :as color]
    [pixel-art.model.preview :as preview]
    [pixel-art.model.sprite :refer [get-current-cel]]
-   [pixel-art.tool.utils :refer [commit-changes-and-init-tool2
+   [pixel-art.tool.utils :refer [commit-preview-and-init-tool
                                  get-empty-visual-effects
                                  get-preview-from-current-cel
                                  with-highlight-cel-under-cursor]]
@@ -33,7 +33,7 @@
 
 (defn- commit-moved-selection [db]
   (let [type (-> db :tool :type)]
-    (commit-changes-and-init-tool2 db (:preview db) (init type))))
+    (commit-preview-and-init-tool db (:preview db) (init type))))
 
 (defn- move-selection [preview tool initial-mouse-down-pos event]
   (let [offset-pos (merge-with - (:pos event) initial-mouse-down-pos)
@@ -122,7 +122,7 @@
         preview (get-preview-from-current-cel db)]
     (doseq [[{:keys [x y]} color] deleted-initial-selection]
       (preview/set-color! preview x y color))
-    (commit-changes-and-init-tool2 db preview {:type tool-type :state {:mode :select}})))
+    (commit-preview-and-init-tool db preview {:type tool-type :state {:mode :select}})))
 
 (defn tool-has-selection? [db]
   (-> db :tool :state :selection-image))

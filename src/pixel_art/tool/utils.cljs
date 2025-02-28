@@ -35,24 +35,12 @@
 (defn get-current-color [db event]
   ((get-current-color-type (:right-button event)) db))
 
-(defn commit-changes-and-init-tool [db tool-init]
+(defn commit-preview-and-init-tool [db preview tool-init]
   (-> {:db (-> db
                (assoc :preview nil)
                (assoc :visual-effects nil)
                ((fn [db]
-                  (if (:preview db)
-                    (-> db
-                        (update :sprite #(sprite/set-current-cel-pixels2 (:preview db) %))
-                        history/save-sprite)
-                    db))))}
-      (assoc-in [:db :tool] tool-init)))
-
-(defn commit-changes-and-init-tool2 [db preview tool-init]
-  (-> {:db (-> db
-               (assoc :preview nil)
-               (assoc :visual-effects nil)
-               ((fn [db]
-                  (if preview
+                  (if (not (empty? preview))
                     (-> db
                         (update :sprite #(sprite/set-current-cel-pixels2 preview %))
                         history/save-sprite)

@@ -8,7 +8,7 @@
    [pixel-art.project-settings :as project-settings]
    [pixel-art.re-pressed.core :as rp]
    [pixel-art.tool.core :as tool]
-   [pixel-art.tool.utils :refer [commit-changes-and-init-tool]]
+   [pixel-art.tool.utils :refer [commit-preview-and-init-tool]]
    [pixel-art.utils.fx]
    [re-frame.core :as re-frame]
    [re-frame.db]
@@ -81,7 +81,7 @@
  ::select-tool
  (fn [{:keys [db]} [_ tool-type]]
    (let [tool (tool/init tool-type)]
-     (commit-changes-and-init-tool db tool))))
+     (commit-preview-and-init-tool db (:preview db) tool))))
 
 (re-frame/reg-event-fx
  ::change-tool-option ;; todo: set

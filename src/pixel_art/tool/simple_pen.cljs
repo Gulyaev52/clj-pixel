@@ -1,6 +1,6 @@
 (ns pixel-art.tool.simple-pen
   (:require
-   [pixel-art.tool.utils :refer [commit-changes-and-init-tool2
+   [pixel-art.tool.utils :refer [commit-preview-and-init-tool
                                  get-preview-or-create-from-current-cel
                                  get-tool-options resize-pixel
                                  with-highlight-cel-under-cursor]]
@@ -42,4 +42,4 @@
                        (assoc-in [:tool :state] {:prev-pos (:pos event)})
                        (assoc :preview preview))}))
           :mouse-up (fn [db]
-                      (commit-changes-and-init-tool2 db (:preview db) (init)))}))}))
+                      (commit-preview-and-init-tool db (:preview db) (init)))}))}))

@@ -3,7 +3,7 @@
    [pixel-art.model.cel :as cel]
    [pixel-art.model.sprite :as sprite]
    [pixel-art.tool.options-spec :as options-spec]
-   [pixel-art.tool.utils :refer [commit-changes-and-init-tool2
+   [pixel-art.tool.utils :refer [commit-preview-and-init-tool
                                  get-current-color
                                  get-preview-from-current-cel get-tool-options
                                  with-highlight-cel-under-cursor]]
@@ -39,4 +39,4 @@
                 preview (get-preview-from-current-cel db)]
             (doseq [{:keys [x y]} points]
               (preview/set-color! preview x y current-color))
-            (commit-changes-and-init-tool2 db preview (init))))}))})
+            (commit-preview-and-init-tool db preview (init))))}))})

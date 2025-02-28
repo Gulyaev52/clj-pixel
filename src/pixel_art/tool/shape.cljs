@@ -1,6 +1,6 @@
 (ns pixel-art.tool.shape
   (:require
-   [pixel-art.tool.utils :refer [commit-changes-and-init-tool2
+   [pixel-art.tool.utils :refer [commit-preview-and-init-tool
                                  with-highlight-cel-under-cursor]]))
 
 (defn make [{:keys [type options-spec draw]}]
@@ -17,4 +17,4 @@
           :mouse-up
           (fn [db event]
             (let [preview (draw db event)] ;; todo а надо ли на ап рисовать?
-              (commit-changes-and-init-tool2 db preview (init))))}))}))
+              (commit-preview-and-init-tool db preview (init))))}))}))
