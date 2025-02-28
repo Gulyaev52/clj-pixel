@@ -5,7 +5,8 @@
    [pixel-art.model.color :as color]
    [pixel-art.model.sprite :as sprite]
    [pixel-art.utils.geometry :as geometry]
-   [sc.api]))
+   [sc.api]
+   [pixel-art.model.preview :as preview]))
 
 (defn get-tool-options [db]
   (get (db :tools-options) (-> db :tool :type)))
@@ -15,11 +16,13 @@
   (-> db :sprite sprite/get-current-cel))
 
 (defn get-preview-from-current-cel [db]
-  (. (:pixels (get-current-cel db)) slice))
+  (let [size (-> db :sprite :size)
+        pixels (:pixels (get-current-cel db))]
+    (preview/create size pixels)))
 
 (defn get-preview-or-create-from-current-cel [db]
   (or (when-let [preview (:preview db)]
-        (. preview slice))
+        (preview/create (-> db :sprite :size) preview))
       (get-preview-from-current-cel db)))
 
 (defn get-empty-visual-effects [db]

@@ -15,9 +15,7 @@
                    (options-spec/make-checkbox {:field :keep-ratio :label "Keep ration"})]
     :get-points
     (fn [db event]
-      (let [size-width (-> db :sprite :size :width)
-            size (-> db :sprite :size)
-            {:keys [initial-mouse-down-pos]} db
+      (let [{:keys [initial-mouse-down-pos]} db
             current-color (get-current-color db event)
             {:keys [pixel-size fill]} (get-tool-options db)
             {:keys [top-left bottom-right]} (geometry/get-ordered-rectangle-points [initial-mouse-down-pos (:pos event)])
@@ -30,12 +28,12 @@
         (if fill
           (doseq [x (range x-top-left (inc x-bottom-right))
                   y (range y-top-left (inc y-bottom-right))]
-            (aset preview (geometry/pos->idx x y size-width) current-color))
+            (preview/set-color! preview x y current-color))
           (doseq [x (range x-top-left (inc x-bottom-right))
                   y (range y-top-left (inc y-bottom-right))]
             (when (or (> x (- x-bottom-right pixel-size))
                       (< x (+ x-top-left pixel-size))
                       (> y (- y-bottom-right pixel-size))
                       (< y (+ y-top-left pixel-size)))
-              (aset preview (geometry/pos->idx x y size-width) current-color))))
+              (preview/set-color! preview x y current-color))))
         preview))}))

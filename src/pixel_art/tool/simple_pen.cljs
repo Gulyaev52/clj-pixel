@@ -4,7 +4,8 @@
                                  get-preview-or-create-from-current-cel
                                  get-tool-options resize-pixel
                                  with-highlight-cel-under-cursor]]
-   [pixel-art.utils.geometry :as geometry])) ;; todo: rename
+   [pixel-art.utils.geometry :as geometry]
+   [pixel-art.model.preview :as preview])) ;; todo: rename
 
 (defn- get-interpolated-pixels
   "The pen movement is too fast for the mousemove frequency, there is a gap between the
@@ -33,11 +34,10 @@
                   points (->>
                           (get-interpolated-pixels prev-pos (:pos event))
                           (mapcat #(resize-pixel % pixel-size)))
-                  preview (get-preview-or-create-from-current-cel db)
-                  size-width (-> db :sprite :size :width)]
+                  preview (get-preview-or-create-from-current-cel db)]
               (doseq [{:keys [x y]} points]
                 (let [color (get-color db event)]
-                  (aset preview (geometry/pos->idx x y size-width) color)))
+                  (preview/set-color! preview x y color)))
               {:db (-> db
                        (assoc-in [:tool :state] {:prev-pos (:pos event)})
                        (assoc :preview preview))}))

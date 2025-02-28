@@ -4,14 +4,18 @@
 
 (defn create
   ([size]
-   {:pixels (js/Uint32Array. (* (:width size) (:height size)))
-    :size size})
+   (let [res ^js (js/Uint32Array. (* (:width size) (:height size)))]
+     (set! (. res -spriteWidth) (:width size))
+     (set! (. res -spriteHeight) (:height size))
+     res))
   ([size pixels]
-   {:pixels (js/Uint32Array. pixels)
-    :size size}))
+   (let [res ^js (js/Uint32Array. pixels)]
+     (set! (. res -spriteWidth) (:width size))
+     (set! (. res -spriteHeight) (:height size))
+     res)))
 
-(defn set-color! [preview x y color]
-  (aset (:pixels preview) (geometry/pos->idx x y (:width (:size preview))) color))
+(defn set-color! [^js preview x y color]
+  (aset preview (geometry/pos->idx x y (. preview -spriteWidth)) color))
 
 (defn clear [preview]
   (js/Uint32Array. (.-length preview)))
