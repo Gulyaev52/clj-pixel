@@ -24,7 +24,7 @@
         visual-effects (get-empty-visual-effects db)
         current-cel (get-current-cel db)]
     (doseq [[pos] selection]
-      (let [idx (geometry/pos->idx (:x pos) (:y pos) (:width size))
+      (let [idx (geometry/pos->idx (:x pos) (:y pos) size)
             color (-> (cel/get-pixel pos current-cel)
                       color/get-highlight-color)]
         (aset visual-effects idx color)))

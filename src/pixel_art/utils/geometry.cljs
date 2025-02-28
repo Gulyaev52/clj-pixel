@@ -33,15 +33,21 @@
   ([x y {:keys [width height]}]
    (and x y (>= x 0) (< x width) (>= y 0) (< y height))))
 
-(defn pos->idx [x y width]
-  (when (< x width) (+ x (* width y))))
+(defn pos->idx [x y size]
+  (when (and (< -1 x (:width size))
+             (< -1 y (:height size)))
+    (+ x (* (:width size) y))))
+
+;; todo: fix
+(defn pos->idx-without-check [x y width]
+  (+ x (* width y)))
 
 (defn flood-fill [start-pos size pixels target-color]
   (let [{:keys [width height]} size
 
         queue #js [start-pos]
         visited-pixels #js []
-        _ (aset visited-pixels (pos->idx (:x start-pos) (:y start-pos) width) start-pos)
+        _ (aset visited-pixels (pos->idx-without-check (:x start-pos) (:y start-pos) width) start-pos)
 
         dy #js [-1 0 1 0]
         dx #js [0 1 0 -1]]

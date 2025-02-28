@@ -91,7 +91,7 @@
                 current-cel (get-current-cel db)]
             (doseq [pos points]
               (let [color (color/get-highlight-color (cel/get-pixel pos current-cel))]
-                (aset visual-effects (geometry/pos->idx (:x pos) (:y pos) (:width size)) color)))
+                (aset visual-effects (geometry/pos->idx (:x pos) (:y pos) size) color)))
             {:db (-> (or (:db handler-res) db)
                      (assoc :visual-effects visual-effects))})
           {:db db})))

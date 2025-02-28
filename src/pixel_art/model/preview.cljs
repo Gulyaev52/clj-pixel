@@ -15,7 +15,7 @@
      res)))
 
 (defn set-color! [^js preview x y color]
-  (aset preview (geometry/pos->idx x y (. preview -spriteWidth)) color))
+  (aset preview (geometry/pos->idx x y {:width (. preview -spriteWidth) :height (. preview -spriteHeight)}) color))
 
 (defn clear [preview]
   (js/Uint32Array. (.-length preview)))
