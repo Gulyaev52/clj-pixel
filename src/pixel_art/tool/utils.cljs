@@ -42,7 +42,7 @@
                ((fn [db]
                   (if (not (empty? preview))
                     (-> db
-                        (update :sprite #(sprite/set-current-cel-pixels2 preview %))
+                        (update :sprite #(sprite/set-current-cel-pixels preview %))
                         history/save-sprite)
                     db))))}
       (assoc-in [:db :tool] tool-init)))

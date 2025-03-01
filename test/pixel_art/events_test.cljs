@@ -80,11 +80,11 @@
                     :layer (layer/create "Layer 1")
                     :frame (frame/create 100)
                     :cel (->> (cel/create sprite-size)
-                              (cel/set-pixels (->> (for [x (range 0 (:width sprite-size))
-                                                         y (range 0 (:height sprite-size))]
-                                                     [{:x x :y y} color/transparent-color-int])
-                                                   (into {})))
-                              (cel/set-pixels
+                              (cel/set-pixels-map (->> (for [x (range 0 (:width sprite-size))
+                                                             y (range 0 (:height sprite-size))]
+                                                         [{:x x :y y} color/transparent-color-int])
+                                                       (into {})))
+                              (cel/set-pixels-map
                                {{:x 0 :y 0} (color/int 255 0 0)
                                 {:x 0 :y 1} color/transparent-color-int
                                 {:x 1 :y 1} (color/int 255 0 0)
@@ -641,9 +641,9 @@
   (testing "when linked")
   (testing "should merge current layer with layer below"
     (initialize-db {:sprite (->> (sprite/clear-cel initial-sprite)
-                                 (sprite/set-current-cel-pixels {{:x 0 :y 0} (color/int 0 0 255)
-                                                                 {:x 0 :y 1} (color/int 0 0 255)
-                                                                 {:x 1 :y 0} (color/int 0 0 255)}))})
+                                 (sprite/set-current-cel-pixels-map {{:x 0 :y 0} (color/int 0 0 255)
+                                                                     {:x 0 :y 1} (color/int 0 0 255)
+                                                                     {:x 1 :y 0} (color/int 0 0 255)}))})
 
     (rf/dispatch-sync [::events/add-frame]) ;; todo: а зачем нам так конструировать объект? сложнее же
     (apply-current-tool [{:x 0 :y 0}])
@@ -901,16 +901,16 @@ Columns: 0
                          :layer (layer/create "Layer 1")
                          :frame (frame/create 200)
                          :cel (->> (cel/create sprite-size)
-                                   (cel/set-pixels
+                                   (cel/set-pixels-map
                                     {{:x 0 :y 0} (color/int 255 0 0)
                                      {:x 1 :y 0} color/transparent-color-int
                                      {:x 0 :y 1} (color/int 255 0 0)
                                      {:x 1 :y 1} (color/int 0 0 0)}))})
          (sprite/add-frame (frame/create 100))
-         (sprite/set-current-cel-pixels {{:x 0 :y 0} (color/int 0 0 255)
-                                         {:x 1 :y 0} color/transparent-color-int
-                                         {:x 0 :y 1} (color/int 0 0 255)
-                                         {:x 1 :y 1} (color/int 0 0 0)}) ;; todo: pass cell-pos?
+         (sprite/set-current-cel-pixels-map {{:x 0 :y 0} (color/int 0 0 255)
+                                             {:x 1 :y 0} color/transparent-color-int
+                                             {:x 0 :y 1} (color/int 0 0 255)
+                                             {:x 1 :y 1} (color/int 0 0 0)}) ;; todo: pass cell-pos?
          )))
 
 (defn get-cel-pixels-with-pos [pos sprite]
@@ -1148,8 +1148,8 @@ Columns: 0
 (deftest test-eraser-tool
   (testing "should remove color"
     (initialize-db {:sprite (->> empty-sprite
-                                 (sprite/set-current-cel-pixels {{:x 0 :y 0} (color/int 0 0 0)
-                                                                 {:x 1 :y 0} (color/int 0 0 255)}))})
+                                 (sprite/set-current-cel-pixels-map {{:x 0 :y 0} (color/int 0 0 0)
+                                                                     {:x 1 :y 0} (color/int 0 0 255)}))})
     (rf/dispatch-sync [::events/select-tool :eraser])
 
     (apply-current-tool [{:x 0 :y 0}])
@@ -1158,8 +1158,8 @@ Columns: 0
 (deftest test-color-picker-tool
   (testing "test"
     (initialize-db {:sprite (->> empty-sprite
-                                 (sprite/set-current-cel-pixels {{:x 0 :y 0} (color/int 0 0 0)
-                                                                 {:x 1 :y 0} (color/int 0 0 255)}))})
+                                 (sprite/set-current-cel-pixels-map {{:x 0 :y 0} (color/int 0 0 0)
+                                                                     {:x 1 :y 0} (color/int 0 0 255)}))})
     (rf/dispatch-sync [::events/set-current-color :primary-color (color/int 255 255 0)])
     (rf/dispatch-sync [::events/set-current-color :secondary-color (color/int 255 255 0)])
     (rf/dispatch-sync [::events/select-tool :color-picker])
@@ -1248,10 +1248,10 @@ Columns: 0
 (deftest test-bucket-tool
   (testing "same color"
     (initialize-db {:sprite (->> empty-sprite
-                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} (color/int 0 0 255)]
-                                                                 [{:x 1 :y 0} (color/int 0 0 255)]
-                                                                 [{:x 2 :y 0} (color/int 255 255 0)]
-                                                                 [{:x 3 :y 0} (color/int 0 0 255)]]))})
+                                 (sprite/set-current-cel-pixels-map [[{:x 0 :y 0} (color/int 0 0 255)]
+                                                                     [{:x 1 :y 0} (color/int 0 0 255)]
+                                                                     [{:x 2 :y 0} (color/int 255 255 0)]
+                                                                     [{:x 3 :y 0} (color/int 0 0 255)]]))})
     (rf/dispatch-sync [::events/select-tool :bucket])
     (rf/dispatch-sync [::events/change-tool-option :same-color true])
 
@@ -1266,10 +1266,10 @@ Columns: 0
 
   (testing "nearby colors"
     (initialize-db {:sprite (->> empty-sprite
-                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} (color/int 0 0 255)]
-                                                                 [{:x 1 :y 0} (color/int 0 0 255)]
-                                                                 [{:x 2 :y 0} (color/int 255 255 0)]
-                                                                 [{:x 3 :y 0} (color/int 0 0 255)]]))})
+                                 (sprite/set-current-cel-pixels-map [[{:x 0 :y 0} (color/int 0 0 255)]
+                                                                     [{:x 1 :y 0} (color/int 0 0 255)]
+                                                                     [{:x 2 :y 0} (color/int 255 255 0)]
+                                                                     [{:x 3 :y 0} (color/int 0 0 255)]]))})
     (rf/dispatch-sync [::events/select-tool :bucket])
 
     (apply-current-tool [{:x 0 :y 0} {:x 2 :y 0}])
@@ -1284,9 +1284,9 @@ Columns: 0
 (deftest test-shading-tool
   (testing "lighten trans"
     (initialize-db {:sprite (->> empty-sprite
-                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} (color/int 0 0 255)]
-                                                                 [{:x 1 :y 0} (color/int 255 255 0)]
-                                                                 [{:x 2 :y 0} (color/int 255 0 0)]]))})
+                                 (sprite/set-current-cel-pixels-map [[{:x 0 :y 0} (color/int 0 0 255)]
+                                                                     [{:x 1 :y 0} (color/int 255 255 0)]
+                                                                     [{:x 2 :y 0} (color/int 255 0 0)]]))})
     (rf/dispatch-sync [::events/select-tool :shading])
 
     (apply-current-tool [{:x 0 :y 0} {:x 1 :y 0} {:x 0 :y 0} {:x 1 :y 0}]) ;; applied only once
@@ -1297,9 +1297,9 @@ Columns: 0
 
   (testing "darken trans"
     (initialize-db {:sprite (->> empty-sprite
-                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} (color/int 0 0 255)]
-                                                                 [{:x 1 :y 0} (color/int 255 255 0)]
-                                                                 [{:x 2 :y 0} (color/int 255 0 0)]]))})
+                                 (sprite/set-current-cel-pixels-map [[{:x 0 :y 0} (color/int 0 0 255)]
+                                                                     [{:x 1 :y 0} (color/int 255 255 0)]
+                                                                     [{:x 2 :y 0} (color/int 255 0 0)]]))})
     (rf/dispatch-sync [::events/select-tool :shading])
     (rf/dispatch-sync [::events/change-tool-option :lighten false])
 
@@ -1311,9 +1311,9 @@ Columns: 0
 
   (testing "pixel size and amount"
     (initialize-db {:sprite (->> empty-sprite
-                                 (sprite/set-current-cel-pixels [[{:x 0 :y 0} (color/int 0 0 255)]
-                                                                 [{:x 1 :y 0} (color/int 255 255 0)]
-                                                                 [{:x 2 :y 0} (color/int 255 0 0)]]))})
+                                 (sprite/set-current-cel-pixels-map [[{:x 0 :y 0} (color/int 0 0 255)]
+                                                                     [{:x 1 :y 0} (color/int 255 255 0)]
+                                                                     [{:x 2 :y 0} (color/int 255 0 0)]]))})
     (rf/dispatch-sync [::events/select-tool :shading])
     (rf/dispatch-sync [::events/change-tool-option :pixel-size 2])
     (rf/dispatch-sync [::events/change-tool-option :amount 20])
@@ -1444,7 +1444,7 @@ Columns: 0
                          :layer (layer/create "Layer 1")
                          :frame (frame/create 200)
                          :cel (->> (cel/create sprite-size)
-                                   (cel/set-pixels
+                                   (cel/set-pixels-map
                                     {{:x 0 :y 0} (color/int 255 0 0)
                                      {:x 1 :y 0} (color/int 0 255 0)
                                      {:x 0 :y 1} (color/int 0 0 255)
@@ -1624,19 +1624,19 @@ Columns: 0
                          :layer (layer/create "Layer 1")
                          :frame (frame/create 200)
                          :cel (->> (cel/create sprite-size)
-                                   (cel/set-pixels
+                                   (cel/set-pixels-map
                                     {{:x 0 :y 0} (color/int 255 0 0)}))})
          (sprite/add-frame (frame/create 100))
          (sprite/add-layer (layer/create "Layer 2"))
 
          (sprite/select-only-1-cel {:frame-idx 1 :layer-idx 0})
-         (sprite/set-current-cel-pixels {{:x 0 :y 0} (color/int 0 255 0)})
+         (sprite/set-current-cel-pixels-map {{:x 0 :y 0} (color/int 0 255 0)})
 
          (sprite/select-only-1-cel {:frame-idx 0 :layer-idx 1})
-         (sprite/set-current-cel-pixels {{:x 0 :y 0} (color/int 0 0 255)})
+         (sprite/set-current-cel-pixels-map {{:x 0 :y 0} (color/int 0 0 255)})
 
          (sprite/select-only-1-cel {:frame-idx 1 :layer-idx 1})
-         (sprite/set-current-cel-pixels {{:x 0 :y 0} (color/int 255 0 255)})
+         (sprite/set-current-cel-pixels-map {{:x 0 :y 0} (color/int 255 0 255)})
 
          (sprite/select-only-1-cel {:frame-idx 0 :layer-idx 0}))))
 

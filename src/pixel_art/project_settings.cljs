@@ -36,9 +36,9 @@
      default-palettes-and-current-colors
      :sprite
      (->> (create-empty-sprite sprite-size)
-          (sprite/set-current-cel-pixels (for [x (range 0 (:width sprite-size))
-                                               y (range 0 (:height sprite-size))]
-                                           [{:x x :y y} (color/int (rand-int 255) (rand-int 255) (rand-int 255))]))))))
+          (sprite/set-current-cel-pixels-map (for [x (range 0 (:width sprite-size))
+                                                   y (range 0 (:height sprite-size))]
+                                               [{:x x :y y} (color/int (rand-int 255) (rand-int 255) (rand-int 255))]))))))
 
 (defn get-viewport-scroll-pos-to-center [canvas-size drawing-container-size viewport-size]
   (let [scroll-dim 15
