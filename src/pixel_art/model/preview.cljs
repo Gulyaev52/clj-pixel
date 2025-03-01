@@ -19,3 +19,6 @@
 
 (defn clear [preview]
   (js/Uint32Array. (.-length preview)))
+
+(defn ->vec [preview]
+  (vec preview))
