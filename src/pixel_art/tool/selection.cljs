@@ -1,15 +1,14 @@
 (ns pixel-art.tool.selection
   (:require
-   [pixel-art.model.cel :as cel]
    [pixel-art.model.color :as color]
    [pixel-art.model.preview :as preview]
-   [pixel-art.model.sprite :refer [get-current-cel]]
-   [pixel-art.tool.utils :refer [commit-preview-and-init-tool
+   [pixel-art.tool.utils :refer [commit-preview-and-init-tool get-current-cel
                                  get-empty-visual-effects
                                  get-preview-from-current-cel
                                  with-highlight-cel-under-cursor]]
    [pixel-art.utils.geometry :as geometry]
-   [re-frame.core :as re-frame]))
+   [re-frame.core :as re-frame]
+   [sc.api :as api]))
 
 (defn- remove-transparent-colors [selection-image]
   (->> selection-image
@@ -21,13 +20,12 @@
 
 (defn- highlight-selection [db selection]
   (let [size (-> db :sprite :size)
-        visual-effects (get-empty-visual-effects db)
-        current-cel (get-current-cel db)]
+        current-pixels (or (:preview db) (:pixels (get-current-cel db)))
+        visual-effects (get-empty-visual-effects db)]
     (doseq [[pos] selection]
-      (let [idx (geometry/pos->idx (:x pos) (:y pos) size)
-            color (-> (cel/get-pixel pos current-cel)
-                      color/get-highlight-color)]
-        (aset visual-effects idx color)))
+      (when-let [idx (geometry/pos->idx (:x pos) (:y pos) size)]
+        (aset visual-effects idx
+              (color/get-highlight-color (nth current-pixels idx)))))
     (-> db
         (assoc :visual-effects visual-effects))))
 

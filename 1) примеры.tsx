@@ -1,14 +1,6 @@
-11) разная подсветка у  selection и hover
--1) pos->idx не правильно если отриц влево
-0) get-interpolated-pixels
-3) днд
-4) удалить t
-5) history
-6) переписать highlighted canvas так же как и превью
 7) bucket perf, circle pref, line, selection perf 
+12) единообразно работать с visual-effects and preview
 8) perf на добавление фрейма\слоя
-0) commit-changes-and-init-tool2 врап в db
-11) неправильно работает подсветку в selection
 
 отрефакторить
   db_ event
