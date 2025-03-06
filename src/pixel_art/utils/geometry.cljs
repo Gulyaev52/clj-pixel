@@ -102,8 +102,7 @@
 (defn get-scaled-points
   "Transform the coordinates to preserve a square 1:1 ratio from the origin of the shape"
   [initial-pos pos]
-  (-> (shape-tool/getScaledCoords (:x initial-pos) (:y initial-pos)
-                                  (:x pos) (:y pos))
-      (js->clj :keywordize-keys true)
-      ((fn [{:keys [col row]}] {:x col :y row}))))
+  (let [[x y] (shape-tool/getScaledCoords (:x initial-pos) (:y initial-pos)
+                                          (:x pos) (:y pos))]
+    {:x x :y y}))
 (comment (get-scaled-points {:x 0 :y 0} {:x 2 :y 2}))

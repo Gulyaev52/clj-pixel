@@ -82,10 +82,7 @@ export function getScaledCoords(startCol, startRow, col, row) {
   row = startRow - ((dY / absY) * delta);
   col = startCol - ((dX / absX) * delta);
 
-  return {
-    col : col,
-    row : row
-  };
+  return [col, row];
 }
 
 /**

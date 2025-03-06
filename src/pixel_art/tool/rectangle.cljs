@@ -17,8 +17,11 @@
     (fn [db event]
       (let [{:keys [initial-mouse-down-pos]} db
             current-color (get-current-color db event)
-            {:keys [pixel-size fill]} (get-tool-options db)
-            {:keys [top-left bottom-right]} (geometry/get-ordered-rectangle-points [initial-mouse-down-pos (:pos event)])
+            {:keys [pixel-size fill keep-ratio]} (get-tool-options db)
+            current-pos (if keep-ratio
+                          (geometry/get-scaled-points initial-mouse-down-pos (:pos event))
+                          (:pos event))
+            {:keys [top-left bottom-right]} (geometry/get-ordered-rectangle-points [initial-mouse-down-pos current-pos])
             x-top-left (:x top-left)
             x-bottom-right (:x bottom-right)
             y-top-left (:y top-left)
