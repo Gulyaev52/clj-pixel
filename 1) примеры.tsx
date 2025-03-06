@@ -1,6 +1,8 @@
-7) bucket perf, circle pref, line, selection perf 
+7) line, selection perf 
 12) единообразно работать с visual-effects and preview
 8) perf на добавление фрейма\слоя
+9) perf коммита
+10) filled circle
 
 отрефакторить
   db_ event

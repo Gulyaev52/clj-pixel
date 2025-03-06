@@ -1,7 +1,8 @@
 (ns pixel-art.utils.geometry
   (:require
    ["./shapeTool.js" :as shape-tool]
-   [clojure.string :as string]))
+   [clojure.string :as string]
+   [sc.api :as api]))
 
 ;; todo: pixels?
 
@@ -33,21 +34,43 @@
   ([x y {:keys [width height]}]
    (and x y (>= x 0) (< x width) (>= y 0) (< y height))))
 
-(defn pos->idx [x y size]
-  (when (and (< -1 x (:width size))
-             (< -1 y (:height size)))
-    (+ x (* (:width size) y))))
+(defn pos->idx
+  ([x y size]
+   (when (and (< -1 x (:width size))
+              (< -1 y (:height size)))
+     (+ x (* (:width size) y))))
+  ([x y width height]
+   (when (and (< -1 x width)
+              (< -1 y height))
+     (+ x (* width y)))))
 
 ;; todo: fix
 (defn pos->idx-without-check [x y width]
   (+ x (* width y)))
 
+(defn visit-connected-pixels [start-pos f]
+  (let [queue #js [#js [(:x start-pos) (:y start-pos)]]
+
+        dy #js [-1 0 1 0]
+        dx #js [0 1 0 -1]]
+    (f (:x start-pos) (:y start-pos))
+    (while (> (. queue -length) 0)
+      (let [current-item (. queue pop)]
+        (dotimes [i 4]
+          (let [next-x (+ (aget current-item 0) (aget dx i))
+                next-y (+ (aget current-item 1) (aget dy i))
+                is-valid (f next-x next-y)]
+            (when is-valid
+              (let [connected-pixel #js [next-x next-y]]
+                (. queue (push connected-pixel))))))))))
+
 (defn flood-fill [start-pos size pixels target-color]
   (let [{:keys [width height]} size
 
-        queue #js [start-pos]
+        queue #js [#js [(:x start-pos) (:y start-pos)]]
         visited-pixels #js []
-        _ (aset visited-pixels (pos->idx-without-check (:x start-pos) (:y start-pos) width) start-pos)
+        _ (aset visited-pixels (pos->idx-without-check (:x start-pos) (:y start-pos) width)
+                #js [(:x start-pos) (:y start-pos)])
 
         dy #js [-1 0 1 0]
         dx #js [0 1 0 -1]]
@@ -55,14 +78,14 @@
     (while (> (. queue -length) 0)
       (let [current-item (. queue pop)]
         (dotimes [i 4]
-          (let [next-x (+ (:x current-item) (aget dx i))
-                next-y (+ (:y current-item) (aget dy i))
+          (let [next-x (+ (aget current-item 0) (aget dx i))
+                next-y (+ (aget current-item 1) (aget dy i))
                 idx (if (and (>= next-x 0) (< next-x width) (>= next-y 0) (< next-y height))
-                      (pos->idx next-x next-y width)
+                      (pos->idx-without-check next-x next-y width)
                       nil)
                 is-valid (and idx (not (aget visited-pixels idx)) (= (nth pixels idx nil) target-color))]
             (when is-valid
-              (let [connected-pixel {:x next-x :y next-y}]
+              (let [connected-pixel #js [next-x next-y]]
                 (. queue (push connected-pixel))
                 (aset visited-pixels idx connected-pixel)))))))
     (. visited-pixels (filter js/Boolean))))

@@ -12,20 +12,21 @@
   (shape/make
    {:type :circle
     :options-spec [options-spec/pixel-size
-                   (options-spec/make-checkbox {:field :keep-ratio :label "Keep ration"})]
+                   (options-spec/make-checkbox {:field :keep-ratio :label "Keep ration"})
+                   #_(options-spec/make-checkbox {:field :fill :label "Fill"})]
     :draw
     (fn [db event]
       (let [{:keys [initial-mouse-down-pos]} db
             current-color (get-current-color db event)
-            {:keys [pixel-size keep-ratio]} (get-tool-options db)
+            {:keys [pixel-size keep-ratio fill]} (get-tool-options db)
             current-pos (if keep-ratio
                           (geometry/get-scaled-points initial-mouse-down-pos (:pos event))
                           (:pos event))
-            points (shapeTool/getCirclePixels (:x initial-mouse-down-pos) (:y initial-mouse-down-pos)
-                                              (:x current-pos) (:y current-pos)
-                                              pixel-size
-                                              (fn [x y] {:x x :y y}))
             preview (get-preview-from-current-cel db)]
-        (doseq [{:keys [x y]} points]
-          (preview/set-color! preview x y current-color))
+        (shapeTool/getCirclePixels (:x initial-mouse-down-pos) (:y initial-mouse-down-pos)
+                                   (:x current-pos) (:y current-pos)
+                                   pixel-size
+                                   (fn [x y]
+                                     (preview/set-color! preview x y current-color)))
+
         preview))}))
