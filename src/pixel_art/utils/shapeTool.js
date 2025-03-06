@@ -110,7 +110,7 @@ export function getLinePixels(x0, x1, y0, y1) {
   var err = dx - dy;
   while (true) {
     // Do what you need to for this
-    pixels.push({'col': x0, 'row': y0});
+    pixels.push([x0, y0]);
 
     if ((x0 == x1) && (y0 == y1)) {
       break;
@@ -162,7 +162,7 @@ export function getUniformLinePixels(x0, x1, y0, y1) {
   while (true) {
     i++;
 
-    pixels.push({'col': x, 'row': y});
+    pixels.push([x, y]);
     if (distance(x0, x, y0, y) >= maxDistance) {
       break;
     }

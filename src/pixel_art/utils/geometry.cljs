@@ -91,14 +91,13 @@
     (. visited-pixels (filter js/Boolean))))
 
 (defn get-line-pixels [p1 p2]
-  (-> (shape-tool/getLinePixels (:x p1) (:x p2) (:y p1) (:y p2))
-      (js->clj :keywordize-keys true)
-      (#(map (fn [{:keys [col row]}] {:x col :y row}) %))))
+  (shape-tool/getLinePixels (:x p1) (:x p2) (:y p1) (:y p2)))
 
 (defn get-uniform-line-pixels [p1 p2]
-  (-> (shape-tool/getUniformLinePixels (:x p1) (:x p2) (:y p1) (:y p2))
-      (js->clj :keywordize-keys true)
-      (#(map (fn [{:keys [col row]}] {:x col :y row}) %))))
+  (shape-tool/getUniformLinePixels (:x p1) (:x p2) (:y p1) (:y p2)))
+
+(defn get-circle-pixels [p1 p2 pixel-size f]
+  (shape-tool/getCirclePixels (:x p1) (:y p1) (:x p2) (:y p2) pixel-size f))
 
 (defn get-scaled-points
   "Transform the coordinates to preserve a square 1:1 ratio from the origin of the shape"
