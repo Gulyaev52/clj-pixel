@@ -4,7 +4,7 @@
    [pixel-art.model.color :as color]
    [pixel-art.tool.options-spec :as options-spec]
    [pixel-art.tool.simple-pen :as simple-pen]
-   [pixel-art.tool.utils :refer [get-current-cel get-tool-options resize-pixel]]))
+   [pixel-art.tool.utils :refer [get-current-cel get-tool-options]]))
 
 (def tool
   (simple-pen/make

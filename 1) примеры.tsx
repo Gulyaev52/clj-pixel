@@ -1,4 +1,4 @@
-7) line, selection perf 
+7) selection perf 
 12) единообразно работать с visual-effects and preview
 8) perf на добавление фрейма\слоя
 9) perf коммита

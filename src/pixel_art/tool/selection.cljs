@@ -7,8 +7,7 @@
                                  get-preview-from-current-cel
                                  with-highlight-cel-under-cursor]]
    [pixel-art.utils.geometry :as geometry]
-   [re-frame.core :as re-frame]
-   [sc.api :as api]))
+   [re-frame.core :as re-frame]))
 
 (defn- remove-transparent-colors [selection-image]
   (->> selection-image
@@ -19,13 +18,13 @@
                                        :user-is-making-selection false}})
 
 (defn- highlight-selection [db selection]
-  (let [size (-> db :sprite :size)
+  (let [{:keys [width height]} (-> db :sprite :size)
         current-pixels (or (:preview db) (:pixels (get-current-cel db)))
         visual-effects (get-empty-visual-effects db)]
-    (doseq [[pos] selection]
-      (when-let [idx (geometry/pos->idx (:x pos) (:y pos) size)]
+    (doseq [[x y] selection]
+      (when-let [idx (geometry/pos->idx x y width height)]
         (aset visual-effects idx
-              (color/get-highlight-color (nth current-pixels idx)))))
+              (color/get-highlight-color (aget current-pixels idx)))))
     (-> db
         (assoc :visual-effects visual-effects))))
 

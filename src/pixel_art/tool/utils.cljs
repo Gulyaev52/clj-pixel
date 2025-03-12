@@ -56,10 +56,6 @@
         i (range 0 size)]
     {:x (+ (- (:x point) (. js/Math (floor (/ size 2)))) i)
      :y (+ (- (:y point) (. js/Math (floor (/ size 2)))) j)}))
-(comment
-  (resize-pixel {:x 3 :y 3} 1)
-  (resize-pixel {:x 3 :y 3} 2)
-  (resize-pixel {:x 3 :y 3} 3))
 
 (defn with-highlight-cel-under-cursor [events-handlers]
   (merge
