@@ -8,9 +8,9 @@
   (selection/make
    {:type :rectangle-selection
     :get-selection
-    (fn get-selection [db event]
+    (fn get-selection [f db event]
       (let [{:keys [initial-mouse-down-pos]} db
             {:keys [top-left bottom-right]} (geometry/get-ordered-rectangle-points [initial-mouse-down-pos (:pos event)])]
-        (for [x (range (:x top-left) (inc (:x bottom-right)))
-              y (range (:y top-left) (inc (:y bottom-right)))]
-          #js [x y])))}))
+        (doseq [x (range (:x top-left) (inc (:x bottom-right)))
+                y (range (:y top-left) (inc (:y bottom-right)))]
+          (f x y))))}))

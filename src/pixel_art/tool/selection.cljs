@@ -1,5 +1,6 @@
 (ns pixel-art.tool.selection
   (:require
+   [pixel-art.model.cel :as cel]
    [pixel-art.model.color :as color]
    [pixel-art.model.preview :as preview]
    [pixel-art.tool.utils :refer [commit-preview-and-init-tool get-current-cel
@@ -7,24 +8,20 @@
                                  get-preview-from-current-cel
                                  with-highlight-cel-under-cursor]]
    [pixel-art.utils.geometry :as geometry]
-   [re-frame.core :as re-frame]))
-
-(defn- remove-transparent-colors [selection-image]
-  (->> selection-image
-       (filter (fn [[_ color]] (not= color color/transparent-color-int)))
-       (into {})))
+   [re-frame.core :as re-frame]
+   [sc.api :as api]))
 
 (defn- init [type] {:type type :state {:mode :select
                                        :user-is-making-selection false}})
 
-(defn- highlight-selection [db selection]
+(defn- highlight-selection [db get-selection]
   (let [{:keys [width height]} (-> db :sprite :size)
         current-pixels (or (:preview db) (:pixels (get-current-cel db)))
         visual-effects (get-empty-visual-effects db)]
-    (doseq [[x y] selection]
-      (when-let [idx (geometry/pos->idx x y width height)]
-        (aset visual-effects idx
-              (color/get-highlight-color (aget current-pixels idx)))))
+    (get-selection (fn [x y]
+                     (when-let [idx (geometry/pos->idx x y width height)]
+                       (aset visual-effects idx
+                             (color/get-highlight-color (aget current-pixels idx))))))
     (-> db
         (assoc :visual-effects visual-effects))))
 
@@ -32,21 +29,41 @@
   (let [type (-> db :tool :type)]
     (commit-preview-and-init-tool db (:preview db) (init type))))
 
-(defn- move-selection [preview tool initial-mouse-down-pos event]
-  (let [offset-pos (merge-with - (:pos event) initial-mouse-down-pos)
-        {:keys [initial-selection-image selection-image pasted?]} (:state tool)
+#_(def initial-selection-and-preview! (atom nil))
+#_(defn cut-selection-from-preview [initial-selection preview]
+    (let [[prev-initial-selection cached-preview] @initial-selection-and-preview!]
+      (if (= prev-initial-selection initial-selection)
+        (do (println "cache")
+            (. cached-preview slice))
+        (do
+          (doseq [tuple initial-selection]
+            (preview/set-color! preview (aget tuple 0 0) (aget tuple 0 1) color/transparent-color-int))
+          (reset! initial-selection-and-preview! [initial-selection (. preview slice)])
+          (println "rev")
+          preview))))
 
-        deleted-initial-selection (when (not pasted?)
-                                    (update-vals initial-selection-image (fn [_] color/transparent-color-int)))
-        moved-selection-image (-> selection-image
-                                  (update-keys #(merge-with + % offset-pos)))
-        changes (merge deleted-initial-selection
-                       (remove-transparent-colors moved-selection-image))]
-    (doseq [[{:keys [x y]} color] changes]
-      (preview/set-color! preview x y color))
-    {:changes changes ;; todo: а это точно нужно?
-     :moved-selection-image moved-selection-image
-     :preview preview}))
+(defn cut-initial-selection-from-preview-if-need [size preview initial-selection pasted?]
+  (if (not pasted?)
+    (do
+      (doseq [tuple initial-selection]
+        (preview/set-color! preview (aget tuple 0 0) (aget tuple 0 1) color/transparent-color-int))
+      preview)
+    preview))
+
+(defn- move-selection [db preview tool initial-mouse-down-pos event]
+  (let [offset-pos (merge-with - (:pos event) initial-mouse-down-pos)
+        offset-x (:x offset-pos)
+        offset-y (:y offset-pos)
+        {:keys [initial-selection-image pasted?]} (:state tool)
+        preview-with-deletion-initial-selection (or (when-let [p (:preview-with-deletion-initial-selection (:state tool))]
+                                                      p)
+                                                    (cut-initial-selection-from-preview-if-need (-> db :sprite :size) preview initial-selection-image pasted?))
+        preview (preview/create (-> db :sprite :size) preview-with-deletion-initial-selection)]
+    (doseq [tuple initial-selection-image]
+      (when (not= (aget tuple 1) color/transparent-color-int)
+        (preview/set-color! preview (+ (aget tuple 0 0) offset-x) (+ (aget tuple 0 1) offset-y) (aget tuple 1))))
+    {:preview preview
+     :preview-with-deletion-initial-selection preview-with-deletion-initial-selection}))
 
 (defn make [{:keys [type get-selection get-selection-only-on-mouse-down]}]
   {:type type
@@ -60,17 +77,19 @@
            {:mouse-down-or-mouse-down-and-move
             (fn [db event]
               (if (not get-selection-only-on-mouse-down)
-                (let [selection-image (get-selection db event)
-                      updated-tool (assoc-in (:tool db) [:state :user-is-making-selection] true) ;; без этого когда меняется мод с move-selection -> select, то происходит up event и снова создаётся селектион
+                (let [updated-tool (assoc-in (:tool db) [:state :user-is-making-selection] true) ;; без этого когда меняется мод с move-selection -> select, то происходит up event и снова создаётся селектион
                       ]
                   {:db (-> db
                            (assoc :tool updated-tool)
-                           (highlight-selection selection-image))})
+                           (highlight-selection #(get-selection % db event)))})
                 {:db db}))
             :mouse-up
             (fn [db event]
               (if (-> db :tool :state :user-is-making-selection)
-                (let [selection-image (get-selection db event)
+                (let [selection-image-js #js []
+                      current-cel (get-current-cel db)
+                      _ (get-selection (fn [x y] (. selection-image-js (push #js [#js [x y] (cel/get-pixel x y current-cel)]))) db event)
+                      selection-image (vec selection-image-js)
                       tool (assoc tool :state {:mode :move-selection
                                                :initial-selection-image selection-image
                                                :selection-image selection-image
@@ -81,26 +100,24 @@
          :move-selection
          {:mouse-down
           (fn [db event]
-            (if (not (contains? (-> tool :state :selection-image) (:pos event)))
-              (commit-moved-selection db)
-              {:db db}))
+            (let [points (set (map (fn [[point]] (vec point)) (-> tool :state :selection-image)))]
+              (if (not (contains? points [(:x (:pos event)) (:y (:pos event))]))
+                (commit-moved-selection db)
+                {:db db})))
           :mouse-down-and-move
           (fn [db event]
-            (let [{:keys [changes preview]} (move-selection (get-preview-from-current-cel db) tool initial-mouse-down-pos event)]
+            (let [{:keys [preview-with-deletion-initial-selection preview]} (move-selection db (get-preview-from-current-cel db) tool initial-mouse-down-pos event)]
               {:db (-> db
-                       (assoc-in [:tool :state :changes] changes)
+                       (assoc-in [:tool :state :preview-with-deletion-initial-selection] preview-with-deletion-initial-selection)
                        (assoc :preview preview)
                        (assoc :visual-effects nil))}))
           :mouse-up
           (fn [db event]
-            (let [{:keys [changes moved-selection-image preview]} (move-selection (get-preview-from-current-cel db) tool initial-mouse-down-pos event)
-                  updated-tool (-> tool
-                                   (assoc-in [:state :selection-image] moved-selection-image)
-                                   (assoc-in [:state :changes] changes))]
+            (let [{:keys [preview-with-deletion-initial-selection preview]} (move-selection db (get-preview-from-current-cel db) tool initial-mouse-down-pos event)]
               {:db (-> db
-                       (assoc :tool updated-tool)
                        (assoc :preview preview)
-                       (highlight-selection moved-selection-image))}))})))})
+                       (assoc-in [:tool :state :preview-with-deletion-initial-selection] preview-with-deletion-initial-selection)
+                       #_(highlight-selection moved-selection-image))}))})))})
 
 (defn copy-selection [db]
   (let [{:keys [selection-image]} (-> db :tool :state)]
@@ -159,7 +176,7 @@
  (fn [{:keys [db]} _]
    (if (-> db :selection-manager :selection-image) ;; todo: copied-selection? оно сущ только когда есть копирование
      (let [{:keys [selection-image tool-type]} (:selection-manager db)
-           changes (remove-transparent-colors selection-image)
+           changes selection-image
            new-tool {:type tool-type
                      :state {:mode :move-selection
                              :initial-selection-image selection-image

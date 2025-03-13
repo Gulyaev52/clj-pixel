@@ -18,8 +18,11 @@
     (. arr (set (clj->js (repeat (* (:width size) (:height size)) color/transparent-color-int))))
     arr))
 
-(defn pos->idx [pos width]
-  (+ (:x pos) (* width (:y pos))))
+(defn pos->idx
+  ([pos width]
+   (+ (:x pos) (* width (:y pos))))
+  ([x y width]
+   (+ x (* width y))))
 
 (defn idx->pos [idx {:keys [width]}]
   {:x (rem idx width)
@@ -73,9 +76,13 @@
 
 (def get-size :size)
 
-(defn get-pixel [pos cel]
-  (let [{:keys [pixels size]} cel]
-    (nth pixels (pos->idx pos (:width size)) color/transparent-color-int)))
+(defn get-pixel
+  ([pos cel]
+   (let [{:keys [pixels size]} cel]
+     (nth pixels (pos->idx pos (:width size)) color/transparent-color-int)))
+  ([x y cel]
+   (let [{:keys [pixels size]} cel]
+     (nth pixels (pos->idx x y (:width size)) color/transparent-color-int))))
 
 (defn pixels->coll [cel]
   (map-indexed (fn [idx pixel] [(idx->pos idx (:size cel)) pixel])
