@@ -8,8 +8,7 @@
                                  get-preview-from-current-cel
                                  with-highlight-cel-under-cursor]]
    [pixel-art.utils.geometry :as geometry]
-   [re-frame.core :as re-frame]
-   [sc.api :as api]))
+   [re-frame.core :as re-frame]))
 
 (defn- init [type] {:type type :state {:mode :select
                                        :user-is-making-selection false}})
@@ -29,20 +28,7 @@
   (let [type (-> db :tool :type)]
     (commit-preview-and-init-tool db (:preview db) (init type))))
 
-#_(def initial-selection-and-preview! (atom nil))
-#_(defn cut-selection-from-preview [initial-selection preview]
-    (let [[prev-initial-selection cached-preview] @initial-selection-and-preview!]
-      (if (= prev-initial-selection initial-selection)
-        (do (println "cache")
-            (. cached-preview slice))
-        (do
-          (doseq [tuple initial-selection]
-            (preview/set-color! preview (aget tuple 0 0) (aget tuple 0 1) color/transparent-color-int))
-          (reset! initial-selection-and-preview! [initial-selection (. preview slice)])
-          (println "rev")
-          preview))))
-
-(defn cut-initial-selection-from-preview-if-need [size preview initial-selection pasted?]
+(defn cut-initial-selection-from-preview-if-need [preview initial-selection pasted?]
   (if (not pasted?)
     (do
       (doseq [tuple initial-selection]
@@ -50,20 +36,24 @@
       preview)
     preview))
 
-(defn- move-selection [db preview tool initial-mouse-down-pos event]
+(defn- move-selection [db tool initial-mouse-down-pos event]
   (let [offset-pos (merge-with - (:pos event) initial-mouse-down-pos)
         offset-x (:x offset-pos)
         offset-y (:y offset-pos)
         {:keys [initial-selection-image pasted?]} (:state tool)
-        preview-with-deletion-initial-selection (or (when-let [p (:preview-with-deletion-initial-selection (:state tool))]
-                                                      p)
-                                                    (cut-initial-selection-from-preview-if-need (-> db :sprite :size) preview initial-selection-image pasted?))
-        preview (preview/create (-> db :sprite :size) preview-with-deletion-initial-selection)]
+        preview-with-deleted-initial-selection (or (:preview-with-deleted-initial-selection (:state tool))
+                                                   (cut-initial-selection-from-preview-if-need (get-preview-from-current-cel db)
+                                                                                               initial-selection-image
+                                                                                               pasted?))
+        preview (preview/create (-> db :sprite :size) preview-with-deleted-initial-selection)]
     (doseq [tuple initial-selection-image]
       (when (not= (aget tuple 1) color/transparent-color-int)
-        (preview/set-color! preview (+ (aget tuple 0 0) offset-x) (+ (aget tuple 0 1) offset-y) (aget tuple 1))))
+        (preview/set-color! preview
+                            (+ (aget tuple 0 0) offset-x)
+                            (+ (aget tuple 0 1) offset-y)
+                            (aget tuple 1))))
     {:preview preview
-     :preview-with-deletion-initial-selection preview-with-deletion-initial-selection}))
+     :preview-with-deleted-initial-selection preview-with-deleted-initial-selection}))
 
 (defn make [{:keys [type get-selection get-selection-only-on-mouse-down]}]
   {:type type
@@ -106,17 +96,17 @@
                 {:db db})))
           :mouse-down-and-move
           (fn [db event]
-            (let [{:keys [preview-with-deletion-initial-selection preview]} (move-selection db (get-preview-from-current-cel db) tool initial-mouse-down-pos event)]
+            (let [{:keys [preview-with-deleted-initial-selection preview]} (move-selection db tool initial-mouse-down-pos event)]
               {:db (-> db
-                       (assoc-in [:tool :state :preview-with-deletion-initial-selection] preview-with-deletion-initial-selection)
+                       (assoc-in [:tool :state :preview-with-deleted-initial-selection] preview-with-deleted-initial-selection)
                        (assoc :preview preview)
                        (assoc :visual-effects nil))}))
           :mouse-up
           (fn [db event]
-            (let [{:keys [preview-with-deletion-initial-selection preview]} (move-selection db (get-preview-from-current-cel db) tool initial-mouse-down-pos event)]
+            (let [{:keys [preview-with-deleted-initial-selection preview]} (move-selection db tool initial-mouse-down-pos event)]
               {:db (-> db
                        (assoc :preview preview)
-                       (assoc-in [:tool :state :preview-with-deletion-initial-selection] preview-with-deletion-initial-selection)
+                       (assoc-in [:tool :state :preview-with-deleted-initial-selection] preview-with-deleted-initial-selection)
                        #_(highlight-selection moved-selection-image))}))})))})
 
 (defn copy-selection [db]
