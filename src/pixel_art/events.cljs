@@ -43,7 +43,7 @@
                 {:event-keys (->> keyboard-shortcuts/shortcuts-by-types
                                   vals
                                   flatten
-                                ;; Order matters, and the first matching key combination will consume the event. So for example, if you want to listen for both forward arrow ({:keyCode 37}) and control + forward arrow ({:keyCode 37 :ctrlKey true}), then you must put the combination before the singleton. 
+                                  ;; Order matters, and the first matching key combination will consume the event. So for example, if you want to listen for both forward arrow ({:keyCode 37}) and control + forward arrow ({:keyCode 37 :ctrlKey true}), then you must put the combination before the singleton. 
                                   (sort-by (fn [{:keys [keys]}] (not (some :ctrlKey keys))))
                                   (map (fn [{:keys [action keys]}]
                                          (into [action] (->> keys

@@ -214,7 +214,7 @@
                       :min-height 0}}
         [tool-options-panel]
         [drawing]
-        #_[timeline-panel]]
+        [timeline-panel]]
        [right-sidebar]]]]))
 
 (defn app []

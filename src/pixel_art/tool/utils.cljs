@@ -40,13 +40,11 @@
                (assoc :preview nil)
                (assoc :visual-effects nil)
                ((fn [db]
-                  (let [preview-vec (preview/->vec preview)
-                        current-pixels (-> (get-current-cel db) :pixels vec)]
-                    (if (and (seq preview-vec) (not= preview-vec current-pixels))
-                      (-> db
-                          (update :sprite #(sprite/set-current-cel-pixels preview %))
-                          history/save-sprite)
-                      db)))))}
+                  (if (and preview (preview/changed? preview))
+                    (-> db
+                        (update :sprite #(sprite/set-current-cel-pixels (js/Uint32Array. preview) %))
+                        history/save-sprite)
+                    db))))}
       (assoc-in [:db :tool] tool-init)))
 
 ;; Resize the pixel at {col, row} for the provided size. Will return the array of pixels centered

@@ -4,30 +4,24 @@
 
 (defn create
   ([size]
-   (let [res ^js (js/Uint32Array. (* (:width size) (:height size)))
+   (create size (js/Uint32Array. (* (:width size) (:height size)))))
+  ([size ^js preview-or-pixels]
+   (let [res (js/Uint32Array. preview-or-pixels)
          width (:width size)
          height (:height size)]
-     (set! (. res -spriteSize) #js [(:width size) (:height size)])
-     ;; todo: comment this
-     (set! (. res -getColor) (fn [^js preview x y]
-                               (aget preview (geometry/pos->idx x y width height))))
-     (set! (. res -setColor) (fn [^js preview x y color]
-                               (aset preview (geometry/pos->idx x y width height) color)))
-     (set! (. res -setColorByIdx)
-           (fn [^js preview idx color]
-             (aset preview idx color)))
-     res))
-  ([size pixels]
-   (let [res ^js (js/Uint32Array. pixels)
-         width (:width size)
-         height (:height size)]
+     (set! (. res -changed) (or (.-changed preview-or-pixels) false))
      (set! (. res -spriteSize) #js [(:width size) (:height size)])
      (set! (. res -getColor) (fn [^js preview x y]
                                (aget preview (geometry/pos->idx x y width height))))
      (set! (. res -setColor) (fn [^js preview x y color]
-                               (aset preview (geometry/pos->idx x y width height) color)))
+                               (let [idx (geometry/pos->idx x y width height)]
+                                 (when (and (not (. preview -changed)) (not= (aget preview idx) color))
+                                   (set! (. preview -changed) true))
+                                 (aset preview (geometry/pos->idx x y width height) color))))
      (set! (. res -setColorByIdx)
            (fn [^js preview idx color]
+             (when (and (not (. preview -changed)) (not= (aget preview idx) color))
+               (set! (. preview -changed) true))
              (aset preview idx color)))
      res)))
 
@@ -46,5 +40,5 @@
 (defn clear [preview]
   (js/Uint32Array. (.-length preview)))
 
-(defn ->vec [preview]
-  (vec preview))
+(defn changed? [^js preview]
+  (. preview -changed))
