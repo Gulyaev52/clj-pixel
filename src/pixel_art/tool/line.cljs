@@ -23,12 +23,10 @@
                           (geometry/get-line-pixels initial-mouse-down-pos (:pos event)))
             preview (get-preview-from-current-cel db)]
         ;; draw the square ends of the line
-        (let [[x y] (aget line-pixels 0)]
-          (doseq [{:keys [x y]} (resize-pixel {:x x :y y} pixel-size)]
-            (preview/set-color! preview x y current-color)))
-        (let [[x y] (aget line-pixels (- (count line-pixels) 1))]
-          (doseq [{:keys [x y]} (resize-pixel {:x x :y y} pixel-size)]
-            (preview/set-color! preview x y current-color)))
+        (doseq [{:keys [x y]} (resize-pixel (aget line-pixels 0) pixel-size)]
+          (preview/set-color! preview x y current-color))
+        (doseq [{:keys [x y]} (resize-pixel (aget line-pixels (- (count line-pixels) 1)) pixel-size)]
+          (preview/set-color! preview x y current-color))
         ;; for each step along the line, draw an x centered on that pixel of size penSize
         (doseq [[x y] line-pixels]
           (dotimes [i pixel-size]

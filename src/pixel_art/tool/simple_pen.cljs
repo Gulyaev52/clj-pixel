@@ -19,8 +19,7 @@
     [pos]))
 
 (defn make [{:keys [type options-spec get-color]}]
-  (let [init (fn init [] {:type type
-                          :state {:prev-pos nil}})]
+  (let [init (fn init [] {:type type})]
     {:type type
      :init init
      :options-spec options-spec
@@ -29,17 +28,15 @@
        (with-highlight-cel-under-cursor
          {:mouse-down-or-mouse-down-and-move
           (fn [db event]
-            (let [prev-pos (-> db :tool :state :prev-pos)
+            (let [prev-pos (:prev-pos db)
                   {:keys [pixel-size]} (get-tool-options db)
                   points (->>
                           (get-interpolated-pixels prev-pos (:pos event))
                           (mapcat #(resize-pixel % pixel-size)))
                   preview (get-preview-or-create-from-current-cel db)]
-              (doseq [{:keys [x y]} points]
+              (doseq [[x y] points]
                 (let [color (get-color db event)]
                   (preview/set-color! preview x y color)))
-              {:db (-> db
-                       (assoc-in [:tool :state] {:prev-pos (:pos event)})
-                       (assoc :preview preview))}))
+              {:db (assoc db :preview preview)}))
           :mouse-up (fn [db]
                       (commit-preview-and-init-tool db (:preview db) (init)))}))}))

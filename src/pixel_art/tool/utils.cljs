@@ -54,8 +54,8 @@
 (defn resize-pixel [point size]
   (for [j (range 0 size)
         i (range 0 size)]
-    {:x (+ (- (:x point) (. js/Math (floor (/ size 2)))) i)
-     :y (+ (- (:y point) (. js/Math (floor (/ size 2)))) j)}))
+    #js [(+ (- (aget point 0) (. js/Math (floor (/ size 2)))) i)
+         (+ (- (aget point 1) (. js/Math (floor (/ size 2)))) j)]))
 
 (defn with-highlight-cel-under-cursor [events-handlers]
   (merge
