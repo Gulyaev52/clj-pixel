@@ -15,8 +15,7 @@
 
 (defn create-pixels-coll [size]
   (let [arr (js/Uint32Array. (* (:width size) (:height size)))]
-    (. arr (set (clj->js (repeat (* (:width size) (:height size)) color/transparent-color-int))))
-    arr))
+    (. arr (fill color/transparent-color-int))))
 
 (defn pos->idx
   ([pos width]
