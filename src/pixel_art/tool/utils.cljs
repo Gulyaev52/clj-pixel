@@ -70,7 +70,7 @@
             {:keys [pixel-size]} (get-tool-options db)
             points (if pixel-size
                      (resize-pixel (:pos event) pixel-size)
-                     [(:pos event)])
+                     [#js [(:x (:pos event)) (:y (:pos event))]])
             size (-> db :sprite :size)
 
             visual-effects (get-empty-visual-effects db)

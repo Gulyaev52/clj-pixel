@@ -48,7 +48,7 @@
      :moved-selection-image moved-selection-image
      :preview preview}))
 
-(defn make [{:keys [type get-selection get-selection-only-on-mouse-down]}]
+(defn make [{:keys [type get-selection]}]
   {:type type
    :init (fn [] (init type))
    :get-events-handlers
@@ -59,6 +59,7 @@
          (with-highlight-cel-under-cursor
            {:mouse-down-or-mouse-down-and-move
             (fn [db event]
+              (println "t")
               (let [selection-image (get-selection db event)
                     updated-tool (assoc-in (:tool db) [:state :user-is-making-selection] true) ;; без этого когда меняется мод с move-selection -> select, то происходит up event и снова создаётся селектион
                     ]
