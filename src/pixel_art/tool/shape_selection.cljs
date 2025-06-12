@@ -8,7 +8,6 @@
 (def tool
   (selection/make
    {:type :shape-selection
-    :get-selection-only-on-mouse-down true
     :get-selection
     (fn [db event]
       (let [current-cel (get-current-cel db)
@@ -17,5 +16,5 @@
                                   (:size current-cel)
                                   (:pixels current-cel)
                                   color-under-mouse)
-             (map (fn [p] [p color-under-mouse]))
+             (map (fn [[x y]] [{:x x :y y} color-under-mouse]))
              (into {}))))}))
