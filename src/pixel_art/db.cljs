@@ -17,7 +17,7 @@
                          (map (fn [{:keys [field initial-value]}] [field initial-value]))
                          (into {})))))
 
-(defn get-db [{:keys [sprite palettes primary-color secondary-color pixels-grid-enabled new-project-modal-opened]} viewport-size]
+(defn get-db [{:keys [sprite palettes tool-type primary-color secondary-color pixels-grid-enabled new-project-modal-opened]} viewport-size]
   (merge
    {:size (:size sprite)
     :preview nil
@@ -25,7 +25,7 @@
     :pixels-grid-enabled (if (some? pixels-grid-enabled) pixels-grid-enabled true)
     :new-project-modal (new-project-modal.events/init new-project-modal-opened)
     :sprite sprite
-    :tool (tool/init :pen)
+    :tool (tool/init (or tool-type :pen))
     :tools-options (get-initial-options tool/options-specs)
     :primary-color primary-color
     :secondary-color secondary-color

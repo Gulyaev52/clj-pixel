@@ -126,7 +126,8 @@
               on-change #(re-frame/dispatch [::events/change-tool-option (:field option-spec) %])
               props (assoc option-spec
                            :value value
-                           :on-change on-change)]
+                           :on-change on-change
+                           :data-testid (:field option-spec))]
           ^{:key idx}
           [:div
            (case (:type option-spec)
@@ -193,8 +194,9 @@
                       :width "100%"
                       :height "100%"
                       :background-color "rgba(0, 0, 0, 0.8)"}}
-        [:> antd/Spin {:size "large"}]])
-     [:div {:style {:display "flex"
+        [:> antd/Spin {:size "large" :data-testid "app-spinner"}]])
+     [:div {:data-testid (when-not initial-loading "ready")
+            :style {:display "flex"
                     :flex-direction "column"
                     :height "100%"
                     :width "100%"

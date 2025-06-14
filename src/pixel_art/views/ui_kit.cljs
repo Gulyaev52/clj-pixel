@@ -87,8 +87,9 @@
                     :onChange (fn [value]
                                 (on-change value))}]])
 
-(defn checkbox [{:keys [value on-change label]}]
+(defn checkbox [{:keys [value on-change label data-testid]}]
   [:> antd/Checkbox {:checked value
+                     :data-testid data-testid
                      :onChange (fn [e]
                                  (on-change (.. e -target -checked)))}
    label])
@@ -118,8 +119,8 @@
                                nil)
                        :style {:width (when block "100%")}
                        :on-change (fn [_ option]
-                                 ;; after select option, select has focus and pressing hotkeys doesn't work + any key lead to select opening
-                                 ;; todo: find better way?
+                                    ;; after select option, select has focus and pressing hotkeys doesn't work + any key lead to select opening
+                                    ;; todo: find better way?
                                     (when-let [value (some-> (nth options (.-value option)) :value)]
                                       (.. @!ref blur)
                                       (on-change value)))}])))

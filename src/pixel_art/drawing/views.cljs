@@ -205,6 +205,7 @@
                   sprite-size)]
         [:canvas (merge
                   {:id "current-layer"
+                   :data-testid "current-layer"
                    :className "layer"
                    :style {:position :absolute
                            :left 0

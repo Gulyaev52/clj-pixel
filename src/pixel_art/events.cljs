@@ -21,9 +21,12 @@
 
 (re-frame/reg-event-fx
  ::start-app
- (fn []
-   {:db {:initial-loading true}
-    :fx [[::load-initial-data]]}))
+ (fn [_ [_ settings]]
+   (if settings
+     {:db {:initial-loading true}
+      :fx [[:dispatch [:initialize-db settings]]]}
+     {:db {:initial-loading true}
+      :fx [[::load-initial-data]]})))
 
 (re-frame/reg-fx
  ::load-initial-data
@@ -31,7 +34,7 @@
    (.. (backup/init-db+)
        (then backup/get-backup+)
        (then (fn [backup]
-               (re-frame/dispatch [:initialize-db])))
+               (re-frame/dispatch [:initialize-db]))) ;; todo: fix
        (catch (fn []
                 (re-frame/dispatch [:initialize-db]))))))
 
