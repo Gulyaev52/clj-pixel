@@ -63,7 +63,7 @@
       (rtl/render)))
 
 ;; todo: rename
-(defn use-current-tool [poses]
+(defn mouse-down->move->up [poses]
   (let [mouse-down-pos (first poses)
         mouse-move-poses (when (> (count poses) 1)
                            (subvec poses 1 (count poses)))
@@ -88,7 +88,7 @@
 (def s (color/int 255 0 0)) ;; default secondary color
 (def t color/transparent-color-int)
 
-(defn run-drawing-tool [{:keys [sprite tool-type options mouse-events expected]}]
+(defn run-drawing-tool [{:keys [sprite tool-type options mouse-points expected]}]
   (mount {:sprite sprite
           :tool-type tool-type
           :palettes initial-palettes
@@ -109,7 +109,7 @@
                        (delay-p 10) ;; todo: replace with wait-for
                        )))
              (then (fn []
-                     (use-current-tool mouse-events)
+                     (mouse-down->move->up mouse-points)
                      (r/flush)
                      (is (= expected (current-layer->pixels-matrix)))
                      (done)))
@@ -121,7 +121,7 @@
 (deftest pen-tool
   (run-drawing-tool {:sprite (get-sprite {:width 4 :height 4})
                      :tool-type :pen
-                     :mouse-events [{:x 0 :y 0}
+                     :mouse-points [{:x 0 :y 0}
                                     {:x 1 :y 1}
                                     {:x 2 :y 2}
                                     {:x 3 :y 3}]
@@ -133,7 +133,7 @@
 (deftest pen-tool-fast-move
   (run-drawing-tool {:sprite (get-sprite {:width 4 :height 4})
                      :tool-type :pen
-                     :mouse-events [{:x 0 :y 0}
+                     :mouse-points [{:x 0 :y 0}
                                     {:x 3 :y 3}]
                      :expected [[p t t t]
                                 [t p t t]
@@ -144,7 +144,7 @@
 #_(deftest pen-pixel-size
     (run-drawing-tool {:sprite (get-empty-sprite {:width 4 :height 4})
                        :tool-type :pen
-                       :mouse-events [{:x 0 :y 0}]
+                       :mouse-points [{:x 0 :y 0}]
                        :options [{:field :pixel-size
                                   :value 2}]
                        :expected [[p t t t]
@@ -157,7 +157,7 @@
                                               [t p t]
                                               [s s s]])
                      :tool-type :eraser
-                     :mouse-events [{:x 1 :y 0}
+                     :mouse-points [{:x 1 :y 0}
                                     {:x 1 :y 1}]
                      :expected [[s t p]
                                 [t t t]
@@ -168,7 +168,7 @@
                                               [t s t]
                                               [t t s]])
                      :tool-type :bucket
-                     :mouse-events [{:x 0 :y 1}]
+                     :mouse-points [{:x 0 :y 1}]
                      :expected [[s t t]
                                 [p s t]
                                 [p p s]]}))
@@ -180,7 +180,7 @@
                      :tool-type :bucket
                      :options [{:field :same-color
                                 :value true}]
-                     :mouse-events [{:x 0 :y 1}]
+                     :mouse-points [{:x 0 :y 1}]
                      :expected [[s p p]
                                 [p s p]
                                 [p p s]]}))
@@ -198,12 +198,12 @@
     (async done
            (.. (. rtl/screen (findByTestId "ready"))
                (then (fn []
-                       (use-current-tool [{:x 0 :y 0}])
+                       (mouse-down->move->up [{:x 0 :y 0}])
                        (r/flush)
                        (is (= new-primary-color (:primary-color @db/app-db)))
                        (is (= s (:secondary-color @db/app-db)))
 
-                       (use-current-tool [{:x 1 :y 0 :right-button true}])
+                       (mouse-down->move->up [{:x 1 :y 0 :right-button true}])
                        (r/flush)
                        (is (= new-primary-color (:primary-color @db/app-db)))
                        (is (= new-secondary-color (:secondary-color @db/app-db)))
@@ -219,7 +219,7 @@
                                               [t t t t t]
                                               [t t t t t]])
                      :tool-type :rectangle
-                     :mouse-events [{:x 1 :y 1}
+                     :mouse-points [{:x 1 :y 1}
                                     {:x 2 :y 2}
                                     {:x 3 :y 3}
                                     {:x 3 :y 4}]
@@ -238,7 +238,7 @@
                      :tool-type :rectangle
                      :options [{:field :fill
                                 :value true}]
-                     :mouse-events [{:x 1 :y 1}
+                     :mouse-points [{:x 1 :y 1}
                                     {:x 3 :y 4}]
                      :expected [[t t t t t]
                                 [t p p p t]
@@ -255,7 +255,7 @@
                      :tool-type :rectangle
                      :options [{:field :keep-ratio
                                 :value true}]
-                     :mouse-events [{:x 1 :y 1}
+                     :mouse-points [{:x 1 :y 1}
                                     {:x 3 :y 4}]
                      :expected [[t t t t t]
                                 [t p p p t]
@@ -271,7 +271,7 @@
                                               [t t t t t t]
                                               [t t t t t t]])
                      :tool-type :circle
-                     :mouse-events [{:x 1 :y 1}
+                     :mouse-points [{:x 1 :y 1}
                                     {:x 2 :y 2}
                                     {:x 3 :y 3}
                                     {:x 4 :y 4}
@@ -293,7 +293,7 @@
                      :tool-type :circle
                      :options [{:field :keep-ratio
                                 :value true}]
-                     :mouse-events [{:x 1 :y 1}
+                     :mouse-points [{:x 1 :y 1}
                                     {:x 4 :y 5}]
                      :expected [[t t t t t t]
                                 [t t p p t t]
@@ -309,7 +309,7 @@
                                               [t t t t t]
                                               [t t t t t]])
                      :tool-type :line
-                     :mouse-events [{:x 1 :y 1}
+                     :mouse-points [{:x 1 :y 1}
                                     {:x 2 :y 2}
                                     {:x 3 :y 3}
                                     {:x 3 :y 4}]
@@ -328,7 +328,7 @@
                      :tool-type :line
                      :options [{:field :straight
                                 :value true}]
-                     :mouse-events [{:x 1 :y 1}
+                     :mouse-points [{:x 1 :y 1}
                                     {:x 3 :y 4}]
                      :expected [[t t t t t]
                                 [t p t t t]
@@ -340,7 +340,7 @@
   (run-drawing-tool {:sprite (matrix->sprite [[s p s]
                                               [s p t]])
                      :tool-type :shading
-                     :mouse-events [{:x 0 :y 0}
+                     :mouse-points [{:x 0 :y 0}
                                     {:x 0 :y 1}
                                     {:x 1 :y 1}
                                     {:x 2 :y 1}]
@@ -353,7 +353,7 @@
                      :tool-type :shading
                      :options [{:field :lighten
                                 :value true}]
-                     :mouse-events [{:x 0 :y 0}
+                     :mouse-points [{:x 0 :y 0}
                                     {:x 1 :y 0}
                                     {:x 1 :y 1}
                                     {:x 2 :y 1}]
