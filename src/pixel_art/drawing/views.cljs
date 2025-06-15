@@ -216,16 +216,6 @@
                            :height "100%"}}
                   sprite-size)]
         [:canvas (merge
-                  {:id "preview"
-                   :style {:position :absolute
-                           :left 0
-                           :top 0
-                           :image-rendering "pixelated"
-                           :z-index 1
-                           :width "100%"
-                           :height "100%"}}
-                  sprite-size)]
-        [:canvas (merge
                   {:id "visual-effects"
                    :style {:position :absolute
                            :left 0
