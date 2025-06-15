@@ -118,12 +118,12 @@
              (then (fn []
                      (when (seq options)
                        (doseq [opt options]
-                         (let [option-input (. rtl/screen (getByTestId (name (:field opt))))]
-                           (cond
-                             (boolean? (:value opt))
-                             (. rtl/fireEvent (click option-input))
-                             (number? (:value opt))
-                             (. rtl/fireEvent (change #js {"target" #js {"value" (:value opt)}})))))
+                         (cond
+                           (boolean? (:value opt))
+                           (let [option-input (. rtl/screen (getByTestId (name (:field opt))))]
+                             (. rtl/fireEvent (click option-input)))
+                           (number? (:value opt))
+                           (re-frame/dispatch-sync [::e/change-tool-option :pixel-size (:value opt)])))
                        (delay-p 10) ;; todo: replace with wait-for
                        )))
              (then (fn []
@@ -158,17 +158,16 @@
                                 [t t p t]
                                 [t t t p]]}))
 
-;; todo: slider реализован как обычный инпут так что там сложно вызывать евент с изменением
-#_(deftest pen-pixel-size
-    (run-drawing-tool {:sprite (get-empty-sprite {:width 4 :height 4})
-                       :tool-type :pen
-                       :mouse-points [{:x 0 :y 0}]
-                       :options [{:field :pixel-size
-                                  :value 2}]
-                       :expected [[p t t t]
-                                  [t p t t]
-                                  [t t p t]
-                                  [t t t t]]}))
+(deftest pen-pixel-size
+  (run-drawing-tool {:sprite (get-sprite {:width 4 :height 4})
+                     :tool-type :pen
+                     :mouse-points [{:x 1 :y 1}]
+                     :options [{:field :pixel-size
+                                :value 2}]
+                     :expected [[p p t t]
+                                [p p t t]
+                                [t t t t]
+                                [t t t t]]}))
 
 (deftest eraser-tool
   (run-drawing-tool {:sprite (matrix->sprite [[s p p]
@@ -719,7 +718,7 @@
 (comment
   (do
     (.clear js/console)
-    (test-vars [#'pixel-art.check-test/copy-past-delete-selection])))
+    (test-vars [#'pixel-art.check-test/pen-pixel-size])))
 (comment
   (do (.clear js/console)
       (run-tests)))

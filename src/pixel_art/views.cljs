@@ -19,7 +19,6 @@
    [pixel-art.sprite-resizer.events :as sprite-resizer.events]
    [pixel-art.sprite-resizer.views :refer [sprite-resizer-modal]]
    [pixel-art.subs :as subs]
-   [pixel-art.timeline.views :refer [timeline-panel]]
    [pixel-art.tool.core :as tool]
    [pixel-art.views.color-picker :refer [color-picker]]
    [pixel-art.views.constants :refer [transparent-color-img]]
