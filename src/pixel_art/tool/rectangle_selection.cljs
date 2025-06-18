@@ -1,9 +1,8 @@
 (ns pixel-art.tool.rectangle-selection
   (:require
+   ["./t.js" :as t]
    [clojure.set]
-   [pixel-art.model.cel :as cel]
    [pixel-art.tool.selection :as selection]
-   [pixel-art.tool.utils :refer [get-current-cel]]
    [pixel-art.utils.geometry :as geometry]))
 
 (def tool
@@ -12,14 +11,6 @@
     :get-selection
     (fn get-selection [db event]
       (let [{:keys [initial-mouse-down-pos]} db
-            current-cel (get-current-cel db)
-            {:keys [top-left bottom-right]} (geometry/get-ordered-rectangle-points [initial-mouse-down-pos (:pos event)])
-            x-top-left (:x top-left)
-            x-bottom-right (:x bottom-right)
-            y-top-left (:y top-left)
-            y-bottom-right (:y bottom-right)]
-        (->> (for [x (range x-top-left (inc x-bottom-right))
-                   y (range y-top-left (inc y-bottom-right))]
-               (let [p {:x x :y y}]
-                 [p (cel/get-pixel p current-cel)]))
-             (into {}))))}))
+            {:keys [top-left bottom-right]} (geometry/get-ordered-rectangle-points [initial-mouse-down-pos (:pos event)])]
+        (t/test (:x top-left) (:y top-left)
+                (:x bottom-right) (:y bottom-right))))}))

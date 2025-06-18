@@ -73,7 +73,7 @@
    (let [initial-db (if settings
                       (db/get-db settings viewport-size)
                       (db/get-db (assoc project-settings/default-palettes-and-current-colors
-                                        :sprite (project-settings/create-empty-sprite {:width 4 :height 4})
+                                        :sprite (project-settings/create-empty-sprite {:width 10 :height 10})
                                         :new-project-modal-opened false)
                                  viewport-size))]
      {:db initial-db

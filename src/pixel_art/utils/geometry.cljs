@@ -39,6 +39,7 @@
    (when (and (< -1 x (:width size))
               (< -1 y (:height size)))
      (+ x (* (:width size) y))))
+  ;; more performant version. lookup can be not performant when doing very often. (e.x. grid is 512x512 and we are making selection)
   ([x y width height]
    (when (and (< -1 x width)
               (< -1 y height))

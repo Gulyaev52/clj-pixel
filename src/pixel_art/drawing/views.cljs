@@ -96,6 +96,19 @@
                      (array visual-effects sprite-size))
     [:div]))
 
+(defn debounce
+  "Создает функцию, которая откладывает вызов функции `f` до тех пор, пока не пройдет `wait` миллисекунд после последнего вызова."
+  [f wait]
+  (let [timeout-id (atom nil)]
+    (fn [& args]
+      (when-let [tid @timeout-id]
+        (js/clearTimeout tid))
+      (reset! timeout-id
+              (js/setTimeout
+               (fn []
+                 (apply f args))
+               wait)))))
+
 (def-func-component drawing []
   (let [viewport-ref (react/useRef)
         onion-skin-ref (react/useRef)
@@ -153,12 +166,14 @@
 
                                      mouse-pos (canvas-pos->frame-pos event scale)
 
-                                     mouse-move (fn [event]
-                                                  (let [scale (:scale @db/app-db)
-                                                        mouse-pos (canvas-pos->frame-pos event scale)]
-                                                    (when (not= mouse-pos @!last-mouse-pos)
-                                                      (reset! !last-mouse-pos mouse-pos)
-                                                      (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos right-button]))))
+                                     mouse-move (debounce
+                                                 (fn [event]
+                                                   (let [scale (:scale @db/app-db)
+                                                         mouse-pos (canvas-pos->frame-pos event scale)]
+                                                     (when (not= mouse-pos @!last-mouse-pos)
+                                                       (reset! !last-mouse-pos mouse-pos)
+                                                       (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos right-button]))))
+                                                 1)
 
                                      mouse-up (fn mouse-up [event]
                                                 (let [scale (:scale @db/app-db)
