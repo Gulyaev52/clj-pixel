@@ -8,7 +8,8 @@
                                  get-preview-from-current-cel
                                  with-highlight-cel-under-cursor]]
    [pixel-art.utils.geometry :as geometry]
-   [re-frame.core :as re-frame]))
+   [re-frame.core :as re-frame]
+   [sc.api :as api]))
 
 ;; использовать idx вместо поинтов?
 ;; пропускать лишние эвенты
@@ -144,12 +145,10 @@
 (defn delete-selection-and-commit [db]
   (let [tool-type (-> db :tool :type)
         {:keys [initial-selection-image pasted?]} (-> db :tool :state)
-        deleted-initial-selection (if pasted?
-                                    {}
-                                    (update-vals initial-selection-image (fn [_] color/transparent-color-int)))
         preview (get-preview-from-current-cel db)]
-    (doseq [[{:keys [x y]} color] deleted-initial-selection]
-      (preview/set-color! preview x y color))
+    (when-not pasted?
+      (doseq [[[x y]] initial-selection-image]
+        (preview/set-color! preview x y color/transparent-color-int)))
     (commit-preview-and-init-tool db preview {:type tool-type :state {:mode :select}})))
 
 (defn tool-has-selection? [db]
@@ -190,19 +189,20 @@
  (fn [{:keys [db]} _]
    (if (-> db :selection-manager :selection-image) ;; todo: copied-selection? оно сущ только когда есть копирование
      (let [{:keys [selection-image tool-type]} (:selection-manager db)
-           changes (remove-transparent-colors selection-image)
            new-tool {:type tool-type
                      :state {:mode :move-selection
                              :initial-selection-image selection-image
                              :selection-image selection-image
                              :pasted? true}}
-           preview (get-preview-from-current-cel db)]
-       (doseq [[{:keys [x y]} color] changes]
-         (preview/set-color! preview x y color))
+           preview (get-preview-from-current-cel db)
+           selection-image-points (. selection-image (map (fn [[point]] point)))]
+       (doseq [[[x y] color] selection-image]
+         (when-not (= color color/transparent-color-int)
+           (preview/set-color! preview x y color)))
        (-> db
            commit-moved-selection
            (assoc-in [:db :tool] new-tool)
            (update :db #(-> %
                             (assoc :preview preview)
-                            (highlight-selection selection-image)))))
+                            (highlight-selection selection-image-points)))))
      {:db db})))

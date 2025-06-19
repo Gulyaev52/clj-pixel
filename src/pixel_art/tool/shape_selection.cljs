@@ -12,9 +12,7 @@
     (fn [db event]
       (let [current-cel (get-current-cel db)
             color-under-mouse (cel/get-pixel (:pos event) current-cel)]
-        (->> (geometry/flood-fill (:pos event)
-                                  (:size current-cel)
-                                  (:pixels current-cel)
-                                  color-under-mouse)
-             (map (fn [[x y]] [{:x x :y y} color-under-mouse]))
-             (into {}))))}))
+        (geometry/flood-fill (:pos event)
+                             (:size current-cel)
+                             (:pixels current-cel)
+                             color-under-mouse)))}))

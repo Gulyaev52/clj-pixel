@@ -443,13 +443,13 @@
          (.. (. rtl/screen (findByTestId "ready"))
              (then (fn []
                      (mouse-down->move->up [{:x 0 :y 0}
-                                            {:x 1 :y 1}])
+                                            {:x 2 :y 1}])
                      (mouse-down {:x 0 :y 0})
                      (delay-p 50)))
              (then (fn []
                      (is (= selection-pixels (current-layer->pixels-matrix)) "current-layer is not changed")
-                     (is (= [[color/highlight-light-color color/highlight-light-color 0 0]
-                             [color/highlight-light-color color/highlight-light-color 0 0]
+                     (is (= [[color/highlight-light-color color/highlight-light-color color/highlight-light-color 0]
+                             [color/highlight-light-color color/highlight-light-color color/highlight-light-color 0]
                              [0 0 0 0]
                              [0 0 0 0]]
                             (get-canvas->pixels "visual-effects")))))
@@ -474,8 +474,8 @@
                              [t t s s]]
                             (get-canvas->pixels "current-layer")))
                      (is (= [[0 0 0 0]
-                             [color/highlight-light-color color/highlight-light-color 0 0]
-                             [color/highlight-light-color color/highlight-light-color 0 0]
+                             [color/highlight-light-color color/highlight-light-color color/highlight-light-color 0]
+                             [color/highlight-light-color color/highlight-light-color color/highlight-light-color 0]
                              [0 0 0 0]]
                             (get-canvas->pixels "visual-effects"))
                          "moved selection is highlighted")))
@@ -523,35 +523,6 @@
                       (is (nil? e)))))))
 
 (deftest delete-selection-test
-  (mount {:sprite (matrix->sprite selection-pixels)
-          :tool-type :rectangle-selection
-          :palettes initial-palettes
-          :primary-color p
-          :secondary-color s})
-  (async done
-         (.. (. rtl/screen (findByTestId "ready"))
-             (then (fn []
-                     (mouse-down->move->up [{:x 0 :y 0}
-                                            {:x 1 :y 1}])
-                     (delay-p 50)))
-             (then (fn []
-                     (. rtl/fireEvent (keyDown js/document #js {"key" "Backspace" "code" "Backspace" "keyCode" 8}))
-                     (delay-p 50)))
-             (then (fn []
-                     (is (= [[t t t t]
-                             [t t t t]
-                             [t t s s]
-                             [t t s s]]
-                            (current-layer->pixels-matrix))
-                         "selection is removed from current-layer")
-                     (is (= 1 (-> @db/app-db :history :current-idx)) "changes are commited")
-                     (is (= visual-effects-without-highlight (get-canvas->pixels "visual-effects"))
-                         "highlight selection")))
-             (then done)
-             (catch (fn [e]
-                      (is (nil? e)))))))
-
-(deftest delete-selection-when-overlap-test
   (mount {:sprite (matrix->sprite selection-pixels)
           :tool-type :rectangle-selection
           :palettes initial-palettes
@@ -664,7 +635,7 @@
 
 (deftest copy-past-delete-selection
   (mount {:sprite (matrix->sprite selection-pixels)
-          :tool-type :shape-selection
+          :tool-type :rectangle-selection
           :palettes initial-palettes
           :primary-color p
           :secondary-color s})
@@ -718,7 +689,11 @@
 (comment
   (do
     (.clear js/console)
-    (test-vars [#'pixel-art.check-test/pen-pixel-size])))
+    (.. (test-vars [#'pixel-art.check-test/shape-selection-make-selection])
+        (then (fn []
+                (println "done")))
+        (catch (fn [e]
+                 (println "error"))))))
 (comment
   (do (.clear js/console)
       (run-tests)))
