@@ -14,10 +14,10 @@
      (set! (. res -getColor) (fn [^js preview x y]
                                (aget preview (geometry/pos->idx x y width height))))
      (set! (. res -setColor) (fn [^js preview x y color]
-                               (let [idx (geometry/pos->idx x y width height)]
+                               (when-let [idx (geometry/pos->idx x y width height)]
                                  (when (and (not (. preview -changed)) (not= (aget preview idx) color))
                                    (set! (. preview -changed) true))
-                                 (aset preview (geometry/pos->idx x y width height) color))))
+                                 (aset preview idx color))))
      (set! (. res -setColorByIdx)
            (fn [^js preview idx color]
              (when (and (not (. preview -changed)) (not= (aget preview idx) color))

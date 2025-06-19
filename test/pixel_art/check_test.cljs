@@ -1,7 +1,7 @@
 (ns pixel-art.check-test
   (:require
    ["@testing-library/react" :as rtl]
-   [cljs.test :refer [async deftest is test-vars run-tests testing]]
+   [cljs.test :refer [async deftest is test-vars run-tests]]
    [pixel-art.drawing.events :as drawing.events]
    [pixel-art.events :as e]
    [pixel-art.model.cel :as cel]
@@ -383,10 +383,10 @@
    [t t s s]
    [t t s s]])
 (def visual-effects-without-highlight
-  [[0 0 0 0]
-   [0 0 0 0]
-   [0 0 0 0]
-   [0 0 0 0]])
+  [[t t t t]
+   [t t t t]
+   [t t t t]
+   [t t t t]])
 
 (deftest rectangle-selection-make-selection
   (mount {:sprite (matrix->sprite selection-pixels)
@@ -402,10 +402,10 @@
                      (delay-p 50)))
              (then (fn []
                      (is (= selection-pixels (current-layer->pixels-matrix)) "current-layer is not changed")
-                     (is (= [[color/highlight-light-color color/highlight-light-color 0 0]
-                             [color/highlight-light-color color/highlight-light-color 0 0]
-                             [0 0 0 0]
-                             [0 0 0 0]]
+                     (is (= [[color/highlight-light-color color/highlight-light-color t t]
+                             [color/highlight-light-color color/highlight-light-color t t]
+                             [t t t t]
+                             [t t t t]]
                             (get-canvas->pixels "visual-effects"))
                          "highlight selection")))
              (then done)
@@ -448,10 +448,10 @@
                      (delay-p 50)))
              (then (fn []
                      (is (= selection-pixels (current-layer->pixels-matrix)) "current-layer is not changed")
-                     (is (= [[color/highlight-light-color color/highlight-light-color color/highlight-light-color 0]
-                             [color/highlight-light-color color/highlight-light-color color/highlight-light-color 0]
-                             [0 0 0 0]
-                             [0 0 0 0]]
+                     (is (= [[color/highlight-light-color color/highlight-light-color color/highlight-light-color t]
+                             [color/highlight-light-color color/highlight-light-color color/highlight-light-color t]
+                             [t t t t]
+                             [t t t t]]
                             (get-canvas->pixels "visual-effects")))))
              (then (fn []
                      (mouse-move [{:x 0 :y 1}])
@@ -473,10 +473,10 @@
                              [p p s s]
                              [t t s s]]
                             (get-canvas->pixels "current-layer")))
-                     (is (= [[0 0 0 0]
-                             [color/highlight-light-color color/highlight-light-color color/highlight-light-color 0]
-                             [color/highlight-light-color color/highlight-light-color color/highlight-light-color 0]
-                             [0 0 0 0]]
+                     (is (= [[t t t t]
+                             [color/highlight-light-color color/highlight-light-color color/highlight-light-color t]
+                             [color/highlight-light-color color/highlight-light-color color/highlight-light-color t]
+                             [t t t t]]
                             (get-canvas->pixels "visual-effects"))
                          "moved selection is highlighted")))
              (then (fn []
@@ -679,12 +679,31 @@
                      (delay-p 50)))
              (then (fn []
                      (is (= selection-pixels (current-layer->pixels-matrix)) "current-layer is not changed")
-                     (is (= [[color/highlight-light-color color/highlight-light-color 0 0]
-                             [color/highlight-light-color color/highlight-light-color 0 0]
-                             [0 0 0 0]
-                             [0 0 0 0]]
+                     (is (= [[color/highlight-light-color color/highlight-light-color t t]
+                             [color/highlight-light-color color/highlight-light-color t t]
+                             [t t t t]
+                             [t t t t]]
                             (get-canvas->pixels "visual-effects"))
                          "highlight selection")))
+             (then done)
+             (catch (fn [e]
+                      (is (nil? e)))))))
+
+(deftest draw-outside-current-layer
+  (mount {:sprite (get-sprite {:width 2 :height 2})
+          :tool-type :pen
+          :palettes initial-palettes
+          :primary-color p
+          :secondary-color s})
+  (async done
+         (.. (. rtl/screen (findByTestId "ready"))
+             (then (fn []
+                     (mouse-down->move->up [{:x -1 :y -1}])
+                     (delay-p 50)))
+             (then (fn []
+                     (is (= [[t t] [t t]] (current-layer->pixels-matrix)))
+                     (is (= 0 (-> @db/app-db :history :current-idx)) "no changes are commited")
+                     (is (= [[t t] [t t]] (get-canvas->pixels "visual-effects")))))
              (then done)
              (catch (fn [e]
                       (is (nil? e)))))))
@@ -692,7 +711,7 @@
 (comment
   (do
     (.clear js/console)
-    (.. (test-vars [#'pixel-art.check-test/copy-past-delete-selection])
+    (.. (test-vars [#'pixel-art.check-test/draw-outside-current-layer])
         (then (fn []
                 (println "done")))
         (catch (fn [e]
