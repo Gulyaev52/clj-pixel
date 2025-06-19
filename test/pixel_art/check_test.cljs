@@ -652,6 +652,9 @@
                      (. rtl/fireEvent (keyDown js/document #js {"key" "v" "code" "KeyV" "keyCode" 86 "ctrlKey" true}))
                      (delay-p 50)))
              (then (fn []
+                     (mouse-down->move->up [{:x 0 :y 0}
+                                            {:x 1 :y 0}])))
+             (then (fn []
                      (. rtl/fireEvent (keyDown js/document #js {"key" "Backspace" "code" "Backspace" "keyCode" 8}))
                      (delay-p 50)))
              (then (fn []
@@ -689,7 +692,7 @@
 (comment
   (do
     (.clear js/console)
-    (.. (test-vars [#'pixel-art.check-test/shape-selection-make-selection])
+    (.. (test-vars [#'pixel-art.check-test/copy-past-delete-selection])
         (then (fn []
                 (println "done")))
         (catch (fn [e]

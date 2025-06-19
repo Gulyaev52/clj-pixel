@@ -80,6 +80,16 @@
                      (array preview sprite-size))
     [:div]))
 
+(def-func-component sprite-layers-comp []
+  (let [sprite @(re-frame/subscribe [::common-subs/sprite])
+        preview @(re-frame/subscribe [::subs/preview])]
+    (react/useEffect (fn []
+                       (when (and sprite (not preview))
+                         (canvas/clear-canvases (vec (. js/document (getElementsByClassName "layer"))))
+                         (canvas/draw-frame (sprite/get-current-frame-idx sprite) sprite)))
+                     (array sprite preview))
+    [:div]))
+
 (def-func-component visual-effects-comp []
   (let [sprite @(re-frame/subscribe [::common-subs/sprite])
         visual-effects @(re-frame/subscribe [::subs/visual-effects])
@@ -123,11 +133,7 @@
         drawing-container-size @(re-frame/subscribe [::subs/drawing-container-size])
         viewport-scroll @(re-frame/subscribe [::subs/viewport-scroll])
         onion-skin @(re-frame/subscribe [::onion-skin.subs/onion-skin])]
-    (react/useEffect (fn []
-                       (when sprite
-                         (canvas/clear-canvases (vec (. js/document (getElementsByClassName "layer"))))
-                         (canvas/draw-frame (sprite/get-current-frame-idx sprite) sprite)))
-                     (array sprite)) ;; todo: optimize 
+    ;; todo: optimize 
     (react/useLayoutEffect (fn []
                              (when-let [current (.-current viewport-ref)]
                                (set! (.. current -scrollTop) (:y viewport-scroll))
@@ -138,6 +144,7 @@
     (use-draw-onion-skin sprite onion-skin onion-skin-ref)
     [:<>
      [preview-comp]
+     [sprite-layers-comp]
      [visual-effects-comp]
      [:div {:id "viewport"
             :ref viewport-ref
