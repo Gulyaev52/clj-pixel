@@ -7,8 +7,8 @@
 (def tool
   (selection/make
    {:type :rectangle-selection
-    :get-selection
-    (fn get-selection [f db event]
+    :iter-selection-points
+    (fn iter-selection-points [f db event]
       (let [{:keys [initial-mouse-down-pos]} db
             {:keys [top-left bottom-right]} (geometry/get-ordered-rectangle-points [initial-mouse-down-pos (:pos event)])]
         (doseq [x (range (:x top-left) (inc (:x bottom-right)))

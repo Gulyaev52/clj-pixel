@@ -711,7 +711,7 @@
 (comment
   (do
     (.clear js/console)
-    (.. (test-vars [#'pixel-art.check-test/shape-selection-make-selection])
+    (.. (test-vars [#'pixel-art.check-test/rectangle-selection-make-selection])
         (then (fn []
                 (println "done")))
         (catch (fn [e]

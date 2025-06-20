@@ -9,8 +9,8 @@
 (def tool
   (selection/make
    {:type :shape-selection
-    :get-selection
-    (fn [f db event]
+    :iter-selection-points
+    (fn iter-selection-points [f db event]
       (let [{:keys [width]} (-> db :sprite :size)
             current-cel (get-current-cel db)
             color-under-mouse (cel/get-pixel (:pos event) current-cel)
