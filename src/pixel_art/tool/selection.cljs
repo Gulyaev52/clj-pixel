@@ -8,31 +8,21 @@
                                  get-preview-from-current-cel
                                  with-highlight-cel-under-cursor]]
    [pixel-art.utils.geometry :as geometry]
-   [re-frame.core :as re-frame]
-   [sc.api :as api]))
+   [re-frame.core :as re-frame]))
 
-;; использовать idx вместо поинтов?
 ;; пропускать лишние эвенты
-;; в selection-points только текущие точки а в initial-selection-image мапа
-
-(defn- remove-transparent-colors [selection-image]
-  (->> selection-image
-       (filter (fn [[_ color]] (not= color color/transparent-color-int)))
-       (into {})))
 
 (defn- init [type] {:type type :state {:mode :select
                                        :user-is-making-selection false}})
 
-(defn- highlight-selection [db selection-points]
+(defn- highlight-selection [db get-selection]
   (let [{:keys [width height]} (-> db :sprite :size)
         current-pixels (or (:preview db) (:pixels (get-current-cel db)))
         visual-effects (get-empty-visual-effects db)]
-    ;; forEarch is much faster than doseq
-    ;; don't use desctruc for pos because it leads to bad performance
-    (. selection-points (forEach (fn [pos]
-                                   (when-let [idx (geometry/pos->idx (aget pos 0) (aget pos 1) width height)]
-                                     (aset visual-effects idx
-                                           (color/get-highlight-color (nth current-pixels idx)))))))
+    (get-selection (fn [x y]
+                     (when-let [idx (geometry/pos->idx x y width height)]
+                       (aset visual-effects idx
+                             (color/get-highlight-color (nth current-pixels idx))))))
     (-> db
         (assoc :visual-effects visual-effects))))
 
@@ -84,19 +74,23 @@
          (with-highlight-cel-under-cursor
            {:mouse-down-or-mouse-down-and-move
             (fn [db event]
-              (let [selection-points (get-selection db event)
-                    updated-tool (assoc-in (:tool db) [:state :user-is-making-selection] true) ;; без этого когда меняется мод с move-selection -> select, то происходит up event и снова создаётся селектион
+              (let [updated-tool (assoc-in (:tool db) [:state :user-is-making-selection] true) ;; без этого когда меняется мод с move-selection -> select, то происходит up event и снова создаётся селектион
                     ]
                 {:db (-> db
                          (assoc :tool updated-tool)
-                         (highlight-selection selection-points))}))
+                         (highlight-selection #(get-selection % db event)))}))
             :mouse-up
             (fn [db event]
               (if (-> db :tool :state :user-is-making-selection)
                 (let [current-cel (get-current-cel db)
-                      selection (. (get-selection db event)
-                                   (map (fn [p]
-                                          #js [p (cel/get-pixel (aget p 0) (aget p 1) current-cel)])))
+
+                      selection #js []
+                      _ (get-selection (fn [x y]
+                                         (. selection (push #js [#js [x y]
+                                                                 (cel/get-pixel x y current-cel)])))
+                                       db
+                                       event)
+
                       initial-selection-image (js/structuredClone selection)
                       tool (assoc tool :state {:mode :move-selection
                                                :initial-selection-image initial-selection-image
@@ -125,14 +119,14 @@
           :mouse-up
           (fn [db event]
             (let [{:keys [preview-with-deleted-initial-selection selection-image preview]} (move-selection db tool initial-mouse-down-pos event)
-                  selection-image-points (. selection-image (map (fn [[point]] point)))
+                  get-selection (fn [f] (. selection-image (forEach (fn [[[x y]]] (f x y)))))
                   updated-tool (-> tool
                                    (assoc-in [:state :selection-image] selection-image)
                                    (assoc-in [:state :preview-with-deleted-initial-selection] preview-with-deleted-initial-selection))]
               {:db (-> db
                        (assoc :tool updated-tool)
                        (assoc :preview preview)
-                       (highlight-selection selection-image-points))}))})))})
+                       (highlight-selection get-selection))}))})))})
 
 (defn copy-selection [db]
   (let [{:keys [selection-image]} (-> db :tool :state)]
@@ -195,7 +189,7 @@
                              :selection-image selection-image
                              :pasted? true}}
            preview (get-preview-from-current-cel db)
-           selection-image-points (. selection-image (map (fn [[point]] point)))]
+           iter-selection-points (fn [f] (. selection-image (forEach (fn [[[x y]]] (f x y)))))]
        (doseq [[[x y] color] selection-image]
          (when-not (= color color/transparent-color-int)
            (preview/set-color! preview x y color)))
@@ -204,5 +198,5 @@
            (assoc-in [:db :tool] new-tool)
            (update :db #(-> %
                             (assoc :preview preview)
-                            (highlight-selection selection-image-points)))))
+                            (highlight-selection iter-selection-points)))))
      {:db db})))

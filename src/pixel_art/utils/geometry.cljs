@@ -45,10 +45,8 @@
               (< -1 y height))
      (+ x (* width y)))))
 
-;; todo: fix
-(defn pos->idx-without-check [x y width]
-  (+ x (* width y)))
-
+;; flood fill algorithm
+;; f should return true if a point is not visited
 (defn visit-connected-pixels [start-pos f]
   (let [queue #js [#js [(:x start-pos) (:y start-pos)]]
 
@@ -65,39 +63,13 @@
               (let [connected-pixel #js [next-x next-y]]
                 (. queue (push connected-pixel))))))))))
 
-(defn flood-fill [start-pos size pixels target-color]
-  (let [{:keys [width height]} size
-
-        queue #js [#js [(:x start-pos) (:y start-pos)]]
-        visited-pixels #js []
-        _ (aset visited-pixels (pos->idx-without-check (:x start-pos) (:y start-pos) width)
-                #js [(:x start-pos) (:y start-pos)])
-
-        dy #js [-1 0 1 0]
-        dx #js [0 1 0 -1]]
-
-    (while (> (. queue -length) 0)
-      (let [current-item (. queue pop)]
-        (dotimes [i 4]
-          (let [next-x (+ (aget current-item 0) (aget dx i))
-                next-y (+ (aget current-item 1) (aget dy i))
-                idx (if (and (>= next-x 0) (< next-x width) (>= next-y 0) (< next-y height))
-                      (pos->idx-without-check next-x next-y width)
-                      nil)
-                is-valid (and idx (not (aget visited-pixels idx)) (= (nth pixels idx nil) target-color))]
-            (when is-valid
-              (let [connected-pixel #js [next-x next-y]]
-                (. queue (push connected-pixel))
-                (aset visited-pixels idx connected-pixel)))))))
-    (. visited-pixels (filter js/Boolean))))
-
 (defn get-line-pixels [p1 p2]
   (shape-tool/getLinePixels (:x p1) (:x p2) (:y p1) (:y p2)))
 
 (defn get-uniform-line-pixels [p1 p2]
   (shape-tool/getUniformLinePixels (:x p1) (:x p2) (:y p1) (:y p2)))
 
-(defn get-circle-pixels [p1 p2 pixel-size f]
+(defn get-circle-pixels [p1 p2 pixel-size f] ;; todo: тут точно надо функцию?
   (shape-tool/getCirclePixels (:x p1) (:y p1) (:x p2) (:y p2) pixel-size f))
 
 (defn get-scaled-points

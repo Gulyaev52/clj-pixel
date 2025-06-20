@@ -711,7 +711,7 @@
 (comment
   (do
     (.clear js/console)
-    (.. (test-vars [#'pixel-art.check-test/draw-outside-current-layer])
+    (.. (test-vars [#'pixel-art.check-test/shape-selection-make-selection])
         (then (fn []
                 (println "done")))
         (catch (fn [e]
