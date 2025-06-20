@@ -12,8 +12,15 @@
 
 ;; пропускать лишние эвенты
 
-(defn- init [type] {:type type :state {:mode :select
-                                       :user-is-making-selection false}})
+(defn- init [type] {:type type
+                    :state {:mode :select
+                            :user-is-making-selection false}
+                    ;; | {:mode :move-selection
+                    ;;    :initial-selection-image Array<#js [#js [x y] color]>
+                    ;;    :selection-image Array<#js [#js [x y] color]>}
+                    ;;    js data structures are used for initial-selection-image and selection-image
+                    ;;    because they are more performant when canvas size large (e.g. 512x512)
+                    })
 
 (defn- highlight-selection [db iter-selection-points]
   (let [{:keys [width height]} (-> db :sprite :size)

@@ -48,7 +48,7 @@
 ;; flood fill algorithm
 ;; f should return true if a point is not visited
 (defn visit-connected-pixels [start-pos f]
-  (let [queue #js [#js [(:x start-pos) (:y start-pos)]]
+  (let [queue #js [#js [(:x start-pos) (:y start-pos)]] ;; js data structures here because they are more performant when canvas size large (e.g. 512x512)
 
         dy #js [-1 0 1 0]
         dx #js [0 1 0 -1]]
