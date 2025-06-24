@@ -3,7 +3,8 @@
    ["antd" :as antd]
    [reagent.core :as reag]
    [react :as react]
-   [sc.api])
+   [sc.api]
+   [clojure.core :as c])
   (:require-macros [pixel-art.views.reagent :refer [def-func-component]]))
 
 (defn use-theme-token []
@@ -162,15 +163,17 @@
                        (set-curr-value value))
                      (array value))
     [:> antd/InputNumber {:value curr-value
-                          :min (or min 1)
                           :step 1
-                          :max max
                           :style {:width (when block "100%")}
                           :onChange (fn [value]
                                       (set-curr-value value))
                           :onBlur (fn []
                                     (let [new-value (let [res (. js/Number (parseInt curr-value))]
-                                                      (if (js/isNaN res) nil res))]
+                                                      (if (js/isNaN res)
+                                                        nil
+                                                        (-> res
+                                                            (#(clojure.core/max % min))
+                                                            (#(clojure.core/min % max)))))]
                                       (set-curr-value new-value)
                                       (on-blur new-value)))}]))
 

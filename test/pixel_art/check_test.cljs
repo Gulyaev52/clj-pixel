@@ -750,6 +750,65 @@
              (catch (fn [e]
                       (is (nil? e)))))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn remove-database []
+  (. js/Promise
+     (resolve
+      (fn [resolve reject]
+        (let [req (. js/indexedDB (deleteDatabase "pixel-database"))]
+          (set! (. req -onsuccess) resolve)
+          (set! (. req -onerror) reject))))))
+
+(def registered-dispatch-interval (atom {}))
+(re-frame/reg-fx
+ :dispatch-interval
+ (fn [{:keys [:dispatch :ms :id]}]
+   (swap! registered-dispatch-interval assoc id dispatch)))
+
+#_(deftest backup-for-new-project
+    (async done
+           (.. (remove-database)
+               (then (fn []
+                       (mount {:sprite (get-sprite {:width 2 :height 2})
+                               :tool-type :pen
+                               :palettes initial-palettes
+                               :primary-color p
+                               :secondary-color s})))
+               (then (fn []
+                       (. rtl/screen (findByTestId "ready")))))))
+
+#_(deftest no-backup-when-no-changes
+    (mount {:sprite (get-sprite {:width 2 :height 2})
+            :tool-type :pen
+            :palettes initial-palettes
+            :primary-color p
+            :secondary-color s})
+    (async done
+           (.. (. rtl/screen (findByTestId "ready"))
+               (then (fn []
+                       ;; дернуть бекап
+                       ;; первый раз сохранится
+                       ;; дернуть бекап
+                       ;; проверить что ничего не сохранилось
+                       )))))
+
+#_(deftest backup-when-changes-exists
+    (mount {:sprite (get-sprite {:width 2 :height 2})
+            :tool-type :pen
+            :palettes initial-palettes
+            :primary-color p
+            :secondary-color s})
+    (async done
+           (.. (. rtl/screen (findByTestId "ready"))
+               (then (fn []
+                       ;; сделать изменения
+                       ;; дернуть бекап
+                       ;; проверить что ничего не сохранилось
+                       )))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (comment
   (do
     (.clear js/console)

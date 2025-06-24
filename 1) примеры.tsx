@@ -1,7 +1,6 @@
 5) переделать сериализацию?
 
 4) untitled вынести
-max value в инпут странно работает
 
 19) image rendering pixelated. превью и сам если отдаляешь. нарисуй квадрат
 https://github.com/Gulyaev52/clj-pixel/commit/69d1382d79f9772d08ab125e1ddd74313d703ff8
@@ -16,6 +15,14 @@ https://github.com/Gulyaev52/clj-pixel/commit/69d1382d79f9772d08ab125e1ddd74313d
 34) подсказки про линкинг и днд
 
 8) perf на добавление фрейма\слоя(нужно toDataUrl кешировать)
+
+17) дизайн
+поправить тесты
+
+
+----------------------
+
+
 12) доп тулы
 
 отрефакторить
@@ -27,11 +34,6 @@ https://github.com/Gulyaev52/clj-pixel/commit/69d1382d79f9772d08ab125e1ddd74313d
 
 events -> db ?
 17) подумать над разделением на слои
-
-17) дизайн
-поправить тесты
-
-
 
 
 
