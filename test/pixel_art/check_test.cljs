@@ -28,13 +28,15 @@
    (sprite/create {:size sprite-size
                    :layer (layer/create "Layer 1")
                    :frame (frame/create 100)
-                   :cel (->> (cel/create sprite-size))}))
+                   :cel (->> (cel/create sprite-size))
+                   :title "Untitled"}))
   ([sprite-size pixels-map]
    (sprite/create {:size sprite-size
                    :layer (layer/create "Layer 1")
                    :frame (frame/create 100)
                    :cel (->> (cel/create sprite-size)
-                             (cel/set-pixels-map pixels-map))})))
+                             (cel/set-pixels-map pixels-map))
+                   :title "Untitled"})))
 
 
 (defn matrix->sprite [m]
@@ -43,7 +45,8 @@
                     :layer (layer/create "Layer 1")
                     :frame (frame/create 100)
                     :cel (->> (cel/create size)
-                              (cel/set-pixels (js/Uint32Array. (flatten m))))})))
+                              (cel/set-pixels (js/Uint32Array. (flatten m))))
+                    :title "Untitled"})))
 
 (def initial-palettes
   [{:name "default"

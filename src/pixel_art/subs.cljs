@@ -1,6 +1,6 @@
 (ns pixel-art.subs
   (:require
-   [pixel-art.tool.utils :refer [get-tool-options]]
+   [pixel-art.tool.utils :refer [check-unsaved-changes-exist get-tool-options]]
    [pixel-art.utils.coll :as coll]
    [re-frame.core :as re-frame]))
 
@@ -26,6 +26,10 @@
    (:sprite db)))
 
 (re-frame/reg-sub
+ ::sprite-title
+ (fn [db] (or (-> db :sprite :title) "")))
+
+(re-frame/reg-sub
  ::pixels-grid-enabled
  (fn [db]
    (:pixels-grid-enabled db)))
@@ -49,6 +53,12 @@
  ::secondary-color
  (fn [db]
    (:secondary-color db)))
+
+(re-frame/reg-sub
+ ::unsaved-changes-exist
+ check-unsaved-changes-exist)
+
+;; todo: move to palette
 
 (re-frame/reg-sub
  ::current-palette

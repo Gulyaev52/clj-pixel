@@ -1,19 +1,23 @@
 (ns pixel-art.project-save-load.events
-  (:require [re-frame.core :as re-frame]
-            [pixel-art.sprite-serialization :as sprite-serialization]))
+  (:require
+   [pixel-art.sprite-serialization :as sprite-serialization]
+   [pixel-art.tool.utils :refer [mark-unsaved-changes-saved]]
+   [re-frame.core :as re-frame]))
 
 (def file-ext "json")
 
 (re-frame/reg-event-fx
  ::save-as-file
  (fn [{:keys [db]}]
-   (let [file-desc {:file-name (str "pixel-project." file-ext)
+   (let [title (-> db :sprite :title)
+         file-desc {:file-name (str title "." file-ext)
                     :content (-> {:version "1"
                                   :project {:sprite (sprite-serialization/serialize (:sprite db))}}
                                  clj->js
                                  (#(. js/JSON (stringify %))))
                     :content-type :json}]
-     {:fx [[:download-file file-desc]]})))
+     {:db (mark-unsaved-changes-saved db)
+      :fx [[:download-file file-desc]]})))
 
 (re-frame/reg-event-fx
  ::load-from-file

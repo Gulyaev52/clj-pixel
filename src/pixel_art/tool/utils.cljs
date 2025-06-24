@@ -86,3 +86,10 @@
                           (f db event))]
         {:db (-> (or (:db handler-res) db)
                  (assoc :visual-effects nil))}))}))
+
+(defn mark-unsaved-changes-saved [db]
+  (let [current-idx (-> db :history :current-idx)]
+    (assoc db :last-saved-history-idx current-idx)))
+
+(defn check-unsaved-changes-exist [db]
+  (not= (:last-saved-history-idx db) (-> db :history :current-idx)))

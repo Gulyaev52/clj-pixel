@@ -8,23 +8,23 @@
    [pixel-art.project-settings :as project-settings]
    [pixel-art.re-pressed.core :as rp]
    [pixel-art.tool.core :as tool]
-   [pixel-art.tool.utils :refer [commit-preview-and-init-tool]]
+   [pixel-art.tool.utils :refer [check-unsaved-changes-exist
+                                 commit-preview-and-init-tool]]
    [pixel-art.utils.fx]
+   [pixel-art.utils.fx.local-storage :as local-storage]
+   [pixel-art.utils.interceptor :refer [on-paths-change]]
    [re-frame.core :as re-frame]
    [re-frame.db]
    [sc.api]))
 
-;; todo: remove
-(add-watch re-frame.db/app-db :def
-           (fn [_ _ _ new]
-             (def db new)))
+(def saved-settings-local-storage-key :saved-settings)
 
 (re-frame/reg-event-fx
  ::start-app
- (fn [_ [_ settings]]
-   (if settings
+ (fn [_ [_ initial-app-data-for-test]]
+   (if initial-app-data-for-test
      {:db {:initial-loading true}
-      :fx [[:dispatch [:initialize-db settings]]]}
+      :fx [[:dispatch [:initialize-db initial-app-data-for-test]]]}
      {:db {:initial-loading true}
       :fx [[::load-initial-data]]})))
 
@@ -34,7 +34,7 @@
    (.. (backup/init-db+)
        (then backup/get-backup+)
        (then (fn [backup]
-               (re-frame/dispatch [:initialize-db]))) ;; todo: fix
+               (re-frame/dispatch [:initialize-db backup]))) ;; todo: fix
        (catch (fn []
                 (re-frame/dispatch [:initialize-db]))))))
 
@@ -68,17 +68,52 @@
 
 (re-frame/reg-event-fx
  :initialize-db
- [(re-frame/inject-cofx :viewport-size)]
- (fn [{:keys [viewport-size]} [_ settings]]
-   (let [initial-db (if settings
-                      (db/get-db settings viewport-size)
-                      (db/get-db (assoc project-settings/default-palettes-and-current-colors
-                                        :sprite (project-settings/create-empty-sprite {:width 512 :height 512})
-                                        :new-project-modal-opened false)
+ [(re-frame/inject-cofx ::local-storage/get-item saved-settings-local-storage-key) (re-frame/inject-cofx :viewport-size)]
+ (fn [{:keys [viewport-size] :as cofx} [_ initial-app-data]]
+   (let [saved-data (into {} (filter (fn [[_ v]] (some? v)) (get cofx saved-settings-local-storage-key)))
+         initial-db (if initial-app-data
+                      (db/get-db (merge saved-data initial-app-data) viewport-size)
+                      (db/get-db (merge (assoc project-settings/default-palettes-and-current-colors
+                                               :sprite (project-settings/create-empty-sprite "Untitled" {:width 4 :height 4})
+                                               :new-project-modal-opened false)
+                                        saved-data)
                                  viewport-size))]
      {:db initial-db
       :fx [[:dispatch [::rp/add-keyboard-event-listener "keydown"]]
-           dispatch-set-keydown-rules]})))
+           dispatch-set-keydown-rules
+           [:dispatch-interval {:dispatch [::backup/save-backup-if-need]
+                                :id :backup
+                                :ms 60000 ;; 1 min
+                                }]
+           [::show-warning-when-leave-with-unsaved-changes]
+           [::register-global-interceptors]]})))
+
+(re-frame/reg-fx
+ ::register-global-interceptors
+ (fn []
+   (re-frame/reg-global-interceptor
+    (on-paths-change
+     :saved-settings
+     [:primary-color :secondary-color :palettes :pixels-grid-enabled]
+     (fn [{:keys [db fields]}]
+       {:db db
+        :fx [[::local-storage/set-item {:key saved-settings-local-storage-key
+                                        :value fields}]]})))))
+
+(defn show-warning-when-leave-with-unsaved-changes [e]
+  (when (check-unsaved-changes-exist @re-frame.db/app-db)
+    (let [confirmMessage "Your current sprite has unsaved changes. Are you sure you want to quit?"]
+      (when-let [e (or e (. js/window -event))]
+        (set! (. e -returnValue) confirmMessage)
+        confirmMessage))))
+
+(re-frame/reg-fx
+ ::show-warning-when-leave-with-unsaved-changes
+ (fn []
+   (. js/window (removeEventListener "beforeunload" show-warning-when-leave-with-unsaved-changes))
+   (. js/window (addEventListener "beforeunload" show-warning-when-leave-with-unsaved-changes))))
+
+;; todo: move bellow actions?
 
 (re-frame/reg-event-fx
  ::select-tool
@@ -103,3 +138,8 @@
  ::set-current-color
  (fn [{:keys [db]} [_ type color]]
    {:db (assoc db type color)}))
+
+(re-frame/reg-event-fx
+ ::set-sprite-title
+ (fn [{:keys [db]} [_ title]]
+   {:db (assoc-in db [:sprite :title] title)}))

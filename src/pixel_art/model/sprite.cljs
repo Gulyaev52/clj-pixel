@@ -3,8 +3,9 @@
             [pixel-art.utils.coll :as coll]
             [sc.api]))
 
-(defn create [{:keys [size layer frame cel]}]
-  {:size size
+(defn create [{:keys [size layer frame cel title]}]
+  {:title title
+   :size size
    :frames [frame]
    :cels [[(assoc cel
                   :current true

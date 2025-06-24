@@ -18,7 +18,7 @@
    {:frames :all
     :layers {:type :visible}
     :direction :forward
-    :file-name "untitled"
+    :file-name ""
     :file-type :png
     :scale min-scale
     :split-layers false}
@@ -122,6 +122,7 @@
    (if opened
      (-> db
          (assoc-in [:export-modal :opened] opened)
+         (assoc-in [:export-modal :common-settings :file-name] (-> db :sprite :title))
          (update-in [:export-modal :spritesheet-settings :columns]
                     #(adjust-columns-if-need % db))
          generate-preview)

@@ -11,7 +11,7 @@
 
 (defn typography
   ([text] (typography {} text))
-  ([props title] [:> antd/Typography props title]))
+  ([props text] [:> antd/Typography props text]))
 
 (defn space [& children]
   (let [props (first children)
@@ -101,8 +101,8 @@
                                          (on-change (keyword (.. e -target -value))))}]
    (map (fn [opt] [:> (.-Button antd/Radio) {:value (name (:value opt))} (:label opt)]) options)))
 
-(defn button [{:keys [on-click]} text]
-  [:> antd/Button {:onClick on-click}
+(defn button [{:keys [on-click disabled]} text]
+  [:> antd/Button {:onClick on-click :disabled disabled}
    text])
 
 (defn select [{:keys [value size on-change block options]}]
@@ -234,3 +234,6 @@
                            )}]
      [render-button (fn []
                       (.. @!input-ref click))]]))
+
+(defn replace-current-project-confirm []
+  (js/confirm "This will replace the current project. Are you sure?"))

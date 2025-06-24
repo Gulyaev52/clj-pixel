@@ -24,18 +24,19 @@
      :primary-color (-> palettes first :colors first)
      :secondary-color (color/int 255 0 0)}))
 
-(defn create-empty-sprite [size]
+(defn create-empty-sprite [title size]
   (sprite/create {:size size
                   :layer (layer/create (get-layer-name :single 0))
                   :frame (frame/create initial-frame-duration)
-                  :cel (cel/create size)}))
+                  :cel (cel/create size)
+                  :title title}))
 
 (defn get-example-project []
   (let [sprite-size {:width 512 :height 512}]
     (assoc
      default-palettes-and-current-colors
      :sprite
-     (->> (create-empty-sprite sprite-size)
+     (->> (create-empty-sprite "Example" sprite-size)
           (sprite/set-current-cel-pixels-map (for [x (range 0 (:width sprite-size))
                                                    y (range 0 (:height sprite-size))]
                                                [{:x x :y y} (color/int (rand-int 255) (rand-int 255) (rand-int 255))]))))))

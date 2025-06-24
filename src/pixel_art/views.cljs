@@ -23,10 +23,12 @@
    [pixel-art.views.color-picker :refer [color-picker]]
    [pixel-art.views.constants :refer [transparent-color-img]]
    [pixel-art.views.ui-kit :refer [button checkbox custom-popover
-                                   file-uploader icon-button slider
-                                   use-theme-token]]
+                                   file-uploader icon-button
+                                   replace-current-project-confirm slider
+                                   space title use-theme-token]]
    [re-frame.core :as re-frame]
-   [sc.api])
+   [sc.api]
+   [clojure.string :as str])
   (:require-macros [pixel-art.views.reagent :refer [def-func-component]]))
 
 (set! *warn-on-infer* false)
@@ -146,6 +148,8 @@
 
 (def-func-component header []
   (let [pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])
+        unsaved-changes-exist @(re-frame/subscribe [::subs/unsaved-changes-exist])
+        sprite-title @(re-frame/subscribe [::subs/sprite-title])
         theme-token (use-theme-token)]
     [:div {:style {:display "flex"
                    :align-items "center"
@@ -157,15 +161,17 @@
       [button {:on-click (fn [] (re-frame/dispatch [::new-project-modal.events/set-opened true]))}
        "New project"]]
      [button {:on-click (fn [] (re-frame/dispatch [::project-save-load.events/save-as-file]))}
-      "Save project as file"]
-     [file-uploader {:on-upload (fn [file-desc]
-                                  (re-frame/dispatch [::project-save-load.events/load-from-file file-desc]))}
+      "Save as file"]
+     [file-uploader {:accept (str "." project-save-load.events/file-ext)
+                     :on-upload (fn [file-desc]
+                                  (when (replace-current-project-confirm)
+                                    (re-frame/dispatch [::project-save-load.events/load-from-file file-desc])))}
       (fn [on-click]
         [button {:on-click on-click}
-         "Load project from file"])]
+         "Load from file"])]
      [:<>
       [button {:on-click (fn [] (re-frame/dispatch [::export-modal.events/set-opened true]))}
-       "Open project export panel"]
+       "Export"]
       [export-modal]]
      [:<>
       [sprite-resizer-modal]
@@ -176,7 +182,16 @@
      [checkbox {:value pixels-grid-enabled
                 :label "Grid"
                 :on-change (fn [checked] (re-frame/dispatch [::drawing.events/enable-pixels-grid checked]))}]
-
+     [space
+      [title {:level 3 :style {:margin 0}}
+       (str sprite-title (when unsaved-changes-exist "*"))]
+      [icon-button {:src :pen
+                    :title "edit title"
+                    :size :xs
+                    :on-click (fn []
+                                (let [new-title (js/prompt "Title")]
+                                  (when-not (str/blank? new-title)
+                                    (re-frame/dispatch [::events/set-sprite-title new-title]))))}]]
      [:div {:style {:margin-left "auto"}}
       [drawing-info]]]))
 
