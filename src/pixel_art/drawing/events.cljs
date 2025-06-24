@@ -26,11 +26,15 @@
 
            :mouse-move
            (let [updated-db (assoc db :mouse-pos (:pos event))]
-             (run-events-handlers (into [:mouse-move] (when (:initial-mouse-down-pos updated-db)
-                                                        [:mouse-down-or-mouse-down-and-move :mouse-down-and-move]))
-                                  tool-events-handlers
-                                  updated-db
-                                  event))
+             (run-events-handlers
+              (concat []
+                      (when (not (:initial-mouse-down-pos updated-db))
+                        [:mouse-move-without-mouse-down])
+                      (when (:initial-mouse-down-pos updated-db)
+                        [:mouse-down-or-mouse-down-and-move :mouse-down-and-move]))
+              tool-events-handlers
+              updated-db
+              event))
 
            :mouse-up
            (let [updated-db (assoc db :mouse-pos (:pos event))]

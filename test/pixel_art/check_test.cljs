@@ -19,6 +19,14 @@
 ;; test selection
 ;; todo: cut selection
 
+(defn run-test [t]
+  (.clear js/console)
+  (.. (test-vars [t])
+      (then (fn []
+              (println "done")))
+      (catch (fn [e]
+               (println "error")))))
+
 (defn delay-p [ms]
   (js/Promise. (fn [r]
                  (js/setTimeout r ms))))
@@ -109,6 +117,12 @@
 (def s (color/int 255 0 0)) ;; default secondary color
 (def t color/transparent-color-int)
 
+(def visual-effects-without-highlight
+  [[t t t t]
+   [t t t t]
+   [t t t t]
+   [t t t t]])
+
 (defn run-drawing-tool [{:keys [sprite tool-type options mouse-points expected]}]
   (mount {:sprite sprite
           :tool-type tool-type
@@ -171,6 +185,36 @@
                                 [p p t t]
                                 [t t t t]
                                 [t t t t]]}))
+
+(deftest no-hightlight-when-drawing
+  (mount {:sprite (get-sprite {:width 2 :height 2})
+          :tool-type :pen
+          :palettes initial-palettes
+          :primary-color p
+          :secondary-color s})
+  (async done
+         (.. (. rtl/screen (findByTestId "ready"))
+             (then (fn []
+                     (mouse-move [{:x 0 :y 0}])
+                     (delay-p 100)))
+             (then (fn []
+                     (is (= [[color/highlight-light-color t] [t t]] (get-canvas->pixels "visual-effects"))
+                         "highlight on mouse move")))
+             (then (fn []
+                     (mouse-down {:x 0 :y 0})
+                     (delay-p 100)))
+             (then (fn []
+                     (is (= [[t t] [t t]] (get-canvas->pixels "visual-effects"))
+                         "no highlight on mouse down")))
+             (then (fn []
+                     (mouse-move [{:x 1 :y 0}])
+                     (delay-p 100)))
+             (then (fn []
+                     (is (= [[t t] [t t]] (get-canvas->pixels "visual-effects"))
+                         "no highlight on mouse down -> mouse move")))
+             (then done)
+             (catch (fn [e]
+                      (is (nil? e)))))))
 
 (deftest eraser-tool
   (run-drawing-tool {:sprite (matrix->sprite [[s p p]
@@ -385,11 +429,6 @@
    [p p t t]
    [t t s s]
    [t t s s]])
-(def visual-effects-without-highlight
-  [[t t t t]
-   [t t t t]
-   [t t t t]
-   [t t t t]])
 
 (deftest rectangle-selection-make-selection
   (mount {:sprite (matrix->sprite selection-pixels)

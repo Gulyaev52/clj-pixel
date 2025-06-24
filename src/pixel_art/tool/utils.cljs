@@ -62,7 +62,7 @@
 (defn with-highlight-cel-under-cursor [events-handlers]
   (merge
    events-handlers
-   {:mouse-move
+   {:mouse-move-without-mouse-down ;; todo: rename
     (fn [db event]
       (let [handler-res (if-let [f (:mouse-move events-handlers)]
                           (f db event)
