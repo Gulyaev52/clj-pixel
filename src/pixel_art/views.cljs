@@ -4,6 +4,7 @@
    ["react-dnd" :as react-dnd]
    ["react-dnd-html5-backend" :as react-dnd-html5-backend]
    [clojure.string :as string]
+
    [pixel-art.drawing.events :as drawing.events]
    [pixel-art.drawing.views :refer [drawing drawing-info]]
    [pixel-art.events :as events]
@@ -19,6 +20,7 @@
    [pixel-art.sprite-resizer.events :as sprite-resizer.events]
    [pixel-art.sprite-resizer.views :refer [sprite-resizer-modal]]
    [pixel-art.subs :as subs]
+   [pixel-art.timeline.views :refer [timeline-panel]]
    [pixel-art.tool.core :as tool]
    [pixel-art.views.color-picker :refer [color-picker]]
    [pixel-art.views.constants :refer [transparent-color-img]]
@@ -27,8 +29,7 @@
                                    replace-current-project-confirm slider
                                    space title use-theme-token]]
    [re-frame.core :as re-frame]
-   [sc.api]
-   [clojure.string :as str])
+   [sc.api])
   (:require-macros [pixel-art.views.reagent :refer [def-func-component]]))
 
 (set! *warn-on-infer* false)
@@ -190,7 +191,7 @@
                     :size :xs
                     :on-click (fn []
                                 (let [new-title (js/prompt "Title")]
-                                  (when-not (str/blank? new-title)
+                                  (when-not (string/blank? new-title)
                                     (re-frame/dispatch [::events/set-sprite-title new-title]))))}]]
      [:div {:style {:margin-left "auto"}}
       [drawing-info]]]))
@@ -230,7 +231,7 @@
                       :min-height 0}}
         [tool-options-panel]
         [drawing]
-        #_[timeline-panel]]
+        [timeline-panel]]
        [right-sidebar]]]]))
 
 (defn app []

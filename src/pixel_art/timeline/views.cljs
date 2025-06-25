@@ -23,7 +23,7 @@
    [sc.api])
   (:require-macros [pixel-art.views.reagent :refer [def-func-component]]))
 
-(def cel-height "50px")
+(def cel-height "80px")
 
 (defn- get-border-color [{:keys [current selected]} theme-token]
   (cond
