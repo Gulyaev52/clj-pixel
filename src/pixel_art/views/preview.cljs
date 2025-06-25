@@ -11,17 +11,21 @@
   (let [container-ref (react/useRef nil)]
     (react/useEffect (fn []
                        (when-let [container (.-current container-ref)]
-                         (if (and (< (.-naturalWidth container)
-                                     (.-offsetWidth container))
-                                  (< (.-naturalHeight container)
-                                     (.-offsetHeight container)))
-                           (set! (.. container -style -imageRendering) "pixelated")
-                           (set! (.. container -style -imageRendering) "auto"))))
+                         (set! (. container -onload)
+                               (fn []
+                                 (when-let [container (.-current container-ref)]
+                                   (if (and (< (.-naturalWidth container)
+                                               (.-offsetWidth container))
+                                            (< (.-naturalHeight container)
+                                               (.-offsetHeight container)))
+                                     (set! (.. container -style -imageRendering) "pixelated")
+                                     (set! (.. container -style -imageRendering) "auto")))))))
                      (array container-ref src))
     [:img {:src src
            :ref container-ref
            :style (merge style
                          {:position "relative"
+                          :image-rendering "pixelated"
                           :background-image transparent-color-img
                           :border drawing-border})}]))
 
