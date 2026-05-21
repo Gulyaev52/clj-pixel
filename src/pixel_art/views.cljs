@@ -4,7 +4,7 @@
    ["react-dnd" :as react-dnd]
    ["react-dnd-html5-backend" :as react-dnd-html5-backend]
    [clojure.string :as string]
-
+   [react :as react]
    [pixel-art.drawing.events :as drawing.events]
    [pixel-art.drawing.views :refer [drawing drawing-info]]
    [pixel-art.events :as events]
@@ -196,6 +196,10 @@
      [:div {:style {:margin-left "auto"}}
       [drawing-info]]]))
 
+(def-func-component counter []
+  (let [[t sett] (react/useState 0)]
+    [:button {:data-testid "button" :onClick (fn [] (sett inc))} t]))
+
 (def-func-component app-content []
   (let [initial-loading @(re-frame/subscribe [::subs/initial-loading])
         colorBgContainer (.. antd/theme useToken -token -colorBgContainer)]
@@ -231,6 +235,7 @@
                       :min-height 0}}
         [tool-options-panel]
         [drawing]
+        [counter]
         [timeline-panel]]
        [right-sidebar]]]]))
 

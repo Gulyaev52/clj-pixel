@@ -157,13 +157,14 @@
                                       :dark "black")}}]])
 
 ;; todo: integer input number
-(def-func-component input-number [{:keys [value min max block on-blur]}]
+(def-func-component input-number [{:keys [value min max block on-blur testid]}]
   (let [[curr-value set-curr-value] (react/useState value)]
     (react/useEffect (fn []
                        (set-curr-value value))
                      (array value))
     [:> antd/InputNumber {:value curr-value
                           :step 1
+                          :data-testid testid
                           :style {:width (when block "100%")}
                           :onChange (fn [value]
                                       (set-curr-value value))
