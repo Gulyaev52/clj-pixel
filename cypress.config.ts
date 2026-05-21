@@ -6,5 +6,7 @@ export default defineConfig({
     specPattern: 'cypress/e2e/**/*.cy.ts',
     supportFile: 'cypress/support/e2e.ts',
     setupNodeEvents(_on, _config) {},
+    viewportWidth: 1700,
+    viewportHeight: 1280,
   },
 });
