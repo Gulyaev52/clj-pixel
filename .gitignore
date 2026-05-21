@@ -23,3 +23,5 @@
 
 # clojure-lsp cache
 /.lsp/.cache
+
+/.joyride/
