@@ -51,6 +51,7 @@
         (let [color-dark? (.. (color/->tinycolor color) isDark)]
           ^{:key color}
           [:div {:className "color-container"
+                 :data-testid (str "palette-color-" idx)
                  :style {:background-color (color/int->rgb-str color)
                          :position "relative"
                          :cursor "pointer"

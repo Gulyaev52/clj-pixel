@@ -64,6 +64,7 @@
        [droppable-layer-zone (:idx layer) {:top 0 :transform "translateY(-50%)"}])
      [:div {:ref ref
             :on-click (fn [] (re-frame/dispatch [::events/select-layer (:idx layer)]))
+            :data-testid (str "layer-" (:idx layer))
             :style {:display :flex
                     :align-items "center"
                     :padding "4px"
@@ -101,6 +102,7 @@
                                            :transform "translateX(-50%)"}])
      [:div {:on-click (fn [] (re-frame/dispatch [::events/select-frame (:idx frame)]))
             :ref ref
+            :data-testid (str "frame-" (:idx frame))
             :style {:display "flex"
                     :align-items "center"
                     :justify-content "center"
@@ -159,6 +161,7 @@
                           (re-frame/dispatch [::events/toggle-cel-to-selection (:pos cel)])
                           :else (re-frame/dispatch [::events/select-only-1-cel (:pos cel)])))
             :ref ref
+            :data-testid (str "cel-" (-> cel :pos :frame-idx) "-" (-> cel :pos :layer-idx))
             :style {:position "relative"
                     :display :flex
                     :align-items :center

@@ -60,7 +60,8 @@
 
 (defn tool-view [{:keys [type selected]}]
   (let [title (string/replace (name type) "-" " ")]
-    [:div {:style {:width "50px" :height "50px"}}
+    [:div {:style {:width "50px" :height "50px"}
+           :data-testid (str "tool-" (name type))}
      [icon-button {:src type
                    :title title
                    :active selected
@@ -154,25 +155,33 @@
                    :border-bottom (str "1px solid " (.-colorBorder theme-token))}}
      [:<>
       [new-project-modal]
-      [button {:on-click (fn [] (re-frame/dispatch [::new-project-modal.events/set-opened true]))}
+      [button {:on-click (fn [] (re-frame/dispatch [::new-project-modal.events/set-opened true]))
+               :data-testid "btn-new-project"}
        "New project"]]
-     [button {:on-click (fn [] (re-frame/dispatch [::project-save-load.events/save-as-file]))}
+     [button {:on-click (fn [] (re-frame/dispatch [::project-save-load.events/save-as-file]))
+              :data-testid "btn-save-project"}
       "Save project as file"]
      [file-uploader {:on-upload (fn [file-desc]
                                   (re-frame/dispatch [::project-save-load.events/load-from-file file-desc]))}
       (fn [on-click]
-        [button {:on-click on-click}
+        [button {:on-click on-click
+                 :data-testid "btn-load-project"}
          "Load project from file"])]
      [:<>
-      [button {:on-click (fn [] (re-frame/dispatch [::export-modal.events/set-opened true]))}
+      [button {:on-click (fn [] (re-frame/dispatch [::export-modal.events/set-opened true]))
+               :data-testid "btn-export"}
        "Open project export panel"]
       [export-modal]]
      [:<>
       [sprite-resizer-modal]
-      [button {:on-click (fn [] (re-frame/dispatch [::sprite-resizer.events/set-opened true]))} "Resize canvas"]]
+      [button {:on-click (fn [] (re-frame/dispatch [::sprite-resizer.events/set-opened true]))
+               :data-testid "btn-resize-canvas"}
+       "Resize canvas"]]
      [:<>
       [keyboard-shortcuts-modal]
-      [button {:on-click (fn [] (re-frame/dispatch [::keyboard-shortcuts-modal.events/set-opened true]))} "Keyboard shortcuts"]]
+      [button {:on-click (fn [] (re-frame/dispatch [::keyboard-shortcuts-modal.events/set-opened true]))
+               :data-testid "btn-keyboard-shortcuts"}
+       "Keyboard shortcuts"]]
      [checkbox {:value pixels-grid-enabled
                 :label "Grid"
                 :on-change (fn [checked] (re-frame/dispatch [::drawing.events/enable-pixels-grid checked]))}]

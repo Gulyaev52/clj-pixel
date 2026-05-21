@@ -100,8 +100,9 @@
                                          (on-change (keyword (.. e -target -value))))}]
    (map (fn [opt] [:> (.-Button antd/Radio) {:value (name (:value opt))} (:label opt)]) options)))
 
-(defn button [{:keys [on-click]} text]
-  [:> antd/Button {:onClick on-click}
+(defn button [{:keys [on-click data-testid]} text]
+  [:> antd/Button (cond-> {:onClick on-click}
+                    data-testid (assoc :data-testid data-testid))
    text])
 
 (defn select [{:keys [value size on-change block options]}]

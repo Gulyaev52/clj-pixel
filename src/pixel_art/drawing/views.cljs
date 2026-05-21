@@ -98,6 +98,7 @@
     (use-draw-onion-skin sprite onion-skin onion-skin-ref)
 
     [:div {:id "viewport"
+           :data-testid "canvas-viewport"
            :ref viewport-ref
            :style {:overflow "auto"
                    :position "relative"
@@ -153,6 +154,7 @@
      [:div {:id "drawing-canvas-container"
             :style (merge {:position "relative"} drawing-container-size)}
       [:div {:id "canvas-layers"
+             :data-testid "canvas-layers"
              :style (merge
                      {:position "relative"
                       :left "50%"
@@ -164,6 +166,7 @@
                      scaled-sprite-size)}
        [:canvas (merge
                  {:id "layers-below"
+                  :data-testid "canvas-layers-below"
                   :className "layer"
                   :style {:position :absolute
                           :left 0
@@ -175,6 +178,7 @@
                  sprite-size)]
        [:canvas (merge
                  {:id "current-layer"
+                  :data-testid "canvas-current-layer"
                   :className "layer"
                   :style {:position :absolute
                           :left 0
@@ -206,6 +210,7 @@
                  sprite-size)]
        [:canvas (merge
                  {:id "layers-above"
+                  :data-testid "canvas-layers-above"
                   :className "layer"
                   :style {:position :absolute
                           :left 0
@@ -217,6 +222,7 @@
                  sprite-size)]
        [:canvas (merge
                  {:id "onion-skin"
+                  :data-testid "canvas-onion-skin"
                   :ref onion-skin-ref
                   :style {:position :absolute
                           :left 0
