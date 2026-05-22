@@ -232,6 +232,66 @@ describe('Line Tool', () => {
   });
 });
 
+describe('Circle Tool', () => {
+  it('step-by-step: mousedown → intermediate drag → mouseup commits circle', () => {
+    cy.seedDatabase({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels([
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+      ]),
+    });
+    cy.waitForAppReady();
+    cy.selectTool('circle');
+
+    // circle with start=end produces no pixels (zero-radius), so no assertion after mousedown
+    cy.startDrawAtCanvasPixel(0, 0);
+
+    cy.moveAtCanvasPixel(2, 2);
+    cy.assertVisibleCanvasPixels([
+      [colors.transparent, colors.black,       colors.transparent, colors.transparent],
+      [colors.black,       colors.transparent, colors.black,       colors.transparent],
+      [colors.transparent, colors.black,       colors.transparent, colors.transparent],
+      [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+    ], 'step 2: mousemove to (2,2) — circle outline preview');
+
+    cy.finishDrawAtCanvasPixel(3, 3);
+    cy.assertVisibleCanvasPixels([
+      [colors.transparent, colors.black,       colors.black,       colors.transparent],
+      [colors.black,       colors.transparent, colors.transparent, colors.black],
+      [colors.black,       colors.transparent, colors.transparent, colors.black],
+      [colors.transparent, colors.black,       colors.black,       colors.transparent],
+    ], 'step 3: mouseup at (3,3) — circle outline committed');
+  });
+
+  it('Keep ration option constrains bounding box to a square', () => {
+    cy.seedDatabase({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels([
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+      ]),
+    });
+    cy.waitForAppReady();
+    cy.selectTool('circle');
+    cy.contains('Keep ration').click();
+    cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true }); // pixel size = 2
+
+    // asymmetric drag (0,0)→(3,2); keep-ratio constrains to effective endpoint (2,2)
+    cy.drawAtCanvasPixel(0, 0, { toX: 3, toY: 2 });
+    cy.assertVisibleCanvasPixels([
+      [colors.black, colors.black, colors.black, colors.transparent],
+      [colors.black, colors.transparent, colors.black, colors.transparent],
+      [colors.black, colors.black, colors.black, colors.transparent],
+      [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+    ], 'keep-ratio: asymmetric drag produces a perfect circle');
+  });
+});
+
 describe('Bucket Tool', () => {
   it('flood-fills the connected region with primary or secondary color', () => {
     const db: DBSeed = {
