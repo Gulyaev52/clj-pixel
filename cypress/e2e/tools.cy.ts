@@ -168,6 +168,140 @@ describe('Rectangle Tool', () => {
   });
 });
 
+describe('Rectangle Selection Tool', () => {
+  it('select state', () => {
+    const initialPixels = getPixels(4, 4, colors.black);
+    cy.seedDatabase({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels(initialPixels),
+    });
+    cy.waitForAppReady();
+    cy.selectTool('rectangle-selection');
+
+    cy.startDrawAtCanvasPixel(0, 0);
+    cy.assertHighlightedPixels([
+      [true,  false, false, false],
+      [false, false, false, false],
+      [false, false, false, false],
+      [false, false, false, false],
+    ], 'mousedown: single pixel highlighted');
+
+    cy.moveAtCanvasPixel(1, 1);
+    cy.assertHighlightedPixels([
+      [true,  true,  false, false],
+      [true,  true,  false, false],
+      [false, false, false, false],
+      [false, false, false, false],
+    ], 'mousemove to (1,1): 2×2 selection highlighted');
+    cy.assertVisibleCanvasPixels(initialPixels, 'canvas pixels unchanged during selection');
+
+    cy.finishDrawAtCanvasPixel(1, 1);
+    cy.assertHighlightedPixels([
+      [true,  true,  false, false],
+      [true,  true,  false, false],
+      [false, false, false, false],
+      [false, false, false, false],
+    ], 'mouseup: highlight stays, transitioned to drag state');
+
+    // Click outside selection — resets to select, old highlight cleared
+    cy.startDrawAtCanvasPixel(3, 3);
+    cy.assertHighlightedPixels([
+      [false, false, false, false],
+      [false, false, false, false],
+      [false, false, false, false],
+      [false, false, false, false],
+    ], 'mousedown outside: old selection cleared');
+    cy.assertVisibleCanvasPixels(initialPixels, 'canvas pixels still all black — nothing committed');
+    cy.moveAtCanvasPixel(2, 2);
+    cy.assertHighlightedPixels([
+      [false, false, false, false],
+      [false, false, false, false],
+      [false, false, true, true],
+      [false, false, true, true],
+    ], 'mousedown outside: new selection created');
+
+    cy.selectTool('pen');
+    cy.assertHighlightedPixels([
+      [false, false, false, false],
+      [false, false, false, false],
+      [false, false, false, false],
+      [false, false, false, false],
+    ], 'selecting another tool clears highlight');
+    cy.assertVisibleCanvasPixels(initialPixels, 'canvas pixels still all black — nothing committed');
+  });
+
+  it.only('select + highlight + drag + commit', () => {
+    const initialPixels = [
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+      ];
+    cy.seedDatabase({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels(initialPixels),
+    });
+    cy.waitForAppReady();
+    cy.selectTool('rectangle-selection');
+
+    // Select 2×2 top-left region
+    cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
+
+    cy.startDrawAtCanvasPixel(0, 0);
+    cy.moveAtCanvasPixel(1, 1);
+    cy.assertVisibleCanvasPixels([
+      [colors.transparent, colors.transparent, colors.black, colors.black],
+      [colors.transparent, colors.red, colors.red, colors.black],
+      [colors.black, colors.red, colors.red, colors.black],
+      [colors.black, colors.black, colors.black, colors.black],
+    ]);
+    cy.assertHighlightedPixels([
+      [false, false, false, false],
+      [false, false, false, false],
+      [false, false, false,  false],
+      [false, false, false,  false],
+    ]);
+
+    cy.finishDrawAtCanvasPixel(2, 2);
+    cy.assertVisibleCanvasPixels([
+        [colors.transparent, colors.transparent, colors.black, colors.black],
+        [colors.transparent, colors.transparent, colors.black, colors.black],
+        [colors.black, colors.black, colors.red, colors.red],
+        [colors.black, colors.black, colors.red, colors.red],
+    ]);
+    cy.assertHighlightedPixels([
+      [false, false, false, false],
+      [false, false, false, false],
+      [false, false, true,  true],
+      [false, false, true,  true],
+    ]);
+
+    cy.drawAtCanvasPixel(2, 2, { toX: 2, toY: 1 });
+    cy.assertVisibleCanvasPixels([
+      [colors.transparent, colors.transparent, colors.black, colors.black],
+      [colors.transparent, colors.transparent, colors.red, colors.red],
+      [colors.black, colors.black, colors.red, colors.red],
+      [colors.black, colors.black, colors.black, colors.black],
+    ]);
+
+    // Click outside selection to commit
+    cy.drawAtCanvasPixel(0, 0);
+    cy.assertVisibleCanvasPixels([
+      [colors.transparent, colors.transparent, colors.black, colors.black],
+      [colors.transparent, colors.transparent, colors.red, colors.red],
+      [colors.black, colors.black, colors.red, colors.red],
+      [colors.black, colors.black, colors.black, colors.black],
+    ]);
+    cy.assertHighlightedPixels([
+      [false, false, false, false],
+      [false, false, false, false],
+      [false, false, false,  false],
+      [false, false, false,  false],
+    ]);
+    // todo: check that pixels was commited
+  });
+});
+
 describe('Line Tool', () => {
   it('step-by-step: mousedown → intermediate drag → mouseup commits line', () => {
     cy.seedDatabase({

@@ -81,6 +81,7 @@ declare global {
       assertDrawedCanvasPixels(pixels: CanvasPixels, assertMessage?: string): Chainable<void>;
       assertCanvasPixels(pixels: string[][], assertMessage?: string): Chainable<void>;
       assertTransparentCanvasPixels(pixels: CanvasPixels, assertMessage?: string): Chainable<void>;
+      assertHighlightedPixels(grid: boolean[][], assertMessage?: string): Chainable<void>;
       addFrame(): Chainable<void>;
       addLayer(): Chainable<void>;
       stubPrompt(returnValue: string | null): Chainable<void>;
@@ -164,9 +165,9 @@ Cypress.Commands.add('drawAtCanvasPixel', (px: number, py: number, options: { ri
         : y + 1;
       const btn = options.rightClick ? 2 : 0;
       cy.get('[data-testid="canvas-viewport"]', { log: false })
-        .trigger('mousedown', x, y, { button: btn, force: true, log: false })
-        .trigger('mousemove', toX, toY, { button: btn, force: true, log: false })
-        .trigger('mouseup', toX, toY, { button: btn, force: true, log: false });
+        .trigger('mousedown', x, y, { button: btn, force: true,})
+        .trigger('mousemove', toX, toY, { button: btn, force: true })
+        .trigger('mouseup', toX, toY, { button: btn, force: true, });
     });
   });
   if (options.toX !== undefined && options.toY !== undefined) {
@@ -304,6 +305,27 @@ Cypress.Commands.add('assertCanvasPixels', (expectedPixels: string[][], assertMe
     message: assertMessage || '',
     consoleProps: () => ({ expectedPixels })
   });
+});
+
+Cypress.Commands.add('assertHighlightedPixels', (expectedGrid: boolean[][], assertMessage?: string) => {
+  cy.get('[data-testid="canvas-current-layer"]', { log: false }).should(($canvas) => {
+    const canvas = $canvas[0] as HTMLCanvasElement;
+    const visualEffects = canvas.ownerDocument.getElementById('visual-effects') as HTMLCanvasElement;
+    const { width, height } = canvas;
+    const data = visualEffects.getContext('2d')!.getImageData(0, 0, width, height).data;
+    const actualObj: Record<string, boolean> = {};
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const i = (y * width + x) * 4;
+        actualObj[`${x},${y}`] = data[i + 3] > 0;
+      }
+    }
+    const expectedObj = Object.fromEntries(expectedGrid.flatMap((row, y) =>
+      row.map((highlighted, x) => [`${x},${y}`, highlighted])
+    ));
+    expect(actualObj, assertMessage).to.deep.equal(expectedObj);
+  });
+  Cypress.log({ name: 'assertHighlightedPixels', message: assertMessage ?? '' });
 });
 
 Cypress.Commands.add('assertTransparentCanvasPixels', (expectedPixels: CanvasPixels, assertMessage?: string) => {

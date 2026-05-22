@@ -139,6 +139,7 @@
                                                  (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos right-button])
                                                  (.. js/document (removeEventListener "mousemove" mouse-move))
                                                  (.. js/document (removeEventListener "mouseup" mouse-up))))]
+                                (reset! !last-mouse-pos mouse-pos)
                                 (re-frame/dispatch [::events/handle-mouse-event :mouse-down mouse-pos right-button])
                                 (.. js/document (addEventListener "mousemove" mouse-move))
                                 (.. js/document (addEventListener "mouseup" mouse-up)))))
