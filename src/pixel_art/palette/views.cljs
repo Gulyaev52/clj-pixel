@@ -48,11 +48,12 @@
                    :overflow "auto"}}
      (doall
       (for [[idx color] (map-indexed vector colors)]
-        (let [color-dark? (.. (color/->tinycolor color) isDark)]
+        (let [color-dark? (.. (color/->tinycolor color) isDark)
+              color-str (color/int->rgb-str color)]
           ^{:key color}
           [:div {:className "color-container"
-                 :data-testid (str "palette-color-" idx)
-                 :style {:background-color (color/int->rgb-str color)
+                 :data-testid (str "palette-color-" color-str)
+                 :style {:background-color color-str
                          :position "relative"
                          :cursor "pointer"
                          :color (if color-dark? (.-colorText theme-token) (.-colorBgBase theme-token))}
