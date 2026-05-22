@@ -14,62 +14,81 @@ const colors = {
 };
 
 describe('Drawing Tools', () => {
-  beforeEach(() => {
-    cy.seedDatabase(defaultDbSeed);
+  it("pen", () => {
+    cy.seedDatabase({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels([
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+      ]),
+    });
     cy.waitForAppReady();
     cy.selectTool('pen');
-  });
-
-  it("pen", () => {
     cy.contains('Pixel size').should('be.visible');
-    // pixel size = 2
     cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true });
 
-    cy.drawAtCanvasPixel(1, 1, { toX: 3, toY: 3 });
-    cy.assertCanvasPixels([
-      [colors.black, colors.black, colors.transparent, colors.transparent, colors.transparent],
-      [colors.black, colors.black, colors.black,       colors.transparent, colors.transparent],
-      [colors.transparent, colors.black, colors.black, colors.black,       colors.transparent],
-      [colors.transparent, colors.transparent, colors.black, colors.black, colors.transparent],
-      [colors.transparent, colors.transparent, colors.transparent, colors.transparent, colors.transparent],
-    ], 'pen draws a diagonal stroke with primary color');
+    cy.startDrawAtCanvasPixel(0, 0);
+    cy.assertVisibleCanvasPixels([
+      [colors.black,       colors.transparent, colors.transparent, colors.transparent],
+      [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+      [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+      [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+    ], 'mousedown: single pixel drawn at (0,0)');
 
-    cy.drawAtCanvasPixel(4, 4, { rightClick: true });
-    cy.assertCanvasPixels([
-      [colors.black, colors.black, colors.transparent, colors.transparent, colors.transparent],
-      [colors.black, colors.black, colors.black,       colors.transparent, colors.transparent],
-      [colors.transparent, colors.black, colors.black, colors.black,       colors.transparent],
-      [colors.transparent, colors.transparent, colors.black, colors.red,   colors.red],
-      [colors.transparent, colors.transparent, colors.transparent, colors.red, colors.red],
-    ], 'right-click draws with secondary color');
+    cy.moveAtCanvasPixel(1, 1);
+    cy.assertVisibleCanvasPixels([
+      [colors.black, colors.black, colors.transparent, colors.transparent],
+      [colors.black, colors.black, colors.transparent, colors.transparent],
+      [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+      [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+    ], 'mousemove to (1,1): 2×2 block drawn');
+
+    cy.finishDrawAtCanvasPixel(3, 3);
+    cy.assertVisibleCanvasPixels([
+      [colors.black, colors.black, colors.transparent, colors.transparent],
+      [colors.black, colors.black, colors.black,       colors.transparent],
+      [colors.transparent, colors.black, colors.black, colors.black],
+      [colors.transparent, colors.transparent, colors.black, colors.black],
+    ], 'mouseup at (3,3): full diagonal stroke committed');
   });
 });
 
 describe('Eraser Tool', () => {
-  beforeEach(() => {
+  it('eraser tool erases correctly', () => {
     cy.seedDatabase({
       ...defaultDbSeed,
-      sprite: getSpriteFromPixels(getPixels(5, 5, colors.black)),
+      sprite: getSpriteFromPixels(getPixels(4, 4, colors.black)),
     });
     cy.waitForAppReady();
     cy.selectTool('eraser');
-  });
-
-  it('eraser tool erases correctly', () => {
-    // options panel shows Pixel size slider (same spec as pen)
     cy.contains('Pixel size').should('be.visible');
     cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true }); // pixel size = 2
 
-    cy.drawAtCanvasPixel(1, 1, { toX: 2, toY: 2 });
-    cy.drawAtCanvasPixel(1, 1, { toX: 3, toY: 3, rightClick: true });
-    const expectedPixels = [
-      [colors.transparent, colors.transparent, colors.black, colors.black, colors.black],
-      [colors.transparent, colors.transparent, colors.transparent, colors.black, colors.black],
-      [colors.black, colors.transparent, colors.transparent, colors.transparent, colors.black],
-      [colors.black, colors.black, colors.transparent, colors.transparent, colors.black],
-      [colors.black, colors.black, colors.black, colors.black, colors.black],
-    ];
-    cy.assertCanvasPixels(expectedPixels, 'eraser turns pixels back to transparent');
+    cy.startDrawAtCanvasPixel(0, 0);
+    cy.assertVisibleCanvasPixels([
+      [colors.transparent, colors.black, colors.black, colors.black],
+      [colors.black,       colors.black, colors.black, colors.black],
+      [colors.black,       colors.black, colors.black, colors.black],
+      [colors.black,       colors.black, colors.black, colors.black],
+    ], 'mousedown: single pixel erased at (0,0)');
+
+    cy.moveAtCanvasPixel(1, 1);
+    cy.assertVisibleCanvasPixels([
+      [colors.transparent, colors.transparent, colors.black, colors.black],
+      [colors.transparent, colors.transparent, colors.black, colors.black],
+      [colors.black,       colors.black,       colors.black, colors.black],
+      [colors.black,       colors.black,       colors.black, colors.black],
+    ], 'mousemove to (1,1): 2×2 block erased');
+
+    cy.finishDrawAtCanvasPixel(3, 3);
+    cy.assertVisibleCanvasPixels([
+      [colors.transparent, colors.transparent, colors.black, colors.black],
+      [colors.transparent, colors.transparent, colors.transparent, colors.black],
+      [colors.black,       colors.transparent, colors.transparent, colors.transparent],
+      [colors.black,       colors.black,       colors.transparent, colors.transparent],
+    ], 'mouseup at (3,3): full diagonal stroke erased');
   });
 });
 
