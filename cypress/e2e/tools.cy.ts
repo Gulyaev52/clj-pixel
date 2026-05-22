@@ -73,6 +73,82 @@ describe('Eraser Tool', () => {
   });
 });
 
+describe('Color Picker Tool', () => {
+  beforeEach(() => {
+    cy.seedDatabase({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels([
+        [colors.green, colors.blue],
+        [colors.transparent, colors.transparent],
+      ]),
+    });
+    cy.waitForAppReady();
+    cy.selectTool('color-picker');
+  });
+
+  it('picks primary and secondary color from canvas pixel', () => {
+    cy.drawAtCanvasPixel(0, 0);
+    cy.get('[data-testid="primary-color-swatch"]')
+      .should('have.css', 'background-color', 'rgb(0, 128, 0)');
+
+    cy.drawAtCanvasPixel(1, 0, { rightClick: true });
+    cy.get('[data-testid="secondary-color-swatch"]')
+      .should('have.css', 'background-color', 'rgb(0, 0, 255)');
+  });
+});
+
+describe('Rectangle Tool', () => {
+  it('step-by-step: mousedown → intermediate drag → mouseup commits outline', () => {
+    cy.seedDatabase({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels([
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.green,       colors.green,       colors.transparent],
+        [colors.transparent, colors.green,       colors.green,       colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+      ]),
+    });
+    cy.waitForAppReady();
+    cy.selectTool('rectangle');
+
+    // Step 1: mousedown at (0,0) — user sees original + black pixel at (0,0)
+    cy.startDrawAtCanvasPixel(0, 0);
+    cy.assertVisibleCanvasPixels([
+      [colors.black,       colors.transparent, colors.transparent, colors.transparent],
+      [colors.transparent, colors.green,       colors.green,       colors.transparent],
+      [colors.transparent, colors.green,       colors.green,       colors.transparent],
+      [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+    ], 'step 1: user sees start pixel, original pixels unchanged underneath');
+
+    // Steps 2–3: intermediate drag to (1,1) — user sees original + 2×2 black outline
+    cy.moveAtCanvasPixel(1, 1);
+    cy.assertVisibleCanvasPixels([
+      [colors.black, colors.black,       colors.transparent, colors.transparent],
+      [colors.black, colors.black,       colors.green,       colors.transparent],
+      [colors.transparent, colors.green, colors.green,       colors.transparent],
+      [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+    ], 'steps 2-3: user sees 2×2 preview outline — green pixel (1,1) visible under transparent preview');
+
+    // Steps 3-4: intermediate drag to (2,2) — user sees original + 3×3 black outline
+    cy.moveAtCanvasPixel(2, 2);
+    cy.assertVisibleCanvasPixels([
+      [colors.black,       colors.black, colors.black, colors.transparent],
+      [colors.black, colors.green,       colors.black,       colors.transparent],
+      [colors.black, colors.black,       colors.black,       colors.transparent],
+      [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+    ], 'steps 3-4: user sees 3×3 preview outline — green pixel (2,2) visible under transparent preview');
+
+    // Step 5: mouseup at (3,3) — user sees committed rectangle
+    cy.finishDrawAtCanvasPixel(3, 3);
+    cy.assertVisibleCanvasPixels([
+      [colors.black, colors.black, colors.black, colors.black],
+      [colors.black, colors.green, colors.green, colors.black],
+      [colors.black, colors.green, colors.green, colors.black],
+      [colors.black, colors.black, colors.black, colors.black],
+    ], 'step 5: rectangle outline committed — interior green pixels preserved');
+  });
+});
+
 describe('Bucket Tool', () => {
   it('flood-fills the connected region with primary or secondary color', () => {
     const db: DBSeed = {

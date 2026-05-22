@@ -190,6 +190,7 @@
                  sprite-size)]
        [:canvas (merge
                  {:id "preview"
+                  :data-testid "canvas-preview"
                   :style {:position :absolute
                           :left 0
                           :top 0

@@ -43,7 +43,7 @@
                                        {:color color/transparent-color-int :title "transparent color"}])
                      :on-cancel close}])))
 
-(defn- current-color-selection [{:keys [value on-change]}]
+(defn- current-color-selection [{:keys [value on-change data-testid]}]
   [custom-popover
    (fn [close]
      [:div {:style {:width "45px"
@@ -54,6 +54,7 @@
                                   transparent-color-img
                                   (color/int->rgb-str value))
                     :border "thin solid white"}
+            :data-testid data-testid
             :on-click close}])
    (fn [close]
      [current-color-selection-color-picker {:value value :on-change on-change} close])])
@@ -75,10 +76,12 @@
     [:div {:style {:width "min-content" :position "relative"}}
      [:div {:style {:width "min-content" :position "relative" :z-index 1}}
       [current-color-selection {:value primary-color
+                                :data-testid "primary-color-swatch"
                                 :on-change (fn [new-primary-color]
                                              (re-frame/dispatch [::events/set-current-color :primary-color new-primary-color]))}]]
      [:div {:style {:margin-top "-25px" :margin-left "32px"}}
       [current-color-selection {:value secondary-color
+                                :data-testid "secondary-color-swatch"
                                 :on-change (fn [new-secondary-color]
                                              (re-frame/dispatch [::events/set-current-color :secondary-color new-secondary-color]))}]]
      [:div {:style {:position "absolute"
