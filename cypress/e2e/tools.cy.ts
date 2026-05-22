@@ -168,6 +168,70 @@ describe('Rectangle Tool', () => {
   });
 });
 
+describe('Line Tool', () => {
+  it('step-by-step: mousedown → intermediate drag → mouseup commits line', () => {
+    cy.seedDatabase({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels([
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+      ]),
+    });
+    cy.waitForAppReady();
+    cy.selectTool('line');
+
+    cy.startDrawAtCanvasPixel(0, 0);
+    cy.assertVisibleCanvasPixels([
+      [colors.black,       colors.transparent, colors.transparent, colors.transparent],
+      [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+      [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+      [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+    ], 'step 1: mousedown at (0,0) — single pixel on preview');
+
+    cy.moveAtCanvasPixel(2, 1);
+    cy.assertVisibleCanvasPixels([
+      [colors.black,       colors.black,       colors.transparent, colors.transparent],
+      [colors.transparent, colors.transparent, colors.black,       colors.transparent],
+      [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+      [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+    ], 'step 2: mousemove to (2,1) — Bresenham line on preview');
+
+    cy.finishDrawAtCanvasPixel(3, 3);
+    cy.assertVisibleCanvasPixels([
+      [colors.black,       colors.transparent, colors.transparent, colors.transparent],
+      [colors.transparent, colors.black,       colors.transparent, colors.transparent],
+      [colors.transparent, colors.transparent, colors.black,       colors.transparent],
+      [colors.transparent, colors.transparent, colors.transparent, colors.black],
+    ], 'step 3: mouseup at (3,3) — diagonal line committed');
+  });
+
+  it('pixel size 2 and Straight option produce correct pixels', () => {
+    cy.seedDatabase({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels([
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+      ]),
+    });
+    cy.waitForAppReady();
+    cy.selectTool('line');
+    cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true }); // pixel size = 2
+    cy.contains('Straight').click();
+
+    cy.drawAtCanvasPixel(0, 0, { toX: 2, toY: 3 });
+    cy.assertVisibleCanvasPixels([
+      [colors.black, colors.black,       colors.transparent, colors.transparent],
+      [colors.black, colors.black,       colors.black,       colors.transparent],
+      [colors.transparent, colors.black, colors.black,       colors.black],
+      [colors.transparent, colors.transparent, colors.black, colors.black],
+    ], 'pixel size 2 + Straight: (0,0)→(2,3) draws perfect diagonal stripe');
+  });
+});
+
 describe('Bucket Tool', () => {
   it('flood-fills the connected region with primary or secondary color', () => {
     const db: DBSeed = {

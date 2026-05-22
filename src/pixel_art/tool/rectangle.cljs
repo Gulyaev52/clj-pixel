@@ -9,8 +9,7 @@
 (def tool
   (shape/make
    {:type :rectangle
-    :options-spec [options-spec/pixel-size
-                   (options-spec/make-checkbox {:field :keep-ratio :label "Keep ration"})]
+    :options-spec [options-spec/pixel-size]
     :get-points
     (fn [db event]
       (let [{:keys [initial-mouse-down-pos]} db
