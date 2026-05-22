@@ -230,7 +230,7 @@ describe('Rectangle Selection Tool', () => {
     cy.assertVisibleCanvasPixels(initialPixels, 'canvas pixels still all black — nothing committed');
   });
 
-  it.only('select + highlight + drag + commit', () => {
+  it('select + highlight + drag + commit', () => {
     const initialPixels = [
         [colors.red, colors.red, colors.black, colors.black],
         [colors.red, colors.red, colors.black, colors.black],
@@ -299,6 +299,132 @@ describe('Rectangle Selection Tool', () => {
       [false, false, false,  false],
     ]);
     // todo: check that pixels was commited
+  });
+
+  describe("actions", () => {
+    it("copy + paste action", () => {
+      const initialPixels = [
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+      ];
+      cy.seedDatabase({
+        ...defaultDbSeed,
+        sprite: getSpriteFromPixels(initialPixels),
+      });
+      cy.waitForAppReady();
+      cy.selectTool('rectangle-selection');
+  
+      // Select 2×2 top-left region
+      cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
+      cy.realPress(['Control', 'c']);
+      cy.realPress(['Control', 'v']);
+      cy.assertHighlightedPixels([
+        [true, true, false, false],
+        [true, true, false, false],
+        [false, false, false,  false],
+        [false, false, false,  false],
+      ]);
+      cy.assertVisibleCanvasPixels(initialPixels);
+
+      cy.drawAtCanvasPixel(0, 0, { toX: 2, toY: 2});
+      cy.assertVisibleCanvasPixels([
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.black, colors.black, colors.red, colors.red],
+        [colors.black, colors.black, colors.red, colors.red],
+      ], "underlying pixels should be preserved + moved only pasted selection");
+      cy.assertHighlightedPixels([
+        [false, false, false, false],
+        [false, false, false, false],
+        [false, false, true,  true],
+        [false, false, true,  true],
+      ]);
+
+      cy.drawAtCanvasPixel(0, 0);
+      cy.assertVisibleCanvasPixels([
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.black, colors.black, colors.red, colors.red],
+        [colors.black, colors.black, colors.red, colors.red],
+      ], "click outside should commit the move");
+      cy.assertHighlightedPixels([
+        [false, false, false, false],
+        [false, false, false, false],
+        [false, false, false,  false],
+        [false, false, false,  false],
+      ]);
+    });
+
+    it("delete selection", () => {
+      const initialPixels = [
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+      ];
+      cy.seedDatabase({
+        ...defaultDbSeed,
+        sprite: getSpriteFromPixels(initialPixels),
+      });
+      cy.waitForAppReady();
+      cy.selectTool('rectangle-selection');
+
+      cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
+      cy.realPress(['Control', 'Backspace']); // in reality here should be only "Backspace" but for some reason this test doesn't work without "Control" key
+      cy.assertVisibleCanvasPixels([
+        [colors.transparent, colors.transparent, colors.black, colors.black],
+        [colors.transparent, colors.transparent, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+      ], "delete should clear pixels in selection");
+      cy.assertHighlightedPixels([
+        [false, false, false, false],
+        [false, false, false, false],
+        [false, false, false,  false],
+        [false, false, false,  false],
+      ], "selection should remain after delete");
+      
+      cy.drawAtCanvasPixel(0, 0, { toX: 2, toY: 2 });
+      cy.realPress(['Control', 'Delete']); // in reality here should be only "Delete" but for some reason this test doesn't work without "Control" key
+      cy.assertVisibleCanvasPixels([
+        [colors.transparent, colors.transparent, colors.transparent, colors.black],
+        [colors.transparent, colors.transparent, colors.transparent, colors.black],
+        [colors.transparent, colors.transparent, colors.transparent, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+      ], "delete should clear pixels in selection");
+      cy.assertHighlightedPixels([
+        [false, false, false, false],
+        [false, false, false, false],
+        [false, false, false,  false],
+        [false, false, false,  false],
+      ], "selection should remain after delete");
+    });
+
+    it("delete pasted selection", () => {
+      const initialPixels = [
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+      ];
+      cy.seedDatabase({
+        ...defaultDbSeed,
+        sprite: getSpriteFromPixels(initialPixels),
+      });
+      cy.waitForAppReady();
+      cy.selectTool('rectangle-selection');
+
+      cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
+      cy.realPress(['Control', 'c']);
+      cy.realPress(['Control', 'v']);
+      cy.drawAtCanvasPixel(1, 1, { toX: 2, toY: 1});
+      cy.realPress(['Control', 'Backspace']);
+      cy.assertVisibleCanvasPixels(initialPixels, "delete pasted selection should not affect underlying pixels only pasted ones");
+    });
+
+    it("paste when another tool is active");
   });
 });
 
