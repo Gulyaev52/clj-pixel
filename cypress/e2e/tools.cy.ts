@@ -425,6 +425,111 @@ describe('Rectangle Selection Tool', () => {
     });
 
     it("paste when another tool is active");
+
+    it("commit moved selection with Enter", () => {
+      const initialPixels = [
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+      ];
+      cy.seedDatabase({
+        ...defaultDbSeed,
+        sprite: getSpriteFromPixels(initialPixels),
+      });
+      cy.waitForAppReady();
+      cy.selectTool('rectangle-selection');
+
+      // Select 2×2 top-left region
+      cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
+
+      // Drag selection to bottom-right
+      cy.drawAtCanvasPixel(0, 0, { toX: 2, toY: 2 });
+      cy.assertVisibleCanvasPixels([
+        [colors.transparent, colors.transparent, colors.black, colors.black],
+        [colors.transparent, colors.transparent, colors.black, colors.black],
+        [colors.black, colors.black, colors.red, colors.red],
+        [colors.black, colors.black, colors.red, colors.red],
+      ], "preview: selection moved to bottom-right");
+      cy.assertHighlightedPixels([
+        [false, false, false, false],
+        [false, false, false, false],
+        [false, false, true,  true],
+        [false, false, true,  true],
+      ], "selection highlighted at new position");
+
+      // Press Enter to commit
+      cy.realPress('Enter');
+      cy.assertVisibleCanvasPixels([
+        [colors.transparent, colors.transparent, colors.black, colors.black],
+        [colors.transparent, colors.transparent, colors.black, colors.black],
+        [colors.black, colors.black, colors.red, colors.red],
+        [colors.black, colors.black, colors.red, colors.red],
+      ], "Enter should commit the moved selection");
+      cy.assertHighlightedPixels([
+        [false, false, false, false],
+        [false, false, false, false],
+        [false, false, false,  false],
+        [false, false, false,  false],
+      ], "highlight cleared after Enter");
+    });
+
+    it("commit pasted and moved selection with Enter", () => {
+      const initialPixels = [
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+      ];
+      cy.seedDatabase({
+        ...defaultDbSeed,
+        sprite: getSpriteFromPixels(initialPixels),
+      });
+      cy.waitForAppReady();
+      cy.selectTool('rectangle-selection');
+
+      // Select 2×2 top-left region, copy and paste
+      cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
+      cy.realPress(['Control', 'c']);
+      cy.realPress(['Control', 'v']);
+      cy.assertHighlightedPixels([
+        [true, true, false, false],
+        [true, true, false, false],
+        [false, false, false,  false],
+        [false, false, false,  false],
+      ], "pasted selection at original position");
+      cy.assertVisibleCanvasPixels(initialPixels, "underlying pixels unchanged after paste");
+
+      // Drag pasted selection to bottom-right
+      cy.drawAtCanvasPixel(0, 0, { toX: 2, toY: 2 });
+      cy.assertVisibleCanvasPixels([
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.black, colors.black, colors.red, colors.red],
+        [colors.black, colors.black, colors.red, colors.red],
+      ], "underlying pixels preserved + pasted selection moved to bottom-right");
+      cy.assertHighlightedPixels([
+        [false, false, false, false],
+        [false, false, false, false],
+        [false, false, true,  true],
+        [false, false, true,  true],
+      ], "highlight at new position");
+
+      // Press Enter to commit
+      cy.realPress('Enter');
+      cy.assertVisibleCanvasPixels([
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.black, colors.black, colors.red, colors.red],
+        [colors.black, colors.black, colors.red, colors.red],
+      ], "Enter should commit the pasted selection");
+      cy.assertHighlightedPixels([
+        [false, false, false, false],
+        [false, false, false, false],
+        [false, false, false,  false],
+        [false, false, false,  false],
+      ], "highlight cleared after Enter");
+    });
   });
 });
 
