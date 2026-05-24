@@ -823,3 +823,68 @@ describe('Bucket Tool', () => {
     cy.assertCanvasPixels(expectedPixels, '"All the same color" fills every matching pixel regardless of adjacency');
   });
 });
+
+describe('Shape Selection Tool', () => {
+  it('select connected pixels and move', () => {
+    const r = colors.red;
+    const b = colors.black;
+    const t = colors.transparent;
+
+    const initialPixels = [
+      [r, r, b, b],
+      [r, b, b, b],
+      [b, b, b, r],
+      [b, b, r, r],
+    ];
+
+    cy.startApp({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels(initialPixels),
+    });
+    cy.waitForAppReady();
+    cy.selectTool('shape-selection');
+
+    // Single click — flood-fill selects only the 3 connected red pixels at top-left
+    cy.drawAtCanvasPixel(0, 0);
+    cy.assertHighlightedPixels([
+      [true,  true,  false, false],
+      [true,  false, false, false],
+      [false, false, false, false],
+      [false, false, false, false],
+    ], 'only connected red pixels highlighted, disconnected reds excluded');
+    cy.assertVisibleCanvasPixels(initialPixels, 'canvas pixels unchanged after selection');
+
+    // Drag selection by (+1, +1)
+    cy.startDrawAtCanvasPixel(0, 0);
+    cy.moveAtCanvasPixel(1, 1);
+    cy.assertVisibleCanvasPixels([
+      [t, t, b, b],
+      [t, r, r, b],
+      [b, r, b, r],
+      [b, b, r, r],
+    ], 'selection floats: originals transparent, preview at new position');
+
+    cy.finishDrawAtCanvasPixel(1, 1);
+    cy.assertHighlightedPixels([
+      [false, false, false, false],
+      [false, true,  true,  false],
+      [false, true,  false, false],
+      [false, false, false, false],
+    ], 'highlight follows selection to new position');
+
+    // Commit by clicking outside
+    cy.drawAtCanvasPixel(0, 3);
+    cy.assertVisibleCanvasPixels([
+      [t, t, b, b],
+      [t, r, r, b],
+      [b, r, b, r],
+      [b, b, r, r],
+    ], 'selection committed at new position');
+    cy.assertHighlightedPixels([
+      [false, false, false, false],
+      [false, false, false, false],
+      [false, false, false, false],
+      [false, false, false, false],
+    ], 'highlight cleared after commit');
+  });
+});

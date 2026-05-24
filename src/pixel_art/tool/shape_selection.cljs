@@ -5,7 +5,7 @@
    [pixel-art.tool.selection :as selection]
    [pixel-art.tool.utils :refer [get-current-cel get-preview-from-current-cel]]
    [pixel-art.utils.geometry :as geometry]))
-
+;; todo: переименовать в wand?
 (def tool
   (selection/make
    {:type :shape-selection
