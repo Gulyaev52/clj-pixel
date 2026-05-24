@@ -30,7 +30,8 @@
                      :actions [[button
                                 {:on-click (fn []
                                              (re-frame/dispatch [::events/add-color @!temp-new-value])
-                                             (on-close))}
+                                             (on-close))
+                                 :data-testid "add-color-confirm-button"}
                                 "Add"]]
                      :preset-colors (coll/distinct-by :color [{:color primary-color}
                                                               {:color secondary-color}
