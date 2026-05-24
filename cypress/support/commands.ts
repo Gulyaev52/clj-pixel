@@ -32,20 +32,6 @@ function readCanvasPixels(canvas: HTMLCanvasElement) {
   ).flat();
 }
 
-function readCompositePixels(current: HTMLCanvasElement, preview: HTMLCanvasElement) {
-  const { width, height } = current;
-  const currentData = current.getContext('2d')!.getImageData(0, 0, width, height).data;
-  const previewData = preview.getContext('2d')!.getImageData(0, 0, width, height).data;
-  return Array.from({ length: width }, (_, x) =>
-    Array.from({ length: height }, (_, y) => {
-      const i = (y * width + x) * 4;
-      const colors = previewData[i + 3] > 0
-        ? [previewData[i], previewData[i + 1], previewData[i + 2], previewData[i + 3]] as const
-        : [currentData[i], currentData[i + 1], currentData[i + 2], currentData[i + 3]] as const;
-      return { pos: [x, y], color: rgba(...colors) } satisfies { pos: [number, number], color: string };
-    })
-  ).flat();
-}
 
 function readTransparentCanvasPixels(canvas: HTMLCanvasElement) {
   const { width, height } = canvas;
@@ -117,7 +103,7 @@ Cypress.Commands.add('seedDatabase', (dbSeed: DBSeed) => {
 
 Cypress.Commands.add('waitForAppReady', () => {
   cy.get('[data-testid="canvas-viewport"]', { timeout: 10000, log: false }).should('be.visible');
-  cy.get('[data-testid="canvas-current-layer"]', { log: false }).should('be.visible');
+  cy.get('[data-testid="current-layer"]', { log: false }).should('be.visible');
   Cypress.log({ name: 'waitForAppReady', message: 'App is ready' });
 });
 
@@ -148,7 +134,7 @@ Cypress.Commands.add('drawOnCanvas', (x: number, y: number) => {
 // Coordinates are computed dynamically from the canvas element's bounding rect.
 Cypress.Commands.add('drawAtCanvasPixel', (px: number, py: number, options: { rightClick?: boolean; toX?: number; toY?: number } = {}) => {
   cy.get('[data-testid="canvas-viewport"]', { log: false }).then(($vp) => {
-    cy.get('[data-testid="canvas-current-layer"]', { log: false }).then(($canvas) => {
+    cy.get('[data-testid="current-layer"]', { log: false }).then(($canvas) => {
       const vpRect = $vp[0].getBoundingClientRect();
       const cvRect = ($canvas[0] as HTMLCanvasElement).getBoundingClientRect();
       const bufferW = ($canvas[0] as HTMLCanvasElement).width;
@@ -179,7 +165,7 @@ Cypress.Commands.add('drawAtCanvasPixel', (px: number, py: number, options: { ri
 
 Cypress.Commands.add('startDrawAtCanvasPixel', (px: number, py: number, options: { rightClick?: boolean } = {}) => {
   cy.get('[data-testid="canvas-viewport"]', { log: false }).then(($vp) => {
-    cy.get('[data-testid="canvas-current-layer"]', { log: false }).then(($canvas) => {
+    cy.get('[data-testid="current-layer"]', { log: false }).then(($canvas) => {
       const vpRect = $vp[0].getBoundingClientRect();
       const cvRect = ($canvas[0] as HTMLCanvasElement).getBoundingClientRect();
       const bufferW = ($canvas[0] as HTMLCanvasElement).width;
@@ -198,7 +184,7 @@ Cypress.Commands.add('startDrawAtCanvasPixel', (px: number, py: number, options:
 
 Cypress.Commands.add('finishDrawAtCanvasPixel', (px: number, py: number, options: { rightClick?: boolean } = {}) => {
   cy.get('[data-testid="canvas-viewport"]', { log: false }).then(($vp) => {
-    cy.get('[data-testid="canvas-current-layer"]', { log: false }).then(($canvas) => {
+    cy.get('[data-testid="current-layer"]', { log: false }).then(($canvas) => {
       const vpRect = $vp[0].getBoundingClientRect();
       const cvRect = ($canvas[0] as HTMLCanvasElement).getBoundingClientRect();
       const bufferW = ($canvas[0] as HTMLCanvasElement).width;
@@ -210,6 +196,7 @@ Cypress.Commands.add('finishDrawAtCanvasPixel', (px: number, py: number, options
       const btn = options.rightClick ? 2 : 0;
       cy.get('[data-testid="canvas-viewport"]', { log: false })
         .trigger('mousemove', x, y, { button: btn, force: true, log: false })
+        .wait(1) // почему то без ожидания mouseup срабатывает раньше чем mousemove
         .trigger('mouseup', x, y, { button: btn, force: true, log: false });
     });
   });
@@ -218,7 +205,7 @@ Cypress.Commands.add('finishDrawAtCanvasPixel', (px: number, py: number, options
 
 Cypress.Commands.add('moveAtCanvasPixel', (px: number, py: number, options: { rightClick?: boolean } = {}) => {
   cy.get('[data-testid="canvas-viewport"]', { log: false }).then(($vp) => {
-    cy.get('[data-testid="canvas-current-layer"]', { log: false }).then(($canvas) => {
+    cy.get('[data-testid="current-layer"]', { log: false }).then(($canvas) => {
       const vpRect = $vp[0].getBoundingClientRect();
       const cvRect = ($canvas[0] as HTMLCanvasElement).getBoundingClientRect();
       const bufferW = ($canvas[0] as HTMLCanvasElement).width;
@@ -236,7 +223,7 @@ Cypress.Commands.add('moveAtCanvasPixel', (px: number, py: number, options: { ri
 });
 
 Cypress.Commands.add('assertPreviewCanvasPixels', (expectedPixels: string[][], assertMessage?: string) => {
-  cy.get('[data-testid="canvas-preview"]', { log: false }).should(($canvas) => {
+  cy.get('[data-testid="current-layer"]', { log: false }).should(($canvas) => {
     const actualPixels = readCanvasPixels($canvas[0] as HTMLCanvasElement);
     const actualObj = Object.fromEntries(actualPixels.map(p => [p.pos.join(','), p.color]));
     const expectedObj = Object.fromEntries(expectedPixels.flatMap((row, y) =>
@@ -252,10 +239,8 @@ Cypress.Commands.add('assertPreviewCanvasPixels', (expectedPixels: string[][], a
 });
 
 Cypress.Commands.add('assertVisibleCanvasPixels', (expectedPixels: string[][], assertMessage?: string) => {
-  cy.get('[data-testid="canvas-preview"]', { log: false }).should(($preview) => {
-    const previewCanvas = $preview[0] as HTMLCanvasElement;
-    const currentCanvas = previewCanvas.ownerDocument.querySelector('[data-testid="canvas-current-layer"]') as HTMLCanvasElement;
-    const actualPixels = readCompositePixels(currentCanvas, previewCanvas);
+  cy.get('[data-testid="current-layer"]', { log: false }).should(($canvas) => {
+    const actualPixels = readCanvasPixels($canvas[0] as HTMLCanvasElement);
     const actualObj = Object.fromEntries(actualPixels.map(p => [p.pos.join(','), p.color]));
     const expectedObj = Object.fromEntries(expectedPixels.flatMap((row, y) =>
       row.map((color, x) => [`${x},${y}`, color])
@@ -272,13 +257,13 @@ Cypress.Commands.add('assertVisibleCanvasPixels', (expectedPixels: string[][], a
 // Reads all canvas pixels inside a should() callback so Cypress retries until
 // all assertions inside check() pass. pixels[x][y] = [r, g, b, a].
 Cypress.Commands.add('getDrawedCanvasPixels', (check: (pixels: CanvasPixels) => void) => {
-  cy.get('[data-testid="canvas-current-layer"]').should(($canvas) => {
+  cy.get('[data-testid="current-layer"]').should(($canvas) => {
     check(readDrawedCanvasPixels($canvas[0] as HTMLCanvasElement));
   });
 });
 
 Cypress.Commands.add('assertDrawedCanvasPixels', (expectedPixels: CanvasPixels, assertMessage?: string) => {
-  cy.get('[data-testid="canvas-current-layer"]', { log: false }).should(($canvas) => {
+  cy.get('[data-testid="current-layer"]', { log: false }).should(($canvas) => {
     const actualPixels = readDrawedCanvasPixels($canvas[0] as HTMLCanvasElement);
     const actualObj = Object.fromEntries(actualPixels.map(p => [p.pos.join(','), p.color]));
     const expectedObj = Object.fromEntries(expectedPixels.map(p => [p.pos.join(','), p.color]));
@@ -292,7 +277,7 @@ Cypress.Commands.add('assertDrawedCanvasPixels', (expectedPixels: CanvasPixels, 
 });
 
 Cypress.Commands.add('assertCanvasPixels', (expectedPixels: string[][], assertMessage?: string) => {
-  cy.get('[data-testid="canvas-current-layer"]', { log: false }).should(($canvas) => {
+  cy.get('[data-testid="current-layer"]', { log: false }).should(($canvas) => {
     const actualPixels = readCanvasPixels($canvas[0] as HTMLCanvasElement);
     const actualObj = Object.fromEntries(actualPixels.map(p => [p.pos.join(','), p.color]));
     const expectedObj = Object.fromEntries(expectedPixels.flatMap((row, y) =>
@@ -308,7 +293,7 @@ Cypress.Commands.add('assertCanvasPixels', (expectedPixels: string[][], assertMe
 });
 
 Cypress.Commands.add('assertHighlightedPixels', (expectedGrid: boolean[][], assertMessage?: string) => {
-  cy.get('[data-testid="canvas-current-layer"]', { log: false }).should(($canvas) => {
+  cy.get('[data-testid="current-layer"]', { log: false }).should(($canvas) => {
     const canvas = $canvas[0] as HTMLCanvasElement;
     const visualEffects = canvas.ownerDocument.getElementById('visual-effects') as HTMLCanvasElement;
     const { width, height } = canvas;
@@ -329,7 +314,7 @@ Cypress.Commands.add('assertHighlightedPixels', (expectedGrid: boolean[][], asse
 });
 
 Cypress.Commands.add('assertTransparentCanvasPixels', (expectedPixels: CanvasPixels, assertMessage?: string) => {
-  cy.get('[data-testid="canvas-current-layer"]', { log: false }).should(($canvas) => {
+  cy.get('[data-testid="current-layer"]', { log: false }).should(($canvas) => {
     const actualPixels = readTransparentCanvasPixels($canvas[0] as HTMLCanvasElement);
     const actualObj = Object.fromEntries(actualPixels.map(p => [p.pos.join(','), p.color]));
     const expectedObj = Object.fromEntries(expectedPixels.map(p => [p.pos.join(','), p.color]));
@@ -361,3 +346,19 @@ Cypress.Commands.add('stubConfirm', (returnValue: boolean) => {
     cy.stub(win, 'confirm').returns(returnValue);
   });
 });
+
+Cypress.on('window:before:load', function (window) {
+  const original = window.EventTarget.prototype.addEventListener
+
+  window.EventTarget.prototype.addEventListener = function () {
+    if (arguments && arguments[0] === 'beforeunload') {
+      return
+    }
+    return original.apply(this, arguments)
+  }
+
+  Object.defineProperty(window, 'onbeforeunload', {
+    get: function () { },
+    set: function () { }
+  })
+})

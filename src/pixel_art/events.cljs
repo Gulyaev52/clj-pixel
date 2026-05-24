@@ -62,7 +62,7 @@
 (re-frame/reg-cofx
  :viewport-size
  (fn [coeffects _]
-   (let [viewport-rect (.. js/document (getElementById "viewport") (getBoundingClientRect))
+   (let [viewport-rect (.. js/document (getElementById "canvas-viewport") (getBoundingClientRect))
          viewport-size {:width (. viewport-rect -width) :height (. viewport-rect -height)}]
      (assoc coeffects :viewport-size viewport-size))))
 
