@@ -29,11 +29,15 @@
 		"cypress": "^15.15.0",
 		"cypress-diff": "^0.0.6",
 		"cypress-real-events": "^1.15.0",
+		"@testing-library/react": "^12.1.5",
+		"@testing-library/react-hooks": "^8.0.1",
+		"@testing-library/user-event": "^13.5.0",
+		"fake-indexeddb": "^6.0.1",
 		"karma": "6.4.0",
 		"karma-chrome-launcher": "3.1.1",
 		"karma-cljs-test": "0.1.0",
 		"karma-junit-reporter": "2.0.1",
-		"shadow-cljs": "2.28.20",
-		"typescript": "^6.0.3"
+		"typescript": "^6.0.3",
+		"shadow-cljs": "3.1.7"
 	}
 }

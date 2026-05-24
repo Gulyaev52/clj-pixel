@@ -2,7 +2,6 @@
   (:require
    [pixel-art.project-settings :as project-settings]
    [pixel-art.tool.core :as tool]
-   [pixel-art.drawing.fx]
    [re-frame.core :as re-frame]))
 
 (defn run-events-handlers [events events-handlers db event]
@@ -16,30 +15,35 @@
 (re-frame/reg-event-fx
  ::handle-mouse-event
  (fn [{:keys [db]} [_ event-type mouse-pos right-button]]
-   (let [event {:type event-type :pos mouse-pos :right-button right-button}
-         tool-events-handlers (tool/get-events-handlers db)]
-     (case event-type
-       :mouse-down
-       (let [updated-db (assoc db
-                               :initial-mouse-down-pos (:pos event)
-                               :mouse-pos (:pos event))]
-         (run-events-handlers [:mouse-down :mouse-down-or-mouse-down-and-move] tool-events-handlers updated-db event))
+   (-> (let [event {:type event-type :pos mouse-pos :right-button right-button}
+             tool-events-handlers (tool/get-events-handlers db)]
+         (case event-type
+           :mouse-down
+           (let [updated-db (assoc db
+                                   :initial-mouse-down-pos (:pos event)
+                                   :mouse-pos (:pos event))] ;; todo: зачем это надо
+             (run-events-handlers [:mouse-down :mouse-down-or-mouse-down-and-move] tool-events-handlers updated-db event))
 
-       :mouse-move
-       (let [updated-db (assoc db :mouse-pos (:pos event))]
-         (run-events-handlers (into [:mouse-move] (when (:initial-mouse-down-pos updated-db)
-                                                    [:mouse-down-or-mouse-down-and-move :mouse-down-and-move]))
-                              tool-events-handlers
-                              updated-db
-                              event))
+           :mouse-move
+           (let [updated-db (assoc db :mouse-pos (:pos event))]
+             (run-events-handlers
+              (concat []
+                      (when (not (:initial-mouse-down-pos updated-db))
+                        [:mouse-move-without-mouse-down])
+                      (when (:initial-mouse-down-pos updated-db)
+                        [:mouse-down-or-mouse-down-and-move :mouse-down-and-move]))
+              tool-events-handlers
+              updated-db
+              event))
 
-       :mouse-up
-       (let [updated-db (assoc db :mouse-pos (:pos event))]
-         (-> (run-events-handlers [:mouse-up]
-                                  tool-events-handlers
-                                  updated-db
-                                  event)
-             (assoc-in [:db :initial-mouse-down-pos] nil)))))))
+           :mouse-up
+           (let [updated-db (assoc db :mouse-pos (:pos event))]
+             (-> (run-events-handlers [:mouse-up]
+                                      tool-events-handlers
+                                      updated-db
+                                      event)
+                 (assoc-in [:db :initial-mouse-down-pos] nil)))))
+       (assoc-in [:db :prev-pos] mouse-pos))))
 
 (re-frame/reg-event-fx
  ::enable-pixels-grid

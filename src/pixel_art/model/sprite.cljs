@@ -3,8 +3,9 @@
             [pixel-art.utils.coll :as coll]
             [sc.api]))
 
-(defn create [{:keys [size layer frame cel]}]
-  {:size size
+(defn create [{:keys [size layer frame cel title]}]
+  {:title title
+   :size size
    :frames [frame]
    :cels [[(assoc cel
                   :current true
@@ -158,8 +159,12 @@
                  (conj (set linked-cels-pos) current-cel-pos)
                  sprite)))
 
-(defn set-current-cel-pixels [pixels-map sprite]
-  (update-current-cel-and-linked #(cel/set-pixels pixels-map %) sprite))
+;; todo: rename
+(defn set-current-cel-pixels-map [pixels-map sprite]
+  (update-current-cel-and-linked #(cel/set-pixels-map pixels-map %) sprite))
+
+(defn set-current-cel-pixels [pixels sprite]
+  (update-current-cel-and-linked #(cel/set-pixels pixels %) sprite))
 
 (defn link-layer-cels [cels-pos main-cel-pos sprite]
   (let [group-number (or (:group-number (get-cel main-cel-pos sprite))

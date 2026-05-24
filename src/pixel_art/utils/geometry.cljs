@@ -1,8 +1,8 @@
 (ns pixel-art.utils.geometry
   (:require
    ["./shapeTool.js" :as shape-tool]
-   ["./t.js" :as t]
-   [clojure.string :as string]))
+   [clojure.string :as string]
+   [sc.api :as api]))
 
 ;; todo: pixels?
 
@@ -11,17 +11,6 @@
               :y (apply min (map :y points))}
    :bottom-right {:x (apply max (map :x points))
                   :y (apply max (map :y points))}})
-
-;; todo: remove
-(defn get-rectange-points [p1 p2]
-  (let [{:keys [top-left bottom-right]} (get-ordered-rectangle-points [p1 p2])
-        x-top-left (:x top-left)
-        x-bottom-right (:x bottom-right)
-        y-top-left (:y top-left)
-        y-bottom-right (:y bottom-right)]
-    (t/fors (clj->js {:i1 x-top-left :i1Stop (inc x-bottom-right)
-                      :i2 y-top-left :i2Stop (inc y-bottom-right)})
-            (fn [x y] {:x x :y y}))))
 
 (defn display-points [points size]
   (let [{:keys [width]} size
@@ -39,52 +28,54 @@
          (string/join "\n")
          println)))
 
-(defn valid-point? [{:keys [x y]} {:keys [width height]}]
-  (and x y (>= x 0) (< x width) (>= y 0) (< y height)))
+(defn valid-point?
+  ([{:keys [x y]} {:keys [width height]}]
+   (and x y (>= x 0) (< x width) (>= y 0) (< y height)))
+  ([x y {:keys [width height]}]
+   (and x y (>= x 0) (< x width) (>= y 0) (< y height))))
 
-(defn pos->idx [x y width]
-  (+ x (* width y)))
+(defn pos->idx
+  ([x y size]
+   (when (and (< -1 x (:width size))
+              (< -1 y (:height size)))
+     (+ x (* (:width size) y))))
+  ;; more performant version. lookup can be not performant when doing very often. (e.x. grid is 512x512 and we are making selection)
+  ([x y width height]
+   (when (and (< -1 x width)
+              (< -1 y height))
+     (+ x (* width y)))))
 
-(defn flood-fill [start-pos size pixels target-color]
-  (let [{:keys [width height]} size
-
-        queue #js [start-pos]
-        visited-pixels #js []
-        _ (aset visited-pixels (pos->idx (:x start-pos) (:y start-pos) width) start-pos)
+;; flood fill algorithm
+;; f should return true if a point is not visited
+(defn visit-connected-pixels [start-pos f]
+  (let [queue #js [#js [(:x start-pos) (:y start-pos)]] ;; js data structures here because they are more performant when canvas size large (e.g. 512x512)
 
         dy #js [-1 0 1 0]
         dx #js [0 1 0 -1]]
-
+    (f (:x start-pos) (:y start-pos))
     (while (> (. queue -length) 0)
       (let [current-item (. queue pop)]
         (dotimes [i 4]
-          (let [next-x (+ (:x current-item) (aget dx i))
-                next-y (+ (:y current-item) (aget dy i))
-                idx (if (and (>= next-x 0) (< next-x width) (>= next-y 0) (< next-y height))
-                      (pos->idx next-x next-y width)
-                      nil)
-                is-valid (and idx (not (aget visited-pixels idx)) (= (nth pixels idx nil) target-color))]
+          (let [next-x (+ (aget current-item 0) (aget dx i))
+                next-y (+ (aget current-item 1) (aget dy i))
+                is-valid (f next-x next-y)]
             (when is-valid
-              (let [connected-pixel {:x next-x :y next-y}]
-                (. queue (push connected-pixel))
-                (aset visited-pixels idx connected-pixel)))))))
-    (. visited-pixels (filter js/Boolean))))
+              (let [connected-pixel #js [next-x next-y]]
+                (. queue (push connected-pixel))))))))))
 
 (defn get-line-pixels [p1 p2]
-  (-> (shape-tool/getLinePixels (:x p1) (:x p2) (:y p1) (:y p2))
-      (js->clj :keywordize-keys true)
-      (#(map (fn [{:keys [col row]}] {:x col :y row}) %))))
+  (shape-tool/getLinePixels (:x p1) (:x p2) (:y p1) (:y p2)))
 
 (defn get-uniform-line-pixels [p1 p2]
-  (-> (shape-tool/getUniformLinePixels (:x p1) (:x p2) (:y p1) (:y p2))
-      (js->clj :keywordize-keys true)
-      (#(map (fn [{:keys [col row]}] {:x col :y row}) %))))
+  (shape-tool/getUniformLinePixels (:x p1) (:x p2) (:y p1) (:y p2)))
+
+(defn get-circle-pixels [p1 p2 pixel-size f] ;; todo: тут точно надо функцию?
+  (shape-tool/getCirclePixels (:x p1) (:y p1) (:x p2) (:y p2) pixel-size f))
 
 (defn get-scaled-points
   "Transform the coordinates to preserve a square 1:1 ratio from the origin of the shape"
   [initial-pos pos]
-  (-> (shape-tool/getScaledCoords (:x initial-pos) (:y initial-pos)
-                                  (:x pos) (:y pos))
-      (js->clj :keywordize-keys true)
-      ((fn [{:keys [col row]}] {:x col :y row}))))
+  (let [[x y] (shape-tool/getScaledCoords (:x initial-pos) (:y initial-pos)
+                                          (:x pos) (:y pos))]
+    {:x x :y y}))
 (comment (get-scaled-points {:x 0 :y 0} {:x 2 :y 2}))

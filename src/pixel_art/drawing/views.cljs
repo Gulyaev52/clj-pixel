@@ -69,6 +69,56 @@
 
 (def !last-mouse-pos (atom nil)) ;; todo: into component?
 
+(def-func-component preview-comp []
+  (let [sprite @(re-frame/subscribe [::common-subs/sprite])
+        preview @(re-frame/subscribe [::subs/preview])
+        sprite-size (:size sprite)]
+    (react/useEffect (fn []
+                       (when preview
+                         (let [current-layer (. js/document (getElementById "current-layer"))]
+                           (canvas/draw-cel {:size sprite-size :pixels preview} current-layer))))
+                     (array preview sprite-size))
+    [:div]))
+
+(def-func-component sprite-layers-comp []
+  (let [sprite @(re-frame/subscribe [::common-subs/sprite])
+        preview @(re-frame/subscribe [::subs/preview])]
+    (react/useEffect (fn []
+                       (when (and sprite (not preview))
+                         (canvas/clear-canvases (vec (. js/document (getElementsByClassName "layer"))))
+                         (canvas/draw-frame (sprite/get-current-frame-idx sprite) sprite)))
+                     (array sprite preview))
+    [:div]))
+
+(def-func-component visual-effects-comp []
+  (let [sprite @(re-frame/subscribe [::common-subs/sprite])
+        visual-effects @(re-frame/subscribe [::subs/visual-effects])
+        sprite-size (:size sprite)]
+    (react/useEffect (fn []
+                       (let [visual-effects-canvas (. js/document (getElementById "visual-effects"))]
+                         (if visual-effects
+                           (let [image-data (js/ImageData. (js/Uint8ClampedArray. (. visual-effects -buffer))
+                                                           (:width sprite-size)
+                                                           (:height sprite-size))
+                                 ctx (. visual-effects-canvas (getContext "2d"))]
+                             (. ctx (putImageData image-data 0 0)))
+                           (canvas/clear-canvas visual-effects-canvas))))
+                     (array visual-effects sprite-size))
+    [:div]))
+
+(defn debounce
+  "Создает функцию, которая откладывает вызов функции `f` до тех пор, пока не пройдет `wait` миллисекунд после последнего вызова."
+  [f wait]
+  (let [timeout-id (atom nil)]
+    (fn [& args]
+      (when-let [tid @timeout-id]
+        (js/clearTimeout tid))
+      (reset! timeout-id
+              (js/setTimeout
+               (fn []
+                 (apply f args))
+               wait)))))
+
 (def-func-component drawing []
   (let [viewport-ref (react/useRef)
         onion-skin-ref (react/useRef)
@@ -83,11 +133,7 @@
         drawing-container-size @(re-frame/subscribe [::subs/drawing-container-size])
         viewport-scroll @(re-frame/subscribe [::subs/viewport-scroll])
         onion-skin @(re-frame/subscribe [::onion-skin.subs/onion-skin])]
-    (react/useEffect (fn []
-                       (when sprite
-                         (canvas/clear-canvases (vec (. js/document (getElementsByClassName "layer"))))
-                         (canvas/draw-frame (sprite/get-current-frame-idx sprite) sprite)))
-                     (array sprite)) ;; todo: optimize 
+    ;; todo: optimize 
     (react/useLayoutEffect (fn []
                              (when-let [current (.-current viewport-ref)]
                                (set! (.. current -scrollTop) (:y viewport-scroll))
@@ -96,154 +142,143 @@
                            (array viewport-scroll viewport-ref))
     (use-zoom viewport-ref)
     (use-draw-onion-skin sprite onion-skin onion-skin-ref)
+    [:<>
+     [preview-comp]
+     [sprite-layers-comp]
+     [visual-effects-comp]
+     [:div {:id "viewport"
+            :ref viewport-ref
+            :style {:overflow "auto"
+                    :position "relative"
+                    :background-color preview-container-bg-color
+                    :width "100%"
+                    :flex-grow 1}
+            :on-context-menu (fn [event]
+                               (. event preventDefault))
+            :on-mouse-down (fn [event]
+                             (. event preventDefault)
+                             (. event stopPropagation)
+                             (if (is-middle-button? event)
+                               (do
+                                 (re-frame/dispatch [::events/start-panning (get-mouse-client-pos event)])
+                                 (let [mouse-move (fn [event]
+                                                    (re-frame/dispatch [::events/pan (get-mouse-client-pos event)]))]
+                                   (.. js/document (addEventListener "mousemove" mouse-move))
+                                   (.. js/document (addEventListener "mouseup"
+                                                                     (fn []
+                                                                       (re-frame/dispatch [::events/stop-panning])
+                                                                       (.. js/document (removeEventListener "mousemove" mouse-move)))
+                                                                     #js {"once" true}))))
+                               (let [right-button (is-right-button? event)
 
-    [:div {:id "viewport"
-           :data-testid "canvas-viewport"
-           :ref viewport-ref
-           :style {:overflow "auto"
-                   :position "relative"
-                   :background-color preview-container-bg-color
-                   :width "100%"
-                   :flex-grow 1}
-           :on-context-menu (fn [event]
-                              (. event preventDefault))
-           :on-mouse-down (fn [event]
-                            (. event preventDefault)
-                            (. event stopPropagation)
-                            (if (is-middle-button? event)
-                              (do
-                                (re-frame/dispatch [::events/start-panning (get-mouse-client-pos event)])
-                                (let [mouse-move (fn [event]
-                                                   (re-frame/dispatch [::events/pan (get-mouse-client-pos event)]))]
-                                  (.. js/document (addEventListener "mousemove" mouse-move))
-                                  (.. js/document (addEventListener "mouseup"
-                                                                    (fn []
-                                                                      (re-frame/dispatch [::events/stop-panning])
-                                                                      (.. js/document (removeEventListener "mousemove" mouse-move)))
-                                                                    #js {"once" true}))))
-                              (let [right-button (is-right-button? event)
+                                     mouse-pos (canvas-pos->frame-pos event scale)
 
-                                    mouse-pos (canvas-pos->frame-pos event scale)
+                                     mouse-move (debounce
+                                                 (fn [event]
+                                                   (let [scale (:scale @db/app-db)
+                                                         mouse-pos (canvas-pos->frame-pos event scale)]
+                                                     (when (not= mouse-pos @!last-mouse-pos)
+                                                       (reset! !last-mouse-pos mouse-pos)
+                                                       (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos right-button]))))
+                                                 1)
 
-                                    mouse-move (fn [event]
-                                                 (let [scale (:scale @db/app-db)
-                                                       mouse-pos (canvas-pos->frame-pos event scale)]
-                                                   (when (not= mouse-pos @!last-mouse-pos)
-                                                     (reset! !last-mouse-pos mouse-pos)
-                                                     (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos right-button]))))
-
-                                    mouse-up (fn mouse-up [event]
-                                               (let [scale (:scale @db/app-db)
-                                                     mouse-pos (canvas-pos->frame-pos event scale)]
-                                                 (reset! !last-mouse-pos mouse-pos)
-                                                 (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos right-button])
-                                                 (.. js/document (removeEventListener "mousemove" mouse-move))
-                                                 (.. js/document (removeEventListener "mouseup" mouse-up))))]
-                                (reset! !last-mouse-pos mouse-pos)
-                                (re-frame/dispatch [::events/handle-mouse-event :mouse-down mouse-pos right-button])
-                                (.. js/document (addEventListener "mousemove" mouse-move))
-                                (.. js/document (addEventListener "mouseup" mouse-up)))))
-           :on-mouse-leave (fn [event]
+                                     mouse-up (fn mouse-up [event]
+                                                (let [scale (:scale @db/app-db)
+                                                      mouse-pos (canvas-pos->frame-pos event scale)]
+                                                  (reset! !last-mouse-pos mouse-pos)
+                                                  (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos right-button])
+                                                  (.. js/document (removeEventListener "mousemove" mouse-move))
+                                                  (.. js/document (removeEventListener "mouseup" mouse-up))))]
+                                 (re-frame/dispatch [::events/handle-mouse-event :mouse-down mouse-pos right-button])
+                                 (.. js/document (addEventListener "mousemove" mouse-move))
+                                 (.. js/document (addEventListener "mouseup" mouse-up)))))
+            :on-mouse-leave (fn [event]
+                              (when-not (or mouse-was-down panning)
+                                (let [mouse-pos (canvas-pos->frame-pos event scale)]
+                                  (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)]))))
+            :on-mouse-move (fn [event]
                              (when-not (or mouse-was-down panning)
-                               (re-frame/dispatch [::events/handle-mouse-event :mouse-move nil (is-right-button? event)])))
-           :on-mouse-move (fn [event]
-                            (when-not (or mouse-was-down panning)
-                              (let [mouse-pos (canvas-pos->frame-pos event scale)]
-                                (when (not= mouse-pos @!last-mouse-pos)
-                                  (reset! !last-mouse-pos mouse-pos)
-                                  (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)])))))}
-     [:div {:id "drawing-canvas-container"
-            :style (merge {:position "relative"} drawing-container-size)}
-      [:div {:id "canvas-layers"
-             :data-testid "canvas-layers"
-             :style (merge
-                     {:position "relative"
-                      :left "50%"
-                      :top "50%"
-                      :transform "translate(-50%, -50%)"
-                      :background-image transparent-color-img
-                      :outline drawing-border ;; todo: why not border
-                      }
-                     scaled-sprite-size)}
-       [:canvas (merge
-                 {:id "layers-below"
-                  :data-testid "canvas-layers-below"
-                  :className "layer"
-                  :style {:position :absolute
-                          :left 0
-                          :top 0
-                          :image-rendering "pixelated"
-                          :z-index 0
-                          :width "100%"
-                          :height "100%"}}
-                 sprite-size)]
-       [:canvas (merge
-                 {:id "current-layer"
-                  :data-testid "canvas-current-layer"
-                  :className "layer"
-                  :style {:position :absolute
-                          :left 0
-                          :top 0
-                          :image-rendering "pixelated"
-                          :z-index 1
-                          :width "100%"
-                          :height "100%"}}
-                 sprite-size)]
-       [:canvas (merge
-                 {:id "preview"
-                  :data-testid "canvas-preview"
-                  :style {:position :absolute
-                          :left 0
-                          :top 0
-                          :image-rendering "pixelated"
-                          :z-index 1
-                          :width "100%"
-                          :height "100%"}}
-                 sprite-size)]
-       [:canvas (merge
-                 {:id "visual-effects"
-                  :style {:position :absolute
-                          :left 0
-                          :top 0
-                          :image-rendering "pixelated"
-                          :z-index 1
-                          :width "100%"
-                          :height "100%"}}
-                 sprite-size)]
-       [:canvas (merge
-                 {:id "layers-above"
-                  :data-testid "canvas-layers-above"
-                  :className "layer"
-                  :style {:position :absolute
-                          :left 0
-                          :top 0
-                          :image-rendering "pixelated"
-                          :z-index 2
-                          :width "100%"
-                          :height "100%"}}
-                 sprite-size)]
-       [:canvas (merge
-                 {:id "onion-skin"
-                  :data-testid "canvas-onion-skin"
-                  :ref onion-skin-ref
-                  :style {:position :absolute
-                          :left 0
-                          :top 0
-                          :opacity (:opacity onion-skin)
-                          :image-rendering "pixelated"
-                          :z-index (if (= (:position onion-skin) :front)
-                                     (count layers)
-                                     0);; todo: подумать тут
-                          :width "100%"
-                          :height "100%"}}
-                 sprite-size)]
-       (when pixels-grid-cel-img
-         [:div {:style {:background-image (str "url(\"" pixels-grid-cel-img "\")")
-                        :background-size scale
-                        :width "100%"
-                        :height "100%"
-                        :position "relative"
-                        :z-index 1000}}])]]]))
+                               (let [mouse-pos (canvas-pos->frame-pos event scale)]
+                                 (when (not= mouse-pos @!last-mouse-pos)
+                                   (reset! !last-mouse-pos mouse-pos)
+                                   (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (is-right-button? event)])))))}
+      [:div {:id "drawing-canvas-container"
+             :style (merge {:position "relative"} drawing-container-size)}
+       [:div {:id "canvas-layers"
+              :style (merge
+                      {:position "relative"
+                       :left "50%"
+                       :top "50%"
+                       :transform "translate(-50%, -50%)"
+                       :background-image transparent-color-img
+                       :outline drawing-border ;; todo: why not border
+                       }
+                      scaled-sprite-size)}
+        [:canvas (merge
+                  {:id "layers-below"
+                   :className "layer"
+                   :style {:position :absolute
+                           :left 0
+                           :top 0
+                           :image-rendering "pixelated"
+                           :z-index 0
+                           :width "100%"
+                           :height "100%"}}
+                  sprite-size)]
+        [:canvas (merge
+                  {:id "current-layer"
+                   :data-testid "current-layer"
+                   :className "layer"
+                   :style {:position :absolute
+                           :left 0
+                           :top 0
+                           :image-rendering "pixelated"
+                           :z-index 1
+                           :width "100%"
+                           :height "100%"}}
+                  sprite-size)]
+        [:canvas (merge
+                  {:id "visual-effects"
+                   :style {:position :absolute
+                           :left 0
+                           :top 0
+                           :image-rendering "pixelated"
+                           :z-index 1
+                           :width "100%"
+                           :height "100%"}}
+                  sprite-size)]
+        [:canvas (merge
+                  {:id "layers-above"
+                   :className "layer"
+                   :style {:position :absolute
+                           :left 0
+                           :top 0
+                           :image-rendering "pixelated"
+                           :z-index 2
+                           :width "100%"
+                           :height "100%"}}
+                  sprite-size)]
+        [:canvas (merge
+                  {:id "onion-skin"
+                   :ref onion-skin-ref
+                   :style {:position :absolute
+                           :left 0
+                           :top 0
+                           :opacity (:opacity onion-skin)
+                           :image-rendering "pixelated"
+                           :z-index (if (= (:position onion-skin) :front)
+                                      (count layers)
+                                      0);; todo: подумать тут
+                           :width "100%"
+                           :height "100%"}}
+                  sprite-size)]
+        (when pixels-grid-cel-img
+          [:div {:style {:background-image (str "url(\"" pixels-grid-cel-img "\")")
+                         :background-size scale
+                         :width "100%"
+                         :height "100%"
+                         :position "relative"
+                         :z-index 1000}}])]]]]))
 
 (defn drawing-info []
   (when-not @(re-frame/subscribe [::common-subs/initial-loading])

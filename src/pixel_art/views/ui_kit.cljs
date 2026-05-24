@@ -3,7 +3,8 @@
    ["antd" :as antd]
    [reagent.core :as reag]
    [react :as react]
-   [sc.api])
+   [sc.api]
+   [clojure.core :as c])
   (:require-macros [pixel-art.views.reagent :refer [def-func-component]]))
 
 (defn use-theme-token []
@@ -11,7 +12,7 @@
 
 (defn typography
   ([text] (typography {} text))
-  ([props title] [:> antd/Typography props title]))
+  ([props text] [:> antd/Typography props text]))
 
 (defn space [& children]
   (let [props (first children)
@@ -87,8 +88,9 @@
                     :onChange (fn [value]
                                 (on-change value))}]])
 
-(defn checkbox [{:keys [value on-change label]}]
+(defn checkbox [{:keys [value on-change label data-testid]}]
   [:> antd/Checkbox {:checked value
+                     :data-testid data-testid
                      :onChange (fn [e]
                                  (on-change (.. e -target -checked)))}
    label])
@@ -100,8 +102,8 @@
                                          (on-change (keyword (.. e -target -value))))}]
    (map (fn [opt] [:> (.-Button antd/Radio) {:value (name (:value opt))} (:label opt)]) options)))
 
-(defn button [{:keys [on-click data-testid]} text]
-  [:> antd/Button (cond-> {:onClick on-click}
+(defn button [{:keys [on-click disabled data-testid]} text]
+  [:> antd/Button (cond-> {:onClick on-click :disabled disabled}
                     data-testid (assoc :data-testid data-testid))
    text])
 
@@ -119,8 +121,8 @@
                                nil)
                        :style {:width (when block "100%")}
                        :on-change (fn [_ option]
-                                 ;; after select option, select has focus and pressing hotkeys doesn't work + any key lead to select opening
-                                 ;; todo: find better way?
+                                    ;; after select option, select has focus and pressing hotkeys doesn't work + any key lead to select opening
+                                    ;; todo: find better way?
                                     (when-let [value (some-> (nth options (.-value option)) :value)]
                                       (.. @!ref blur)
                                       (on-change value)))}])))
@@ -156,21 +158,24 @@
                                       :dark "black")}}]])
 
 ;; todo: integer input number
-(def-func-component input-number [{:keys [value min max block on-blur]}]
+(def-func-component input-number [{:keys [value min max block on-blur testid]}]
   (let [[curr-value set-curr-value] (react/useState value)]
     (react/useEffect (fn []
                        (set-curr-value value))
                      (array value))
     [:> antd/InputNumber {:value curr-value
-                          :min (or min 1)
                           :step 1
-                          :max max
+                          :data-testid testid
                           :style {:width (when block "100%")}
                           :onChange (fn [value]
                                       (set-curr-value value))
                           :onBlur (fn []
                                     (let [new-value (let [res (. js/Number (parseInt curr-value))]
-                                                      (if (js/isNaN res) nil res))]
+                                                      (if (js/isNaN res)
+                                                        nil
+                                                        (-> res
+                                                            (#(clojure.core/max % min))
+                                                            (#(clojure.core/min % max)))))]
                                       (set-curr-value new-value)
                                       (on-blur new-value)))}]))
 
@@ -234,3 +239,6 @@
                            )}]
      [render-button (fn []
                       (.. @!input-ref click))]]))
+
+(defn replace-current-project-confirm []
+  (js/confirm "This will replace the current project. Are you sure?"))

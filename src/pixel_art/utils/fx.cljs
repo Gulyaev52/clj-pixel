@@ -1,5 +1,6 @@
 (ns pixel-art.utils.fx
   (:require
+   [pixel-art.utils.fx.local-storage]
    [re-frame.core :as re-frame]))
 
 (re-frame/reg-fx
@@ -20,25 +21,29 @@
      (.click link)
      (.removeChild (.-body js/document) link))))
 
-(defn- now [] (.getTime (js/Date.)))
+;; https://github.com/district0x/re-frame-interval-fx/blob/master/src/district0x/re_frame/interval_fx.cljs
 
 (def registered-keys (atom nil))
 
-(defn- dispatch-if-not-superceded [{:keys [key delay event time-received]}]
-  (when (= time-received (get @registered-keys key))
-    ;; no new events on this key!
-    (re-frame/dispatch event)))
-
-(defn- dispatch-later [{:keys [delay] :as debounce}]
-  (js/setTimeout
-   (fn [] (dispatch-if-not-superceded debounce))
-   delay))
-
-;; https://github.com/johnswanson/re-frame-debounce-fx/tree/develop
+(re-frame/reg-fx
+ :dispatch-interval
+ (fn [{:keys [:dispatch :ms :id]}]
+   (let [interval-id (js/setInterval #(re-frame/dispatch dispatch) ms)]
+     (swap! registered-keys assoc id interval-id))))
 
 (re-frame/reg-fx
- :dispatch-debounce
- (fn dispatch-debounce [debounce]
-   (let [ts (now)]
-     (swap! registered-keys assoc (:key debounce) ts)
-     (dispatch-later (assoc debounce :time-received ts)))))
+ :clear-interval
+ (fn [{:keys [:id]}]
+   (when-let [interval-id (get @registered-keys id)]
+     (js/clearInterval interval-id)
+     (swap! registered-keys dissoc id))))
+
+;;
+
+(re-frame/reg-fx
+ :confirm
+ (fn [{:keys [message on-ok on-cancel]}]
+   (if (js/confirm message)
+     (re-frame/dispatch on-ok)
+     (when on-cancel
+       (re-frame/dispatch on-cancel)))))

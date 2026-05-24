@@ -1,9 +1,7 @@
 (ns pixel-art.canvas ;; todo: разделить
   (:require
    [pixel-art.model.sprite :as sprite]
-   [pixel-art.utils.geometry :as geometry]
-   [sc.api]
-   [pixel-art.model.color :as color]))
+   [sc.api]))
 
 (defn create-canvas [{:keys [width height]}]
   (let [canvas (.. js/document (createElement "canvas"))]
@@ -16,27 +14,14 @@
     (draw canvas)
     (. canvas (toDataURL "image/png"))))
 
-;; set-image-data
-(defn cel-pixels->image-data [image-data {:keys [pixels size]} skip-transparent-color]
-  (let [pixels-u32arr (js/Uint32Array. (.. image-data -data -buffer))]
-    (dotimes [idx (count pixels)]
-      (let [color (nth pixels idx)
-            add-color? (if skip-transparent-color
-                         (not= color color/transparent-color-int)
-                         true)]
-        (when add-color?
-          (aset pixels-u32arr idx (nth pixels idx)))))
-    (js/ImageData. (js/Uint8ClampedArray. (. pixels-u32arr -buffer))
-                   (:width size)
-                   (:height size))))
-
-;; todo: не должны лежать здесь с остальными утилитами. set-image-data
+;; todo: не должны лежать здесь с остальными утилитами
 (defn draw-cel
-  ([cel canvas] (draw-cel cel canvas true))
-  ([cel canvas skip-transparent-color]
+  ([cel canvas]
    (let [ctx (. canvas (getContext "2d"))
-         prev-image-data (. ctx (getImageData 0 0 (:width (:size cel)) (:height (:size cel))))
-         image-data (cel-pixels->image-data prev-image-data cel skip-transparent-color)]
+         size (:size cel)
+         image-data (js/ImageData. (js/Uint8ClampedArray. (. (:pixels cel) -buffer))
+                                   (:width size)
+                                   (:height size))]
      (. ctx (putImageData image-data 0 0))
      canvas)))
 
@@ -55,13 +40,13 @@
   (let [cels (sprite/get-frame-cels-with-layers frame-idx sprite)]
     (doseq [cel (reverse cels)]
       (when (-> cel :layer :visible?)
-        (draw-cel cel canvas true))))
+        (draw-cel cel canvas))))
   canvas)
 
 ;; todo: refactore above
 (defn draw-cels-on-single-canvas [cels canvas]
   (doseq [cel (reverse cels)]
-    (draw-cel cel canvas true))
+    (draw-cel cel canvas))
   canvas)
 
 (defn clear-canvas [canvas]
@@ -124,21 +109,4 @@
 
 (defn canvas->pixels [canvas size]
   (let [image-data (.. canvas (getContext "2d") (getImageData 0 0 (:width size) (:height size)))]
-    (vec (js/Uint32Array. (. (.. image-data -data) -buffer)))))
-
-;; todo: rename
-(defn set-image-data [image-data changes size]
-  (let [pixels-u32arr (js/Uint32Array. (.. image-data -data -buffer))]
-    (doseq [[pos color] changes
-            :let [idx (geometry/pos->idx (:x pos) (:y pos) (:width size))]]
-      (aset pixels-u32arr idx color))
-    (js/ImageData. (js/Uint8ClampedArray. (. pixels-u32arr -buffer))
-                   (:width size)
-                   (:height size))))
-
-(defn update-image-data [canvas changes]
-  (let [size {:width (.-width canvas) :height (.-height canvas)}
-        ctx (. canvas (getContext "2d"))]
-    (-> (. ctx (getImageData 0 0 (:width size) (:height size)))
-        (set-image-data changes size)
-        (#(. ctx (putImageData % 0 0))))))
+    (js/Uint32Array. (. (.. image-data -data) -buffer))))

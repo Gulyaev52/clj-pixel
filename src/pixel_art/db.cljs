@@ -9,7 +9,8 @@
    [pixel-art.sprite-preview.events :as sprite-preview.events]
    [pixel-art.sprite-resizer.events :as sprite-resizer.events]
    [pixel-art.tool.core :as tool]
-   [sc.api]))
+   [sc.api]
+   [pixel-art.backup :as backup]))
 
 (defn get-initial-options [m]
   (-> m
@@ -17,13 +18,15 @@
                          (map (fn [{:keys [field initial-value]}] [field initial-value]))
                          (into {})))))
 
-(defn get-db [{:keys [sprite palettes primary-color secondary-color pixels-grid-enabled new-project-modal-opened]} viewport-size]
+(defn get-db [{:keys [sprite tool-type primary-color palettes secondary-color pixels-grid-enabled new-project-modal-opened]} viewport-size]
   (merge
    {:size (:size sprite)
+    :preview nil
+    :visual-effects nil
     :pixels-grid-enabled (if (some? pixels-grid-enabled) pixels-grid-enabled true)
     :new-project-modal (new-project-modal.events/init new-project-modal-opened)
     :sprite sprite
-    :tool (tool/init :pen)
+    :tool (tool/init (or tool-type :pen))
     :tools-options (get-initial-options tool/options-specs)
     :primary-color primary-color
     :secondary-color secondary-color
@@ -34,5 +37,7 @@
     :palettes palettes
     :keyboard-shortcuts-modal (keyboard-shortcuts-modal.events/init)
     :export-modal (export-modal.events/init)
-    :sprite-resizer (sprite-resizer.events/init)}
+    :sprite-resizer (sprite-resizer.events/init)
+    :backup (backup/init)
+    :last-saved-history-idx 0} ;; TODO: Find a better solutiion. This approach is not reliabe on 100% since history has max size.
    (project-settings.events/get-initial-drawing-settings (:size sprite) viewport-size)))

@@ -9,10 +9,10 @@
  (fn [{:keys [db viewport-size]} _]
    (if (history/check-undo-available? db)
      {:db (-> db
-              (assoc :tool (tool/init (-> db :tool :type)))
-              (history/undo viewport-size))
-      :fx [[:clear-preview]
-           [:clear-visual-effects]]}
+              (assoc :tool (tool/init (-> db :tool :type))
+                     :visual-effects nil
+                     :preview nil)
+              (history/undo viewport-size))}
      {:db db})))
 
 (re-frame/reg-event-fx
@@ -21,8 +21,8 @@
  (fn [{:keys [db viewport-size]} _]
    (if (history/check-redo-available? db)
      {:db (-> db
-              (assoc :tool (tool/init (-> db :tool :type)))
-              (history/redo viewport-size))
-      :fx [[:clear-preview]
-           [:clear-visual-effects]]}
+              (assoc :tool (tool/init (-> db :tool :type))
+                     :visual-effects nil
+                     :preview nil)
+              (history/redo viewport-size))}
      {:db db})))

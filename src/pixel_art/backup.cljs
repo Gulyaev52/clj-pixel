@@ -1,7 +1,6 @@
 (ns pixel-art.backup
   (:require
    [pixel-art.sprite-serialization :as sprite-serialization]
-   [pixel-art.utils.interceptor :refer [on-paths-change]]
    [re-frame.core :as re-frame]))
 
 (defonce !db (atom nil))
@@ -56,23 +55,20 @@
                    clj->js)]
     (request->promise (. store (put record)))))
 
-;; todo: move to init
-(re-frame/reg-global-interceptor
- (on-paths-change
-  :backup
-  [:primary-color :secondary-color :palettes :sprite]
-  (fn [{:keys [db fields]}]
-    {:db db
-     :fx [[:dispatch-debounce {:key :backup
-                               :event [::backup fields]
-                               :delay 6000}]]})))
+(defn init []
+  {:last-saved-history-idx nil}) ;; TODO: Find a better solutiion. This approach is not reliabe on 100% since history has max size.
 
 (re-frame/reg-event-fx
- ::backup
- (fn [_ [_ backup]]
-   {:fx [[::backup backup]]}))
+ ::save-backup-if-need
+ (fn [{:keys [db]}]
+   (let [last-saved-history-idx (-> db :backup :last-saved-history-idx)
+         current-history-idx (-> db :history :current-idx)]
+     (if (= last-saved-history-idx current-history-idx)
+       {}
+       {:db (assoc-in db [:backup :last-saved-history-idx] current-history-idx)
+        :fx [[::save-backup (select-keys db [:sprite])]]}))))
 
 (re-frame/reg-fx
- ::backup
+ ::save-backup
  (fn [backup]
    (put-backup+ @!db backup)))

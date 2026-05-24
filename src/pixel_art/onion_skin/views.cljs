@@ -25,9 +25,7 @@
                      (fn []
                        (when (.-current onion-skin-ref)
                          (hide-onion-skin (.-current onion-skin-ref)))))
-                   (to-array (flatten (concat [onion-skin]
-                                              [onion-skin-ref]
-                                              (get-onion-skin-frames sprite (:frames-count onion-skin)))))))
+                   #js [onion-skin onion-skin-ref sprite (:frames-count onion-skin)]))
 
 (defn onion-skin-settings []
   (let [onion-skin @(re-frame/subscribe [::subs/onion-skin])]

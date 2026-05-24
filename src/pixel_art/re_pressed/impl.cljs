@@ -162,8 +162,8 @@
                    e-key         (.-keyCode e)
                    modifier-key? (modifier-keys e-key)
 
-                                      ;; --
-                                      ;; thanks re-frame-10x for this snippet
+                   ;; --
+                   ;; thanks re-frame-10x for this snippet
                    tag-name        (.-tagName (.-target e))
                    entering-input? (and (and (= tag-name "INPUT")
                                              (not (contains? #{"range" "checkbox"} (.-type (.-target e)))))
@@ -172,7 +172,7 @@
                                            "SELECT"
                                            "TEXTAREA"}
                                          tag-name))
-                                      ;; --
+                   ;; --
 
                    hit-key {:altKey   (.-altKey e)
                             :ctrlKey  (.-ctrlKey e)

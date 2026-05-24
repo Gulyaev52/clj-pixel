@@ -12,6 +12,14 @@
  (fn [db] (:viewport-scroll db)))
 
 (re-frame/reg-sub
+ ::preview
+ (fn [db] (:preview db)))
+
+(re-frame/reg-sub
+ ::visual-effects
+ (fn [db] (:visual-effects db)))
+
+(re-frame/reg-sub
  ::panning
  (fn [db]
    (some? (:start-viewport-scroll db))))

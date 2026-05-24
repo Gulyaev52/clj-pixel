@@ -1,17 +1,33 @@
 (ns pixel-art.views.preview
   (:require
+   [react :as react]
    [pixel-art.views.constants :refer [drawing-border
                                       preview-container-bg-color
                                       transparent-color-img]]
-   [pixel-art.views.ui-kit :refer [typography]]))
+   [pixel-art.views.ui-kit :refer [typography]])
+  (:require-macros [pixel-art.views.reagent :refer [def-func-component]]))
 
-(defn preview-image [src style]
-  [:img {:src src
-         :style (merge style
-                       {:position "relative"
-                        :image-rendering "pixelated"
-                        :background-image transparent-color-img
-                        :border drawing-border})}])
+(def-func-component preview-image [src style]
+  (let [container-ref (react/useRef nil)]
+    (react/useEffect (fn []
+                       (when-let [container (.-current container-ref)]
+                         (set! (. container -onload)
+                               (fn []
+                                 (when-let [container (.-current container-ref)]
+                                   (if (and (< (.-naturalWidth container)
+                                               (.-offsetWidth container))
+                                            (< (.-naturalHeight container)
+                                               (.-offsetHeight container)))
+                                     (set! (.. container -style -imageRendering) "pixelated")
+                                     (set! (.. container -style -imageRendering) "auto")))))))
+                     (array container-ref src))
+    [:img {:src src
+           :ref container-ref
+           :style (merge style
+                         {:position "relative"
+                          :image-rendering "pixelated"
+                          :background-image transparent-color-img
+                          :border drawing-border})}]))
 
 (defn previews-container [{:keys [loading]} items]
   [:div {:style {:display :flex

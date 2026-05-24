@@ -69,7 +69,7 @@ const Swatch = /*#__PURE__*/React.forwardRef((props, ref) => {
           children: render
         }, idx);
       }
-      const child = rectProps.children && /*#__PURE__*/React.isValidElement(rectProps.children) ? React.cloneElement < any > (rectProps.children, {
+      const child = rectProps.children && /*#__PURE__*/React.isValidElement(rectProps.children) ? React.cloneElement(rectProps.children, {
         color: background,
         checked
       }) : null;

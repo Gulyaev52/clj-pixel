@@ -115,7 +115,7 @@
                      :size :sm
                      :disabled (not (events/deletable-palette? palettes))
                      :on-click (fn []
-                                 (when (js/confirm "are you sure?")
+                                 (when (js/confirm "Are you sure?")
                                    (re-frame/dispatch [::events/remove-selected-palette])))}]
        [icon-button {:src :edit
                      :title "Rename palette"
