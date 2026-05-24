@@ -897,6 +897,86 @@ describe('Bucket Tool', () => {
   });
 });
 
+describe('Shading Tool', () => {
+  it('darken: darkens non-transparent pixels, skips transparent', () => {
+    const r = colors.red;
+    const t = colors.transparent;
+    cy.startApp({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels([
+        [r, t],
+        [r, t],
+      ]),
+    });
+    cy.selectTool('shading');
+    cy.drawAtCanvasPixel(0, 0); // red pixel — should darken
+    cy.drawAtCanvasPixel(1, 0); // transparent pixel — should stay transparent
+    cy.assertVisibleCanvasPixels([
+      [rgba(224, 0, 0), t],
+      [r,               t],
+    ], 'darken: red pixel darkened, transparent pixel unchanged');
+  });
+
+  it('lighten: lightens non-transparent pixels', () => {
+    const r = colors.red;
+    cy.startApp({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels([
+        [r, r],
+        [r, r],
+      ]),
+    });
+    cy.selectTool('shading');
+    cy.contains('Lighten').click();
+    cy.drawAtCanvasPixel(0, 0);
+    cy.assertVisibleCanvasPixels([
+      [rgba(255, 31, 31), r],
+      [r,                 r],
+    ], 'lighten: red pixel lightened');
+  });
+
+  it('amount option: larger amount causes stronger darkening', () => {
+    const r = colors.red;
+    cy.startApp({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels([
+        [r, r],
+        [r, r],
+      ]),
+    });
+    cy.selectTool('shading');
+    cy.get('.ant-slider-handle').eq(1).focus().type('{rightarrow}{rightarrow}{rightarrow}{rightarrow}', { force: true }); // amount = 10
+    cy.drawAtCanvasPixel(0, 0);
+    cy.assertVisibleCanvasPixels([
+      [rgba(204, 0, 0), r],
+      [r,               r],
+    ], 'amount=10: pixel darkened more than with default amount=6');
+  });
+
+  it('pixel-size option: enlarges brush', () => {
+    const r = colors.red;
+    const d = rgba(224, 0, 0); // darkened red (darken 6%)
+    cy.startApp({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels([
+        [r, r, r, r],
+        [r, r, r, r],
+        [r, r, r, r],
+        [r, r, r, r],
+      ]),
+    });
+    cy.selectTool('shading');
+    cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true }); // pixel-size = 2
+    cy.drawAtCanvasPixel(1, 1); // cursor at (1,1): block expands top-left to (0,0)-(1,1)
+    cy.assertVisibleCanvasPixels([
+      [d, d, r, r],
+      [d, d, r, r],
+      [r, r, r, r],
+      [r, r, r, r],
+    ], 'pixel-size=2: 2×2 block darkened');
+  });
+});
+
 describe('Shape Selection Tool', () => {
   it('select connected pixels and move', () => {
     const r = colors.red;
