@@ -530,6 +530,112 @@ describe('Rectangle Selection Tool', () => {
         [false, false, false,  false],
       ], "highlight cleared after Enter");
     });
+
+    it("cut selection", () => {
+      const initialPixels = [
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+      ];
+      cy.seedDatabase({
+        ...defaultDbSeed,
+        sprite: getSpriteFromPixels(initialPixels),
+      });
+      cy.waitForAppReady();
+      cy.selectTool('rectangle-selection');
+
+      // Select 2×2 top-left region and cut
+      cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
+      // move
+      cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
+      cy.realPress(['Control', 'x']);
+      cy.assertVisibleCanvasPixels([
+        [colors.transparent, colors.transparent, colors.black, colors.black],
+        [colors.transparent, colors.transparent, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+      ], "cut should clear original pixels immediately");
+      cy.assertHighlightedPixels([
+        [false, false, false, false],
+        [false, false, false, false],
+        [false, false, false,  false],
+        [false, false, false,  false],
+      ], "selection cleared after cut");
+
+      // Paste cut content to verify clipboard is populated
+      cy.realPress(['Control', 'v']);
+      cy.assertHighlightedPixels([
+        [false, false, false, false],
+        [false, true, true, false],
+        [false, true, true,  false],
+        [false, false, false,  false],
+      ], "pasted selection at original position");
+      cy.assertVisibleCanvasPixels([
+        [colors.transparent, colors.transparent, colors.black, colors.black],
+        [colors.transparent, colors.red, colors.red, colors.black],
+        [colors.black, colors.red, colors.red, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+      ], "cut pixels available in clipboard — float over transparent area restores appearance");
+
+      // commit
+      cy.drawAtCanvasPixel(0, 0);
+      cy.assertHighlightedPixels([
+        [false, false, false, false],
+        [false, false, false, false],
+        [false, false, false,  false],
+        [false, false, false,  false],
+      ], "pasted selection at original position");
+      cy.assertVisibleCanvasPixels([
+        [colors.transparent, colors.transparent, colors.black, colors.black],
+        [colors.transparent, colors.red, colors.red, colors.black],
+        [colors.black, colors.red, colors.red, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+      ], "cut pixels available in clipboard — float over transparent area restores appearance");
+    });
+
+    it("cut pasted selection preserves underlying pixels", () => {
+      const initialPixels = [
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+        [colors.black, colors.black, colors.black, colors.black],
+      ];
+      cy.seedDatabase({
+        ...defaultDbSeed,
+        sprite: getSpriteFromPixels(initialPixels),
+      });
+      cy.waitForAppReady();
+      cy.selectTool('rectangle-selection');
+
+      // Select, copy, paste and move the pasted selection
+      cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
+      cy.realPress(['Control', 'c']);
+      cy.realPress(['Control', 'v']);
+      cy.drawAtCanvasPixel(0, 0, { toX: 2, toY: 2 });
+      cy.assertVisibleCanvasPixels([
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.red, colors.red, colors.black, colors.black],
+        [colors.black, colors.black, colors.red, colors.red],
+        [colors.black, colors.black, colors.red, colors.red],
+      ], "underlying pixels preserved + pasted selection moved");
+      cy.assertHighlightedPixels([
+        [false, false, false, false],
+        [false, false, false, false],
+        [false, false, true,  true],
+        [false, false, true,  true],
+      ]);
+
+      // Cut the pasted selection — original pixels must not be affected
+      cy.realPress(['Control', 'x']);
+      cy.assertVisibleCanvasPixels(initialPixels, "cut pasted selection should not affect underlying pixels");
+      cy.assertHighlightedPixels([
+        [false, false, false, false],
+        [false, false, false, false],
+        [false, false, false,  false],
+        [false, false, false,  false],
+      ], "selection cleared after cut");
+    });
   });
 });
 
