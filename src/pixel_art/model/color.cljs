@@ -1,7 +1,7 @@
 (ns pixel-art.model.color
   (:refer-clojure :exclude [int])
   (:require ["tinycolor2" :as tinycolor]
-            ["../color.js" :as color-js]))
+            ["./color.js" :as color-js]))
 
 (defn ->int [color]
   (color-js/colorToInt color))
@@ -22,12 +22,9 @@
 
 (def transparent-color-int (int 0 0 0 0))
 
+(def highlight-dark-color (int 0 0 0 0.1))
+(def highlight-light-color (int 255 255 255 0.2))
+
 (defn get-highlight-color [color]
-  (let [dark-color (int 0 0 0 0.3)
-        light-color (int 255 255 255 0.2)]
-    (if (= color transparent-color-int)
-      dark-color
-      (let [luminance (.. (->tinycolor color) toHsl -l)]
-        (if (> luminance 0.5)
-          dark-color
-          light-color)))))
+  (let [res (color-js/getBrightness color)]
+    (if (< res 128) highlight-light-color highlight-dark-color)))

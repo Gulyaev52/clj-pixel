@@ -1,10 +1,6 @@
 import tinycolor from "tinycolor2";
 
-export const rgbaToInt = function colorToInt (r, g, b, a) {
-  if (typeof color === 'number') {
-    return color;
-  }
-
+export const rgbaToInt = function rgbaToInt (r, g, b, a) {
   var a = Math.round(a * 255);
   var intValue = (a << 24 >>> 0) + (b << 16) + (g << 8) + r;
   if (a === 0) {
@@ -15,10 +11,6 @@ export const rgbaToInt = function colorToInt (r, g, b, a) {
 };
 
 export const colorToInt = function colorToInt (color) {
-    if (typeof color === 'number') {
-      return color;
-    }
-
     var tc = tinycolor(color);
     var rgb = tc.toRgb();
     var a = Math.round(rgb.a * 255);
@@ -31,10 +23,6 @@ export const colorToInt = function colorToInt (color) {
 };
 
 export const intToColor = function(intValue) {
-    if (typeof intValue === 'string') {
-      return intValue;
-    }
-
     var r = intValue & 0xff;
     var g = intValue >> 8 & 0xff;
     var b = intValue >> 16 & 0xff;
@@ -43,3 +31,17 @@ export const intToColor = function(intValue) {
 
     return color;
   };
+
+export const getBrightness = function(intColor) {
+  var r = intColor & 0xff;
+  var g = intColor >> 8 & 0xff;
+  var b = intColor >> 16 & 0xff;
+  return (r * 299 + g * 587 + b * 114) / 1000;
+}
+
+export const getRgb = function(intColor) {
+  var r = intColor & 0xff;
+  var g = intColor >> 8 & 0xff;
+  var b = intColor >> 16 & 0xff;
+  return [r, g, b];
+}

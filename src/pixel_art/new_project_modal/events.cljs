@@ -4,24 +4,29 @@
 
 (defn init [opened]
   {:opened opened
-   :size {:width 100 :height 100}})
+   :settings {:title "Untitled" :size {:width 100 :height 100}}})
 
 (re-frame/reg-event-fx
  ::set-opened
  (fn [{:keys [db]} [_ opened]]
    {:db (-> db
             (assoc-in [:new-project-modal :opened] opened)
-            (assoc-in [:new-project-modal :size] (-> db :sprite :size)))}))
+            (assoc-in [:new-project-modal :settings :size] (-> db :sprite :size)))}))
 
 (re-frame/reg-event-fx
  ::set-width
  (fn [{:keys [db]} [_ width]]
-   {:db (assoc-in db [:new-project-modal :size :width] width)}))
+   {:db (assoc-in db [:new-project-modal :settings :size :width] width)}))
 
 (re-frame/reg-event-fx
  ::set-height
  (fn [{:keys [db]} [_ height]]
-   {:db (assoc-in db [:new-project-modal :size :height] height)}))
+   {:db (assoc-in db [:new-project-modal :settings :size :height] height)}))
+
+(re-frame/reg-event-fx
+ ::set-title
+ (fn [{:keys [db]} [_ title]]
+   {:db (assoc-in db [:new-project-modal :settings :title] title)}))
 
 (re-frame/reg-event-fx
  ::create-example-project
@@ -32,7 +37,8 @@
 (re-frame/reg-event-fx
  ::create
  (fn [{:keys [db]}]
-   {:fx [[:dispatch
-          [:initialize-db
-           (assoc project-settings/default-palettes-and-current-colors
-                  :sprite (project-settings/create-empty-sprite (-> db :new-project-modal :size)))]]]}))
+   (let [settings (-> db :new-project-modal :settings)]
+     {:fx [[:dispatch
+            [:initialize-db
+             (assoc project-settings/default-palettes-and-current-colors
+                    :sprite (project-settings/create-empty-sprite (:title settings) (:size settings)))]]]})))

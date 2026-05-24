@@ -41,5 +41,5 @@
                                               (assoc :current (= {:x 0 :y 0} pos)
                                                      :selected (= {:x 0 :y 0} pos))
                                               (dissoc :data-url)
-                                              (assoc :pixels (get cels-pixels pos))))
+                                              (assoc :pixels (get cels-pixels pos)))) ;; todo: move this creation to cell/create
                                         %))))))

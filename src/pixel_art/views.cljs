@@ -4,6 +4,7 @@
    ["react-dnd" :as react-dnd]
    ["react-dnd-html5-backend" :as react-dnd-html5-backend]
    [clojure.string :as string]
+   [react :as react]
    [pixel-art.drawing.events :as drawing.events]
    [pixel-art.drawing.views :refer [drawing drawing-info]]
    [pixel-art.events :as events]
@@ -24,8 +25,9 @@
    [pixel-art.views.color-picker :refer [color-picker]]
    [pixel-art.views.constants :refer [transparent-color-img]]
    [pixel-art.views.ui-kit :refer [button checkbox custom-popover
-                                   file-uploader icon-button slider
-                                   use-theme-token]]
+                                   file-uploader icon-button
+                                   replace-current-project-confirm slider
+                                   space title use-theme-token]]
    [re-frame.core :as re-frame]
    [sc.api])
   (:require-macros [pixel-art.views.reagent :refer [def-func-component]]))
@@ -126,7 +128,8 @@
               on-change #(re-frame/dispatch [::events/change-tool-option (:field option-spec) %])
               props (assoc option-spec
                            :value value
-                           :on-change on-change)]
+                           :on-change on-change
+                           :data-testid (:field option-spec))]
           ^{:key idx}
           [:div
            (case (:type option-spec)
@@ -146,6 +149,8 @@
 
 (def-func-component header []
   (let [pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])
+        unsaved-changes-exist @(re-frame/subscribe [::subs/unsaved-changes-exist])
+        sprite-title @(re-frame/subscribe [::subs/sprite-title])
         theme-token (use-theme-token)]
     [:div {:style {:display "flex"
                    :align-items "center"
@@ -157,15 +162,17 @@
       [button {:on-click (fn [] (re-frame/dispatch [::new-project-modal.events/set-opened true]))}
        "New project"]]
      [button {:on-click (fn [] (re-frame/dispatch [::project-save-load.events/save-as-file]))}
-      "Save project as file"]
-     [file-uploader {:on-upload (fn [file-desc]
-                                  (re-frame/dispatch [::project-save-load.events/load-from-file file-desc]))}
+      "Save as file"]
+     [file-uploader {:accept (str "." project-save-load.events/file-ext)
+                     :on-upload (fn [file-desc]
+                                  (when (replace-current-project-confirm)
+                                    (re-frame/dispatch [::project-save-load.events/load-from-file file-desc])))}
       (fn [on-click]
         [button {:on-click on-click}
-         "Load project from file"])]
+         "Load from file"])]
      [:<>
       [button {:on-click (fn [] (re-frame/dispatch [::export-modal.events/set-opened true]))}
-       "Open project export panel"]
+       "Export"]
       [export-modal]]
      [:<>
       [sprite-resizer-modal]
@@ -176,9 +183,22 @@
      [checkbox {:value pixels-grid-enabled
                 :label "Grid"
                 :on-change (fn [checked] (re-frame/dispatch [::drawing.events/enable-pixels-grid checked]))}]
-
+     [space
+      [title {:level 3 :style {:margin 0}}
+       (str sprite-title (when unsaved-changes-exist "*"))]
+      [icon-button {:src :pen
+                    :title "edit title"
+                    :size :xs
+                    :on-click (fn []
+                                (let [new-title (js/prompt "Title")]
+                                  (when-not (string/blank? new-title)
+                                    (re-frame/dispatch [::events/set-sprite-title new-title]))))}]]
      [:div {:style {:margin-left "auto"}}
       [drawing-info]]]))
+
+(def-func-component counter []
+  (let [[t sett] (react/useState 0)]
+    [:button {:data-testid "button" :onClick (fn [] (sett inc))} t]))
 
 (def-func-component app-content []
   (let [initial-loading @(re-frame/subscribe [::subs/initial-loading])
@@ -193,8 +213,9 @@
                       :width "100%"
                       :height "100%"
                       :background-color "rgba(0, 0, 0, 0.8)"}}
-        [:> antd/Spin {:size "large"}]])
-     [:div {:style {:display "flex"
+        [:> antd/Spin {:size "large" :data-testid "app-spinner"}]])
+     [:div {:data-testid (when-not initial-loading "ready")
+            :style {:display "flex"
                     :flex-direction "column"
                     :height "100%"
                     :width "100%"
@@ -214,6 +235,7 @@
                       :min-height 0}}
         [tool-options-panel]
         [drawing]
+        [counter]
         [timeline-panel]]
        [right-sidebar]]]]))
 

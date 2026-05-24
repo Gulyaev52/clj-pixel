@@ -7,9 +7,9 @@ function getOrderedRectangleCoordinates (x0, y0, x1, y1) {
     };
 }
 
+
 export function getCirclePixels(x0, y0, x1, y1, penSize, fn) {
     var coords = getOrderedRectangleCoordinates(x0, y0, x1, y1);
-    var pixels = [];
     var xC = Math.round((coords.x0 + coords.x1) / 2);
     var yC = Math.round((coords.y0 + coords.y1) / 2);
     var evenX = (coords.x0 + coords.x1) % 2;
@@ -26,20 +26,20 @@ export function getCirclePixels(x0, y0, x1, y1, penSize, fn) {
       for (x = coords.x0 ; x <= xC ; x++) {
         angle = Math.acos((x - xC) / rX);
         y = Math.round(rY * Math.sin(angle) + yC);
-        pixels.push(fn(x - evenX, y));
-        pixels.push(fn(x - evenX, 2 * yC - y - evenY));
-        pixels.push(fn(2 * xC - x, y));
-        pixels.push(fn(2 * xC - x, 2 * yC - y - evenY));
+        (fn(x - evenX, y));
+        (fn(x - evenX, 2 * yC - y - evenY));
+        (fn(2 * xC - x, y));
+        (fn(2 * xC - x, 2 * yC - y - evenY));
       }
       for (y = coords.y0 ; y <= yC ; y++) {
         angle = Math.asin((y - yC) / rY);
         x = Math.round(rX * Math.cos(angle) + xC);
-        pixels.push(fn(x, y - evenY));
-        pixels.push(fn(2 * xC - x - evenX, y - evenY));
-        pixels.push(fn(x, 2 * yC - y));
-        pixels.push(fn(2 * xC - x - evenX, 2 * yC - y));
+        (fn(x, y - evenY));
+        (fn(2 * xC - x - evenX, y - evenY));
+        (fn(x, 2 * yC - y));
+        (fn(2 * xC - x - evenX, 2 * yC - y));
       }
-      return pixels;
+      return;
     }
 
     var iX = rX - penSize;
@@ -60,15 +60,15 @@ export function getCirclePixels(x0, y0, x1, y1, penSize, fn) {
           0.5) &&
           r < rX * rY / Math.sqrt(rY * rY * Math.pow(Math.cos(angle), 2) + rX * rX * Math.pow(Math.sin(angle), 2)) +
           0.5) {
-          pixels.push(fn(xC + x, yC + y));
-          pixels.push(fn(xC - x - evenX, yC + y));
-          pixels.push(fn(xC + x, yC - y - evenY));
-          pixels.push(fn(xC - x - evenX, yC - y - evenY));
+          (fn(xC + x, yC + y));
+          (fn(xC - x - evenX, yC + y));
+          (fn(xC + x, yC - y - evenY));
+          (fn(xC - x - evenX, yC - y - evenY));
         }
       }
     }
 
-    return pixels;
+    return;
   }
 
 export function getScaledCoords(startCol, startRow, col, row) {
@@ -82,10 +82,7 @@ export function getScaledCoords(startCol, startRow, col, row) {
   row = startRow - ((dY / absY) * delta);
   col = startCol - ((dX / absX) * delta);
 
-  return {
-    col : col,
-    row : row
-  };
+  return [col, row];
 }
 
 /**
@@ -110,7 +107,7 @@ export function getLinePixels(x0, x1, y0, y1) {
   var err = dx - dy;
   while (true) {
     // Do what you need to for this
-    pixels.push({'col': x0, 'row': y0});
+    pixels.push([x0, y0]);
 
     if ((x0 == x1) && (y0 == y1)) {
       break;
@@ -162,7 +159,7 @@ export function getUniformLinePixels(x0, x1, y0, y1) {
   while (true) {
     i++;
 
-    pixels.push({'col': x, 'row': y});
+    pixels.push([x, y]);
     if (distance(x0, x, y0, y) >= maxDistance) {
       break;
     }

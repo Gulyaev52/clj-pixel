@@ -1,9 +1,11 @@
 (ns pixel-art.keyboard-shortcuts
-  (:require [pixel-art.tool.core :as tool]
-            [pixel-art.tool.selection :as tool.selection]
-            [pixel-art.history.events :as history]
-            [clojure.set :as set]
-            [clojure.string :as string]))
+  (:require
+   [clojure.set :as set]
+   [clojure.string :as string]
+   [pixel-art.history.events :as history]
+   [pixel-art.project-save-load.events :as project-save-load.events]
+   [pixel-art.tool.core :as tool]
+   [pixel-art.tool.selection :as tool.selection]))
 
 (def shortcuts-by-types
   {:tools (->> [[:pen {:key "p"}]
@@ -30,6 +32,11 @@
            :keys [{:key "y"
                    :ctrlKey true}]
            :action [::history/redo]
+           :prevent-default-keys true}
+          {:label "save as file"
+           :keys [{:key "s"
+                   :ctrlKey true}]
+           :action [::project-save-load.events/save-as-file]
            :prevent-default-keys true}]
    :selection [{:label "cut selection"
                 :keys [{:ctrlKey true :key "x"}]

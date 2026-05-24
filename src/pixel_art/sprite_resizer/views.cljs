@@ -45,6 +45,7 @@
                     :control [input-number {:value (-> settings :target-size :width)
                                             :type "number"
                                             :max project-settings/max-sprite-dim
+                                            :testid "resize-width"
                                             :block true
                                             :on-blur (fn [value]
                                                        (re-frame/dispatch [::events/set-settings-option
@@ -53,6 +54,7 @@
         [form-item {:label "Height"
                     :control [input-number {:value (-> settings :target-size :height)
                                             :type "number"
+                                            :testid "resize-height"
                                             :max project-settings/max-sprite-dim
                                             :block true
                                             :on-blur (fn [value]
