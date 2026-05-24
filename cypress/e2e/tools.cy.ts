@@ -166,6 +166,82 @@ describe('Rectangle Tool', () => {
       [colors.black, colors.black, colors.black, colors.black],
     ], 'step 5: rectangle outline committed — interior green pixels preserved');
   });
+
+  it('fill option: paints all pixels inside the rectangle', () => {
+    const b = colors.black;
+    const t = colors.transparent;
+    cy.startApp({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels([
+        [t, t, t, t],
+        [t, t, t, t],
+        [t, t, t, t],
+        [t, t, t, t],
+      ]),
+    });
+    cy.waitForAppReady();
+    cy.selectTool('rectangle');
+    cy.contains('Fill').click();
+    cy.drawAtCanvasPixel(0, 0, { toX: 3, toY: 3 });
+    cy.assertVisibleCanvasPixels([
+      [b, b, b, b],
+      [b, b, b, b],
+      [b, b, b, b],
+      [b, b, b, b],
+    ], 'fill: all pixels inside the rectangle are painted');
+  });
+
+  it('pixel-size option: thickens the outline border', () => {
+    const b = colors.black;
+    const t = colors.transparent;
+    cy.startApp({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels([
+        [t, t, t, t, t, t],
+        [t, t, t, t, t, t],
+        [t, t, t, t, t, t],
+        [t, t, t, t, t, t],
+        [t, t, t, t, t, t],
+        [t, t, t, t, t, t],
+      ]),
+    });
+    cy.waitForAppReady();
+    cy.selectTool('rectangle');
+    cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true }); // pixel-size = 2
+    cy.drawAtCanvasPixel(0, 0, { toX: 5, toY: 5 });
+    cy.assertVisibleCanvasPixels([
+      [b, b, b, b, b, b],
+      [b, b, b, b, b, b],
+      [b, b, t, t, b, b],
+      [b, b, t, t, b, b],
+      [b, b, b, b, b, b],
+      [b, b, b, b, b, b],
+    ], 'pixel-size=2: 2px border, interior remains transparent');
+  });
+
+  it('keep-ratio option: constrains rectangle to a square', () => {
+    const b = colors.black;
+    const t = colors.transparent;
+    cy.startApp({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels([
+        [t, t, t, t],
+        [t, t, t, t],
+        [t, t, t, t],
+        [t, t, t, t],
+      ]),
+    });
+    cy.waitForAppReady();
+    cy.selectTool('rectangle');
+    cy.contains('Keep ration').click();
+    cy.drawAtCanvasPixel(0, 0, { toX: 3, toY: 2 }); // asymmetric drag: 4 wide, 3 tall
+    cy.assertVisibleCanvasPixels([
+      [b, b, b, t],
+      [b, t, b, t],
+      [b, b, b, t],
+      [t, t, t, t],
+    ], 'keep-ratio: asymmetric drag produces a square outline');
+  });
 });
 
 describe('Rectangle Selection Tool', () => {
