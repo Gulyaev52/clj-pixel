@@ -15,7 +15,7 @@ const colors = {
 
 describe('Drawing Tools', () => {
   it("pen", () => {
-    cy.seedDatabase({
+    cy.startApp({
       ...defaultDbSeed,
       sprite: getSpriteFromPixels([
         [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
@@ -57,7 +57,7 @@ describe('Drawing Tools', () => {
 
 describe('Eraser Tool', () => {
   it('eraser tool erases correctly', () => {
-    cy.seedDatabase({
+    cy.startApp({
       ...defaultDbSeed,
       sprite: getSpriteFromPixels(getPixels(4, 4, colors.black)),
     });
@@ -94,7 +94,7 @@ describe('Eraser Tool', () => {
 
 describe('Color Picker Tool', () => {
   beforeEach(() => {
-    cy.seedDatabase({
+    cy.startApp({
       ...defaultDbSeed,
       sprite: getSpriteFromPixels([
         [colors.green, colors.blue],
@@ -118,7 +118,7 @@ describe('Color Picker Tool', () => {
 
 describe('Rectangle Tool', () => {
   it('step-by-step: mousedown → intermediate drag → mouseup commits outline', () => {
-    cy.seedDatabase({
+    cy.startApp({
       ...defaultDbSeed,
       sprite: getSpriteFromPixels([
         [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
@@ -171,7 +171,7 @@ describe('Rectangle Tool', () => {
 describe('Rectangle Selection Tool', () => {
   it('select state', () => {
     const initialPixels = getPixels(4, 4, colors.black);
-    cy.seedDatabase({
+    cy.startApp({
       ...defaultDbSeed,
       sprite: getSpriteFromPixels(initialPixels),
     });
@@ -237,7 +237,7 @@ describe('Rectangle Selection Tool', () => {
         [colors.black, colors.black, colors.black, colors.black],
         [colors.black, colors.black, colors.black, colors.black],
       ];
-    cy.seedDatabase({
+    cy.startApp({
       ...defaultDbSeed,
       sprite: getSpriteFromPixels(initialPixels),
     });
@@ -309,7 +309,7 @@ describe('Rectangle Selection Tool', () => {
         [colors.black, colors.black, colors.black, colors.black],
         [colors.black, colors.black, colors.black, colors.black],
       ];
-      cy.seedDatabase({
+      cy.startApp({
         ...defaultDbSeed,
         sprite: getSpriteFromPixels(initialPixels),
       });
@@ -364,7 +364,7 @@ describe('Rectangle Selection Tool', () => {
         [colors.black, colors.black, colors.black, colors.black],
         [colors.black, colors.black, colors.black, colors.black],
       ];
-      cy.seedDatabase({
+      cy.startApp({
         ...defaultDbSeed,
         sprite: getSpriteFromPixels(initialPixels),
       });
@@ -409,7 +409,7 @@ describe('Rectangle Selection Tool', () => {
         [colors.black, colors.black, colors.black, colors.black],
         [colors.black, colors.black, colors.black, colors.black],
       ];
-      cy.seedDatabase({
+      cy.startApp({
         ...defaultDbSeed,
         sprite: getSpriteFromPixels(initialPixels),
       });
@@ -433,7 +433,7 @@ describe('Rectangle Selection Tool', () => {
         [colors.black, colors.black, colors.black, colors.black],
         [colors.black, colors.black, colors.black, colors.black],
       ];
-      cy.seedDatabase({
+      cy.startApp({
         ...defaultDbSeed,
         sprite: getSpriteFromPixels(initialPixels),
       });
@@ -481,7 +481,7 @@ describe('Rectangle Selection Tool', () => {
         [colors.black, colors.black, colors.black, colors.black],
         [colors.black, colors.black, colors.black, colors.black],
       ];
-      cy.seedDatabase({
+      cy.startApp({
         ...defaultDbSeed,
         sprite: getSpriteFromPixels(initialPixels),
       });
@@ -538,7 +538,7 @@ describe('Rectangle Selection Tool', () => {
         [colors.black, colors.black, colors.black, colors.black],
         [colors.black, colors.black, colors.black, colors.black],
       ];
-      cy.seedDatabase({
+      cy.startApp({
         ...defaultDbSeed,
         sprite: getSpriteFromPixels(initialPixels),
       });
@@ -601,7 +601,7 @@ describe('Rectangle Selection Tool', () => {
         [colors.black, colors.black, colors.black, colors.black],
         [colors.black, colors.black, colors.black, colors.black],
       ];
-      cy.seedDatabase({
+      cy.startApp({
         ...defaultDbSeed,
         sprite: getSpriteFromPixels(initialPixels),
       });
@@ -641,7 +641,7 @@ describe('Rectangle Selection Tool', () => {
 
 describe('Line Tool', () => {
   it('step-by-step: mousedown → intermediate drag → mouseup commits line', () => {
-    cy.seedDatabase({
+    cy.startApp({
       ...defaultDbSeed,
       sprite: getSpriteFromPixels([
         [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
@@ -679,7 +679,7 @@ describe('Line Tool', () => {
   });
 
   it('pixel size 2 and Straight option produce correct pixels', () => {
-    cy.seedDatabase({
+    cy.startApp({
       ...defaultDbSeed,
       sprite: getSpriteFromPixels([
         [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
@@ -705,7 +705,7 @@ describe('Line Tool', () => {
 
 describe('Circle Tool', () => {
   it('step-by-step: mousedown → intermediate drag → mouseup commits circle', () => {
-    cy.seedDatabase({
+    cy.startApp({
       ...defaultDbSeed,
       sprite: getSpriteFromPixels([
         [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
@@ -738,7 +738,7 @@ describe('Circle Tool', () => {
   });
 
   it('Keep ration option constrains bounding box to a square', () => {
-    cy.seedDatabase({
+    cy.startApp({
       ...defaultDbSeed,
       sprite: getSpriteFromPixels([
         [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
@@ -774,7 +774,7 @@ describe('Bucket Tool', () => {
         [colors.transparent, colors.green, colors.green, colors.transparent],
       ]),
     };
-    cy.seedDatabase(db);
+    cy.startApp(db);
     cy.waitForAppReady();
     cy.selectTool('bucket');
 
@@ -808,7 +808,7 @@ describe('Bucket Tool', () => {
         [colors.transparent, colors.green, colors.blue],
       ]),
     };
-    cy.seedDatabase(db);
+    cy.startApp(db);
     cy.waitForAppReady();
     cy.selectTool('bucket');
 

@@ -51,7 +51,7 @@ function readTransparentCanvasPixels(canvas: HTMLCanvasElement) {
 declare global {
   namespace Cypress {
     interface Chainable {
-      seedDatabase(dbSeed: DBSeed): Chainable<void>;
+      startApp(dbSeed: DBSeed): Chainable<void>;
       selectTool(toolName: string): Chainable<void>;
       selectColor(idx: number, colorType?: 'primary' | 'secondary'): Chainable<void>;
       drawOnCanvas(x: number, y: number): Chainable<void>;
@@ -79,26 +79,26 @@ declare global {
 
 // Visits the page, seeds IndexedDB with a fresh 20×20 sprite, then reloads so the
 // app initializes from our data (no "New Project" modal).
-Cypress.Commands.add('seedDatabase', (dbSeed: DBSeed) => {
-  cy.visit('/index.html', { log: false });
-  cy.window({ log: false }).then((win) => {
-    return new Promise<void>((resolve, reject) => {
-      const openReq = (win as any).indexedDB.open('pixel-database', 1);
-      openReq.onupgradeneeded = (e: any) => {
-        (e.target.result as IDBDatabase).createObjectStore('pixel', { keyPath: 'id' });
-      };
-      openReq.onsuccess = (e: any) => {
-        const db = e.target.result as IDBDatabase;
-        const tx = db.transaction('pixel', 'readwrite');
-        tx.objectStore('pixel').put({ id: 'backup', backup: dbSeed });
-        tx.oncomplete = () => { db.close(); resolve(); };
-        tx.onerror = () => reject((tx as any).error);
-      };
-      openReq.onerror = () => reject((openReq as any).error);
-    });
+Cypress.Commands.add('startApp', (dbSeed: DBSeed) => {
+  cy.visit('/index.html', {
+    onBeforeLoad(window) {
+      return new Promise<void>((resolve, reject) => {
+        const openReq = window.indexedDB.open('pixel-database', 1);
+        openReq.onupgradeneeded = (e: any) => {
+          (e.target.result as IDBDatabase).createObjectStore('pixel', { keyPath: 'id' });
+        };
+        openReq.onsuccess = (e: any) => {
+          const db = e.target.result as IDBDatabase;
+          const tx = db.transaction('pixel', 'readwrite');
+          tx.objectStore('pixel').put({ id: 'backup', backup: dbSeed });
+          tx.oncomplete = () => { db.close(); resolve(); };
+          tx.onerror = () => reject((tx as any).error);
+        };
+        openReq.onerror = () => reject((openReq as any).error);
+      });
+    }
   });
-  cy.reload();
-  Cypress.log({ name: 'seedDatabase', message: 'Database seeded with default sprite' });
+  Cypress.log({ name: 'startApp', message: 'App started with seeded database' });
 });
 
 Cypress.Commands.add('waitForAppReady', () => {
