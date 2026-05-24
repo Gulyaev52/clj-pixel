@@ -24,7 +24,6 @@ describe('Drawing Tools', () => {
         [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
       ]),
     });
-    cy.waitForAppReady();
     cy.selectTool('pen');
     cy.contains('Pixel size').should('be.visible');
     cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true });
@@ -61,7 +60,6 @@ describe('Eraser Tool', () => {
       ...defaultDbSeed,
       sprite: getSpriteFromPixels(getPixels(4, 4, colors.black)),
     });
-    cy.waitForAppReady();
     cy.selectTool('eraser');
     cy.contains('Pixel size').should('be.visible');
     cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true }); // pixel size = 2
@@ -101,7 +99,6 @@ describe('Color Picker Tool', () => {
         [colors.transparent, colors.transparent],
       ]),
     });
-    cy.waitForAppReady();
     cy.selectTool('color-picker');
   });
 
@@ -127,7 +124,6 @@ describe('Rectangle Tool', () => {
         [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
       ]),
     });
-    cy.waitForAppReady();
     cy.selectTool('rectangle');
 
     // Step 1: mousedown at (0,0) — user sees original + black pixel at (0,0)
@@ -179,7 +175,6 @@ describe('Rectangle Tool', () => {
         [t, t, t, t],
       ]),
     });
-    cy.waitForAppReady();
     cy.selectTool('rectangle');
     cy.contains('Fill').click();
     cy.drawAtCanvasPixel(0, 0, { toX: 3, toY: 3 });
@@ -205,7 +200,6 @@ describe('Rectangle Tool', () => {
         [t, t, t, t, t, t],
       ]),
     });
-    cy.waitForAppReady();
     cy.selectTool('rectangle');
     cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true }); // pixel-size = 2
     cy.drawAtCanvasPixel(0, 0, { toX: 5, toY: 5 });
@@ -231,7 +225,6 @@ describe('Rectangle Tool', () => {
         [t, t, t, t],
       ]),
     });
-    cy.waitForAppReady();
     cy.selectTool('rectangle');
     cy.contains('Keep ration').click();
     cy.drawAtCanvasPixel(0, 0, { toX: 3, toY: 2 }); // asymmetric drag: 4 wide, 3 tall
@@ -251,7 +244,6 @@ describe('Rectangle Selection Tool', () => {
       ...defaultDbSeed,
       sprite: getSpriteFromPixels(initialPixels),
     });
-    cy.waitForAppReady();
     cy.selectTool('rectangle-selection');
 
     cy.startDrawAtCanvasPixel(0, 0);
@@ -317,7 +309,6 @@ describe('Rectangle Selection Tool', () => {
       ...defaultDbSeed,
       sprite: getSpriteFromPixels(initialPixels),
     });
-    cy.waitForAppReady();
     cy.selectTool('rectangle-selection');
 
     // Select 2×2 top-left region
@@ -389,7 +380,6 @@ describe('Rectangle Selection Tool', () => {
         ...defaultDbSeed,
         sprite: getSpriteFromPixels(initialPixels),
       });
-      cy.waitForAppReady();
       cy.selectTool('rectangle-selection');
   
       // Select 2×2 top-left region
@@ -444,7 +434,6 @@ describe('Rectangle Selection Tool', () => {
         ...defaultDbSeed,
         sprite: getSpriteFromPixels(initialPixels),
       });
-      cy.waitForAppReady();
       cy.selectTool('rectangle-selection');
 
       cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
@@ -489,7 +478,6 @@ describe('Rectangle Selection Tool', () => {
         ...defaultDbSeed,
         sprite: getSpriteFromPixels(initialPixels),
       });
-      cy.waitForAppReady();
       cy.selectTool('rectangle-selection');
 
       cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
@@ -513,7 +501,6 @@ describe('Rectangle Selection Tool', () => {
         ...defaultDbSeed,
         sprite: getSpriteFromPixels(initialPixels),
       });
-      cy.waitForAppReady();
       cy.selectTool('rectangle-selection');
 
       // Select 2×2 top-left region
@@ -561,7 +548,6 @@ describe('Rectangle Selection Tool', () => {
         ...defaultDbSeed,
         sprite: getSpriteFromPixels(initialPixels),
       });
-      cy.waitForAppReady();
       cy.selectTool('rectangle-selection');
 
       // Select 2×2 top-left region, copy and paste
@@ -618,7 +604,6 @@ describe('Rectangle Selection Tool', () => {
         ...defaultDbSeed,
         sprite: getSpriteFromPixels(initialPixels),
       });
-      cy.waitForAppReady();
       cy.selectTool('rectangle-selection');
 
       // Select 2×2 top-left region and cut
@@ -681,7 +666,6 @@ describe('Rectangle Selection Tool', () => {
         ...defaultDbSeed,
         sprite: getSpriteFromPixels(initialPixels),
       });
-      cy.waitForAppReady();
       cy.selectTool('rectangle-selection');
 
       // Select, copy, paste and move the pasted selection
@@ -726,7 +710,6 @@ describe('Line Tool', () => {
         [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
       ]),
     });
-    cy.waitForAppReady();
     cy.selectTool('line');
 
     cy.startDrawAtCanvasPixel(0, 0);
@@ -764,7 +747,6 @@ describe('Line Tool', () => {
         [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
       ]),
     });
-    cy.waitForAppReady();
     cy.selectTool('line');
     cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true }); // pixel size = 2
     cy.contains('Straight').click();
@@ -790,7 +772,6 @@ describe('Circle Tool', () => {
         [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
       ]),
     });
-    cy.waitForAppReady();
     cy.selectTool('circle');
 
     // circle with start=end produces no pixels (zero-radius), so no assertion after mousedown
@@ -823,7 +804,6 @@ describe('Circle Tool', () => {
         [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
       ]),
     });
-    cy.waitForAppReady();
     cy.selectTool('circle');
     cy.contains('Keep ration').click();
     cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true }); // pixel size = 2
@@ -851,7 +831,6 @@ describe('Bucket Tool', () => {
       ]),
     };
     cy.startApp(db);
-    cy.waitForAppReady();
     cy.selectTool('bucket');
 
     // left-click fills the entire connected transparent region with primary color (black)
@@ -885,7 +864,6 @@ describe('Bucket Tool', () => {
       ]),
     };
     cy.startApp(db);
-    cy.waitForAppReady();
     cy.selectTool('bucket');
 
     cy.contains('All the same color').click(); // todo: check checkbox state
@@ -917,7 +895,6 @@ describe('Shape Selection Tool', () => {
       ...defaultDbSeed,
       sprite: getSpriteFromPixels(initialPixels),
     });
-    cy.waitForAppReady();
     cy.selectTool('shape-selection');
 
     // Single click — flood-fill selects only the 3 connected red pixels at top-left

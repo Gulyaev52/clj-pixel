@@ -72,7 +72,6 @@ declare global {
       addLayer(): Chainable<void>;
       stubPrompt(returnValue: string | null): Chainable<void>;
       stubConfirm(returnValue: boolean): Chainable<void>;
-      waitForAppReady(): Chainable<void>;
     }
   }
 }
@@ -98,13 +97,9 @@ Cypress.Commands.add('startApp', (dbSeed: DBSeed) => {
       });
     }
   });
-  Cypress.log({ name: 'startApp', message: 'App started with seeded database' });
-});
-
-Cypress.Commands.add('waitForAppReady', () => {
   cy.get('[data-testid="canvas-viewport"]', { timeout: 10000, log: false }).should('be.visible');
   cy.get('[data-testid="current-layer"]', { log: false }).should('be.visible');
-  Cypress.log({ name: 'waitForAppReady', message: 'App is ready' });
+  Cypress.log({ name: 'startApp', message: 'App started with seeded database' });
 });
 
 Cypress.Commands.add('selectTool', (toolName: string) => {
