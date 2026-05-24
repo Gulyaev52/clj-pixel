@@ -196,10 +196,6 @@
      [:div {:style {:margin-left "auto"}}
       [drawing-info]]]))
 
-(def-func-component counter []
-  (let [[t sett] (react/useState 0)]
-    [:button {:data-testid "button" :onClick (fn [] (sett inc))} t]))
-
 (def-func-component app-content []
   (let [initial-loading @(re-frame/subscribe [::subs/initial-loading])
         colorBgContainer (.. antd/theme useToken -token -colorBgContainer)]
@@ -235,7 +231,6 @@
                       :min-height 0}}
         [tool-options-panel]
         [drawing]
-        [counter]
         [timeline-panel]]
        [right-sidebar]]]]))
 
