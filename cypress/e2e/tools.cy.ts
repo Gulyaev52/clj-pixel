@@ -806,16 +806,35 @@ describe('Circle Tool', () => {
     });
     cy.selectTool('circle');
     cy.contains('Keep ration').click();
-    cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true }); // pixel size = 2
 
     // asymmetric drag (0,0)→(3,2); keep-ratio constrains to effective endpoint (2,2)
     cy.drawAtCanvasPixel(0, 0, { toX: 3, toY: 2 });
     cy.assertVisibleCanvasPixels([
-      [colors.black, colors.black, colors.black, colors.transparent],
-      [colors.black, colors.transparent, colors.black, colors.transparent],
-      [colors.black, colors.black, colors.black, colors.transparent],
+      [colors.transparent, colors.black,       colors.transparent, colors.transparent],
+      [colors.black,       colors.transparent, colors.black,       colors.transparent],
+      [colors.transparent, colors.black,       colors.transparent, colors.transparent],
       [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
     ], 'keep-ratio: asymmetric drag produces a perfect circle');
+  });
+
+  it('pixel-size option: thickens the circle outline', () => {
+    cy.startApp({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels([
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+        [colors.transparent, colors.transparent, colors.transparent, colors.transparent],
+      ]),
+    });
+    cy.selectTool('circle');
+    cy.drawAtCanvasPixel(0, 0, { toX: 3, toY: 3 });
+    cy.assertVisibleCanvasPixels([
+      [colors.transparent, colors.black, colors.black, colors.transparent],
+      [colors.black,       colors.transparent, colors.transparent, colors.black],
+      [colors.black,       colors.transparent, colors.transparent, colors.black],
+      [colors.transparent, colors.black, colors.black, colors.transparent],
+    ], 'pixel-size=2: circle outline is 2px thick');
   });
 });
 
