@@ -127,7 +127,7 @@
                                       (.. @!ref blur)
                                       (on-change value)))}])))
 
-(defn icon-button [{:keys [src icon-theme title active disabled size on-click]}]
+(defn icon-button [{:keys [src icon-theme title active disabled size on-click data-testid]}]
   [:button (merge {:className "icon-button"
                    :style (merge
                            {:border "none"
@@ -145,6 +145,7 @@
                              :else
                              {:width "100%" :height "100%"}))
                    :title title
+                   :data-testid data-testid
                    :disabled disabled
                    :on-click on-click})
    [:div {:style {:width "100%"

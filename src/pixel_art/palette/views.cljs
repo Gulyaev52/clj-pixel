@@ -73,6 +73,7 @@
             [icon-button {:src :close
                           :icon-theme (if color-dark? :light :dark)
                           :title "remove color"
+                          :data-testid (str "remove-palette-color-" idx)
                           :size :xs
                           :on-click (fn [e]
                                       (.. e (stopPropagation))
