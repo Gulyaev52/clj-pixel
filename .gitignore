@@ -9,6 +9,8 @@
 /.lein-*
 /.nrepl-port
 
+/cypress/downloads/
+
 # Node.js dependencies
 /node_modules/
 
