@@ -48,6 +48,21 @@ function readTransparentCanvasPixels(canvas: HTMLCanvasElement) {
   ).flat();
 }
 
+function readImgPixels(img: HTMLImageElement): string[][] {
+  const { naturalWidth: width, naturalHeight: height } = img;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext('2d')!.drawImage(img, 0, 0);
+  const { data } = canvas.getContext('2d')!.getImageData(0, 0, width, height);
+  return Array.from({ length: height }, (_, y) =>
+    Array.from({ length: width }, (_, x) => {
+      const i = (y * width + x) * 4;
+      return rgba(data[i], data[i + 1], data[i + 2], data[i + 3]);
+    })
+  );
+}
+
 declare global {
   namespace Cypress {
     interface Chainable {
@@ -72,6 +87,9 @@ declare global {
       addLayer(): Chainable<void>;
       stubPrompt(returnValue: string | null): Chainable<void>;
       stubConfirm(returnValue: boolean): Chainable<void>;
+      getCelPreview(frameIdx: number, layerIdx: number, expectedPixels: string[][], assertMessage?: string): Chainable<void>;
+      assertTimelineCels(cels: string[][][][], active: { activeFrameIdx: number; activeLayerIdx: number }): Chainable<void>;
+      assertTimelineLabels(frameCount: number, layerNames: string[]): Chainable<void>;
     }
   }
 }
@@ -319,6 +337,65 @@ Cypress.Commands.add('assertTransparentCanvasPixels', (expectedPixels: CanvasPix
     name: 'assertTransparentCanvasPixels',
     message: assertMessage || '',
     consoleProps: () => ({ expectedPixels })
+  });
+});
+
+Cypress.Commands.add('getCelPreview', (frameIdx: number, layerIdx: number, expectedPixels: string[][], assertMessage?: string) => {
+  cy.get(`[data-testid="cel-${frameIdx}-${layerIdx}"] img`, { log: false })
+    .should(($img) => {
+      expect(($img[0] as HTMLImageElement).complete).to.be.true;
+      expect(($img[0] as HTMLImageElement).naturalWidth).to.be.greaterThan(0);
+    })
+    .should(($img) => {
+      const actualPixels = readImgPixels($img[0] as HTMLImageElement);
+      const actualObj = Object.fromEntries(actualPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
+      const expectedObj = Object.fromEntries(expectedPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
+      expect(actualObj, assertMessage).to.deep.equal(expectedObj);
+    });
+  Cypress.log({ name: 'getCelPreview', message: assertMessage || `cel-${frameIdx}-${layerIdx}` });
+});
+
+Cypress.Commands.add('assertTimelineCels', (
+  cels: string[][][][],
+  active: { activeFrameIdx: number; activeLayerIdx: number }
+) => {
+  const frameCount = cels.length;
+  const layerCount = cels[0].length;
+
+  cy.get('[data-testid^="frame-"]').should('have.length', frameCount, `frame count is ${frameCount}`);
+  cy.get('[data-testid^="layer-"]').should('have.length', layerCount, `layer count is ${layerCount}`);
+
+  cels.forEach((frameCels, frameIdx) => {
+    const isActiveFrame = frameIdx === active.activeFrameIdx;
+    cy.get(`[data-testid="frame-${frameIdx}"][data-current="${isActiveFrame}"]`)
+      .should('exist', `frame-${frameIdx} data-current=${isActiveFrame}`);
+
+    frameCels.forEach((pixels, layerIdx) => {
+      const isActiveCel = isActiveFrame && layerIdx === active.activeLayerIdx;
+      cy.get(`[data-testid="cel-${frameIdx}-${layerIdx}"]`).should('be.visible');
+      cy.getCelPreview(frameIdx, layerIdx, pixels, `cel-${frameIdx}-${layerIdx} pixels`);
+      cy.get(`[data-testid="cel-${frameIdx}-${layerIdx}"][data-selected="${isActiveCel}"]`)
+        .should('exist', `cel-${frameIdx}-${layerIdx} data-selected=${isActiveCel}`);
+    });
+  });
+
+  cels[0].forEach((_, layerIdx) => {
+    const isActiveLayer = layerIdx === active.activeLayerIdx;
+    cy.get(`[data-testid="layer-${layerIdx}"][data-current="${isActiveLayer}"]`)
+      .should('exist', `layer-${layerIdx} data-current=${isActiveLayer}`);
+  });
+});
+
+Cypress.Commands.add('assertTimelineLabels', (frameCount: number, layerNames: string[]) => {
+  cy.get('[data-testid^="frame-"]').should('have.length', frameCount);
+  for (let i = 0; i < frameCount; i++) {
+    cy.get('[data-testid^="frame-"]').eq(i)
+      .should('contain.text', String(i + 1), `frame at position ${i} shows number ${i + 1}`);
+  }
+  cy.get('[data-testid^="layer-"]').should('have.length', layerNames.length);
+  layerNames.forEach((name, i) => {
+    cy.get('[data-testid^="layer-"]').eq(i)
+      .should('contain.text', name, `layer at position ${i} shows "${name}"`);
   });
 });
 

@@ -65,6 +65,7 @@
      [:div {:ref ref
             :on-click (fn [] (re-frame/dispatch [::events/select-layer (:idx layer)]))
             :data-testid (str "layer-" (:idx layer))
+            :data-current (str (:current layer))
             :style {:display :flex
                     :align-items "center"
                     :padding "4px"
@@ -103,6 +104,7 @@
      [:div {:on-click (fn [] (re-frame/dispatch [::events/select-frame (:idx frame)]))
             :ref ref
             :data-testid (str "frame-" (:idx frame))
+            :data-current (str (:current frame))
             :style {:display "flex"
                     :align-items "center"
                     :justify-content "center"
@@ -162,6 +164,7 @@
                           :else (re-frame/dispatch [::events/select-only-1-cel (:pos cel)])))
             :ref ref
             :data-testid (str "cel-" (-> cel :pos :frame-idx) "-" (-> cel :pos :layer-idx))
+            :data-selected (str (:selected cel))
             :style {:position "relative"
                     :display :flex
                     :align-items :center

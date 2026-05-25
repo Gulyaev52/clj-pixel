@@ -33,6 +33,27 @@ export const getSpriteFromPixels = (pixels: string[][]): DBSeed['sprite'] => {
   };
 }
 
+// cels[frame_idx][layer_idx] = 2D pixel grid (pixels[y][x] = rgba string)
+export const getSpriteFromCels = (
+  cels: string[][][][],
+  frames: Array<{ duration: number }>,
+  layers: Array<{ 'visible?': boolean; 'automatic-linking?': boolean; name: string }>
+): DBSeed['sprite'] => {
+  const height = cels[0][0].length;
+  const width = cels[0][0][0].length;
+  return {
+    size: { width, height },
+    frames,
+    layers,
+    cels: cels.map(frameCels =>
+      frameCels.map(pixels => ({
+        size: { width, height },
+        'data-url': pixelsToDataURL(pixels)
+      }))
+    )
+  };
+};
+
 export const getEmptyPixels = (width: number, height: number, color?: string) => {
   const pixels = Array(height).fill(null).map(() => Array(width).fill([0, 0, 0, 0]));
   if (color) {
