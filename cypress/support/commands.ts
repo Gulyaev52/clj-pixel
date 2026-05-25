@@ -48,6 +48,28 @@ function readTransparentCanvasPixels(canvas: HTMLCanvasElement) {
   ).flat();
 }
 
+function readCompositePixels(doc: Document, width: number, height: number): string[][] {
+  const below   = doc.getElementById('layers-below')  as HTMLCanvasElement;
+  const current = doc.getElementById('current-layer') as HTMLCanvasElement;
+  const above   = doc.getElementById('layers-above')  as HTMLCanvasElement;
+
+  const belowData   = below.getContext('2d')!.getImageData(0, 0, width, height).data;
+  const currentData = current.getContext('2d')!.getImageData(0, 0, width, height).data;
+  const aboveData   = above.getContext('2d')!.getImageData(0, 0, width, height).data;
+
+  return Array.from({ length: height }, (_, y) =>
+    Array.from({ length: width }, (_, x) => {
+      const i = (y * width + x) * 4;
+      for (const data of [aboveData, currentData, belowData]) {
+        if (data[i + 3] > 0) {
+          return rgba(data[i], data[i + 1], data[i + 2], data[i + 3]);
+        }
+      }
+      return rgba(0, 0, 0, 0);
+    })
+  );
+}
+
 function readImgPixels(img: HTMLImageElement): string[][] {
   const { naturalWidth: width, naturalHeight: height } = img;
   const canvas = document.createElement('canvas');
@@ -253,8 +275,9 @@ Cypress.Commands.add('assertPreviewCanvasPixels', (expectedPixels: string[][], a
 
 Cypress.Commands.add('assertVisibleCanvasPixels', (expectedPixels: string[][], assertMessage?: string) => {
   cy.get('[data-testid="current-layer"]', { log: false }).should(($canvas) => {
-    const actualPixels = readCanvasPixels($canvas[0] as HTMLCanvasElement);
-    const actualObj = Object.fromEntries(actualPixels.map(p => [p.pos.join(','), p.color]));
+    const canvas = $canvas[0] as HTMLCanvasElement;
+    const actualPixels = readCompositePixels(canvas.ownerDocument, canvas.width, canvas.height);
+    const actualObj = Object.fromEntries(actualPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
     const expectedObj = Object.fromEntries(expectedPixels.flatMap((row, y) =>
       row.map((color, x) => [`${x},${y}`, color])
     ));
@@ -291,8 +314,9 @@ Cypress.Commands.add('assertDrawedCanvasPixels', (expectedPixels: CanvasPixels, 
 
 Cypress.Commands.add('assertCanvasPixels', (expectedPixels: string[][], assertMessage?: string) => {
   cy.get('[data-testid="current-layer"]', { log: false }).should(($canvas) => {
-    const actualPixels = readCanvasPixels($canvas[0] as HTMLCanvasElement);
-    const actualObj = Object.fromEntries(actualPixels.map(p => [p.pos.join(','), p.color]));
+    const canvas = $canvas[0] as HTMLCanvasElement;
+    const actualPixels = readCompositePixels(canvas.ownerDocument, canvas.width, canvas.height);
+    const actualObj = Object.fromEntries(actualPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
     const expectedObj = Object.fromEntries(expectedPixels.flatMap((row, y) =>
       row.map((color, x) => [`${x},${y}`, color])
     ));

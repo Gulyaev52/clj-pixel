@@ -24,7 +24,7 @@ const twoFramesTwoLayersSeed: DBSeed = {
 
 describe('Timeline', () => {
   describe('Display', () => {
-    it.only('frame numbers, layer names, cel previews, and canvas match selected cel', () => {
+    it('frame numbers, layer names, cel previews, and canvas match selected cel', () => {
       cy.startApp(twoFramesTwoLayersSeed);
 
       cy.assertTimelineLabels(2, ['Layer 1', 'Layer 2']);
