@@ -2,8 +2,10 @@
   (:require [clojure.string :as string]
             [pixel-art.model.color :as color]))
 
+(def ext "gpl")
+
 (defn palette->file-desc [palette]
-  {:file-name (str (:name palette) ".gpl")
+  {:file-name (str (:name palette) "." ext)
    :content (->> (concat ["GIMP Palette"
                           (str "Name: " (:name palette))
                           "Columns: 0"]

@@ -222,11 +222,12 @@
                      (when hide-footer {:footer nil}))]
      children)))
 
-(defn file-uploader [{:keys [on-upload accept]} render-button]
+(defn file-uploader [{:keys [on-upload accept data-testid]} render-button]
   (reag/with-let [!input-ref (reag/atom nil)]
     [:span
      [:input {:type "file"
               :accept accept
+              :data-testid data-testid
               :ref (fn [ref] (reset! !input-ref ref))
               :style {:display "none"}
               :on-change (fn [e]

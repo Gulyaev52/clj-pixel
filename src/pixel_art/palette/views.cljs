@@ -2,6 +2,7 @@
   (:require
    [pixel-art.model.color :as color]
    [pixel-art.palette.events :as events]
+   [pixel-art.palette.gimp-file :as gimp-file]
    [pixel-art.subs :as common-subs]
    [pixel-art.utils.coll :as coll]
    [pixel-art.views.color-picker :refer [color-picker]]
@@ -138,9 +139,12 @@
       [:div
        [icon-button {:src :file-export
                      :title "Export palette"
+                     :data-testid "export-palette-button"
                      :size :sm
                      :on-click (fn [] (re-frame/dispatch [::events/export-palette]))}]
-       [file-uploader {:on-upload (fn [file-desc]
+       [file-uploader {:accept (str "." gimp-file/ext)
+                       :data-testid "import-palette-input"
+                       :on-upload (fn [file-desc]
                                     (re-frame/dispatch [::events/import-palette file-desc]))}
         (fn [on-click]
           [icon-button {:src :file-import

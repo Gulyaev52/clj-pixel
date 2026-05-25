@@ -184,4 +184,83 @@ describe('Palette', () => {
     cy.contains('.ant-select-item-option-content', 'Second')
       .should('not.exist', 'removed palette absent from dropdown after reload');
   });
+
+  describe('Import/Export', () => {
+    const expectedExportContent = [
+      'GIMP Palette',
+      'Name: default',
+      'Columns: 0',
+      '0 0 0 Untitled',
+      '255 0 0 Untitled',
+      '0 0 255 Untitled',
+      '0 128 0 Untitled'
+    ].join('\n');
+
+    const importedGplContent = [
+      'GIMP Palette',
+      'Name: Imported Palette',
+      'Columns: 0',
+      '255 0 0 Untitled',
+      '0 255 0 Untitled',
+      '0 0 255 Untitled'
+    ].join('\n');
+
+    it('exports current palette as GPL file', () => {
+      cy.startApp(defaultDbSeed);
+      cy.exec('rm -f cypress/downloads/default.gpl', { failOnNonZeroExit: false });
+
+      cy.get('[data-testid="export-palette-button"]').click();
+
+      cy.readFile('cypress/downloads/default.gpl', { timeout: 10000 }).then((content: string) => {
+        expect(expectedExportContent).to.equal(content);
+      });
+    });
+
+    it('imports valid GPL file, appends palette at end, and persists after reload', () => {
+      cy.startApp(defaultDbSeed);
+
+      cy.get('[data-testid="import-palette-input"]').selectFile({
+        contents: Cypress.Buffer.from(importedGplContent),
+        fileName: 'palette.gpl',
+        mimeType: 'text/plain'
+      }, { force: true });
+
+      cy.get('[data-testid="palette-select"]')
+        .should('contain.text', 'Imported Palette', 'imported palette is selected');
+      cy.get('[data-testid="palette-color-rgba(255,0,0,1)"]').should('be.visible', 'red imported');
+      cy.get('[data-testid="palette-color-rgba(0,255,0,1)"]').should('be.visible', 'green imported');
+      cy.get('[data-testid="palette-color-rgba(0,0,255,1)"]').should('be.visible', 'blue imported');
+
+      cy.get('[data-testid="palette-select"]').click();
+      cy.get('.ant-select-item-option-content').first()
+        .should('have.text', 'default', 'original palette is first');
+      cy.get('.ant-select-item-option-content').last()
+        .should('have.text', 'Imported Palette', 'imported palette is last');
+
+      cy.reload();
+      cy.get('[data-testid="canvas-viewport"]', { timeout: 10000 }).should('be.visible');
+      cy.get('[data-testid="palette-select"]')
+        .should('contain.text', 'Imported Palette', 'imported palette persists after reload');
+      cy.get('[data-testid="palette-color-rgba(255,0,0,1)"]')
+        .should('be.visible', 'colors persist after reload');
+    });
+
+    it('shows error alert when importing invalid GPL file and does not change palette', () => {
+      cy.startApp(defaultDbSeed);
+
+      cy.window().then((win) => {
+        cy.stub(win, 'alert').as('alertStub');
+      });
+
+      cy.get('[data-testid="import-palette-input"]').selectFile({
+        contents: Cypress.Buffer.from('not a valid gpl content'),
+        fileName: 'invalid.gpl',
+        mimeType: 'text/plain'
+      }, { force: true });
+
+      cy.get('@alertStub').should('have.been.calledWith', 'invalid file content');
+      cy.get('[data-testid="palette-select"]')
+        .should('contain.text', 'default', 'palette unchanged after failed import');
+    });
+  });
 });
