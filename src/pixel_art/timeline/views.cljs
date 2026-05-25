@@ -274,7 +274,7 @@
                                                       :size :sm
                                                       :on-click (fn [e]
                                                                   (. e stopPropagation)
-                                                                  (let [new-name (js/prompt)]
+                                                                  (let [new-name (js/prompt "New layer name" (:name current-frame))]
                                                                     (when (seq (string/trim new-name))
                                                                       (re-frame/dispatch [::events/rename-layer new-name]))))}]]]
 

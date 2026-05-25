@@ -72,7 +72,7 @@
  (fn [{:keys [viewport-size] :as cofx} [_ initial-app-data]]
    (let [saved-data (into {} (filter (fn [[_ v]] (some? v)) (get cofx saved-settings-local-storage-key)))
          initial-db (if initial-app-data
-                      (db/get-db (merge saved-data initial-app-data) viewport-size)
+                      (db/get-db (merge initial-app-data saved-data) viewport-size)
                       (db/get-db (merge (assoc project-settings/default-palettes-and-current-colors
                                                :sprite (project-settings/create-empty-sprite "Untitled" {:width 4 :height 4})
                                                :new-project-modal-opened false)

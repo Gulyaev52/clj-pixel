@@ -84,7 +84,8 @@
         current-palette-idx (coll/find-first-idx :current palettes)
         current-palette (coll/find-first :current palettes)
         primary-color @(re-frame/subscribe [::common-subs/primary-color])
-        secondary-color @(re-frame/subscribe [::common-subs/secondary-color])]
+        secondary-color @(re-frame/subscribe [::common-subs/secondary-color])
+        can-delete-palette? (> (count palettes) 1)]
     [:div {:style {:display "flex"
                    :flex-direction "column"
                    :height "300px"}}
@@ -92,6 +93,7 @@
               :options (map-indexed (fn [idx p] {:value idx :label (:name p)}) palettes)
               :block true
               :size :sm
+              :data-testid "palette-select"
               :on-change (fn [idx]
                            (re-frame/dispatch [::events/select-palette idx]))}]
 
@@ -110,21 +112,21 @@
                      :title "Add palette"
                      :size :sm
                      :on-click (fn []
-                                 (when-let [name (js/prompt)]
+                                 (when-let [name (js/prompt "palette name")]
                                    (re-frame/dispatch [::events/create-palette name])))}]
        [icon-button {:src :remove
                      :title "Remove palette"
+                     :data-testid "remove-palette-button"
                      :size :sm
-                     :disabled (not (events/deletable-palette? palettes))
+                     :disabled (not can-delete-palette?)
                      :on-click (fn []
                                  (when (js/confirm "Are you sure?")
                                    (re-frame/dispatch [::events/remove-selected-palette])))}]
        [icon-button {:src :edit
                      :title "Rename palette"
                      :size :sm
-                     :disabled (not (events/deletable-palette? palettes))
                      :on-click (fn []
-                                 (when-let [name (js/prompt)]
+                                 (when-let [name (js/prompt "New palette name" (:name current-palette))]
                                    (re-frame/dispatch [::events/rename-selected-palette name])))}]
        [icon-button {:src :adjust
                      :title "Add colors from current frame"
