@@ -124,6 +124,7 @@
                                    (re-frame/dispatch [::events/remove-selected-palette])))}]
        [icon-button {:src :edit
                      :title "Rename palette"
+                     :data-testid "rename-palette-button"
                      :size :sm
                      :on-click (fn []
                                  (when-let [name (js/prompt "New palette name" (:name current-palette))]

@@ -124,6 +124,24 @@ describe('Palette', () => {
       .should('be.visible', 'added color preserved in My Palette after reload');
   });
 
+  it('renames current palette and persists after reload', () => {
+    cy.startApp(defaultDbSeed);
+
+    cy.stubPrompt('Renamed Palette');
+    cy.get('[data-testid="rename-palette-button"]').click();
+
+    cy.get('[data-testid="palette-select"]')
+      .should('contain.text', 'Renamed Palette', 'palette name updated in select');
+    cy.get('[data-testid="palette-select"]')
+      .should('not.contain.text', 'default', 'old name is gone');
+
+    cy.reload();
+    cy.get('[data-testid="canvas-viewport"]', { timeout: 10000 }).should('be.visible');
+
+    cy.get('[data-testid="palette-select"]')
+      .should('contain.text', 'Renamed Palette', 'new name persists after reload');
+  });
+
   it('"Add colors from current frame" adds only new non-transparent colors from current frame to palette', () => {
     cy.startApp(addFromFrameSeed);
 
