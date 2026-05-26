@@ -14,7 +14,7 @@ const twoFramesTwoLayersSeed: DBSeed = {
       [[[RED, T], [T, T]], [[T, T], [T, T]]],   // frame-0: layer-0 red(0,0) | layer-1 empty
       [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]], // frame-1: layer-0 green(1,1) | layer-1 empty
     ],
-    [{ duration: 100 }, { duration: 100 }],
+    [{ duration: 150 }, { duration: 100 }],
     [
       { 'visible?': true, 'automatic-linking?': false, name: 'Layer 1' },
       { 'visible?': true, 'automatic-linking?': false, name: 'Layer 2' }
@@ -35,6 +35,7 @@ describe('Timeline', () => {
       ], { activeFrameIdx: 0, activeLayerIdx: 0 });
 
       cy.assertVisibleCanvasPixels([[RED, T], [T, T]], 'canvas shows frame-0 layer-0: red pixel');
+      cy.get('[data-testid="input-frame-duration"]').should('have.value', '150', 'frame-0 duration is 150');
 
       cy.get('[data-testid="cel-1-1"]').click();
 
@@ -44,10 +45,27 @@ describe('Timeline', () => {
       ], { activeFrameIdx: 1, activeLayerIdx: 1 });
 
       cy.assertVisibleCanvasPixels([[GREEN, T], [T, GREEN]], 'canvas shows frame-1 layer-0: green pixel');
+      cy.get('[data-testid="input-frame-duration"]').should('have.value', '100', 'frame-1 duration is 100');
     });
   });
 
   describe('Frames', () => {
+    it('remove frame → previous frame becomes active and canvas updates', () => {
+      cy.startApp(twoFramesTwoLayersSeed);
+
+      // Move to frame-1
+      cy.get('[data-testid="cel-1-0"]').click();
+      cy.get('[data-testid="frame-1"][data-current="true"]').should('exist', 'frame-1 is active before remove');
+      cy.get('[title="remove frame"]').click();
+
+      // Only frame-0 remains, previous frame is selected
+      cy.assertTimelineCels([
+        [[[RED, T], [T, T]], [[T, T], [T, T]]],
+      ], { activeFrameIdx: 0, activeLayerIdx: 0 });
+      cy.assertVisibleCanvasPixels([[RED, T], [T, T]], 'canvas shows frame-0: red pixel at (0,0)');
+      cy.get('[title="remove frame"]').should('be.disabled', 'remove frame button is disabled when only one frame exists');
+    });
+
     it('add empty frame → new frame is active, is empty, draw works', () => {
       cy.startApp(twoFramesTwoLayersSeed);
 

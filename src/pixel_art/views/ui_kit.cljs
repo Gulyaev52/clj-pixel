@@ -175,9 +175,9 @@
                                     (let [new-value (let [res (. js/Number (parseInt curr-value))]
                                                       (if (js/isNaN res)
                                                         nil
-                                                        (-> res
-                                                            (#(clojure.core/max % min))
-                                                            (#(clojure.core/min % max)))))]
+                                                        (cond-> res
+                                                          (some? min) (clojure.core/max min)
+                                                          (some? max) (clojure.core/min max))))]
                                       (set-curr-value new-value)
                                       (on-blur new-value)))}]))
 

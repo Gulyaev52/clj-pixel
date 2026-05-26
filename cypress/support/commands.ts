@@ -386,6 +386,7 @@ Cypress.Commands.add('assertTimelineCels', (
   const frameCount = cels.length;
   const layerCount = cels[0].length;
 
+  // удалить ^ так как матчить может и frame-duration-input
   cy.get('[data-testid^="frame-"]').should('have.length', frameCount, `frame count is ${frameCount}`);
   cy.get('[data-testid^="layer-"]').should('have.length', layerCount, `layer count is ${layerCount}`);
 

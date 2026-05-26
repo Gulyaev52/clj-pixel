@@ -212,7 +212,7 @@
     (into [:div {:style {:display "flex" :align-items "center"}}]
           children)]])
 
-(defn- timeline-panel-toolbar [{:keys [disabled-actions all-frames-duration current-frame]}]
+(defn- timeline-panel-toolbar [{:keys [disabled-actions current-frame]}]
   (let [onion-skin-enabled @(re-frame/subscribe [::onion-skin.subs/enabled])]
     [:div {:style {:display "flex" :justify-content "space-between"}}
      [space
@@ -312,22 +312,15 @@
       [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
        [typography "Duration (ms)"]
        [input-number {:value (:duration current-frame)
+                      :testid "input-frame-duration"
                       :on-blur (fn [duration]
-                                 (re-frame/dispatch [::events/set-frame-duration (:idx current-frame) duration]))}]]
-
-      [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
-       [typography "All frames duration (ms)"]
-       [input-number {:value all-frames-duration
-                      :on-blur (fn [duration]
-                                 (re-frame/dispatch [::events/set-frame-duration-for-all duration]))}]]]]))
+                                 (re-frame/dispatch [::events/set-frame-duration (:idx current-frame) duration]))}]]]]))
 
 (def dndScrollingVerticalStrength (react-dnd-scrolling/createVerticalStrength 50))
 
 (def-func-component timeline-panel []
-  (let [{:keys [cels layers frames disabled-actions some-layer-visible some-layer-automatic-linking]} @(re-frame/subscribe [::subs/timeline])
-        current-frame (coll/find-first :current frames) ;; todo: to subs?
-        all-frames-duration (when (apply = (map :duration frames))
-                              (-> frames first :duration))
+  (let [{:keys [cels layers frames disabled-actions some-layer-visible all-frames-duration some-layer-automatic-linking]} @(re-frame/subscribe [::subs/timeline])
+        current-frame (coll/find-first :current frames) ;; todo: to subs? 
         cels-by-layers (-> cels
                            (#(group-by (fn [c] (-> c :pos :layer-idx)) %))
                            (update-vals (fn [cels] (sort-by #(-> % :pos :frame-idx) cels))))

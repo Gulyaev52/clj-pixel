@@ -3,13 +3,14 @@
    [pixel-art.model.sprite :as sprite]
    [pixel-art.onion-skin.subs :as onion-skin.subs]
    [pixel-art.subs :as subs]
-   [re-frame.core :as re-frame]))
+   [re-frame.core :as re-frame]
+   [sc.api :as api]))
 
 (re-frame/reg-sub
  ::timeline
  :<- [::subs/sprite]
  :<- [::onion-skin.subs/frames-idx]
- (fn [[sprite onion-skin-frames-idx]]
+ (fn [[sprite onion-skin-frames-idx]] 
    (let [{:keys [layers frames]} sprite
          selected-cels-pos (sprite/get-selected-cels-pos sprite)
          current-cel-pos (sprite/get-current-cel-pos sprite)]
