@@ -110,7 +110,7 @@ declare global {
       stubPrompt(returnValue: string | null): Chainable<void>;
       stubConfirm(returnValue: boolean): Chainable<void>;
       getCelPreview(frameIdx: number, layerIdx: number, expectedPixels: string[][], assertMessage?: string): Chainable<void>;
-      assertTimelineCels(cels: string[][][][], active: { activeFrameIdx: number; activeLayerIdx: number }): Chainable<void>;
+      assertTimelineCelsAndVisiblePixels(cels: string[][][][], active: { activeFrameIdx: number; activeLayerIdx: number }): Chainable<void>;
       assertTimelineLabels(frameCount: number, layerNames: string[]): Chainable<void>;
     }
   }
@@ -379,7 +379,7 @@ Cypress.Commands.add('getCelPreview', (frameIdx: number, layerIdx: number, expec
   Cypress.log({ name: 'getCelPreview', message: assertMessage || `cel-${frameIdx}-${layerIdx}` });
 });
 
-Cypress.Commands.add('assertTimelineCels', (
+Cypress.Commands.add('assertTimelineCelsAndVisiblePixels', (
   cels: string[][][][],
   active: { activeFrameIdx: number; activeLayerIdx: number }
 ) => {

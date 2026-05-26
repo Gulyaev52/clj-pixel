@@ -28,7 +28,7 @@ describe('Timeline', () => {
       cy.startApp(twoFramesTwoLayersSeed);
 
       cy.assertTimelineLabels(2, ['Layer 1', 'Layer 2']);
-      cy.assertTimelineCels([
+      cy.assertTimelineCelsAndVisiblePixels([
         [[[RED, T], [T, T]], [[T, T], [T, T]]],
         [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]],
       ], { activeFrameIdx: 0, activeLayerIdx: 0 });
@@ -36,7 +36,7 @@ describe('Timeline', () => {
       cy.get('[data-testid="input-frame-duration"]').should('have.value', '150', 'frame-0 duration is 150');
       cy.get('[data-testid="cel-1-1"]').click();
 
-      cy.assertTimelineCels([
+      cy.assertTimelineCelsAndVisiblePixels([
         [[[RED, T], [T, T]], [[T, T], [T, T]]],
         [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]],
       ], { activeFrameIdx: 1, activeLayerIdx: 1 });
@@ -54,11 +54,24 @@ describe('Timeline', () => {
       cy.get('[title="remove frame"]').click();
 
       // Only frame-0 remains, previous frame is selected
-      cy.assertTimelineCels([
+      cy.assertTimelineCelsAndVisiblePixels([
         [[[RED, T], [T, T]], [[T, T], [T, T]]],
       ], { activeFrameIdx: 0, activeLayerIdx: 0 });
       cy.assertTimelineLabels(1, ['Layer 1', 'Layer 2']);
       cy.get('[title="remove frame"]').should('be.disabled', 'remove frame button is disabled when only one frame exists');
+    });
+
+    it('duplicate frame → copy inserted after current, new frame becomes active', () => {
+      cy.startApp(twoFramesTwoLayersSeed);
+
+      cy.get('[title="duplicate frame"]').click();
+
+      cy.assertTimelineLabels(3, ['Layer 1', 'Layer 2']);
+      cy.assertTimelineCelsAndVisiblePixels([
+        [[[RED, T], [T, T]], [[T, T], [T, T]]],           // frame-0: unchanged
+        [[[RED, T], [T, T]], [[T, T], [T, T]]],           // frame-1: duplicate of frame-0 (active)
+        [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]],     // frame-2: was frame-1
+      ], { activeFrameIdx: 1, activeLayerIdx: 0 });
     });
 
     it('add empty frame → new frame is active, is empty, draw works', () => {
@@ -69,7 +82,7 @@ describe('Timeline', () => {
       cy.get('[title="add empty frame"]').click();
 
       cy.assertTimelineLabels(3, ['Layer 1', 'Layer 2']);
-      cy.assertTimelineCels([
+      cy.assertTimelineCelsAndVisiblePixels([
         [[[RED, T], [T, T]], [[T, T], [T, T]]],   // frame-0: layer-0 red | layer-1 empty
         [[[T, T], [T, T]], [[T, T], [T, T]]],     // frame-1 (new, active): empty | empty
         [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]], // frame-2 (was frame-1): layer-0 green | layer-1 empty
@@ -77,7 +90,7 @@ describe('Timeline', () => {
 
       cy.selectTool('pen');
       cy.drawAtCanvasPixel(0, 0);
-      cy.assertTimelineCels([
+      cy.assertTimelineCelsAndVisiblePixels([
         [[[RED, T], [T, T]], [[T, T], [T, T]]],   // frame-0: layer-0 red | layer-1 empty
         [[[BLACK, T], [T, T]], [[T, T], [T, T]]],     // frame-1 (new, active): empty | empty
         [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]], // frame-2 (was frame-1): layer-0 green | layer-1 empty
