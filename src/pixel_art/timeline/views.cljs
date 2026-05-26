@@ -289,11 +289,13 @@
 
       [timeline-panel-section "Cels" [[icon-button {:src :link
                                                     :title "link cels"
+                                                    :data-testid "btn-link-cels"
                                                     :disabled (:link-cels disabled-actions)
                                                     :size :sm
                                                     :on-click (fn [] (re-frame/dispatch [::events/link-selected-cels]))}]
                                       [icon-button {:src :link-off
                                                     :title "unlink cels"
+                                                    :data-testid "btn-unlink-cels"
                                                     :disabled (:unlink-cel disabled-actions)
                                                     :size :sm
                                                     :on-click (fn [] (re-frame/dispatch [::events/unlink-selected-cels]))}]]]

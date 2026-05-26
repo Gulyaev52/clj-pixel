@@ -238,4 +238,114 @@ describe('Timeline', () => {
       ], { activeFrameIdx: 0, activeLayerIdx: 1 }, ['Layer 1', 'Layer 1', 'Layer 2']);
     });
   });
+
+  describe('Cels', () => {
+    it('link cels → pixels copied on link, draw propagates within group only', () => {
+      cy.startApp(twoFramesTwoLayersSeed);
+
+      cy.get('[data-testid="btn-link-cels"]').should('be.disabled', 'disabled with single selection');
+
+      // Group A on layer-0: click frame-1 first (receives pixels), ctrl+click frame-0 last (main)
+      cy.get('[data-testid="cel-1-0"]').click();
+      cy.get('[data-testid="cel-0-0"]').click({ ctrlKey: true });
+      cy.get('[data-testid="btn-link-cels"]').should('not.be.disabled', 'enabled with 2 selected on same layer');
+      cy.get('[data-testid="btn-link-cels"]').click();
+      cy.get('[data-testid="cel-0-0"]').click();  // clear multi-selection before assert
+      
+      cy.assertTimelineCelsAndVisiblePixels([
+        [[[RED, T], [T, T]], [[T, T], [T, RED]]],
+        [[[RED, T], [T, T]], [[GREEN, T], [T, T]]],  // frame-1-layer-0 copied RED from frame-0
+      ], { activeFrameIdx: 0, activeLayerIdx: 0 }, ['Layer 1', 'Layer 2']);
+      
+      // Group B on layer-1: click frame-1 first (receives pixels), ctrl+click frame-0 last (main)
+      cy.get('[data-testid="cel-1-1"]').click();
+      cy.get('[data-testid="cel-0-1"]').click({ ctrlKey: true });
+      cy.get('[data-testid="btn-link-cels"]').click();
+      cy.get('[data-testid="cel-0-1"]').click();  // clear multi-selection before assert
+
+      cy.assertTimelineCelsAndVisiblePixels([
+        [[[RED, T], [T, T]], [[T, T], [T, RED]]],
+        [[[RED, T], [T, T]], [[T, T], [T, RED]]],  // frame-1-layer-1 copied RED(1,1) from frame-0
+      ], { activeFrameIdx: 0, activeLayerIdx: 1 }, ['Layer 1', 'Layer 2']);
+
+      // Draw BLACK at (1,1) on frame-0-layer-0 (group A) → propagates to frame-1-layer-0 only
+      cy.get('[data-testid="cel-0-0"]').click();
+      cy.selectTool('pen');
+      cy.drawAtCanvasPixel(1, 1);
+      cy.get('[data-testid="cel-0-0"]').click();  // reset: draw propagation copies selected state to linked cels
+
+      cy.assertTimelineCelsAndVisiblePixels([
+        [[[RED, T], [T, BLACK]], [[T, T], [T, RED]]],  // frame-0: layer-0 updated | layer-1 unchanged
+        [[[RED, T], [T, BLACK]], [[T, T], [T, RED]]],  // frame-1: layer-0 linked   | layer-1 unchanged
+      ], { activeFrameIdx: 0, activeLayerIdx: 0 }, ['Layer 1', 'Layer 2']);
+    });
+
+    it('unlink single cel → disabled when not linked, only active cel unlinked', () => {
+      cy.startApp(twoFramesTwoLayersSeed);
+
+      cy.get('[data-testid="btn-unlink-cels"]').should('be.disabled', 'disabled when cel not in a group');
+
+      // Link cel-0-0 + cel-1-0 as group A
+      cy.get('[data-testid="cel-1-0"]').click();
+      cy.get('[data-testid="cel-0-0"]').click({ ctrlKey: true });
+      cy.get('[data-testid="btn-link-cels"]').click();
+      cy.get('[data-testid="cel-0-0"]').click();  // reset
+
+      cy.get('[data-testid="btn-unlink-cels"]').should('not.be.disabled', 'enabled when cel is in a group');
+
+      // Unlink only cel-0-0 (single selection)
+      cy.get('[data-testid="btn-unlink-cels"]').click();
+
+      cy.get('[data-testid="btn-unlink-cels"]').should('be.disabled', 'disabled after cel-0-0 unlinked');
+
+      // cel-1-0 still has group-number → enabled when it is active
+      cy.get('[data-testid="cel-1-0"]').click();
+      cy.get('[data-testid="btn-unlink-cels"]').should('not.be.disabled', 'cel-1-0 still has group-number');
+
+      // Draw on cel-0-0 → no longer propagates to cel-1-0
+      cy.get('[data-testid="cel-0-0"]').click();
+      cy.selectTool('pen');
+      cy.drawAtCanvasPixel(0, 0);
+      cy.get('[data-testid="cel-0-0"]').click();  // reset selected state
+
+      cy.assertTimelineCelsAndVisiblePixels([
+        [[[BLACK, T], [T, T]], [[T, T], [T, RED]]],  // frame-0: layer-0 updated, layer-1 unchanged
+        [[[RED, T], [T, T]], [[GREEN, T], [T, T]]],  // frame-1: layer-0 NOT propagated
+      ], { activeFrameIdx: 0, activeLayerIdx: 0 }, ['Layer 1', 'Layer 2']);
+    });
+
+    it('unlink multiple selected cels → all selected cels unlinked', () => {
+      cy.startApp(twoFramesTwoLayersSeed);
+
+      // Link cel-0-0 + cel-1-0 as group A
+      cy.get('[data-testid="cel-1-0"]').click();
+      cy.get('[data-testid="cel-0-0"]').click({ ctrlKey: true });
+      cy.get('[data-testid="btn-link-cels"]').click();
+      cy.get('[data-testid="cel-0-0"]').click();  // reset
+
+      // Select both linked cels and unlink
+      cy.get('[data-testid="cel-1-0"]').click();
+      cy.get('[data-testid="cel-0-0"]').click({ ctrlKey: true });
+      cy.get('[data-testid="btn-unlink-cels"]').should('not.be.disabled', 'enabled with linked cels selected');
+      cy.get('[data-testid="btn-unlink-cels"]').click();
+      cy.get('[data-testid="cel-0-0"]').click();  // reset
+
+      cy.get('[data-testid="btn-unlink-cels"]').should('be.disabled', 'cel-0-0 unlinked');
+
+      // cel-1-0 also unlinked
+      cy.get('[data-testid="cel-1-0"]').click();
+      cy.get('[data-testid="btn-unlink-cels"]').should('be.disabled', 'cel-1-0 also unlinked');
+
+      // Draw on cel-0-0 → no propagation
+      cy.get('[data-testid="cel-0-0"]').click();
+      cy.selectTool('pen');
+      cy.drawAtCanvasPixel(0, 0);
+      cy.get('[data-testid="cel-0-0"]').click();  // reset selected state
+
+      cy.assertTimelineCelsAndVisiblePixels([
+        [[[BLACK, T], [T, T]], [[T, T], [T, RED]]],  // frame-0: layer-0 updated
+        [[[RED, T], [T, T]], [[GREEN, T], [T, T]]],  // frame-1: NOT propagated
+      ], { activeFrameIdx: 0, activeLayerIdx: 0 }, ['Layer 1', 'Layer 2']);
+    });
+  });
 });
