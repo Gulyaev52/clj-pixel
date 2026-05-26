@@ -110,7 +110,7 @@ declare global {
       stubPrompt(returnValue: string | null): Chainable<void>;
       stubConfirm(returnValue: boolean): Chainable<void>;
       getCelPreview(frameIdx: number, layerIdx: number, expectedPixels: string[][], assertMessage?: string): Chainable<void>;
-      assertTimelineCelsAndVisiblePixels(cels: string[][][][], active: { activeFrameIdx: number; activeLayerIdx: number }): Chainable<void>;
+      assertTimelineCelsAndVisiblePixels(cels: string[][][][], active: { activeFrameIdx: number; activeLayerIdx: number }, layerNames: string[]): Chainable<void>;
       assertTimelineLabels(frameCount: number, layerNames: string[]): Chainable<void>;
     }
   }
@@ -381,14 +381,11 @@ Cypress.Commands.add('getCelPreview', (frameIdx: number, layerIdx: number, expec
 
 Cypress.Commands.add('assertTimelineCelsAndVisiblePixels', (
   cels: string[][][][],
-  active: { activeFrameIdx: number; activeLayerIdx: number }
+  active: { activeFrameIdx: number; activeLayerIdx: number },
+  layerNames: string[]
 ) => {
   const frameCount = cels.length;
-  const layerCount = cels[0].length;
-
-  // удалить ^ так как матчить может и frame-duration-input
-  cy.get('[data-testid^="frame-"]').should('have.length', frameCount, `frame count is ${frameCount}`);
-  cy.get('[data-testid^="layer-"]').should('have.length', layerCount, `layer count is ${layerCount}`);
+  cy.assertTimelineLabels(frameCount, layerNames);
 
   cels.forEach((frameCels, frameIdx) => {
     const isActiveFrame = frameIdx === active.activeFrameIdx;

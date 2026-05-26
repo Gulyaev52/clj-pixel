@@ -27,11 +27,10 @@ describe('Timeline', () => {
     it('frame numbers, layer names, cel previews, and canvas match selected cel', () => {
       cy.startApp(twoFramesTwoLayersSeed);
 
-      cy.assertTimelineLabels(2, ['Layer 1', 'Layer 2']);
       cy.assertTimelineCelsAndVisiblePixels([
         [[[RED, T], [T, T]], [[T, T], [T, RED]]],
         [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]],
-      ], { activeFrameIdx: 0, activeLayerIdx: 0 });
+      ], { activeFrameIdx: 0, activeLayerIdx: 0 }, ['Layer 1', 'Layer 2']);
 
       cy.get('[data-testid="input-frame-duration"]').should('have.value', '150', 'frame-0 duration is 150');
       cy.get('[data-testid="cel-1-1"]').click();
@@ -39,7 +38,7 @@ describe('Timeline', () => {
       cy.assertTimelineCelsAndVisiblePixels([
         [[[RED, T], [T, T]], [[T, T], [T, RED]]],
         [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]],
-      ], { activeFrameIdx: 1, activeLayerIdx: 1 });
+      ], { activeFrameIdx: 1, activeLayerIdx: 1 }, ['Layer 1', 'Layer 2']);
       cy.get('[data-testid="input-frame-duration"]').should('have.value', '100', 'frame-1 duration is 100');
     });
   });
@@ -56,8 +55,7 @@ describe('Timeline', () => {
       // Only frame-0 remains, previous frame is selected
       cy.assertTimelineCelsAndVisiblePixels([
         [[[RED, T], [T, T]], [[T, T], [T, RED]]],
-      ], { activeFrameIdx: 0, activeLayerIdx: 0 });
-      cy.assertTimelineLabels(1, ['Layer 1', 'Layer 2']);
+      ], { activeFrameIdx: 0, activeLayerIdx: 0 }, ['Layer 1', 'Layer 2']);
       cy.get('[title="remove frame"]').should('be.disabled', 'remove frame button is disabled when only one frame exists');
     });
 
@@ -66,35 +64,63 @@ describe('Timeline', () => {
 
       cy.get('[title="duplicate frame"]').click();
 
-      cy.assertTimelineLabels(3, ['Layer 1', 'Layer 2']);
       cy.assertTimelineCelsAndVisiblePixels([
         [[[RED, T], [T, T]], [[T, T], [T, RED]]],           // frame-0: unchanged
         [[[RED, T], [T, T]], [[T, T], [T, RED]]],           // frame-1: duplicate of frame-0 (active)
         [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]],     // frame-2: was frame-1
-      ], { activeFrameIdx: 1, activeLayerIdx: 0 });
+      ], { activeFrameIdx: 1, activeLayerIdx: 0 }, ['Layer 1', 'Layer 2']);
+    });
+
+    it('move frame right → frame moves to next position, button disabled on last frame', () => {
+      cy.startApp(twoFramesTwoLayersSeed);
+
+      cy.get('[data-testid="cel-0-1"]').click();
+      cy.get('[title="move frame right"]').should('not.be.disabled', 'button enabled when not on last frame');
+
+      cy.get('[title="move frame right"]').click();
+
+      cy.assertTimelineCelsAndVisiblePixels([
+        [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]],   // frame-0: was frame-1
+        [[[RED, T], [T, T]], [[T, T], [T, RED]]],       // frame-1: was frame-0 (active)
+      ], { activeFrameIdx: 1, activeLayerIdx: 1 }, ['Layer 1', 'Layer 2']);
+
+      cy.get('[title="move frame right"]').should('be.disabled', 'button disabled on last frame');
+    });
+
+    it('move frame left → frame moves to previous position, button disabled on first frame', () => {
+      cy.startApp(twoFramesTwoLayersSeed);
+
+      cy.get('[data-testid="cel-1-1"]').click();
+      cy.get('[title="move frame left"]').should('not.be.disabled', 'button enabled when not on first frame');
+
+      cy.get('[title="move frame left"]').click();
+
+      cy.assertTimelineCelsAndVisiblePixels([
+        [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]],   // frame-0: was frame-1 (active)
+        [[[RED, T], [T, T]], [[T, T], [T, RED]]],       // frame-1: was frame-0
+      ], { activeFrameIdx: 0, activeLayerIdx: 1 }, ['Layer 1', 'Layer 2']);
+
+      cy.get('[title="move frame left"]').should('be.disabled', 'button disabled on first frame');
     });
 
     it('add empty frame → new frame is active, is empty, draw works', () => {
       cy.startApp(twoFramesTwoLayersSeed);
 
-      cy.get('[data-testid^="frame-"]').should('have.length', 2);
-
       cy.get('[title="add empty frame"]').click();
 
-      cy.assertTimelineLabels(3, ['Layer 1', 'Layer 2']);
       cy.assertTimelineCelsAndVisiblePixels([
-        [[[RED, T], [T, T]], [[T, T], [T, RED]]],   // frame-0: layer-0 red | layer-1 empty
-        [[[T, T], [T, T]], [[T, T], [T, T]]],     // frame-1 (new, active): empty | empty
+        [[[RED, T], [T, T]], [[T, T], [T, RED]]],   // frame-0: layer-0 red | layer-1 red(1,1)
+        [[[T, T], [T, T]], [[T, T], [T, T]]],       // frame-1 (new, active): empty | empty
         [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]], // frame-2 (was frame-1): layer-0 green | layer-1 empty
-      ], { activeFrameIdx: 1, activeLayerIdx: 0 });
+      ], { activeFrameIdx: 1, activeLayerIdx: 0 }, ['Layer 1', 'Layer 2']);
 
       cy.selectTool('pen');
       cy.drawAtCanvasPixel(0, 0);
       cy.assertTimelineCelsAndVisiblePixels([
-        [[[RED, T], [T, T]], [[T, T], [T, RED]]],   // frame-0: layer-0 red | layer-1 empty
-        [[[BLACK, T], [T, T]], [[T, T], [T, T]]],     // frame-1 (new, active): empty | empty
-        [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]], // frame-2 (was frame-1): layer-0 green | layer-1 empty
-      ], { activeFrameIdx: 1, activeLayerIdx: 0 });
+        [[[RED, T], [T, T]], [[T, T], [T, RED]]],   // frame-0: unchanged
+        [[[BLACK, T], [T, T]], [[T, T], [T, T]]],   // frame-1: black pixel drawn
+        [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]], // frame-2: unchanged
+      ], { activeFrameIdx: 1, activeLayerIdx: 0 }, ['Layer 1', 'Layer 2']);
     });
   });
 });
