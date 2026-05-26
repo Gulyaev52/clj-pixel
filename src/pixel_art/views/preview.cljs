@@ -45,14 +45,17 @@
 
 (defn previews-grid-items [previews]
   (if (= (count previews) 1)
-    [preview-image (first previews)
-     {:height "100%"
-      :min-height "70px"}]
+    [:div {:data-testid "preview-frame-0"
+           :style {:height "100%"}}
+     [preview-image (first previews)
+      {:height "100%"
+       :min-height "70px"}]]
 
     [:<>
      (for [[idx data-url] (map-indexed vector previews)]
        ^{:key idx}
-       [:div {:style {:display :flex
+       [:div {:data-testid (str "preview-frame-" idx)
+              :style {:display :flex
                       :flex-direction :column
                       :height "100%"
                       :align-items "center"

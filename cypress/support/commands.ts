@@ -110,6 +110,7 @@ declare global {
       stubPrompt(returnValue: string | null): Chainable<void>;
       stubConfirm(returnValue: boolean): Chainable<void>;
       getCelPreview(frameIdx: number, layerIdx: number, expectedPixels: string[][], assertMessage?: string): Chainable<void>;
+      assertResizePreviewPixels(frameIdx: number, pixels: string[][], assertMessage?: string): Chainable<void>;
       assertTimelineCelsAndVisiblePixels(cels: string[][][][], active: { activeFrameIdx: number; activeLayerIdx: number }, layerNames: string[]): Chainable<void>;
       assertTimelineLabels(frameCount: number, layerNames: string[]): Chainable<void>;
       assertOnionSkinPixels(pixels: string[][], assertMessage?: string): Chainable<void>;
@@ -398,6 +399,22 @@ Cypress.Commands.add('getCelPreview', (frameIdx: number, layerIdx: number, expec
       expect(actualObj, assertMessage).to.deep.equal(expectedObj);
     });
   Cypress.log({ name: 'getCelPreview', message: assertMessage || `cel-${frameIdx}-${layerIdx}` });
+});
+
+Cypress.Commands.add('assertResizePreviewPixels', (frameIdx: number, expectedPixels: string[][], assertMessage?: string) => {
+  cy.get(`[data-testid="preview-frame-${frameIdx}"]`, { log: false })
+    .find('img', { log: false })
+    .should(($img) => {
+      expect(($img[0] as HTMLImageElement).complete).to.be.true;
+      expect(($img[0] as HTMLImageElement).naturalWidth).to.be.greaterThan(0);
+    })
+    .should(($img) => {
+      const actualPixels = readImgPixels($img[0] as HTMLImageElement);
+      const actualObj = Object.fromEntries(actualPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
+      const expectedObj = Object.fromEntries(expectedPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
+      expect(actualObj, assertMessage).to.deep.equal(expectedObj);
+    });
+  Cypress.log({ name: 'assertResizePreviewPixels', message: assertMessage || `frame-${frameIdx}` });
 });
 
 Cypress.Commands.add('assertTimelineCelsAndVisiblePixels', (

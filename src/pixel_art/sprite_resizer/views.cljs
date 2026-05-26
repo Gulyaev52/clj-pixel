@@ -18,7 +18,8 @@
      (for [y [:top :center :bottom]
            x [:left :center :right]]
        ^{:key (str y "-y-" x "-x")}
-       [:div {:title (str (name y) "/" (name x))
+       [:div {:data-testid (str "anchor-" (name y) "-" (name x))
+              :title (str (name y) "/" (name x))
               :style {:border-radius "4px"
                       :width "24px"
                       :height "24px"
@@ -35,6 +36,7 @@
           previews @(re-frame/subscribe [::subs/previews])]
       [modal {:title "Resize canvas"
               :size :sm
+              :ok-data-testid "btn-resize"
               :on-cancel (fn []
                            (re-frame/dispatch [::events/set-opened false]))
               :ok-text "Resize"
@@ -63,6 +65,7 @@
                                                                            (assoc (:target-size settings) :height value)]))}]}]
         [form-item {:label "Resize contents"
                     :control [checkbox {:value (:resize-content settings)
+                                        :data-testid "checkbox-resize-content"
                                         :on-change (fn [value]
                                                      (re-frame/dispatch [::events/set-settings-option :resize-content value]))}]}]
         [form-item {:label "Anchor"
