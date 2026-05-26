@@ -1,5 +1,5 @@
 import { DBSeed } from "./data";
-import { rgba, rgbaToInt } from "./utils";
+import { mergeFrameLayers, rgba, rgbaToInt } from "./utils";
 
 // pixels[x][y] = [r, g, b, a]
 type Rgba = [number, number, number, number];
@@ -409,6 +409,8 @@ Cypress.Commands.add('assertTimelineCels', (
     cy.get(`[data-testid="layer-${layerIdx}"][data-current="${isActiveLayer}"]`)
       .should('exist', `layer-${layerIdx} data-current=${isActiveLayer}`);
   });
+
+  cy.assertVisibleCanvasPixels(mergeFrameLayers(cels[active.activeFrameIdx]), 'canvas shows current cel');
 });
 
 Cypress.Commands.add('assertTimelineLabels', (frameCount: number, layerNames: string[]) => {

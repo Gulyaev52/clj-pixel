@@ -23,3 +23,16 @@ export const intToColor = function(intValue) {
 };
 
 export const rgba = (r: number, g: number, b: number, a: number = 255) => `rgba(${r},${g},${b},${a})`;
+
+// Merges all layers of a frame into a single pixel grid.
+// For each position takes the first non-transparent pixel; transparent pixels are ignored.
+export const mergeFrameLayers = (layers: string[][][]): string[][] => {
+  const T = rgba(0, 0, 0, 0);
+  const height = layers[0].length;
+  const width = layers[0][0].length;
+  return Array.from({ length: height }, (_, y) =>
+    Array.from({ length: width }, (_, x) =>
+      layers.find(layer => layer[y][x] !== T)?.[y][x] ?? T
+    )
+  );
+};
