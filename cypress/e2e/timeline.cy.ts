@@ -11,7 +11,7 @@ const twoFramesTwoLayersSeed: DBSeed = {
   ...defaultDbSeed,
   sprite: getSpriteFromCels(
     [
-      [[[RED, T], [T, T]], [[T, T], [T, T]]],   // frame-0: layer-0 red(0,0) | layer-1 empty
+      [[[RED, T], [T, T]], [[T, T], [T, RED]]],   // frame-0: layer-0 red(0,0) | layer-1 red(1,1)
       [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]], // frame-1: layer-0 green(1,1) | layer-1 empty
     ],
     [{ duration: 150 }, { duration: 100 }],
@@ -29,7 +29,7 @@ describe('Timeline', () => {
 
       cy.assertTimelineLabels(2, ['Layer 1', 'Layer 2']);
       cy.assertTimelineCelsAndVisiblePixels([
-        [[[RED, T], [T, T]], [[T, T], [T, T]]],
+        [[[RED, T], [T, T]], [[T, T], [T, RED]]],
         [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]],
       ], { activeFrameIdx: 0, activeLayerIdx: 0 });
 
@@ -37,7 +37,7 @@ describe('Timeline', () => {
       cy.get('[data-testid="cel-1-1"]').click();
 
       cy.assertTimelineCelsAndVisiblePixels([
-        [[[RED, T], [T, T]], [[T, T], [T, T]]],
+        [[[RED, T], [T, T]], [[T, T], [T, RED]]],
         [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]],
       ], { activeFrameIdx: 1, activeLayerIdx: 1 });
       cy.get('[data-testid="input-frame-duration"]').should('have.value', '100', 'frame-1 duration is 100');
@@ -55,7 +55,7 @@ describe('Timeline', () => {
 
       // Only frame-0 remains, previous frame is selected
       cy.assertTimelineCelsAndVisiblePixels([
-        [[[RED, T], [T, T]], [[T, T], [T, T]]],
+        [[[RED, T], [T, T]], [[T, T], [T, RED]]],
       ], { activeFrameIdx: 0, activeLayerIdx: 0 });
       cy.assertTimelineLabels(1, ['Layer 1', 'Layer 2']);
       cy.get('[title="remove frame"]').should('be.disabled', 'remove frame button is disabled when only one frame exists');
@@ -68,8 +68,8 @@ describe('Timeline', () => {
 
       cy.assertTimelineLabels(3, ['Layer 1', 'Layer 2']);
       cy.assertTimelineCelsAndVisiblePixels([
-        [[[RED, T], [T, T]], [[T, T], [T, T]]],           // frame-0: unchanged
-        [[[RED, T], [T, T]], [[T, T], [T, T]]],           // frame-1: duplicate of frame-0 (active)
+        [[[RED, T], [T, T]], [[T, T], [T, RED]]],           // frame-0: unchanged
+        [[[RED, T], [T, T]], [[T, T], [T, RED]]],           // frame-1: duplicate of frame-0 (active)
         [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]],     // frame-2: was frame-1
       ], { activeFrameIdx: 1, activeLayerIdx: 0 });
     });
@@ -83,7 +83,7 @@ describe('Timeline', () => {
 
       cy.assertTimelineLabels(3, ['Layer 1', 'Layer 2']);
       cy.assertTimelineCelsAndVisiblePixels([
-        [[[RED, T], [T, T]], [[T, T], [T, T]]],   // frame-0: layer-0 red | layer-1 empty
+        [[[RED, T], [T, T]], [[T, T], [T, RED]]],   // frame-0: layer-0 red | layer-1 empty
         [[[T, T], [T, T]], [[T, T], [T, T]]],     // frame-1 (new, active): empty | empty
         [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]], // frame-2 (was frame-1): layer-0 green | layer-1 empty
       ], { activeFrameIdx: 1, activeLayerIdx: 0 });
@@ -91,7 +91,7 @@ describe('Timeline', () => {
       cy.selectTool('pen');
       cy.drawAtCanvasPixel(0, 0);
       cy.assertTimelineCelsAndVisiblePixels([
-        [[[RED, T], [T, T]], [[T, T], [T, T]]],   // frame-0: layer-0 red | layer-1 empty
+        [[[RED, T], [T, T]], [[T, T], [T, RED]]],   // frame-0: layer-0 red | layer-1 empty
         [[[BLACK, T], [T, T]], [[T, T], [T, T]]],     // frame-1 (new, active): empty | empty
         [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]], // frame-2 (was frame-1): layer-0 green | layer-1 empty
       ], { activeFrameIdx: 1, activeLayerIdx: 0 });
