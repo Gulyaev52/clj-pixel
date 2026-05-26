@@ -112,6 +112,7 @@ declare global {
       getCelPreview(frameIdx: number, layerIdx: number, expectedPixels: string[][], assertMessage?: string): Chainable<void>;
       assertTimelineCelsAndVisiblePixels(cels: string[][][][], active: { activeFrameIdx: number; activeLayerIdx: number }, layerNames: string[]): Chainable<void>;
       assertTimelineLabels(frameCount: number, layerNames: string[]): Chainable<void>;
+      assertOnionSkinPixels(pixels: string[][], assertMessage?: string): Chainable<void>;
     }
   }
 }
@@ -287,6 +288,26 @@ Cypress.Commands.add('assertVisibleCanvasPixels', (expectedPixels: string[][], a
     name: 'assertVisibleCanvasPixels',
     message: assertMessage || '',
     consoleProps: () => ({ expectedPixels })
+  });
+});
+
+Cypress.Commands.add('assertOnionSkinPixels', (expectedPixels: string[][], assertMessage?: string) => {
+  cy.get('#onion-skin', { log: false }).should(($canvas) => {
+    const canvas = $canvas[0] as HTMLCanvasElement;
+    const height = expectedPixels.length;
+    const width = expectedPixels[0].length;
+    const data = canvas.getContext('2d')!.getImageData(0, 0, width, height).data;
+    const actualPixels = Array.from({ length: height }, (_, y) =>
+      Array.from({ length: width }, (_, x) => {
+        const i = (y * width + x) * 4;
+        return data[i + 3] > 0
+          ? rgba(data[i], data[i + 1], data[i + 2], data[i + 3])
+          : rgba(0, 0, 0, 0);
+      })
+    );
+    const actualObj = Object.fromEntries(actualPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
+    const expectedObj = Object.fromEntries(expectedPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
+    expect(actualObj, assertMessage).to.deep.equal(expectedObj);
   });
 });
 

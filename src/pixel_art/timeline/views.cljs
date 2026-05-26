@@ -303,6 +303,7 @@
       [timeline-panel-section "Onion skin"
        [[icon-button {:src (if onion-skin-enabled :layers-off :layers)
                       :title (if onion-skin-enabled "disable onion skin" "enable onion skin")
+                      :data-testid "btn-toggle-onion-skin"
                       :size :sm
                       :on-click (fn [] (re-frame/dispatch [::onion-skin.events/set-enabled (not onion-skin-enabled)]))}]
         [popover

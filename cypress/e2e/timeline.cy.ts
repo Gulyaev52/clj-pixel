@@ -5,6 +5,7 @@ import { rgba } from '../support/utils';
 const T = rgba(0, 0, 0, 0);
 const RED = rgba(255, 0, 0);
 const GREEN = rgba(0, 128, 0);
+const BLUE = rgba(0, 0, 255);
 const BLACK = rgba(0, 0, 0);
 
 const twoFramesTwoLayersSeed: DBSeed = {
@@ -15,6 +16,22 @@ const twoFramesTwoLayersSeed: DBSeed = {
       [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]], // frame-1: layer-0 green(1,1) | layer-1 empty
     ],
     [{ duration: 150 }, { duration: 100 }],
+    [
+      { 'visible?': true, 'automatic-linking?': false, name: 'Layer 1' },
+      { 'visible?': true, 'automatic-linking?': false, name: 'Layer 2' }
+    ]
+  )
+};
+
+const threeFramesTwoLayersSeed: DBSeed = {
+  ...defaultDbSeed,
+  sprite: getSpriteFromCels(
+    [
+      [[[RED, T], [T, T]], [[T, T], [T, RED]]],        // frame-0: layer-0 red(0,0)   | layer-1 red(1,1)
+      [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]],     // frame-1: layer-0 green(1,1) | layer-1 green(0,0)
+      [[[T, BLUE], [T, T]], [[T, T], [T, BLUE]]],       // frame-2: layer-0 blue(1,0)  | layer-1 blue(1,1)
+    ],
+    [{ duration: 150 }, { duration: 100 }, { duration: 200 }],
     [
       { 'visible?': true, 'automatic-linking?': false, name: 'Layer 1' },
       { 'visible?': true, 'automatic-linking?': false, name: 'Layer 2' }
@@ -346,6 +363,72 @@ describe('Timeline', () => {
         [[[BLACK, T], [T, T]], [[T, T], [T, RED]]],  // frame-0: layer-0 updated
         [[[RED, T], [T, T]], [[GREEN, T], [T, T]]],  // frame-1: NOT propagated
       ], { activeFrameIdx: 0, activeLayerIdx: 0 }, ['Layer 1', 'Layer 2']);
+    });
+  });
+
+  describe('Onion skin', () => {
+    it('settings: next frames / opacity / position / previous frames', () => {
+      cy.startApp(threeFramesTwoLayersSeed);
+
+      cy.get('[data-testid="btn-toggle-onion-skin"]').click();
+      cy.get('[title="onion skin settings"]').click();
+
+      // Next Frames = 2 → #{1,2} iterates [1,2]; frame-2 drawn last → shows frame-2 layer-0 (blue at top-right)
+      cy.get('[data-testid="input-next-frames"]').clear().type('2').blur();
+      cy.assertOnionSkinPixels([[T, BLUE], [T, T]], 'frame-2 visible when next=2');
+
+      // Next Frames = 1 (restore) → only #{1} → shows frame-1 layer-0 (green at bottom-right)
+      cy.get('[data-testid="input-next-frames"]').clear().type('1').blur();
+      cy.assertOnionSkinPixels([[T, T], [T, GREEN]], 'frame-1 visible when next=1');
+
+      // Opacity: default 0.3, right ×2 → 0.5
+      cy.get('[data-testid="slider-opacity"]').find('.ant-slider-handle').focus().type('{rightarrow}{rightarrow}', { force: true });
+      cy.get('#onion-skin').should('have.css', 'opacity', '0.5');
+
+      // Position = behind → z-index 0
+      cy.get('[data-testid="select-position"]').click();
+      cy.contains('.ant-select-item-option-content', 'behind sprite').click();
+      cy.get('#onion-skin').should('have.css', 'z-index', '0');
+
+      // Navigate to frame-2 (Ant Design Popover auto-closes on outside click)
+      // frame-2 is last frame: no next frames; prev=1 shows frame-1 layer-0
+      cy.get('[data-testid="cel-2-0"]').click();
+      cy.assertOnionSkinPixels([[T, T], [T, GREEN]], 'frame-1 visible when frame-2 active (prev=1)');
+
+      // Reopen settings
+      cy.get('[title="onion skin settings"]').click();
+
+      // Previous Frames = 0 → canvas clears (frame-2 active, no prev or next)
+      cy.get('[data-testid="input-prev-frames"]').clear().type('0').blur();
+      cy.assertOnionSkinPixels([[T, T], [T, T]], 'canvas empty when prev=0');
+
+      // Previous Frames = 1 (restore) → shows frame-1 layer-0
+      cy.get('[data-testid="input-prev-frames"]').clear().type('1').blur();
+      cy.assertOnionSkinPixels([[T, T], [T, GREEN]], 'frame-1 visible with prev=1');
+    });
+
+    it('enable → shows adjacent frame pixels; navigate → updates; disable → clears', () => {
+      cy.startApp(twoFramesTwoLayersSeed);
+
+      // Disabled by default — canvas is empty
+      cy.get('[title="enable onion skin"]').should('exist');
+      cy.assertOnionSkinPixels([[T, T], [T, T]], 'canvas empty when disabled');
+
+      // Enable
+      cy.get('[data-testid="btn-toggle-onion-skin"]').click();
+      cy.get('[title="disable onion skin"]').should('exist');
+
+      // Frame-0 active → shows frame-1 (layer-0: GREEN at bottom-right)
+      cy.assertOnionSkinPixels([[T, T], [T, GREEN]], 'frame-1 pixels visible when frame-0 active');
+
+      // Navigate to frame-1 → shows frame-0 (layer-0: RED at top-left)
+      cy.get('[data-testid="cel-1-0"]').click();
+      cy.assertOnionSkinPixels([[RED, T], [T, T]], 'frame-0 pixels visible when frame-1 active');
+
+      // Disable → canvas clears
+      cy.get('[data-testid="btn-toggle-onion-skin"]').click();
+      cy.get('[title="enable onion skin"]').should('exist');
+      cy.assertOnionSkinPixels([[T, T], [T, T]], 'canvas empty after disable');
     });
   });
 });
