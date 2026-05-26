@@ -181,12 +181,13 @@
                                       (set-curr-value new-value)
                                       (on-blur new-value)))}]))
 
-(def-func-component input-text [{:keys [value on-blur]}]
+(def-func-component input-text [{:keys [value on-blur testid]}]
   (let [[curr-value set-curr-value] (react/useState value)]
     (react/useEffect (fn []
                        (set-curr-value value))
                      (array value))
     [:> antd/Input {:value curr-value
+                    :data-testid testid
                     :onChange (fn [e]
                                 (set-curr-value (.. e -target -value)))
                     :onBlur (fn []
@@ -195,7 +196,7 @@
                                     (on-blur curr-value))}]))
 
 (defn modal [props & children]
-  (let [{:keys [on-cancel cancel-text on-ok ok-text ok-disabled hide-footer title additional-buttons]} props]
+  (let [{:keys [on-cancel cancel-text on-ok ok-text ok-disabled hide-footer title additional-buttons ok-data-testid]} props]
     (into
      [:> antd/Modal (merge
                      {:title title
@@ -208,7 +209,8 @@
                                :else nil)
                       :onOk on-ok
                       :okText ok-text
-                      :okButtonProps {:disabled ok-disabled}
+                      :okButtonProps (cond-> {:disabled ok-disabled}
+                                      ok-data-testid (assoc :data-testid ok-data-testid))
                       :onCancel on-cancel
                       :cancelText cancel-text
                       :footer (fn [_ props]
