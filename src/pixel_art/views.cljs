@@ -170,6 +170,7 @@
               :data-testid "btn-save-as-file"}
       "Save as file"]
      [file-uploader {:accept (str "." project-save-load.events/file-ext)
+                     :data-testid "input-load-from-file"
                      :on-upload (fn [file-desc]
                                   (when (replace-current-project-confirm)
                                     (re-frame/dispatch [::project-save-load.events/load-from-file file-desc])))}

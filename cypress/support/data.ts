@@ -5,6 +5,7 @@ export interface DBSeed {
   "secondary-color": number;
   palettes: Array<{ name: string; current: boolean; colors: number[] }>;
   sprite: {
+    title?: string;
     size: { width: number; height: number };
     frames: Array<{ duration: number }>;
     cels: Array<Array<{ size: { width: number; height: number }; 'data-url': string }>>;

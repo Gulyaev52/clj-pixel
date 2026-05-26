@@ -1,7 +1,13 @@
-import { defaultDbSeed } from '../support/data';
+import { defaultDbSeed, getSpriteFromPixels, DBSeed } from '../support/data';
 import { rgba } from '../support/utils';
 
-const T = rgba(0, 0, 0, 0);
+const T   = rgba(0, 0, 0, 0);
+const RED = rgba(255, 0, 0);
+
+const saveLoadSeed: DBSeed = {
+  ...defaultDbSeed,
+  sprite: { ...getSpriteFromPixels([[RED, T], [T, T]]), title: 'SaveLoadTest' }
+};
 
 describe('Project', () => {
   it('new project → inputs show set values; canvas, title, and timeline update on create', () => {
@@ -28,5 +34,55 @@ describe('Project', () => {
       { activeFrameIdx: 0, activeLayerIdx: 0 },
       ['Layer 1']
     );
+  });
+
+  describe('Save and Load', () => {
+    it('save as file → downloads JSON with correct sprite data', () => {
+      cy.exec('rm -f "cypress/downloads/SaveLoadTest.json"', { failOnNonZeroExit: false });
+      cy.startApp(saveLoadSeed);
+
+      cy.get('[data-testid="btn-save-as-file"]').click();
+
+      cy.readFile('cypress/downloads/SaveLoadTest.json', { timeout: 10000 }).then((content) => {
+        const expected = {
+          version: '1',
+          project: {
+            sprite: {
+              title: 'SaveLoadTest',
+              size: { width: 2, height: 2 },
+              frames: [{ duration: 100 }],
+              layers: [{ name: 'Layer 1', 'visible?': true, 'automatic-linking?': false }],
+              cels: [[{ size: { width: 2, height: 2 }, 'data-url': saveLoadSeed.sprite.cels[0][0]['data-url'] }]]
+            }
+          }
+        };
+
+        expect(content).to.deep.equal(expected);
+      });
+    });
+
+    it('load from file → restores project name, pixels, and timeline', () => {
+      cy.exec('rm -f "cypress/downloads/SaveLoadTest.json"', { failOnNonZeroExit: false });
+      cy.startApp(saveLoadSeed);
+      cy.get('[data-testid="btn-save-as-file"]').click();
+
+      cy.readFile('cypress/downloads/SaveLoadTest.json', { timeout: 10000 }).then((fileContent) => {
+        cy.startApp(defaultDbSeed);
+        cy.stubConfirm(true);
+
+        cy.get('[data-testid="input-load-from-file"]').selectFile({
+          contents: Cypress.Buffer.from(JSON.stringify(fileContent)),
+          fileName: 'SaveLoadTest.json',
+          mimeType: 'application/json'
+        }, { force: true });
+
+        cy.get('h3').should('have.text', 'SaveLoadTest');
+        cy.assertTimelineCelsAndVisiblePixels(
+          [[[[RED, T], [T, T]]]],
+          { activeFrameIdx: 0, activeLayerIdx: 0 },
+          ['Layer 1']
+        );
+      });
+    });
   });
 });
