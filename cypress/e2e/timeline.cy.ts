@@ -123,4 +123,119 @@ describe('Timeline', () => {
       ], { activeFrameIdx: 1, activeLayerIdx: 0 }, ['Layer 1', 'Layer 2']);
     });
   });
+
+  describe('Layers', () => {
+    it('add layer → new layer inserted after current, becomes active', () => {
+      cy.startApp(twoFramesTwoLayersSeed);
+
+      cy.get('[title="add layer"]').click();
+
+      cy.assertTimelineCelsAndVisiblePixels([
+        [[[RED, T], [T, T]], [[T, T], [T, T]], [[T, T], [T, RED]]],      // frame-0: L1 | new empty (active) | L2
+        [[[T, T], [T, GREEN]], [[T, T], [T, T]], [[GREEN, T], [T, T]]],  // frame-1: L1 | new empty | L2
+      ], { activeFrameIdx: 0, activeLayerIdx: 1 }, ['Layer 1', 'Layer 3', 'Layer 2']);
+    });
+
+    it('remove layer → layer removed, previous selected, button disabled with single layer', () => {
+      cy.startApp(twoFramesTwoLayersSeed);
+
+      cy.get('[data-testid="cel-0-1"]').click();
+      cy.get('[data-testid="btn-remove-layer"]').should('not.be.disabled', 'button enabled with multiple layers');
+
+      cy.get('[data-testid="btn-remove-layer"]').click();
+
+      cy.assertTimelineCelsAndVisiblePixels([
+        [[[RED, T], [T, T]]],        // frame-0: only Layer 1 remains (active)
+        [[[T, T], [T, GREEN]]],      // frame-1: only Layer 1 remains
+      ], { activeFrameIdx: 0, activeLayerIdx: 0 }, ['Layer 1']);
+
+      cy.get('[data-testid="btn-remove-layer"]').should('be.disabled', 'button disabled with single layer');
+    });
+
+    it('merge layer with below → pixels merged into current layer, below removed', () => {
+      cy.startApp(twoFramesTwoLayersSeed);
+
+      cy.get('[data-testid="cel-0-1"]').click();
+      cy.get('[data-testid="btn-merge-layer-with-below"]').should('be.disabled', 'disabled on last layer');
+
+      cy.get('[data-testid="cel-0-0"]').click();
+      cy.get('[data-testid="btn-merge-layer-with-below"]').should('not.be.disabled', 'enabled when layer below exists');
+
+      cy.get('[data-testid="btn-merge-layer-with-below"]').click();
+
+      cy.assertTimelineCelsAndVisiblePixels([
+        [[[RED, T], [T, RED]]],      // frame-0: merged layer (active)
+        [[[GREEN, T], [T, GREEN]]], // frame-1: merged layer
+      ], { activeFrameIdx: 0, activeLayerIdx: 0 }, ['Layer 1']);
+
+      cy.get('[data-testid="btn-merge-layer-with-below"]').should('be.disabled', 'disabled with single layer');
+    });
+
+    it('move layer up → layer moves to previous position, button disabled on first layer', () => {
+      cy.startApp(twoFramesTwoLayersSeed);
+
+      cy.get('[data-testid="cel-0-0"]').click();
+      cy.get('[data-testid="btn-move-layer-up"]').should('be.disabled', 'disabled on first layer');
+
+      cy.get('[data-testid="cel-0-1"]').click();
+      cy.get('[data-testid="btn-move-layer-up"]').should('not.be.disabled', 'enabled when not first layer');
+
+      cy.get('[data-testid="btn-move-layer-up"]').click();
+
+      cy.assertTimelineCelsAndVisiblePixels([
+        [[[T, T], [T, RED]], [[RED, T], [T, T]]],      // frame-0: L2 (active) | L1
+        [[[GREEN, T], [T, T]], [[T, T], [T, GREEN]]],  // frame-1: L2 | L1
+      ], { activeFrameIdx: 0, activeLayerIdx: 0 }, ['Layer 2', 'Layer 1']);
+
+      cy.get('[data-testid="btn-move-layer-up"]').should('be.disabled', 'disabled on first layer after move');
+    });
+
+    it('move layer down → layer moves to next position, button disabled on last layer', () => {
+      cy.startApp(twoFramesTwoLayersSeed);
+
+      cy.get('[data-testid="cel-0-1"]').click();
+      cy.get('[data-testid="btn-move-layer-down"]').should('be.disabled', 'disabled on last layer');
+
+      cy.get('[data-testid="cel-0-0"]').click();
+      cy.get('[data-testid="btn-move-layer-down"]').should('not.be.disabled', 'enabled when not last layer');
+
+      cy.get('[data-testid="btn-move-layer-down"]').click();
+
+      cy.assertTimelineCelsAndVisiblePixels([
+        [[[T, T], [T, RED]], [[RED, T], [T, T]]],      // frame-0: L2 | L1 (active)
+        [[[GREEN, T], [T, T]], [[T, T], [T, GREEN]]],  // frame-1: L2 | L1
+      ], { activeFrameIdx: 0, activeLayerIdx: 1 }, ['Layer 2', 'Layer 1']);
+
+      cy.get('[data-testid="btn-move-layer-down"]').should('be.disabled', 'disabled on last layer after move');
+    });
+
+    it('rename layer → layer name updates in timeline', () => {
+      cy.startApp(twoFramesTwoLayersSeed);
+      cy.stubPrompt('Background');
+
+      cy.get('[data-testid="btn-rename-layer"]').click();
+
+      cy.assertTimelineLabels(2, ['Background', 'Layer 2']);
+    });
+
+    it('rename layer cancel → layer name unchanged', () => {
+      cy.startApp(twoFramesTwoLayersSeed);
+      cy.stubPrompt(null);
+
+      cy.get('[data-testid="btn-rename-layer"]').click();
+
+      cy.assertTimelineLabels(2, ['Layer 1', 'Layer 2']);
+    });
+
+    it('duplicate layer → copy inserted after current with same pixels, becomes active', () => {
+      cy.startApp(twoFramesTwoLayersSeed);
+
+      cy.get('[data-testid="btn-duplicate-layer"]').click();
+
+      cy.assertTimelineCelsAndVisiblePixels([
+        [[[RED, T], [T, T]], [[RED, T], [T, T]], [[T, T], [T, RED]]],      // frame-0: L1 | dup (active) | L2
+        [[[T, T], [T, GREEN]], [[T, T], [T, GREEN]], [[GREEN, T], [T, T]]], // frame-1: L1 | dup | L2
+      ], { activeFrameIdx: 0, activeLayerIdx: 1 }, ['Layer 1', 'Layer 1', 'Layer 2']);
+    });
+  });
 });

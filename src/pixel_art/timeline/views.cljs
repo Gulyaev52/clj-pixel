@@ -249,35 +249,41 @@
                                                       :on-click (fn [] (re-frame/dispatch [::events/add-layer]))}]
                                         [icon-button {:src :remove
                                                       :title "remove layer"
+                                                      :data-testid "btn-remove-layer"
                                                       :disabled (:remove-layer disabled-actions)
                                                       :size :sm
                                                       :on-click (fn [] (re-frame/dispatch [::events/remove-layer]))}]
                                         [icon-button {:src :duplicate
                                                       :title "duplicate layer"
+                                                      :data-testid "btn-duplicate-layer"
                                                       :disabled (:duplicate-layer disabled-actions)
                                                       :size :sm
                                                       :on-click (fn [] (re-frame/dispatch [::events/duplicate-layer]))}]
                                         [icon-button {:src :merge-down
                                                       :title "merge layer with below"
+                                                      :data-testid "btn-merge-layer-with-below"
                                                       :disabled (:merge-layer-with-below disabled-actions)
                                                       :size :sm
                                                       :on-click (fn [] (re-frame/dispatch [::events/merge-layer-with-below]))}]
                                         [icon-button {:src :arrow-up
                                                       :title "move layer up"
+                                                      :data-testid "btn-move-layer-up"
                                                       :disabled (:move-layer-up disabled-actions)
                                                       :size :sm
                                                       :on-click (fn [] (re-frame/dispatch [::events/move-layer-up]))}]
                                         [icon-button {:src :arrow-down
                                                       :title "move layer down"
+                                                      :data-testid "btn-move-layer-down"
                                                       :disabled (:move-layer-down disabled-actions)
                                                       :size :sm
                                                       :on-click (fn [] (re-frame/dispatch [::events/move-layer-down]))}]
                                         [icon-button {:src :edit
                                                       :title "rename layer"
+                                                      :data-testid "btn-rename-layer"
                                                       :size :sm
                                                       :on-click (fn [e]
                                                                   (. e stopPropagation)
-                                                                  (let [new-name (js/prompt "New layer name" (:name current-frame))]
+                                                                  (when-let [new-name (js/prompt "New layer name" (:name current-frame))]
                                                                     (when (seq (string/trim new-name))
                                                                       (re-frame/dispatch [::events/rename-layer new-name]))))}]]]
 
