@@ -377,6 +377,7 @@
                             :visibility
                             :visibility-off)
                      :title "toggle all layers visibility"
+                     :data-testid "btn-toggle-all-layers-visibility"
                      :size :sm
                      :on-click (fn []
                                  (re-frame/dispatch [::events/toggle-all-layers-visibility]))}]
@@ -404,6 +405,7 @@
                                 :visibility
                                 :visibility-off)
                          :title "toggle layer's visibility"
+                         :data-testid (str "btn-toggle-layer-visibility-" (:idx layer))
                          :size :sm
                          :on-click (fn []
                                      (re-frame/dispatch [::events/toggle-layer-visibility (:idx layer)]))}]

@@ -44,6 +44,18 @@ const undoRedoSeed: DBSeed = {
   sprite: getSpriteFromPixels([[RED, T], [T, T]])
 };
 
+const visibilitySeed: DBSeed = {
+  ...defaultDbSeed,
+  sprite: getSpriteFromCels(
+    [[[[RED, T], [T, T]], [[T, T], [T, BLUE]]]],  // frame-0: Layer 1=RED@(0,0), Layer 2=BLUE@(1,1)
+    [{ duration: 100 }],
+    [
+      { 'visible?': true, 'automatic-linking?': false, name: 'Layer 1' },
+      { 'visible?': true, 'automatic-linking?': false, name: 'Layer 2' }
+    ]
+  )
+};
+
 describe('Timeline', () => {
   describe('Display', () => {
     it('frame numbers, layer names, cel previews, and canvas match selected cel', () => {
@@ -421,6 +433,32 @@ describe('Timeline', () => {
         { activeFrameIdx: 0, activeLayerIdx: 1 },
         ['Layer 1', 'Layer 2']
       );
+    });
+  });
+
+  describe('Layer visibility', () => {
+    it('toggle layer visibility → canvas hides and restores layer pixels', () => {
+      cy.startApp(visibilitySeed); // Layer 1=RED@(0,0), Layer 2=BLUE@(1,1)
+
+      cy.assertVisibleCanvasPixels([[RED, T], [T, BLUE]], 'initial: both layers visible');
+
+      cy.get('[data-testid="btn-toggle-layer-visibility-0"]').click();
+      cy.assertVisibleCanvasPixels([[T, T], [T, BLUE]], 'Layer 1 hidden: only Layer 2 shows');
+
+      cy.get('[data-testid="btn-toggle-layer-visibility-0"]').click();
+      cy.assertVisibleCanvasPixels([[RED, T], [T, BLUE]], 'Layer 1 visible again');
+    });
+
+    it('toggle all layers visibility → hides all, then restores all', () => {
+      cy.startApp(visibilitySeed);
+
+      cy.assertVisibleCanvasPixels([[RED, T], [T, BLUE]], 'initial: all layers visible');
+
+      cy.get('[data-testid="btn-toggle-all-layers-visibility"]').click();
+      cy.assertVisibleCanvasPixels([[T, T], [T, T]], 'all hidden: canvas empty');
+
+      cy.get('[data-testid="btn-toggle-all-layers-visibility"]').click();
+      cy.assertVisibleCanvasPixels([[RED, T], [T, BLUE]], 'all visible again');
     });
   });
 
