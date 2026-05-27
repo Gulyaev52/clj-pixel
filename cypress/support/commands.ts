@@ -115,6 +115,8 @@ declare global {
       assertTimelineCelsAndVisiblePixels(cels: string[][][][], active: { activeFrameIdx: number; activeLayerIdx: number }, layerNames: string[]): Chainable<void>;
       assertTimelineLabels(frameCount: number, layerNames: string[]): Chainable<void>;
       assertOnionSkinPixels(pixels: string[][], assertMessage?: string): Chainable<void>;
+      undo(): Chainable<void>;
+      redo(): Chainable<void>;
     }
   }
 }
@@ -512,6 +514,9 @@ Cypress.Commands.add('stubConfirm', (returnValue: boolean) => {
     cy.stub(win, 'confirm').returns(returnValue);
   });
 });
+
+Cypress.Commands.add('undo', () => { cy.realPress(['Control', 'z']); });
+Cypress.Commands.add('redo', () => { cy.realPress(['Control', 'y']); });
 
 Cypress.on('window:before:load', function (window) {
   const original = window.EventTarget.prototype.addEventListener

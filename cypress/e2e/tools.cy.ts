@@ -977,6 +977,62 @@ describe('Shading Tool', () => {
   });
 });
 
+describe('undo/redo', () => {
+  const T = colors.transparent;
+  const BLACK = colors.black;
+
+  it('draw → undo → redo restores pixel', () => {
+    cy.startApp({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels([[T, T], [T, T]]),
+    });
+    cy.selectTool('pen');
+    cy.drawAtCanvasPixel(0, 0);
+    cy.assertVisibleCanvasPixels([[BLACK, T], [T, T]], 'pixel drawn');
+
+    cy.undo();
+    cy.assertVisibleCanvasPixels([[T, T], [T, T]], 'undo: pixel gone');
+
+    cy.redo();
+    cy.assertVisibleCanvasPixels([[BLACK, T], [T, T]], 'redo: pixel back');
+  });
+
+  it('3-step chain: draw → draw → draw → undo×3 → redo×3', () => {
+    cy.startApp({
+      ...defaultDbSeed,
+      sprite: getSpriteFromPixels([[T, T], [T, T]]),
+    });
+    cy.selectTool('pen');
+
+    cy.drawAtCanvasPixel(0, 0);
+    cy.assertVisibleCanvasPixels([[BLACK, T], [T, T]], 'after draw (0,0)');
+
+    cy.drawAtCanvasPixel(1, 0);
+    cy.assertVisibleCanvasPixels([[BLACK, BLACK], [T, T]], 'after draw (1,0)');
+
+    cy.drawAtCanvasPixel(0, 1);
+    cy.assertVisibleCanvasPixels([[BLACK, BLACK], [BLACK, T]], 'after draw (0,1)');
+
+    cy.undo();
+    cy.assertVisibleCanvasPixels([[BLACK, BLACK], [T, T]], 'undo 1: (0,1) gone');
+
+    cy.undo();
+    cy.assertVisibleCanvasPixels([[BLACK, T], [T, T]], 'undo 2: (1,0) gone');
+
+    cy.undo();
+    cy.assertVisibleCanvasPixels([[T, T], [T, T]], 'undo 3: all gone');
+
+    cy.redo();
+    cy.assertVisibleCanvasPixels([[BLACK, T], [T, T]], 'redo 1: (0,0) back');
+
+    cy.redo();
+    cy.assertVisibleCanvasPixels([[BLACK, BLACK], [T, T]], 'redo 2: (1,0) back');
+
+    cy.redo();
+    cy.assertVisibleCanvasPixels([[BLACK, BLACK], [BLACK, T]], 'redo 3: (0,1) back');
+  });
+});
+
 describe('Shape Selection Tool', () => {
   it('select connected pixels and move', () => {
     const r = colors.red;

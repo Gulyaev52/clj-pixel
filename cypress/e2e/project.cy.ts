@@ -91,6 +91,23 @@ describe('Project', () => {
     });
   });
 
+  it('create project clears history — undo after create has no effect', () => {
+    cy.startApp(saveLoadSeed); // title='SaveLoadTest', RED at (0,0), 2×2
+    cy.stubConfirm(true);
+
+    cy.get('[data-testid="btn-new-project"]').click();
+    cy.get('[data-testid="input-project-title"]').clear().type('NewProject');
+    cy.get('[data-testid="input-project-width"]').clear().type('3').blur();
+    cy.get('[data-testid="input-project-height"]').clear().type('3').blur();
+    cy.get('[data-testid="btn-create-project"]').click();
+    cy.contains('h3', 'NewProject').should('exist');
+
+    // create project resets undo history — Ctrl+Z has no effect
+    cy.undo();
+    cy.contains('h3', 'NewProject').should('exist');
+    cy.assertTimelineLabels(1, ['Layer 1']);
+  });
+
   describe('Edit title', () => {
     it('enter new title → header updates to new title', () => {
       cy.startApp(editTitleSeed);

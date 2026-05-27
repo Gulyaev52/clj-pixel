@@ -46,6 +46,29 @@ describe('Resize canvas', () => {
     );
   });
 
+  it('resize → undo reverts size and pixels', () => {
+    cy.startApp(anchorSeed); // 2×2, RED at (0,0)
+    cy.get('[data-testid="btn-resize-canvas"]').click();
+    cy.get('[data-testid="resize-width"]').clear().type('4').blur();
+    cy.get('[data-testid="resize-height"]').clear().type('4').blur();
+    cy.get('[data-testid="anchor-top-left"]').click();
+    cy.get('[data-testid="btn-resize"]').click();
+
+    cy.assertTimelineCelsAndVisiblePixels(
+      [[[[RED, T, T, T], [T, T, T, T], [T, T, T, T], [T, T, T, T]]]],
+      { activeFrameIdx: 0, activeLayerIdx: 0 },
+      ['Layer 1']
+    );
+
+    cy.undo();
+
+    cy.assertTimelineCelsAndVisiblePixels(
+      [[[[RED, T], [T, T]]]],
+      { activeFrameIdx: 0, activeLayerIdx: 0 },
+      ['Layer 1']
+    );
+  });
+
   it('resize contents scales pixels', () => {
     cy.startApp(solidSeed);
     cy.get('[data-testid="btn-resize-canvas"]').click();
