@@ -129,14 +129,22 @@ describe('Export modal — Image tab', () => {
     cy.get('[data-testid="export-frame-size"]').should('contain.text', '4x4');
   });
 
-  it('File: filename field accepts input', () => {
-    cy.startApp(singleSeed);
+  it('File: changing filename downloads file under the new name', () => {
+    cy.exec('rm -f cypress/downloads/my-sprite.png', { failOnNonZeroExit: false });
+
+    // namedSeed has title = 'export-test', so Export button is enabled from the start
+    cy.startApp(namedSeed);
     cy.get('[data-testid="btn-export"]').click();
 
     cy.assertResizePreviewPixels(0, [[RED, T], [T, T]], 'file test - preview');
 
+    // Change the filename
     cy.get('[data-testid="export-file-name"]').clear().type('my-sprite').blur();
     cy.get('[data-testid="export-file-name"]').should('have.value', 'my-sprite');
+
+    // Export and verify the downloaded file name and pixel content
+    cy.get('[data-testid="btn-export-ok"]').click();
+    cy.assertDownloadedPngPixels('cypress/downloads/my-sprite.png', [[RED, T], [T, T]], 'downloaded png pixels');
   });
 
   it('Type: switching to gif shows "Never repeat" option and updates preview', () => {
@@ -180,18 +188,4 @@ describe('Export modal — Image tab', () => {
     cy.assertResizePreviewPixels(1, [[BLUE, BLUE], [BLUE, BLUE]], 'split on - layer 1 frame');
   });
 
-  it('Export button downloads a PNG file with correct pixels', () => {
-    cy.exec('rm -f cypress/downloads/export-test.png', { failOnNonZeroExit: false });
-
-    // namedSeed has title = 'export-test', so file-name is auto-filled and Export button is enabled
-    cy.startApp(namedSeed);
-    cy.get('[data-testid="btn-export"]').click();
-
-    // Verify preview before exporting
-    cy.assertResizePreviewPixels(0, [[RED, T], [T, T]], 'export preview');
-
-    cy.get('[data-testid="btn-export-ok"]').click();
-
-    cy.assertDownloadedPngPixels('cypress/downloads/export-test.png', [[RED, T], [T, T]], 'downloaded png pixels');
-  });
 });
