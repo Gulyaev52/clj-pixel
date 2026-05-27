@@ -1,6 +1,11 @@
 import { defaultDbSeed, getSpriteFromPixels, DBSeed } from '../support/data';
 import { rgba } from '../support/utils';
 
+const editTitleSeed: DBSeed = {
+  ...defaultDbSeed,
+  sprite: { ...defaultDbSeed.sprite, title: 'OriginalTitle' }
+};
+
 const T   = rgba(0, 0, 0, 0);
 const RED = rgba(255, 0, 0);
 
@@ -83,6 +88,17 @@ describe('Project', () => {
           ['Layer 1']
         );
       });
+    });
+  });
+
+  describe('Edit title', () => {
+    it('enter new title → header updates to new title', () => {
+      cy.startApp(editTitleSeed);
+      cy.stubPrompt('NewTitle');
+
+      cy.get('[data-testid="btn-edit-title"]').click();
+
+      cy.contains('h3', 'NewTitle').should('exist');
     });
   });
 });

@@ -200,6 +200,7 @@
        (str sprite-title (when unsaved-changes-exist "*"))]
       [icon-button {:src :pen
                     :title "edit title"
+                    :data-testid "btn-edit-title"
                     :size :xs
                     :on-click (fn []
                                 (let [new-title (js/prompt "Title")]
