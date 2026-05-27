@@ -62,6 +62,7 @@ describe('Timeline', () => {
         [[[T, T], [T, GREEN]], [[GREEN, T], [T, T]]],
       ], { activeFrameIdx: 1, activeLayerIdx: 1 }, ['Layer 1', 'Layer 2']);
       cy.get('[data-testid="input-frame-duration"]').should('have.value', '100', 'frame-1 duration is 100');
+      cy.screenshot("timeline");
     });
   });
 
