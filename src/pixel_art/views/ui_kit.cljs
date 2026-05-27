@@ -70,12 +70,13 @@
           [:div {:style {:position "absolute" :z-index 101 :bottom "calc(100% + 5px)"}}
            (over (fn [] (reset! !opened false)))]])])))
 
-(defn slider [{:keys [value label block min max step style on-change]}]
-  [:div {:style {:display :flex
-                 :align-items :center
-                 :width (if block "100%" "250px")
-                 :gap "8px"
-                 :font-size "13px"}}
+(defn slider [{:keys [value label block min max step style on-change data-testid]}]
+  [:div (merge {:style {:display :flex
+                        :align-items :center
+                        :width (if block "100%" "250px")
+                        :gap "8px"
+                        :font-size "13px"}}
+               (when data-testid {:data-testid data-testid}))
    [:div {:style {:display :flex :gap "4px"}}
     [typography label]
     [typography {:style {:white-space "nowrap" :width "20px"}} ;; fixed width is used to avoid slider jumping when value width is changed

@@ -111,6 +111,7 @@ declare global {
       stubConfirm(returnValue: boolean): Chainable<void>;
       getCelPreview(frameIdx: number, layerIdx: number, expectedPixels: string[][], assertMessage?: string): Chainable<void>;
       assertResizePreviewPixels(frameIdx: number, pixels: string[][], assertMessage?: string): Chainable<void>;
+      assertDownloadedPngPixels(filePath: string, pixels: string[][], assertMessage?: string): Chainable<void>;
       assertTimelineCelsAndVisiblePixels(cels: string[][][][], active: { activeFrameIdx: number; activeLayerIdx: number }, layerNames: string[]): Chainable<void>;
       assertTimelineLabels(frameCount: number, layerNames: string[]): Chainable<void>;
       assertOnionSkinPixels(pixels: string[][], assertMessage?: string): Chainable<void>;
@@ -399,6 +400,37 @@ Cypress.Commands.add('getCelPreview', (frameIdx: number, layerIdx: number, expec
       expect(actualObj, assertMessage).to.deep.equal(expectedObj);
     });
   Cypress.log({ name: 'getCelPreview', message: assertMessage || `cel-${frameIdx}-${layerIdx}` });
+});
+
+Cypress.Commands.add('assertDownloadedPngPixels', (filePath: string, expectedPixels: string[][], assertMessage?: string) => {
+  cy.readFile(filePath, 'base64', { timeout: 10000 }).then((base64: string) => {
+    cy.window().then((win) => {
+      return new Promise<string[][]>((resolve) => {
+        const img = new win.Image();
+        img.onload = () => {
+          const { naturalWidth: width, naturalHeight: height } = img;
+          const canvas = win.document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext('2d')!.drawImage(img, 0, 0);
+          const { data } = canvas.getContext('2d')!.getImageData(0, 0, width, height);
+          const pixels = Array.from({ length: height }, (_, y) =>
+            Array.from({ length: width }, (_, x) => {
+              const i = (y * width + x) * 4;
+              return rgba(data[i], data[i + 1], data[i + 2], data[i + 3]);
+            })
+          );
+          resolve(pixels);
+        };
+        img.src = `data:image/png;base64,${base64}`;
+      });
+    }).then((actualPixels: string[][]) => {
+      const actualObj = Object.fromEntries(actualPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
+      const expectedObj = Object.fromEntries(expectedPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
+      expect(actualObj, assertMessage).to.deep.equal(expectedObj);
+    });
+  });
+  Cypress.log({ name: 'assertDownloadedPngPixels', message: assertMessage || filePath });
 });
 
 Cypress.Commands.add('assertResizePreviewPixels', (frameIdx: number, expectedPixels: string[][], assertMessage?: string) => {
