@@ -11,6 +11,7 @@ const seed: DBSeed = {
   sprite: { ...defaultDbSeed.sprite, title: TITLE }
 };
 
+// похожие тесты в project
 describe('Unsaved changes', () => {
   it('* appears next to title after a change', () => {
     cy.startApp(seed);

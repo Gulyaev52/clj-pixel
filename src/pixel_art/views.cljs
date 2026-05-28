@@ -4,12 +4,13 @@
    ["react-dnd" :as react-dnd]
    ["react-dnd-html5-backend" :as react-dnd-html5-backend]
    [clojure.string :as string]
-   [react :as react]
    [pixel-art.drawing.events :as drawing.events]
    [pixel-art.drawing.views :refer [drawing drawing-info]]
    [pixel-art.events :as events]
    [pixel-art.export-modal.events :as export-modal.events]
    [pixel-art.export-modal.views :refer [export-modal]]
+   [pixel-art.history.events :as history.events]
+   [pixel-art.history.subs :as history.subs]
    [pixel-art.keyboard-shortcuts-modal.events :as keyboard-shortcuts-modal.events]
    [pixel-art.keyboard-shortcuts-modal.views :refer [keyboard-shortcuts-modal]]
    [pixel-art.model.color :as color]
@@ -151,6 +152,17 @@
      [:div {:style {:margin-top "auto"}}
       [palettes-section]]]))
 
+(defn undo-redo-buttons []
+  (let [undo-available? @(re-frame/subscribe [::history.subs/undo-available?])
+        redo-available? @(re-frame/subscribe [::history.subs/redo-available?])]
+    [:<>
+     [button {:on-click (fn [] (re-frame/dispatch [::history.events/undo]))
+              :disabled (not undo-available?)}
+      "Undo"]
+     [button {:on-click (fn [] (re-frame/dispatch [::history.events/redo]))
+              :disabled (not redo-available?)}
+      "Redo"]]))
+
 (def-func-component header []
   (let [pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])
         unsaved-changes-exist @(re-frame/subscribe [::subs/unsaved-changes-exist])
@@ -198,6 +210,7 @@
      [checkbox {:value pixels-grid-enabled
                 :label "Grid"
                 :on-change (fn [checked] (re-frame/dispatch [::drawing.events/enable-pixels-grid checked]))}]
+     [undo-redo-buttons]
      [space
       [title {:level 3 :style {:margin 0}}
        (str sprite-title (when unsaved-changes-exist "*"))]
