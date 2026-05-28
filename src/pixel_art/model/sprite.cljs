@@ -155,9 +155,9 @@
                                              (= (:group-number %) (:group-number current-cel))
                                              false)))
                              (map :pos))]
-    (-> sprite
-        (#(update-cel (fn [_] updated-current-cel) current-cel-pos %))
-        (#(update-cels (fn [cel] (assoc cel :pixels (:pixels updated-current-cel))) linked-cels-pos %)))))
+    (update-cels (fn [_] updated-current-cel) ;; todo: current, selected?
+                 (conj (set linked-cels-pos) current-cel-pos)
+                 sprite)))
 
 ;; todo: rename
 (defn set-current-cel-pixels-map [pixels-map sprite]

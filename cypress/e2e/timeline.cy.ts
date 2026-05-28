@@ -398,6 +398,35 @@ describe('Timeline', () => {
   });
 
   describe('undo/redo', () => {
+    it('undo button disabled initially, enabled after change; redo mirrors', () => {
+      cy.startApp(undoRedoSeed);
+
+      cy.get('[data-testid="btn-undo"]').should('be.disabled', 'undo disabled with no history');
+      cy.get('[data-testid="btn-redo"]').should('be.disabled', 'redo disabled with no history');
+
+      cy.addLayer();
+      cy.get('[data-testid="btn-undo"]').should('not.be.disabled', 'undo enabled after change');
+      cy.get('[data-testid="btn-redo"]').should('be.disabled', 'redo disabled before any undo');
+
+      cy.get('[data-testid="btn-undo"]').click();
+      cy.assertTimelineCelsAndVisiblePixels(
+        [[[[RED, T], [T, T]]]],
+        { activeFrameIdx: 0, activeLayerIdx: 0 },
+        ['Layer 1']
+      );
+      cy.get('[data-testid="btn-undo"]').should('be.disabled', 'undo disabled after undoing last change');
+      cy.get('[data-testid="btn-redo"]').should('not.be.disabled', 'redo enabled after undo');
+
+      cy.get('[data-testid="btn-redo"]').click();
+      cy.assertTimelineCelsAndVisiblePixels(
+        [[[[RED, T], [T, T]], [[T, T], [T, T]]]],
+        { activeFrameIdx: 0, activeLayerIdx: 1 },
+        ['Layer 1', 'Layer 2']
+      );
+      cy.get('[data-testid="btn-undo"]').should('not.be.disabled', 'undo enabled after redo');
+      cy.get('[data-testid="btn-redo"]').should('be.disabled', 'redo disabled after redo');
+    });
+
     it('add frame → undo → redo', () => {
       cy.startApp(undoRedoSeed); // 1 frame, 1 layer, RED at (0,0)
 

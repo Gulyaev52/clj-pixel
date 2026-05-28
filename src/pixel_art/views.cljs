@@ -157,10 +157,12 @@
         redo-available? @(re-frame/subscribe [::history.subs/redo-available?])]
     [:<>
      [button {:on-click (fn [] (re-frame/dispatch [::history.events/undo]))
-              :disabled (not undo-available?)}
+              :disabled (not undo-available?)
+              :data-testid "btn-undo"}
       "Undo"]
      [button {:on-click (fn [] (re-frame/dispatch [::history.events/redo]))
-              :disabled (not redo-available?)}
+              :disabled (not redo-available?)
+              :data-testid "btn-redo"}
       "Redo"]]))
 
 (def-func-component header []
