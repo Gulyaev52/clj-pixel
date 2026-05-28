@@ -564,7 +564,12 @@ describe('Timeline', () => {
       cy.assertOnionSkinPixels([[T, T], [T, GREEN]], 'frame-1 visible when next=1');
 
       // Opacity: default 0.3, right ×2 → 0.5
-      cy.get('[data-testid="slider-opacity"]').find('.ant-slider-handle').focus().type('{rightarrow}{rightarrow}', { force: true });
+      // rc-slider is a controlled component: must wait for re-render between key presses
+      cy.get('[data-testid="slider-opacity"]').find('.ant-slider-handle').focus();
+      cy.realPress('ArrowRight');
+      cy.get('#onion-skin').should('have.css', 'opacity', '0.4');
+      cy.get('[data-testid="slider-opacity"]').find('.ant-slider-handle').focus();
+      cy.realPress('ArrowRight');
       cy.get('#onion-skin').should('have.css', 'opacity', '0.5');
 
       // Position = behind → z-index 0
