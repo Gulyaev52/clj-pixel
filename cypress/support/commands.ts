@@ -117,6 +117,7 @@ declare global {
       assertOnionSkinPixels(pixels: string[][], assertMessage?: string): Chainable<void>;
       undo(): Chainable<void>;
       redo(): Chainable<void>;
+      drag(sourceSelector: string, targetSelector: string): Chainable<void>;
     }
   }
 }
@@ -517,6 +518,17 @@ Cypress.Commands.add('stubConfirm', (returnValue: boolean) => {
 
 Cypress.Commands.add('undo', () => { cy.realPress(['Control', 'z']); });
 Cypress.Commands.add('redo', () => { cy.realPress(['Control', 'y']); });
+
+Cypress.Commands.add('drag', (sourceSelector: string, targetSelector: string) => {
+  cy.window().then(win => {
+    const dataTransfer = new win.DataTransfer();
+    cy.get(sourceSelector).trigger('dragstart', { dataTransfer });
+    cy.get(targetSelector).trigger('dragenter', { dataTransfer });
+    cy.get(targetSelector).trigger('dragover', { dataTransfer });
+    cy.get(targetSelector).trigger('drop', { dataTransfer });
+    cy.get(sourceSelector).trigger('dragend', { dataTransfer });
+  });
+});
 
 Cypress.on('window:before:load', function (window) {
   const original = window.EventTarget.prototype.addEventListener
