@@ -186,7 +186,8 @@
                                                (:height (:size cel)))
                                           {:width "100%"}
                                           {:height "100%"}))]
-      [:div {:style {:position "absolute" :top 0}}
+      [:div {:data-testid (str "cel-group-" (-> cel :pos :frame-idx) "-" (-> cel :pos :layer-idx))
+            :style {:position "absolute" :top 0}}
        (some-> (:group-number cel)
                inc
                (#(typography {:style {:color (when-let [group-number (:group-number cel)]

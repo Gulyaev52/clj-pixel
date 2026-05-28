@@ -118,6 +118,7 @@ declare global {
       undo(): Chainable<void>;
       redo(): Chainable<void>;
       drag(sourceSelector: string, targetSelector: string): Chainable<void>;
+      assertCelGroupNumber(options: { frameIdx: number; layerIdx: number; groupNumber: number | null }): Chainable<void>;
     }
   }
 }
@@ -518,6 +519,15 @@ Cypress.Commands.add('stubConfirm', (returnValue: boolean) => {
 
 Cypress.Commands.add('undo', () => { cy.realPress(['Control', 'z']); });
 Cypress.Commands.add('redo', () => { cy.realPress(['Control', 'y']); });
+
+Cypress.Commands.add('assertCelGroupNumber', ({ frameIdx, layerIdx, groupNumber }: { frameIdx: number; layerIdx: number; groupNumber: number | null }) => {
+  const sel = `[data-testid="cel-group-${frameIdx}-${layerIdx}"]`;
+  if (groupNumber === null) {
+    cy.get(sel).should('be.empty');
+  } else {
+    cy.get(sel).should('contain.text', String(groupNumber));
+  }
+});
 
 Cypress.Commands.add('drag', (sourceSelector: string, targetSelector: string) => {
   cy.window().then(win => {

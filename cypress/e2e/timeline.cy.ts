@@ -286,12 +286,14 @@ describe('Timeline', () => {
       cy.get('[data-testid="btn-link-cels"]').should('not.be.disabled', 'enabled with 2 selected on same layer');
       cy.get('[data-testid="btn-link-cels"]').click();
       cy.get('[data-testid="cel-0-0"]').click();  // clear multi-selection before assert
-      
+
       cy.assertTimelineCelsAndVisiblePixels([
         [[[RED, T], [T, T]], [[T, T], [T, RED]]],
         [[[RED, T], [T, T]], [[GREEN, T], [T, T]]],  // frame-1-layer-0 copied RED from frame-0
       ], { activeFrameIdx: 0, activeLayerIdx: 0 }, ['Layer 1', 'Layer 2']);
-      
+      cy.assertCelGroupNumber({ frameIdx: 0, layerIdx: 0, groupNumber: 1 });
+      cy.assertCelGroupNumber({ frameIdx: 1, layerIdx: 0, groupNumber: 1 });
+
       // Group B on layer-1: click frame-1 first (receives pixels), ctrl+click frame-0 last (main)
       cy.get('[data-testid="cel-1-1"]').click();
       cy.get('[data-testid="cel-0-1"]').click({ ctrlKey: true });
@@ -302,6 +304,8 @@ describe('Timeline', () => {
         [[[RED, T], [T, T]], [[T, T], [T, RED]]],
         [[[RED, T], [T, T]], [[T, T], [T, RED]]],  // frame-1-layer-1 copied RED(1,1) from frame-0
       ], { activeFrameIdx: 0, activeLayerIdx: 1 }, ['Layer 1', 'Layer 2']);
+      cy.assertCelGroupNumber({ frameIdx: 0, layerIdx: 1, groupNumber: 1 });
+      cy.assertCelGroupNumber({ frameIdx: 1, layerIdx: 1, groupNumber: 1 });
 
       // Draw BLACK at (1,1) on frame-0-layer-0 (group A) → propagates to frame-1-layer-0 only
       cy.get('[data-testid="cel-0-0"]').click();
@@ -327,11 +331,15 @@ describe('Timeline', () => {
       cy.get('[data-testid="cel-0-0"]').click();  // reset
 
       cy.get('[data-testid="btn-unlink-cels"]').should('not.be.disabled', 'enabled when cel is in a group');
+      cy.assertCelGroupNumber({ frameIdx: 0, layerIdx: 0, groupNumber: 1 });
+      cy.assertCelGroupNumber({ frameIdx: 1, layerIdx: 0, groupNumber: 1 });
 
       // Unlink only cel-0-0 (single selection)
       cy.get('[data-testid="btn-unlink-cels"]').click();
 
       cy.get('[data-testid="btn-unlink-cels"]').should('be.disabled', 'disabled after cel-0-0 unlinked');
+      cy.assertCelGroupNumber({ frameIdx: 0, layerIdx: 0, groupNumber: null });
+      cy.assertCelGroupNumber({ frameIdx: 1, layerIdx: 0, groupNumber: 1 });
 
       // cel-1-0 still has group-number → enabled when it is active
       cy.get('[data-testid="cel-1-0"]').click();
@@ -358,6 +366,9 @@ describe('Timeline', () => {
       cy.get('[data-testid="btn-link-cels"]').click();
       cy.get('[data-testid="cel-0-0"]').click();  // reset
 
+      cy.assertCelGroupNumber({ frameIdx: 0, layerIdx: 0, groupNumber: 1 });
+      cy.assertCelGroupNumber({ frameIdx: 1, layerIdx: 0, groupNumber: 1 });
+
       // Select both linked cels and unlink
       cy.get('[data-testid="cel-1-0"]').click();
       cy.get('[data-testid="cel-0-0"]').click({ ctrlKey: true });
@@ -366,10 +377,12 @@ describe('Timeline', () => {
       cy.get('[data-testid="cel-0-0"]').click();  // reset
 
       cy.get('[data-testid="btn-unlink-cels"]').should('be.disabled', 'cel-0-0 unlinked');
+      cy.assertCelGroupNumber({ frameIdx: 0, layerIdx: 0, groupNumber: null });
 
       // cel-1-0 also unlinked
       cy.get('[data-testid="cel-1-0"]').click();
       cy.get('[data-testid="btn-unlink-cels"]').should('be.disabled', 'cel-1-0 also unlinked');
+      cy.assertCelGroupNumber({ frameIdx: 1, layerIdx: 0, groupNumber: null });
 
       // Draw on cel-0-0 → no propagation
       cy.get('[data-testid="cel-0-0"]').click();
