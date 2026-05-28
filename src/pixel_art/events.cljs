@@ -1,10 +1,10 @@
 (ns pixel-art.events
   (:require
-   [pixel-art.backup :as backup]
+   [pixel-art.project-save-load.backup :as backup]
    [pixel-art.db :as db]
    [pixel-art.drawing.events]
    [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
-   [pixel-art.project-save-load.events]
+   [pixel-art.project-save-load.events :as project-save-load]
    [pixel-art.project-settings :as project-settings]
    [pixel-art.re-pressed.core :as rp]
    [pixel-art.tool.core :as tool]
@@ -16,6 +16,8 @@
    [re-frame.core :as re-frame]
    [re-frame.db]
    [sc.api]))
+
+;; global events
 
 (def saved-settings-local-storage-key :saved-settings)
 
@@ -81,7 +83,7 @@
      {:db initial-db
       :fx [[:dispatch [::rp/add-keyboard-event-listener "keydown"]]
            dispatch-set-keydown-rules
-           [:dispatch-interval {:dispatch [::backup/save-backup-if-need]
+           [:dispatch-interval {:dispatch [::project-save-load/save-backup-if-need]
                                 :id :backup
                                 :ms 60000 ;; 1 min
                                 }]

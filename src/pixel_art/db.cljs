@@ -9,8 +9,7 @@
    [pixel-art.sprite-preview.events :as sprite-preview.events]
    [pixel-art.sprite-resizer.events :as sprite-resizer.events]
    [pixel-art.tool.core :as tool]
-   [sc.api]
-   [pixel-art.backup :as backup]))
+   [sc.api]))
 
 (defn get-initial-options [m]
   (-> m

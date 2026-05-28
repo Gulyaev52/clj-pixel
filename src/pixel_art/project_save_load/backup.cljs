@@ -1,9 +1,6 @@
-(ns pixel-art.backup
+(ns pixel-art.project-save-load.backup
   (:require
-   [pixel-art.sprite-serialization :as sprite-serialization]
-   [pixel-art.tool.utils :refer [check-unsaved-changes-exist
-                                 mark-unsaved-changes-saved]]
-   [re-frame.core :as re-frame]))
+   [pixel-art.project-save-load.sprite-serialization :as sprite-serialization]))
 
 (defonce !db (atom nil))
 
@@ -56,17 +53,3 @@
                                 (update :sprite sprite-serialization/serialize))}
                    clj->js)]
     (request->promise (. store (put record)))))
-
-(re-frame/reg-event-fx
- ::save-backup-if-need
- (fn [{:keys [db]}]
-   (if (check-unsaved-changes-exist db)
-     {:db (-> db
-              (mark-unsaved-changes-saved))
-      :fx [[::save-backup (select-keys db [:sprite])]]}
-     {})))
-
-(re-frame/reg-fx
- ::save-backup
- (fn [backup]
-   (put-backup+ @!db backup)))

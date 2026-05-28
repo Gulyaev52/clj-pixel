@@ -1,4 +1,4 @@
-(ns pixel-art.sprite-serialization ;; todo: rename?
+(ns pixel-art.project-save-load.sprite-serialization ;; todo: rename to project-serialization?
   (:require
    [pixel-art.canvas :as canvas]
    [pixel-art.utils.coll :as coll]))
