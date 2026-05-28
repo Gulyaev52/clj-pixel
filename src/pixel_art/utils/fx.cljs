@@ -1,5 +1,6 @@
 (ns pixel-art.utils.fx
   (:require
+   ["antd" :as antd]
    [pixel-art.utils.fx.local-storage]
    [re-frame.core :as re-frame]))
 
@@ -7,6 +8,17 @@
  :show-alert
  (fn [message]
    (js/alert message)))
+
+(re-frame/reg-event-fx
+ :show-notification
+ (fn [_ [_ config]]
+   {:fx [[:show-notification config]]}))
+
+(re-frame/reg-fx
+ :show-notification
+ (fn [config]
+   (.open antd/notification (clj->js (merge config
+                                            {"transitionName" ""})))))
 
 (re-frame/reg-fx
  :download-file

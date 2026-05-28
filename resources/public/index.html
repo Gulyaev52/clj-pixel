@@ -31,6 +31,13 @@
       .color-container:hover .remove-color-button {
         opacity: 1 !important;
       }
+
+      /* fix blinking notification */
+      .ant-notification-stack > .ant-notification-notice-wrapper {
+        transition:
+          transform 0.3s,
+          backdrop-filter 0s !important;
+      }
     </style>
   </head>
   <body>  

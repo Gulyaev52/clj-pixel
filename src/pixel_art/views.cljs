@@ -169,6 +169,9 @@
      [button {:on-click (fn [] (re-frame/dispatch [::project-save-load.events/save-as-file]))
               :data-testid "btn-save-as-file"}
       "Save as file"]
+     [button {:on-click (fn [] (re-frame/dispatch [::project-save-load.events/save-in-browser]))
+              :data-testid "btn-save-in-browser"}
+      "Save in browser"]
      [file-uploader {:accept (str "." project-save-load.events/file-ext)
                      :data-testid "input-load-from-file"
                      :on-upload (fn [file-desc]

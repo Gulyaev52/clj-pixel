@@ -32,11 +32,11 @@
            :keys [{:key "y"
                    :ctrlKey true}]
            :action [::history/redo]
-           :prevent-default-keys true}
-          {:label "save as file"
+           :prevent-default-keys true} 
+          {:label "save in browser"
            :keys [{:key "s"
                    :ctrlKey true}]
-           :action [::project-save-load.events/save-as-file]
+           :action [::project-save-load.events/save-in-browser]
            :prevent-default-keys true}]
    :selection [{:label "cut selection"
                 :keys [{:ctrlKey true :key "x"}]

@@ -57,16 +57,34 @@
        (catch (fn []
                 (re-frame/dispatch [::deserialize-from-file-error "invalid format of file"]))))))
 
+(defn- save-backup-if-need [db on-success on-failure]
+  (if (check-unsaved-changes-exist db)
+    {:db (-> db
+             (mark-unsaved-changes-saved))
+     :fx [[::save-backup {:backup (select-keys db [:sprite])
+                          :on-success on-success
+                          :on-failure on-failure}]]}
+    {}))
+
+(re-frame/reg-event-fx
+ ::save-in-browser
+ (fn [{:keys [db]}]
+   (save-backup-if-need db
+                        [:show-notification {:type :success
+                                             :message "Successfully saved!"}]
+                        [:show-notification {:type :error
+                                             :message "Something wrong!"}])))
+
 (re-frame/reg-event-fx
  ::save-backup-if-need
  (fn [{:keys [db]}]
-   (if (check-unsaved-changes-exist db)
-     {:db (-> db
-              (mark-unsaved-changes-saved))
-      :fx [[::save-backup (select-keys db [:sprite])]]}
-     {})))
+   (save-backup-if-need db nil nil)))
 
 (re-frame/reg-fx
  ::save-backup
- (fn [backup]
-   (backup/put-backup+ @backup/!db backup)))
+ (fn [{:keys [backup on-success on-failure]}]
+   (. (backup/put-backup+ @backup/!db backup)
+      (then #(when on-success
+               (re-frame/dispatch on-success))
+            #(when on-failure
+               (re-frame/dispatch on-failure))))))
