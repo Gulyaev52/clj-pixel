@@ -85,7 +85,7 @@
            dispatch-set-keydown-rules
            [:dispatch-interval {:dispatch [::project-save-load/save-backup-if-need]
                                 :id :backup
-                                :ms 60000 ;; 1 min
+                                :ms project-settings/auto-backup-in-ms ;; 1 min
                                 }]
            [::show-warning-when-leave-with-unsaved-changes]
            [::register-global-interceptors]]})))

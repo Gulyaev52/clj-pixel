@@ -57,34 +57,35 @@
        (catch (fn []
                 (re-frame/dispatch [::deserialize-from-file-error "invalid format of file"]))))))
 
-(defn- save-backup-if-need [db on-success on-failure]
-  (if (check-unsaved-changes-exist db)
-    {:db (-> db
-             (mark-unsaved-changes-saved))
-     :fx [[::save-backup {:backup (select-keys db [:sprite])
-                          :on-success on-success
-                          :on-failure on-failure}]]}
-    {}))
-
 (re-frame/reg-event-fx
  ::save-in-browser
  (fn [{:keys [db]}]
-   (save-backup-if-need db
-                        [:show-notification {:type :success
-                                             :message "Successfully saved!"}]
-                        [:show-notification {:type :error
-                                             :message "Something wrong!"}])))
+   {:db db
+    :fx [[::save-backup {:backup (select-keys db [:sprite])
+                         :success-message "Successfully saved!"
+                         :failure-message "Something wrong!"}]]}))
 
 (re-frame/reg-event-fx
  ::save-backup-if-need
  (fn [{:keys [db]}]
-   (save-backup-if-need db nil nil)))
+   (if (check-unsaved-changes-exist db)
+     {:db db
+      :fx [[::save-backup {:backup (select-keys db [:sprite])
+                           :success-message "Auto-backup"}]]}
+     {})))
+
+(re-frame/reg-event-fx
+ ::handle-save-backup-result
+ (fn [{:keys [db]} [_ type message]]
+   {:db (if (= type :success) (mark-unsaved-changes-saved db) db)
+    :fx [[:show-notification {:type type
+                              :message message}]]}))
 
 (re-frame/reg-fx
  ::save-backup
- (fn [{:keys [backup on-success on-failure]}]
+ (fn [{:keys [backup success-message failure-message]}]
    (. (backup/put-backup+ @backup/!db backup)
-      (then #(when on-success
-               (re-frame/dispatch on-success))
-            #(when on-failure
-               (re-frame/dispatch on-failure))))))
+      (then (when success-message
+              (re-frame/dispatch [::handle-save-backup-result :success success-message]))
+            #(when failure-message
+               (re-frame/dispatch [::handle-save-backup-result :error success-message]))))))

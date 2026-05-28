@@ -70,14 +70,15 @@ describe('Unsaved changes', () => {
     );
   });
 
-  it('auto-backup (1 min) → * disappears and backup is applied after reload', () => {
+  it('auto-backup (5 min) → * disappears, notification shown, backup applied after reload', () => {
     cy.clock(Date.now(), ['setInterval', 'clearInterval']);
     cy.startApp(seed);
     cy.drawAtCanvasPixel(0, 0);
     cy.addLayer();
     cy.contains('h3', TITLE + '*').should('exist', '* appears after change');
-    cy.tick(60000);
+    cy.tick(300000);
     cy.contains('h3', TITLE + '*').should('not.exist', '* disappears after backup');
+    cy.contains('.ant-notification-notice-message', 'Auto-backup').should('be.visible');
 
     cy.visit('/index.html');
     cy.get('[data-testid="canvas-viewport"]', { timeout: 10000 }).should('be.visible');
