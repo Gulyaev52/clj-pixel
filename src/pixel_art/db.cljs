@@ -38,6 +38,5 @@
     :keyboard-shortcuts-modal (keyboard-shortcuts-modal.events/init)
     :export-modal (export-modal.events/init)
     :sprite-resizer (sprite-resizer.events/init)
-    :backup (backup/init)
     :last-saved-history-idx 0} ;; TODO: Find a better solutiion. This approach is not reliabe on 100% since history has max size.
    (project-settings.events/get-initial-drawing-settings (:size sprite) viewport-size)))

@@ -1,6 +1,8 @@
 (ns pixel-art.backup
   (:require
    [pixel-art.sprite-serialization :as sprite-serialization]
+   [pixel-art.tool.utils :refer [check-unsaved-changes-exist
+                                 mark-unsaved-changes-saved]]
    [re-frame.core :as re-frame]))
 
 (defonce !db (atom nil))
@@ -55,18 +57,14 @@
                    clj->js)]
     (request->promise (. store (put record)))))
 
-(defn init []
-  {:last-saved-history-idx nil}) ;; TODO: Find a better solutiion. This approach is not reliabe on 100% since history has max size.
-
 (re-frame/reg-event-fx
  ::save-backup-if-need
  (fn [{:keys [db]}]
-   (let [last-saved-history-idx (-> db :backup :last-saved-history-idx)
-         current-history-idx (-> db :history :current-idx)]
-     (if (= last-saved-history-idx current-history-idx)
-       {}
-       {:db (assoc-in db [:backup :last-saved-history-idx] current-history-idx)
-        :fx [[::save-backup (select-keys db [:sprite])]]}))))
+   (if (check-unsaved-changes-exist db)
+     {:db (-> db
+              (mark-unsaved-changes-saved))
+      :fx [[::save-backup (select-keys db [:sprite])]]}
+     {})))
 
 (re-frame/reg-fx
  ::save-backup
