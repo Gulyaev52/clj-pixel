@@ -20,17 +20,20 @@
                        (map-indexed (fn [idx l] {:label (:name l) :value {:type :layer :idx idx}}) layers))]
     [[form-item {:label "Frames"
                  :control [select {:value (:frames common-settings)
+                                   :data-testid "export-frames"
                                    :options [{:label "All frames" :value :all}
                                              {:label "Selected frames" :value :selected}]
                                    :on-change (fn [value]
                                                 (re-frame/dispatch [::events/set-settings-option :frames value]))}]}]
      [form-item {:label "Layers"
                  :control [select {:value (:layers common-settings)
+                                   :data-testid "export-layers"
                                    :options layer-options
                                    :on-change (fn [value]
                                                 (re-frame/dispatch [::events/set-settings-option :layers value]))}]}]
      [form-item {:label "Direction"
                  :control [select {:value (:direction common-settings)
+                                   :data-testid "export-direction"
                                    :options [{:label "Forward" :value :forward}
                                              {:label "Backwards" :value :backwards}]
                                    :on-change (fn [value]
@@ -41,24 +44,28 @@
                                    :max events/max-scale
                                    :block true
                                    :step 1
+                                   :data-testid "export-scale-slider"
                                    :on-change (fn [value]
                                                 (re-frame/dispatch [::events/set-settings-option :scale value]))}]}]
      [form-item {:label "Frame size"
-                 :control [:<> (str (-> common-settings :scaled-frame-size :width)
-                                    "x"
-                                    (-> common-settings :scaled-frame-size :height))
-                           [:br]]}]
+                 :control [:div {:data-testid "export-frame-size"}
+                           (str (-> common-settings :scaled-frame-size :width)
+                                "x"
+                                (-> common-settings :scaled-frame-size :height))]}]
      [form-item {:label "File"
                  :control [input-text {:value (:file-name common-settings)
+                                       :testid "export-file-name"
                                        :on-blur (fn [value]
                                                   (re-frame/dispatch [::events/set-settings-option :file-name value]))}]}]
      [form-item {:label "Type"
                  :control [select {:value (:file-type common-settings)
+                                   :data-testid "export-type"
                                    :options type-options
                                    :on-change (fn [value]
                                                 (re-frame/dispatch [::events/set-settings-option :file-type value]))}]}]
      [form-item {:label "Split layers"
                  :control [checkbox {:value (:split-layers common-settings)
+                                     :data-testid "export-split-layers"
                                      :on-change (fn [value]
                                                   (re-frame/dispatch [::events/set-settings-option :split-layers value]))}]}]]))
 
@@ -71,10 +78,10 @@
              :type-options [{:label "png" :value :png}
                             {:label "gif" :value :gif}]})
            (when (= (:file-type image-settings) :gif)
-             [[form-item
-               "Never repeat" [checkbox {:value (not (:repeat image-settings))
-                                         :on-change (fn [value]
-                                                      (re-frame/dispatch [::events/set-settings-option :repeat (not value)]))}]]])))))
+             [[form-item {:label "Never repeat"
+                          :control [checkbox {:value (not (:repeat image-settings))
+                                              :on-change (fn [value]
+                                                           (re-frame/dispatch [::events/set-settings-option :repeat (not value)]))}]}]])))))
 
 (defn export-spritesheet-settings-form []
   (let [settings @(re-frame/subscribe [::subs/spritesheet-settings])]
@@ -100,6 +107,7 @@
           preview @(re-frame/subscribe [::subs/preview])]
       [modal {:title "Export"
               :size :lg
+              :ok-data-testid "btn-export-ok"
               :on-cancel (fn []
                            (re-frame/dispatch [::events/set-opened false]))
               :ok-text "Export"

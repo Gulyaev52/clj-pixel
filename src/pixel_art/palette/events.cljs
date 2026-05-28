@@ -7,9 +7,6 @@
             [re-frame.core :as re-frame]
             [sc.api]))
 
-(defn deletable-palette? [palettes]
-  (> (count palettes) 1))
-
 (defn- get-current-palette-idx [db]
   (coll/find-first-idx :current (:palettes db)))
 
@@ -34,12 +31,10 @@
 (re-frame/reg-event-fx
  ::remove-selected-palette
  (fn [{:keys [db]} [_]]
-   (if (deletable-palette? (:palettes db))
-     (let [palettes (->> (:palettes db)
-                         (coll/removev (get-current-palette-idx db))
-                         (#(assoc-in % [0 :current] true)))]
-       {:db (assoc db :palettes palettes)})
-     {:db db})))
+   (let [palettes (->> (:palettes db)
+                       (coll/removev (get-current-palette-idx db))
+                       (#(assoc-in % [0 :current] true)))]
+     {:db (assoc db :palettes palettes)})))
 
 (re-frame/reg-event-fx
  ::rename-selected-palette

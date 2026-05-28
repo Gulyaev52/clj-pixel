@@ -1,7 +1,6 @@
-(ns pixel-art.backup
+(ns pixel-art.project-save-load.backup
   (:require
-   [pixel-art.sprite-serialization :as sprite-serialization]
-   [re-frame.core :as re-frame]))
+   [pixel-art.project-save-load.sprite-serialization :as sprite-serialization]))
 
 (defonce !db (atom nil))
 
@@ -54,21 +53,3 @@
                                 (update :sprite sprite-serialization/serialize))}
                    clj->js)]
     (request->promise (. store (put record)))))
-
-(defn init []
-  {:last-saved-history-idx nil}) ;; TODO: Find a better solutiion. This approach is not reliabe on 100% since history has max size.
-
-(re-frame/reg-event-fx
- ::save-backup-if-need
- (fn [{:keys [db]}]
-   (let [last-saved-history-idx (-> db :backup :last-saved-history-idx)
-         current-history-idx (-> db :history :current-idx)]
-     (if (= last-saved-history-idx current-history-idx)
-       {}
-       {:db (assoc-in db [:backup :last-saved-history-idx] current-history-idx)
-        :fx [[::save-backup (select-keys db [:sprite])]]}))))
-
-(re-frame/reg-fx
- ::save-backup
- (fn [backup]
-   (put-backup+ @!db backup)))

@@ -2,6 +2,7 @@
   (:require
    [pixel-art.model.color :as color]
    [pixel-art.palette.events :as events]
+   [pixel-art.palette.gimp-file :as gimp-file]
    [pixel-art.subs :as common-subs]
    [pixel-art.utils.coll :as coll]
    [pixel-art.views.color-picker :refer [color-picker]]
@@ -30,7 +31,8 @@
                      :actions [[button
                                 {:on-click (fn []
                                              (re-frame/dispatch [::events/add-color @!temp-new-value])
-                                             (on-close))}
+                                             (on-close))
+                                 :data-testid "add-color-confirm-button"}
                                 "Add"]]
                      :preset-colors (coll/distinct-by :color [{:color primary-color}
                                                               {:color secondary-color}
@@ -48,10 +50,12 @@
                    :overflow "auto"}}
      (doall
       (for [[idx color] (map-indexed vector colors)]
-        (let [color-dark? (.. (color/->tinycolor color) isDark)]
+        (let [color-dark? (.. (color/->tinycolor color) isDark)
+              color-str (color/int->rgb-str color)]
           ^{:key color}
           [:div {:className "color-container"
-                 :style {:background-color (color/int->rgb-str color)
+                 :data-testid (str "palette-color-" color-str)
+                 :style {:background-color color-str
                          :position "relative"
                          :cursor "pointer"
                          :color (if color-dark? (.-colorText theme-token) (.-colorBgBase theme-token))}
@@ -70,6 +74,7 @@
             [icon-button {:src :close
                           :icon-theme (if color-dark? :light :dark)
                           :title "remove color"
+                          :data-testid (str "remove-palette-color-" idx)
                           :size :xs
                           :on-click (fn [e]
                                       (.. e (stopPropagation))
@@ -80,7 +85,8 @@
         current-palette-idx (coll/find-first-idx :current palettes)
         current-palette (coll/find-first :current palettes)
         primary-color @(re-frame/subscribe [::common-subs/primary-color])
-        secondary-color @(re-frame/subscribe [::common-subs/secondary-color])]
+        secondary-color @(re-frame/subscribe [::common-subs/secondary-color])
+        can-delete-palette? (> (count palettes) 1)]
     [:div {:style {:display "flex"
                    :flex-direction "column"
                    :height "300px"}}
@@ -88,6 +94,7 @@
               :options (map-indexed (fn [idx p] {:value idx :label (:name p)}) palettes)
               :block true
               :size :sm
+              :data-testid "palette-select"
               :on-change (fn [idx]
                            (re-frame/dispatch [::events/select-palette idx]))}]
 
@@ -106,21 +113,22 @@
                      :title "Add palette"
                      :size :sm
                      :on-click (fn []
-                                 (when-let [name (js/prompt)]
+                                 (when-let [name (js/prompt "palette name")]
                                    (re-frame/dispatch [::events/create-palette name])))}]
        [icon-button {:src :remove
                      :title "Remove palette"
+                     :data-testid "remove-palette-button"
                      :size :sm
-                     :disabled (not (events/deletable-palette? palettes))
+                     :disabled (not can-delete-palette?)
                      :on-click (fn []
                                  (when (js/confirm "Are you sure?")
                                    (re-frame/dispatch [::events/remove-selected-palette])))}]
        [icon-button {:src :edit
                      :title "Rename palette"
+                     :data-testid "rename-palette-button"
                      :size :sm
-                     :disabled (not (events/deletable-palette? palettes))
                      :on-click (fn []
-                                 (when-let [name (js/prompt)]
+                                 (when-let [name (js/prompt "New palette name" (:name current-palette))]
                                    (re-frame/dispatch [::events/rename-selected-palette name])))}]
        [icon-button {:src :adjust
                      :title "Add colors from current frame"
@@ -131,9 +139,12 @@
       [:div
        [icon-button {:src :file-export
                      :title "Export palette"
+                     :data-testid "export-palette-button"
                      :size :sm
                      :on-click (fn [] (re-frame/dispatch [::events/export-palette]))}]
-       [file-uploader {:on-upload (fn [file-desc]
+       [file-uploader {:accept (str "." gimp-file/ext)
+                       :data-testid "import-palette-input"
+                       :on-upload (fn [file-desc]
                                     (re-frame/dispatch [::events/import-palette file-desc]))}
         (fn [on-click]
           [icon-button {:src :file-import

@@ -45,7 +45,7 @@
                                        {:color color/transparent-color-int :title "transparent color"}])
                      :on-cancel close}])))
 
-(defn- current-color-selection [{:keys [value on-change]}]
+(defn- current-color-selection [{:keys [value on-change data-testid]}]
   [custom-popover
    (fn [close]
      [:div {:style {:width "45px"
@@ -56,13 +56,15 @@
                                   transparent-color-img
                                   (color/int->rgb-str value))
                     :border "thin solid white"}
+            :data-testid data-testid
             :on-click close}])
    (fn [close]
      [current-color-selection-color-picker {:value value :on-change on-change} close])])
 
 (defn tool-view [{:keys [type selected]}]
   (let [title (string/replace (name type) "-" " ")]
-    [:div {:style {:width "50px" :height "50px"}}
+    [:div {:style {:width "50px" :height "50px"}
+           :data-testid (str "tool-" (name type))}
      [icon-button {:src type
                    :title title
                    :active selected
@@ -76,10 +78,12 @@
     [:div {:style {:width "min-content" :position "relative"}}
      [:div {:style {:width "min-content" :position "relative" :z-index 1}}
       [current-color-selection {:value primary-color
+                                :data-testid "primary-color-swatch"
                                 :on-change (fn [new-primary-color]
                                              (re-frame/dispatch [::events/set-current-color :primary-color new-primary-color]))}]]
      [:div {:style {:margin-top "-25px" :margin-left "32px"}}
       [current-color-selection {:value secondary-color
+                                :data-testid "secondary-color-swatch"
                                 :on-change (fn [new-secondary-color]
                                              (re-frame/dispatch [::events/set-current-color :secondary-color new-secondary-color]))}]]
      [:div {:style {:position "absolute"
@@ -159,11 +163,14 @@
                    :border-bottom (str "1px solid " (.-colorBorder theme-token))}}
      [:<>
       [new-project-modal]
-      [button {:on-click (fn [] (re-frame/dispatch [::new-project-modal.events/set-opened true]))}
+      [button {:on-click (fn [] (re-frame/dispatch [::new-project-modal.events/set-opened true]))
+               :data-testid "btn-new-project"}
        "New project"]]
-     [button {:on-click (fn [] (re-frame/dispatch [::project-save-load.events/save-as-file]))}
+     [button {:on-click (fn [] (re-frame/dispatch [::project-save-load.events/save-as-file]))
+              :data-testid "btn-save-as-file"}
       "Save as file"]
      [file-uploader {:accept (str "." project-save-load.events/file-ext)
+                     :data-testid "input-load-from-file"
                      :on-upload (fn [file-desc]
                                   (when (replace-current-project-confirm)
                                     (re-frame/dispatch [::project-save-load.events/load-from-file file-desc])))}
@@ -171,15 +178,20 @@
         [button {:on-click on-click}
          "Load from file"])]
      [:<>
-      [button {:on-click (fn [] (re-frame/dispatch [::export-modal.events/set-opened true]))}
+      [button {:on-click (fn [] (re-frame/dispatch [::export-modal.events/set-opened true]))
+               :data-testid "btn-export"}
        "Export"]
       [export-modal]]
      [:<>
       [sprite-resizer-modal]
-      [button {:on-click (fn [] (re-frame/dispatch [::sprite-resizer.events/set-opened true]))} "Resize canvas"]]
+      [button {:on-click (fn [] (re-frame/dispatch [::sprite-resizer.events/set-opened true]))
+               :data-testid "btn-resize-canvas"}
+       "Resize canvas"]]
      [:<>
       [keyboard-shortcuts-modal]
-      [button {:on-click (fn [] (re-frame/dispatch [::keyboard-shortcuts-modal.events/set-opened true]))} "Keyboard shortcuts"]]
+      [button {:on-click (fn [] (re-frame/dispatch [::keyboard-shortcuts-modal.events/set-opened true]))
+               :data-testid "btn-keyboard-shortcuts"}
+       "Keyboard shortcuts"]]
      [checkbox {:value pixels-grid-enabled
                 :label "Grid"
                 :on-change (fn [checked] (re-frame/dispatch [::drawing.events/enable-pixels-grid checked]))}]
@@ -188,6 +200,7 @@
        (str sprite-title (when unsaved-changes-exist "*"))]
       [icon-button {:src :pen
                     :title "edit title"
+                    :data-testid "btn-edit-title"
                     :size :xs
                     :on-click (fn []
                                 (let [new-title (js/prompt "Title")]

@@ -31,7 +31,7 @@
     selected "green"
     :else (.-colorBorder theme-token)))
 
-(defn- droppable-zone [{:keys [accept on-drop can-drop]} styles]
+(defn- droppable-zone [{:keys [accept on-drop can-drop attrs]} styles]
   (let [[{:keys [over can-drop]}, ref] (react-dnd/useDrop
                                         #js
                                          {"accept" accept
@@ -41,15 +41,17 @@
                                                       {:over (.. monitor isOver)
                                                        :can-drop (.. monitor canDrop)})})]
     (when can-drop
-      [:div {:ref ref
-             :style (merge {:position "absolute"
-                            :z-index 1
-                            :width "100%"
-                            :background-color (when (and can-drop over) "blue")}
-                           styles)}])))
+      [:div (merge {:ref ref
+                    :style (merge {:position "absolute"
+                                   :z-index 1
+                                   :width "100%"
+                                   :background-color (when (and can-drop over) "blue")}
+                                  styles)}
+                   attrs)])))
 
 (def-func-component droppable-layer-zone [to-idx styles]
   (droppable-zone {:accept "layer"
+                   :attrs {:data-testid (str "layer-drop-" to-idx)}
                    :on-drop (fn [layer]
                               (re-frame/dispatch [::events/move-layer (:idx layer) to-idx]))}
                   (merge {:height "20px" :width "100%"} styles)))
@@ -64,6 +66,8 @@
        [droppable-layer-zone (:idx layer) {:top 0 :transform "translateY(-50%)"}])
      [:div {:ref ref
             :on-click (fn [] (re-frame/dispatch [::events/select-layer (:idx layer)]))
+            :data-testid (str "layer-" (:idx layer))
+            :data-current (str (:current layer))
             :style {:display :flex
                     :align-items "center"
                     :padding "4px"
@@ -80,6 +84,7 @@
 
 (def-func-component droppable-frame-zone [idx styles]
   (droppable-zone {:accept "frame"
+                   :attrs {:data-testid (str "frame-drop-" idx)}
                    :on-drop (fn [frame]
                               (re-frame/dispatch [::events/move-frame (:idx frame) idx]))}
                   (merge {:width "30px" :height "100%"} styles)))
@@ -101,6 +106,8 @@
                                            :transform "translateX(-50%)"}])
      [:div {:on-click (fn [] (re-frame/dispatch [::events/select-frame (:idx frame)]))
             :ref ref
+            :data-testid (str "frame-" (:idx frame))
+            :data-current (str (:current frame))
             :style {:display "flex"
                     :align-items "center"
                     :justify-content "center"
@@ -159,6 +166,8 @@
                           (re-frame/dispatch [::events/toggle-cel-to-selection (:pos cel)])
                           :else (re-frame/dispatch [::events/select-only-1-cel (:pos cel)])))
             :ref ref
+            :data-testid (str "cel-" (-> cel :pos :frame-idx) "-" (-> cel :pos :layer-idx))
+            :data-selected (str (:selected cel))
             :style {:position "relative"
                     :display :flex
                     :align-items :center
@@ -177,7 +186,8 @@
                                                (:height (:size cel)))
                                           {:width "100%"}
                                           {:height "100%"}))]
-      [:div {:style {:position "absolute" :top 0}}
+      [:div {:data-testid (str "cel-group-" (-> cel :pos :frame-idx) "-" (-> cel :pos :layer-idx))
+            :style {:position "absolute" :top 0}}
        (some-> (:group-number cel)
                inc
                (#(typography {:style {:color (when-let [group-number (:group-number cel)]
@@ -206,7 +216,7 @@
     (into [:div {:style {:display "flex" :align-items "center"}}]
           children)]])
 
-(defn- timeline-panel-toolbar [{:keys [disabled-actions all-frames-duration current-frame]}]
+(defn- timeline-panel-toolbar [{:keys [disabled-actions current-frame]}]
   (let [onion-skin-enabled @(re-frame/subscribe [::onion-skin.subs/enabled])]
     [:div {:style {:display "flex" :justify-content "space-between"}}
      [space
@@ -243,45 +253,53 @@
                                                       :on-click (fn [] (re-frame/dispatch [::events/add-layer]))}]
                                         [icon-button {:src :remove
                                                       :title "remove layer"
+                                                      :data-testid "btn-remove-layer"
                                                       :disabled (:remove-layer disabled-actions)
                                                       :size :sm
                                                       :on-click (fn [] (re-frame/dispatch [::events/remove-layer]))}]
                                         [icon-button {:src :duplicate
                                                       :title "duplicate layer"
+                                                      :data-testid "btn-duplicate-layer"
                                                       :disabled (:duplicate-layer disabled-actions)
                                                       :size :sm
                                                       :on-click (fn [] (re-frame/dispatch [::events/duplicate-layer]))}]
                                         [icon-button {:src :merge-down
                                                       :title "merge layer with below"
+                                                      :data-testid "btn-merge-layer-with-below"
                                                       :disabled (:merge-layer-with-below disabled-actions)
                                                       :size :sm
                                                       :on-click (fn [] (re-frame/dispatch [::events/merge-layer-with-below]))}]
                                         [icon-button {:src :arrow-up
                                                       :title "move layer up"
+                                                      :data-testid "btn-move-layer-up"
                                                       :disabled (:move-layer-up disabled-actions)
                                                       :size :sm
                                                       :on-click (fn [] (re-frame/dispatch [::events/move-layer-up]))}]
                                         [icon-button {:src :arrow-down
                                                       :title "move layer down"
+                                                      :data-testid "btn-move-layer-down"
                                                       :disabled (:move-layer-down disabled-actions)
                                                       :size :sm
                                                       :on-click (fn [] (re-frame/dispatch [::events/move-layer-down]))}]
                                         [icon-button {:src :edit
                                                       :title "rename layer"
+                                                      :data-testid "btn-rename-layer"
                                                       :size :sm
                                                       :on-click (fn [e]
                                                                   (. e stopPropagation)
-                                                                  (let [new-name (js/prompt)]
+                                                                  (when-let [new-name (js/prompt "New layer name" (:name current-frame))]
                                                                     (when (seq (string/trim new-name))
                                                                       (re-frame/dispatch [::events/rename-layer new-name]))))}]]]
 
       [timeline-panel-section "Cels" [[icon-button {:src :link
                                                     :title "link cels"
+                                                    :data-testid "btn-link-cels"
                                                     :disabled (:link-cels disabled-actions)
                                                     :size :sm
                                                     :on-click (fn [] (re-frame/dispatch [::events/link-selected-cels]))}]
                                       [icon-button {:src :link-off
                                                     :title "unlink cels"
+                                                    :data-testid "btn-unlink-cels"
                                                     :disabled (:unlink-cel disabled-actions)
                                                     :size :sm
                                                     :on-click (fn [] (re-frame/dispatch [::events/unlink-selected-cels]))}]]]
@@ -289,6 +307,7 @@
       [timeline-panel-section "Onion skin"
        [[icon-button {:src (if onion-skin-enabled :layers-off :layers)
                       :title (if onion-skin-enabled "disable onion skin" "enable onion skin")
+                      :data-testid "btn-toggle-onion-skin"
                       :size :sm
                       :on-click (fn [] (re-frame/dispatch [::onion-skin.events/set-enabled (not onion-skin-enabled)]))}]
         [popover
@@ -306,22 +325,15 @@
       [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
        [typography "Duration (ms)"]
        [input-number {:value (:duration current-frame)
+                      :testid "input-frame-duration"
                       :on-blur (fn [duration]
-                                 (re-frame/dispatch [::events/set-frame-duration (:idx current-frame) duration]))}]]
-
-      [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
-       [typography "All frames duration (ms)"]
-       [input-number {:value all-frames-duration
-                      :on-blur (fn [duration]
-                                 (re-frame/dispatch [::events/set-frame-duration-for-all duration]))}]]]]))
+                                 (re-frame/dispatch [::events/set-frame-duration (:idx current-frame) duration]))}]]]]))
 
 (def dndScrollingVerticalStrength (react-dnd-scrolling/createVerticalStrength 50))
 
 (def-func-component timeline-panel []
-  (let [{:keys [cels layers frames disabled-actions some-layer-visible some-layer-automatic-linking]} @(re-frame/subscribe [::subs/timeline])
-        current-frame (coll/find-first :current frames) ;; todo: to subs?
-        all-frames-duration (when (apply = (map :duration frames))
-                              (-> frames first :duration))
+  (let [{:keys [cels layers frames disabled-actions some-layer-visible all-frames-duration some-layer-automatic-linking]} @(re-frame/subscribe [::subs/timeline])
+        current-frame (coll/find-first :current frames) ;; todo: to subs? 
         cels-by-layers (-> cels
                            (#(group-by (fn [c] (-> c :pos :layer-idx)) %))
                            (update-vals (fn [cels] (sort-by #(-> % :pos :frame-idx) cels))))
@@ -369,6 +381,7 @@
                             :visibility
                             :visibility-off)
                      :title "toggle all layers visibility"
+                     :data-testid "btn-toggle-all-layers-visibility"
                      :size :sm
                      :on-click (fn []
                                  (re-frame/dispatch [::events/toggle-all-layers-visibility]))}]
@@ -376,6 +389,7 @@
                             :link
                             :link-off)
                      :title "toggle all layers automatic linking"
+                     :data-testid "btn-toggle-all-layers-automatic-linking"
                      :size :sm
                      :on-click (fn []
                                  (re-frame/dispatch [::events/toggle-all-layers-automatic-linking]))}]]
@@ -396,6 +410,7 @@
                                 :visibility
                                 :visibility-off)
                          :title "toggle layer's visibility"
+                         :data-testid (str "btn-toggle-layer-visibility-" (:idx layer))
                          :size :sm
                          :on-click (fn []
                                      (re-frame/dispatch [::events/toggle-layer-visibility (:idx layer)]))}]
@@ -403,6 +418,7 @@
                                 :link
                                 :link-off)
                          :title "toggle layer's automatic linking"
+                         :data-testid (str "btn-toggle-layer-automatic-linking-" (:idx layer))
                          :size :sm
                          :on-click (fn []
                                      (re-frame/dispatch [::events/toggle-layer-automatic-linking (:idx layer)]))}]]

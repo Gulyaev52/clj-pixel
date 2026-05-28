@@ -52,7 +52,7 @@
 ;; todo: refactoring
 (defn resize-pixel [point size]
   (when point
-    (let [x (or (aget point 0) (:x point))
+    (let [x (or (aget point 0) (:x point)) ;; todo wtf
           y (or (aget point 1) (:y point))]
       (for [j (range 0 size)
             i (range 0 size)]

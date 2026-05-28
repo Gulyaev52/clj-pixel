@@ -18,6 +18,7 @@
               :on-cancel (fn []
                            (re-frame/dispatch [::events/set-opened false]))
               :ok-text "Create"
+              :ok-data-testid "btn-create-project"
               :on-ok (fn []
                        (when (replace-current-project-confirm)
                          (re-frame/dispatch [::events/create])))
@@ -36,6 +37,7 @@
         [form-item {:label "Title"
                     :control [input-text {:value (:title settings)
                                           :block true
+                                          :testid "input-project-title"
                                           :on-blur (fn [value]
                                                      (re-frame/dispatch [::events/set-title value]))}]}]
         [form-item {:label "Width"
@@ -43,6 +45,7 @@
                                             :block true
                                             :min 1
                                             :max project-settings/max-sprite-dim
+                                            :testid "input-project-width"
                                             :on-blur (fn [value]
                                                        (re-frame/dispatch [::events/set-width value]))}]}]
         [form-item {:label "Height"
@@ -50,5 +53,6 @@
                                             :block true
                                             :min 1
                                             :max project-settings/max-sprite-dim
+                                            :testid "input-project-height"
                                             :on-blur (fn [value]
                                                        (re-frame/dispatch [::events/set-height value]))}]}]]])))

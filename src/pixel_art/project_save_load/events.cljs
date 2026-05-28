@@ -1,8 +1,12 @@
 (ns pixel-art.project-save-load.events
   (:require
-   [pixel-art.sprite-serialization :as sprite-serialization]
-   [pixel-art.tool.utils :refer [mark-unsaved-changes-saved]]
+   [pixel-art.project-save-load.backup :as backup]
+   [pixel-art.project-save-load.sprite-serialization :as sprite-serialization]
+   [pixel-art.tool.utils :refer [check-unsaved-changes-exist
+                                 mark-unsaved-changes-saved]]
    [re-frame.core :as re-frame]))
+
+;; todo: rename this feature
 
 (def file-ext "json")
 
@@ -22,7 +26,7 @@
 (re-frame/reg-event-fx
  ::load-from-file
  (fn [_ [_ file-desc]]
-   {:fx [[::deserialize file-desc]]}))
+   {:fx [[::deserialize-from-file file-desc]]}))
 
 (re-frame/reg-event-fx
  ::deserialize-success
@@ -32,12 +36,12 @@
                             (select-keys db [:palettes :primary-color :secondary-color]))]]]}))
 
 (re-frame/reg-event-fx
- ::deserialize-error
+ ::deserialize-from-file-error
  (fn [_ [_ error]]
    {:fx [[:show-alert error]]}))
 
 (re-frame/reg-fx
- ::deserialize
+ ::deserialize-from-file
  (fn [file-desc]
    (.. (js/Promise. (fn [resolve]
                       (-> (. js/JSON (parse (:content file-desc)))
@@ -51,4 +55,18 @@
        (then (fn [res]
                (re-frame/dispatch [::deserialize-success (:sprite res)])))
        (catch (fn []
-                (re-frame/dispatch [::deserialize-error "invalid format of file"]))))))
+                (re-frame/dispatch [::deserialize-from-file-error "invalid format of file"]))))))
+
+(re-frame/reg-event-fx
+ ::save-backup-if-need
+ (fn [{:keys [db]}]
+   (if (check-unsaved-changes-exist db)
+     {:db (-> db
+              (mark-unsaved-changes-saved))
+      :fx [[::save-backup (select-keys db [:sprite])]]}
+     {})))
+
+(re-frame/reg-fx
+ ::save-backup
+ (fn [backup]
+   (backup/put-backup+ @backup/!db backup)))

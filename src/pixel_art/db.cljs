@@ -9,8 +9,7 @@
    [pixel-art.sprite-preview.events :as sprite-preview.events]
    [pixel-art.sprite-resizer.events :as sprite-resizer.events]
    [pixel-art.tool.core :as tool]
-   [sc.api]
-   [pixel-art.backup :as backup]))
+   [sc.api]))
 
 (defn get-initial-options [m]
   (-> m
@@ -38,6 +37,5 @@
     :keyboard-shortcuts-modal (keyboard-shortcuts-modal.events/init)
     :export-modal (export-modal.events/init)
     :sprite-resizer (sprite-resizer.events/init)
-    :backup (backup/init)
     :last-saved-history-idx 0} ;; TODO: Find a better solutiion. This approach is not reliabe on 100% since history has max size.
    (project-settings.events/get-initial-drawing-settings (:size sprite) viewport-size)))

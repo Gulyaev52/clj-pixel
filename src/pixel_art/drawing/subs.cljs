@@ -26,7 +26,8 @@
 
 (re-frame/reg-sub
  ::mouse-was-down ;; todo: rename?
- (fn [db] (some? (:initial-mouse-down-pos db))))
+ (fn [db]
+   (some? (:initial-mouse-down-pos db))))
 
 (re-frame/reg-sub
  ::mouse-pos

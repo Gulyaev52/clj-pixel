@@ -8,7 +8,9 @@
    [pixel-art.project-settings :as project-settings]
    [pixel-art.tool.core :as tool]
    [pixel-art.tool.utils :refer [commit-preview-and-init-tool]]
-   [re-frame.core :as re-frame]))
+   [re-frame.core :as re-frame]
+   [sc.api :as api]
+   [re-frame.db :as db]))
 
 (defn commit-preview-from-db-and-init-tool [db]
   (let [tool (tool/init (-> db :tool :type))]
@@ -237,16 +239,4 @@
      {:db (-> db
               (update :sprite (fn [sprite]
                                 (sprite/update-frame idx #(assoc % :duration valid-duration) sprite)))
-              history/save-sprite)})))
-
-(re-frame/reg-event-fx
- ::set-frame-duration-for-all
- (fn [{:keys [db]} [_ duration]]
-   (when duration
-     {:db (-> db
-              (update :sprite (fn [sprite]
-                                (->> (range 0 (count (:frames sprite)))
-                                     (reduce (fn [res-sprite idx]
-                                               (sprite/update-frame idx #(assoc % :duration duration) res-sprite))
-                                             sprite))))
               history/save-sprite)})))

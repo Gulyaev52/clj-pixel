@@ -70,12 +70,13 @@
           [:div {:style {:position "absolute" :z-index 101 :bottom "calc(100% + 5px)"}}
            (over (fn [] (reset! !opened false)))]])])))
 
-(defn slider [{:keys [value label block min max step style on-change]}]
-  [:div {:style {:display :flex
-                 :align-items :center
-                 :width (if block "100%" "250px")
-                 :gap "8px"
-                 :font-size "13px"}}
+(defn slider [{:keys [value label block min max step style on-change data-testid]}]
+  [:div (merge {:style {:display :flex
+                        :align-items :center
+                        :width (if block "100%" "250px")
+                        :gap "8px"
+                        :font-size "13px"}}
+               (when data-testid {:data-testid data-testid}))
    [:div {:style {:display :flex :gap "4px"}}
     [typography label]
     [typography {:style {:white-space "nowrap" :width "20px"}} ;; fixed width is used to avoid slider jumping when value width is changed
@@ -102,17 +103,19 @@
                                          (on-change (keyword (.. e -target -value))))}]
    (map (fn [opt] [:> (.-Button antd/Radio) {:value (name (:value opt))} (:label opt)]) options)))
 
-(defn button [{:keys [on-click disabled]} text]
-  [:> antd/Button {:onClick on-click :disabled disabled}
+(defn button [{:keys [on-click disabled data-testid]} text]
+  [:> antd/Button (cond-> {:onClick on-click :disabled disabled}
+                    data-testid (assoc :data-testid data-testid))
    text])
 
-(defn select [{:keys [value size on-change block options]}]
+(defn select [{:keys [value size on-change block options data-testid]}]
   (reag/with-let [!ref (atom nil)]
     (let [options-with-idx (map-indexed (fn [idx v] (assoc v :value idx)) options) ;; todo: we cannot use cljs object as value so we need this hack with index
           value-idx (.indexOf (mapv :value options) value)]
       [:> antd/Select {:value value-idx
                        :ref (fn [ref] (reset! !ref ref))
                        :options (clj->js options-with-idx)
+                       :data-testid data-testid
                        :size (case size
                                :sm "small"
                                :lg "large"
@@ -126,7 +129,7 @@
                                       (.. @!ref blur)
                                       (on-change value)))}])))
 
-(defn icon-button [{:keys [src icon-theme title active disabled size on-click]}]
+(defn icon-button [{:keys [src icon-theme title active disabled size on-click data-testid]}]
   [:button (merge {:className "icon-button"
                    :style (merge
                            {:border "none"
@@ -144,6 +147,7 @@
                              :else
                              {:width "100%" :height "100%"}))
                    :title title
+                   :data-testid data-testid
                    :disabled disabled
                    :on-click on-click})
    [:div {:style {:width "100%"
@@ -172,18 +176,19 @@
                                     (let [new-value (let [res (. js/Number (parseInt curr-value))]
                                                       (if (js/isNaN res)
                                                         nil
-                                                        (-> res
-                                                            (#(clojure.core/max % min))
-                                                            (#(clojure.core/min % max)))))]
+                                                        (cond-> res
+                                                          (some? min) (clojure.core/max min)
+                                                          (some? max) (clojure.core/min max))))]
                                       (set-curr-value new-value)
                                       (on-blur new-value)))}]))
 
-(def-func-component input-text [{:keys [value on-blur]}]
+(def-func-component input-text [{:keys [value on-blur testid]}]
   (let [[curr-value set-curr-value] (react/useState value)]
     (react/useEffect (fn []
                        (set-curr-value value))
                      (array value))
     [:> antd/Input {:value curr-value
+                    :data-testid testid
                     :onChange (fn [e]
                                 (set-curr-value (.. e -target -value)))
                     :onBlur (fn []
@@ -192,7 +197,7 @@
                                     (on-blur curr-value))}]))
 
 (defn modal [props & children]
-  (let [{:keys [on-cancel cancel-text on-ok ok-text ok-disabled hide-footer title additional-buttons]} props]
+  (let [{:keys [on-cancel cancel-text on-ok ok-text ok-disabled hide-footer title additional-buttons ok-data-testid]} props]
     (into
      [:> antd/Modal (merge
                      {:title title
@@ -205,7 +210,8 @@
                                :else nil)
                       :onOk on-ok
                       :okText ok-text
-                      :okButtonProps {:disabled ok-disabled}
+                      :okButtonProps (cond-> {:disabled ok-disabled}
+                                      ok-data-testid (assoc :data-testid ok-data-testid))
                       :onCancel on-cancel
                       :cancelText cancel-text
                       :footer (fn [_ props]
@@ -219,11 +225,12 @@
                      (when hide-footer {:footer nil}))]
      children)))
 
-(defn file-uploader [{:keys [on-upload accept]} render-button]
+(defn file-uploader [{:keys [on-upload accept data-testid]} render-button]
   (reag/with-let [!input-ref (reag/atom nil)]
     [:span
      [:input {:type "file"
               :accept accept
+              :data-testid data-testid
               :ref (fn [ref] (reset! !input-ref ref))
               :style {:display "none"}
               :on-change (fn [e]

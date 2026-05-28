@@ -186,6 +186,7 @@ const Sketch = /*#__PURE__*/React.forwardRef((props, ref) => {
       },
       children: [/*#__PURE__*/_jsx(EditableInput, {
         label: "Hex",
+        "data-testid": "color-picker-hex-input",
         value: hsvaToHex(hsva).replace(/^#/, '').toLocaleUpperCase(),
         onChange: (evn, val) => handleHex(val, evn),
         style: {
@@ -196,6 +197,9 @@ const Sketch = /*#__PURE__*/React.forwardRef((props, ref) => {
         style: {
           marginLeft: 6
         },
+        rProps: { 'data-testid': 'color-picker-r-input' },
+        gProps: { 'data-testid': 'color-picker-g-input' },
+        bProps: { 'data-testid': 'color-picker-b-input' },
         aProps: !disableAlpha ? {} : false,
         onChange: result => handleChange(result.hsva)
       })]

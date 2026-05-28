@@ -146,7 +146,8 @@
      [preview-comp]
      [sprite-layers-comp]
      [visual-effects-comp]
-     [:div {:id "viewport"
+     [:div {:id "canvas-viewport"
+            :data-testid "canvas-viewport"
             :ref viewport-ref
             :style {:overflow "auto"
                     :position "relative"
@@ -189,6 +190,7 @@
                                                   (re-frame/dispatch [::events/handle-mouse-event :mouse-up mouse-pos right-button])
                                                   (.. js/document (removeEventListener "mousemove" mouse-move))
                                                   (.. js/document (removeEventListener "mouseup" mouse-up))))]
+                                 (reset! !last-mouse-pos mouse-pos)
                                  (re-frame/dispatch [::events/handle-mouse-event :mouse-down mouse-pos right-button])
                                  (.. js/document (addEventListener "mousemove" mouse-move))
                                  (.. js/document (addEventListener "mouseup" mouse-up)))))
@@ -205,6 +207,7 @@
       [:div {:id "drawing-canvas-container"
              :style (merge {:position "relative"} drawing-container-size)}
        [:div {:id "canvas-layers"
+              :data-testid "canvas-layers"
               :style (merge
                       {:position "relative"
                        :left "50%"
@@ -286,6 +289,6 @@
           scale @(re-frame/subscribe [::subs/scale])
           sprite-size @(re-frame/subscribe [::common-subs/sprite-size])]
       [space
-       [typography (str "[" (:width sprite-size) "x" (:height sprite-size) "]")]
-       [typography (str (:x mouse-pos) ":" (:y mouse-pos))]
-       [typography (str "scale=" (. scale (toFixed 2)))]])))
+       [typography {:data-testid "drawing-info-sprite-size"} (str "[" (:width sprite-size) "x" (:height sprite-size) "]")]
+       [typography {:data-testid "drawing-info-mouse-pos"} (str (:x mouse-pos) ":" (:y mouse-pos))]
+       [typography {:data-testid "drawing-info-scale"} (str "scale=" (. scale (toFixed 2)))]])))

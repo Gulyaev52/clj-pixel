@@ -34,6 +34,7 @@
                  :control [input-number {:min 0
                                          :value (:prev (:frames-count onion-skin))
                                          :block true
+                                         :testid "input-prev-frames"
                                          :on-blur (fn [value]
                                                     (re-frame/dispatch [::events/set-frames-count (assoc (:frames-count onion-skin)
                                                                                                          :prev
@@ -42,17 +43,20 @@
                  :control [input-number {:min 0
                                          :value (:next (:frames-count onion-skin))
                                          :block true
+                                         :testid "input-next-frames"
                                          :on-blur (fn [value]
                                                     (re-frame/dispatch [::events/set-frames-count (assoc (:frames-count onion-skin)
                                                                                                          :next
                                                                                                          value)]))}]}]
      [form-item {:label "Opacity"
-                 :control [slider {:min 0 :max 1 :step 0.1
-                                   :value (:opacity onion-skin)
-                                   :block true
-                                   :on-change (fn [v] (re-frame/dispatch [::events/set-opacity v]))}]}]
+                 :control [:div {:data-testid "slider-opacity"}
+                            [slider {:min 0 :max 1 :step 0.1
+                                     :value (:opacity onion-skin)
+                                     :block true
+                                     :on-change (fn [v] (re-frame/dispatch [::events/set-opacity v]))}]]}]
      [form-item {:label "Position"
                  :control [select {:value (:position onion-skin)
+                                   :data-testid "select-position"
                                    :options [{:value :front :label "in front of sprite"}
                                              {:value :behind :label "behind sprite"}]
                                    :on-change (fn [v]
