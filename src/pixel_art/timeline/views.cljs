@@ -385,6 +385,7 @@
                             :link
                             :link-off)
                      :title "toggle all layers automatic linking"
+                     :data-testid "btn-toggle-all-layers-automatic-linking"
                      :size :sm
                      :on-click (fn []
                                  (re-frame/dispatch [::events/toggle-all-layers-automatic-linking]))}]]
@@ -413,6 +414,7 @@
                                 :link
                                 :link-off)
                          :title "toggle layer's automatic linking"
+                         :data-testid (str "btn-toggle-layer-automatic-linking-" (:idx layer))
                          :size :sm
                          :on-click (fn []
                                      (re-frame/dispatch [::events/toggle-layer-automatic-linking (:idx layer)]))}]]

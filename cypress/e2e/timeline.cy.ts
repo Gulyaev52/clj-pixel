@@ -462,7 +462,80 @@ describe('Timeline', () => {
     });
   });
 
+  describe.skip('Layer automatic linking', () => {
+    it('toggle layer automatic linking → draw propagates to linked cels', () => {
+      cy.startApp(undoRedoSeed); // 1 frame, 1 layer, RED@(0,0), auto-link=false
+
+      cy.get('[data-testid="btn-toggle-layer-automatic-linking-0"]').click(); // enable
+      cy.addFrame(); // frame-1 active (linked to frame-0, same pixels RED@(0,0))
+      cy.pause();
+      cy.selectTool('pen');
+      cy.pause();
+
+      cy.drawAtCanvasPixel(1, 1); // draw BLACK at (1,1) on frame-1
+      cy.pause();
+
+
+      // draw propagated to frame-0 via linking
+      cy.assertTimelineCelsAndVisiblePixels(
+        [[[[RED, T], [T, BLACK]]], [[[RED, T], [T, BLACK]]]],
+        { activeFrameIdx: 1, activeLayerIdx: 0 },
+        ['Layer 1']
+      );
+    });
+
+    it('toggle all layers automatic linking → draw propagates in all linked layers', () => {
+      cy.startApp(visibilitySeed); // 1 frame, Layer 1=RED@(0,0), Layer 2=BLUE@(1,1), both auto-link=false
+
+      cy.get('[data-testid="btn-toggle-all-layers-automatic-linking"]').click(); // enable all
+      cy.addFrame(); // frame-1 active
+
+      // draw on layer 0, frame 1
+      cy.selectTool('pen');
+      cy.drawAtCanvasPixel(0, 1); // BLACK at (0,1)
+
+      // switch to layer 1, frame 1 — draw there too
+      cy.get('[data-testid="cel-1-1"]').click();
+      cy.drawAtCanvasPixel(1, 0); // BLACK at (1,0)
+
+      // both layers' draws propagated to frame-0
+      cy.assertTimelineCelsAndVisiblePixels(
+        [
+          [[[RED, T], [BLACK, T]], [[T, BLACK], [T, BLUE]]],  // frame-0: both layers propagated!
+          [[[RED, T], [BLACK, T]], [[T, BLACK], [T, BLUE]]],  // frame-1: directly drawn
+        ],
+        { activeFrameIdx: 1, activeLayerIdx: 1 },
+        ['Layer 1', 'Layer 2']
+      );
+    });
+  });
+
   describe('Onion skin', () => {
+    it('enable → shows adjacent frame pixels; navigate → updates; disable → clears', () => {
+      cy.startApp(twoFramesTwoLayersSeed);
+
+      // Disabled by default — canvas is empty
+      cy.get('[title="enable onion skin"]').should('exist');
+      cy.assertOnionSkinPixels([[T, T], [T, T]], 'canvas empty when disabled');
+
+      // Enable
+      cy.get('[data-testid="btn-toggle-onion-skin"]').click();
+      cy.get('[title="disable onion skin"]').should('exist');
+
+      // Frame-0 active → shows frame-1 (layer-0: GREEN at bottom-right)
+      cy.assertOnionSkinPixels([[T, T], [T, GREEN]], 'frame-1 pixels visible when frame-0 active');
+      cy.screenshot("onion-skin");
+
+      // Navigate to frame-1 → shows frame-0 (layer-0: RED at top-left)
+      cy.get('[data-testid="cel-1-0"]').click();
+      cy.assertOnionSkinPixels([[RED, T], [T, T]], 'frame-0 pixels visible when frame-1 active');
+
+      // Disable → canvas clears
+      cy.get('[data-testid="btn-toggle-onion-skin"]').click();
+      cy.get('[title="enable onion skin"]').should('exist');
+      cy.assertOnionSkinPixels([[T, T], [T, T]], 'canvas empty after disable');
+    });
+
     it('settings: next frames / opacity / position / previous frames', () => {
       cy.startApp(threeFramesTwoLayersSeed);
 
@@ -503,28 +576,5 @@ describe('Timeline', () => {
       cy.assertOnionSkinPixels([[T, T], [T, GREEN]], 'frame-1 visible with prev=1');
     });
 
-    it('enable → shows adjacent frame pixels; navigate → updates; disable → clears', () => {
-      cy.startApp(twoFramesTwoLayersSeed);
-
-      // Disabled by default — canvas is empty
-      cy.get('[title="enable onion skin"]').should('exist');
-      cy.assertOnionSkinPixels([[T, T], [T, T]], 'canvas empty when disabled');
-
-      // Enable
-      cy.get('[data-testid="btn-toggle-onion-skin"]').click();
-      cy.get('[title="disable onion skin"]').should('exist');
-
-      // Frame-0 active → shows frame-1 (layer-0: GREEN at bottom-right)
-      cy.assertOnionSkinPixels([[T, T], [T, GREEN]], 'frame-1 pixels visible when frame-0 active');
-
-      // Navigate to frame-1 → shows frame-0 (layer-0: RED at top-left)
-      cy.get('[data-testid="cel-1-0"]').click();
-      cy.assertOnionSkinPixels([[RED, T], [T, T]], 'frame-0 pixels visible when frame-1 active');
-
-      // Disable → canvas clears
-      cy.get('[data-testid="btn-toggle-onion-skin"]').click();
-      cy.get('[title="enable onion skin"]').should('exist');
-      cy.assertOnionSkinPixels([[T, T], [T, T]], 'canvas empty after disable');
-    });
   });
 });
