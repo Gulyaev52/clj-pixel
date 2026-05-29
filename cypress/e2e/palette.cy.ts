@@ -7,8 +7,8 @@ describe('Palette', () => {
     ...defaultDbSeed,
     palettes: [{ name: 'default', current: true, colors: [rgbaToInt(255, 0, 0)] }],
     sprite: getSpriteFromPixels([
-      [r, rgba(0, 255, 0)],  // red (уже в палитре), lime green (новый)
-      [y, t]                 // blue (новый), transparent (пропускается)
+      [r, rgba(0, 255, 0)],
+      [y, t]
     ])
   };
 
