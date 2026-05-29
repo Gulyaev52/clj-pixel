@@ -213,8 +213,11 @@
                 :label "Grid"
                 :on-change (fn [checked] (re-frame/dispatch [::drawing.events/enable-pixels-grid checked]))}]
      [undo-redo-buttons]
-     [space
-      [title {:level 3 :style {:margin 0}}
+     [space {:style {:min-width 0} :styles {:item {:min-width 0}}}
+      [title {:level 3 :style {:margin 0
+                               :white-space "nowrap"
+                               :overflow "hidden"
+                               :text-overflow "ellipsis"}}
        (str sprite-title (when unsaved-changes-exist "*"))]
       [icon-button {:src :pen
                     :title "edit title"
@@ -224,7 +227,7 @@
                                 (let [new-title (js/prompt "Title")]
                                   (when-not (string/blank? new-title)
                                     (re-frame/dispatch [::events/set-sprite-title new-title]))))}]]
-     [:div {:style {:margin-left "auto"}}
+     [:div {:style {:margin-left "auto" :flex-shrink 0}}
       [drawing-info]]]))
 
 (def-func-component app-content []
