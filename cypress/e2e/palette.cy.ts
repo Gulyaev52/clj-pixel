@@ -142,7 +142,7 @@ describe('Palette', () => {
       .should('contain.text', 'Renamed Palette', 'new name persists after reload');
   });
 
-  it.only('"Add colors from current frame" adds only new non-transparent colors from current frame to palette', () => {
+  it('"Add colors from current frame" adds only new non-transparent colors from current frame to palette', () => {
     cy.startApp(addFromFrameSeed);
 
     cy.get('[title="Add colors from current frame"]').click();
