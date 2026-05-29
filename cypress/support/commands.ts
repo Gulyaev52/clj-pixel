@@ -26,8 +26,6 @@ declare global {
       redo(): Chainable<void>;
       drag(sourceSelector: string, targetSelector: string): Chainable<void>;
       assertCelGroupNumber(options: { frameIdx: number; layerIdx: number; groupNumber: number | null }): Chainable<void>;
-      addLayer(): Chainable<void>;
-      addFrame(): Chainable<void>;
       assertCanvasPixels(pixels: string[][], assertMessage?: string): Chainable<void>;
     }
   }
@@ -257,8 +255,7 @@ Cypress.Commands.add('stubConfirm', (returnValue: boolean) => {
 
 Cypress.Commands.add('undo', () => { cy.realPress(['Control', 'z']); });
 Cypress.Commands.add('redo', () => { cy.realPress(['Control', 'y']); });
-Cypress.Commands.add('addLayer', () => { cy.get('[data-testid="btn-add-layer"]').click(); });
-Cypress.Commands.add('addFrame', () => { cy.get('[data-testid="btn-add-empty-frame"]').click(); });
+
 Cypress.Commands.add('assertCanvasPixels', (pixels: string[][], assertMessage?: string) => {
   cy.assertVisibleCanvasPixels(pixels, assertMessage);
 });

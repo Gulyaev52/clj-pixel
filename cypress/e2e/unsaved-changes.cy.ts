@@ -13,14 +13,14 @@ const seed: DBSeed = {
 describe('Unsaved changes', () => {
   it('* appears next to title after a change', () => {
     cy.startApp(seed);
-    cy.addLayer();
+    cy.get('[data-testid="btn-add-layer"]').click();
     cy.contains('h3', TITLE + '*').should('exist');
   });
 
   it('* disappears after save as file', () => {
     cy.exec('rm -f "cypress/downloads/TestProject.json"', { failOnNonZeroExit: false });
     cy.startApp(seed);
-    cy.addLayer();
+    cy.get('[data-testid="btn-add-layer"]').click();
     cy.contains('h3', TITLE + '*').should('exist', '* appears after change');
     cy.get('[data-testid="btn-save-as-file"]').click();
     cy.contains('h3', TITLE + '*').should('not.exist', '* disappears after save');
@@ -36,7 +36,7 @@ describe('Unsaved changes', () => {
     });
 
     cy.startApp(seed);
-    cy.addLayer();
+    cy.get('[data-testid="btn-add-layer"]').click();
 
     cy.window().then(win => {
       const handler = (win as any).__beforeunloadHandler;
@@ -49,7 +49,7 @@ describe('Unsaved changes', () => {
   it('save in browser → * disappears, notification shown, backup applied after reload', () => {
     cy.startApp(seed);
     cy.drawAtCanvasPixel(0, 0);
-    cy.addLayer();
+    cy.get('[data-testid="btn-add-layer"]').click();
     cy.contains('h3', TITLE + '*').should('exist', '* appears after change');
     cy.get('[data-testid="btn-save-in-browser"]').click();
     cy.contains('h3', TITLE + '*').should('not.exist', '* disappears after save');
@@ -73,7 +73,7 @@ describe('Unsaved changes', () => {
     cy.clock(Date.now(), ['setInterval', 'clearInterval']);
     cy.startApp(seed);
     cy.drawAtCanvasPixel(0, 0);
-    cy.addLayer();
+    cy.get('[data-testid="btn-add-layer"]').click();
     cy.contains('h3', TITLE + '*').should('exist', '* appears after change');
     cy.tick(300000);
     cy.contains('h3', TITLE + '*').should('not.exist', '* disappears after backup');

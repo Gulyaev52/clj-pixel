@@ -398,7 +398,7 @@ describe('Timeline', () => {
       cy.get('[data-testid="btn-undo"]').should('be.disabled', 'undo disabled with no history');
       cy.get('[data-testid="btn-redo"]').should('be.disabled', 'redo disabled with no history');
 
-      cy.addLayer();
+      cy.get('[data-testid="btn-add-layer"]').click();
       cy.get('[data-testid="btn-undo"]').should('not.be.disabled', 'undo enabled after change');
       cy.get('[data-testid="btn-redo"]').should('be.disabled', 'redo disabled before any undo');
 
@@ -424,7 +424,7 @@ describe('Timeline', () => {
     it('add frame → undo → redo', () => {
       cy.startApp(undoRedoSeed); // 1 frame, 1 layer, r at (0,0)
 
-      cy.addFrame();
+      cy.get('[data-testid="btn-add-empty-frame"]').click();
       cy.assertTimelineCelsAndVisiblePixels(
         [[[[r, t], [t, t]]], [[[t, t], [t, t]]]],
         { activeFrameIdx: 1, activeLayerIdx: 0 },
@@ -449,7 +449,7 @@ describe('Timeline', () => {
     it('add layer → undo → redo', () => {
       cy.startApp(undoRedoSeed); // 1 frame, 1 layer, r at (0,0)
 
-      cy.addLayer();
+      cy.get('[data-testid="btn-add-layer"]').click();
       cy.assertTimelineCelsAndVisiblePixels(
         [[[[r, t], [t, t]], [[t, t], [t, t]]]],
         { activeFrameIdx: 0, activeLayerIdx: 1 },
@@ -503,7 +503,7 @@ describe('Timeline', () => {
       cy.startApp(undoRedoSeed); // 1 frame, 1 layer, r@(0,0), auto-link=false
 
       cy.get('[data-testid="btn-toggle-layer-automatic-linking-0"]').click(); // enable
-      cy.addFrame(); // frame-1 active (linked to frame-0, same pixels r@(0,0))
+      cy.get('[data-testid="btn-add-empty-frame"]').click(); // frame-1 active (linked to frame-0, same pixels r@(0,0))
       cy.selectTool('pen');
 
       cy.drawAtCanvasPixel(1, 1); // draw b at (1,1) on frame-1
@@ -521,7 +521,7 @@ describe('Timeline', () => {
       cy.startApp(visibilitySeed); // 1 frame, Layer 1=r@(0,0), Layer 2=y@(1,1), both auto-link=false
 
       cy.get('[data-testid="btn-toggle-all-layers-automatic-linking"]').click(); // enable all
-      cy.addFrame(); // frame-1 active
+      cy.get('[data-testid="btn-add-empty-frame"]').click(); // frame-1 active
 
       // draw on layer 0, frame 1
       cy.selectTool('pen');
