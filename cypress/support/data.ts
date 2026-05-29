@@ -5,7 +5,7 @@ export interface DBSeed {
   "secondary-color": number;
   palettes: Array<{ name: string; current: boolean; colors: number[] }>;
   sprite: {
-    title?: string;
+    title: string;
     size: { width: number; height: number };
     frames: Array<{ duration: number }>;
     cels: Array<Array<{ size: { width: number; height: number }; 'data-url': string }>>;
@@ -18,6 +18,7 @@ export const defaultDbSeed: DBSeed = {
   'secondary-color': rgbaToInt(255, 0, 0),
   palettes: [{ name: 'default', current: true, colors: [rgbaToInt(0, 0, 0), rgbaToInt(255, 0, 0), rgbaToInt(0, 0, 255), rgbaToInt(0, 128, 0)] }],
   sprite: {
+    title: "ProjectTitle",
     size: { width: 5, height: 5 },
     frames: [{ duration: 100 }],
     cels: [[{ size: { width: 5, height: 5 }, 'data-url': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAKElEQVQ4T2NkoDJgpLJ5DKMGUh6io2E4GoZkhMBosiEj0NC0jMAwBABIxgAVO+SUsAAAAABJRU5ErkJggg==' }]],
@@ -27,6 +28,7 @@ export const defaultDbSeed: DBSeed = {
 
 export const getSpriteFromPixels = (pixels: string[][]): DBSeed['sprite'] => {
   return {
+    title: "ProjectTitle",
     size: { width: pixels[0].length, height: pixels.length },
     frames: [{ duration: 100 }],
     cels: [[{ size: { width: pixels[0].length, height: pixels.length }, 'data-url': pixelsToDataURL(pixels) }]],
@@ -43,6 +45,7 @@ export const getSpriteFromCels = (
   const height = cels[0][0].length;
   const width = cels[0][0][0].length;
   return {
+    title: "ProjectTitle",
     size: { width, height },
     frames,
     layers,

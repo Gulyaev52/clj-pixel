@@ -1,29 +1,27 @@
-import { defaultDbSeed, DBSeed } from '../support/data';
-import { b, t } from '../support/colors';
-
-const TITLE = 'TestProject';
-const E = Array(5).fill(t); // empty row
+import { DBSeed, defaultDbSeed, getSpriteFromPixels } from '../support/data';
+import { b, r, t } from '../support/colors';
 
 const seed: DBSeed = {
   ...defaultDbSeed,
-  sprite: { ...defaultDbSeed.sprite, title: TITLE }
+  sprite: getSpriteFromPixels([[r, t], [t, t]]),
 };
+const title = defaultDbSeed.sprite.title!;
 
 // похожие тесты в project
 describe('Unsaved changes', () => {
   it('* appears next to title after a change', () => {
     cy.startApp(seed);
     cy.get('[data-testid="btn-add-layer"]').click();
-    cy.contains('h3', TITLE + '*').should('exist');
+    cy.contains('h3', title + '*').should('exist');
   });
 
   it('* disappears after save as file', () => {
     cy.exec('rm -f "cypress/downloads/TestProject.json"', { failOnNonZeroExit: false });
     cy.startApp(seed);
     cy.get('[data-testid="btn-add-layer"]').click();
-    cy.contains('h3', TITLE + '*').should('exist', '* appears after change');
+    cy.contains('h3', title + '*').should('exist', '* appears after change');
     cy.get('[data-testid="btn-save-as-file"]').click();
-    cy.contains('h3', TITLE + '*').should('not.exist', '* disappears after save');
+    cy.contains('h3', title + '*').should('not.exist', '* disappears after save');
   });
 
   it('warns on page close when there are unsaved changes', () => {
@@ -50,9 +48,9 @@ describe('Unsaved changes', () => {
     cy.startApp(seed);
     cy.drawAtCanvasPixel(0, 0);
     cy.get('[data-testid="btn-add-layer"]').click();
-    cy.contains('h3', TITLE + '*').should('exist', '* appears after change');
+    cy.contains('h3', title + '*').should('exist', '* appears after change');
     cy.get('[data-testid="btn-save-in-browser"]').click();
-    cy.contains('h3', TITLE + '*').should('not.exist', '* disappears after save');
+    cy.contains('h3', title + '*').should('not.exist', '* disappears after save');
     cy.contains('.ant-notification-notice-message', 'Successfully saved!').should('be.visible');
 
     cy.visit('/index.html');
@@ -61,8 +59,7 @@ describe('Unsaved changes', () => {
 
     cy.assertTimelineCelsAndVisiblePixels(
       [[
-        [[b, t, t, t, t], E, E, E, E],
-        [E, E, E, E, E],
+        [[b, t], [t, t]],
       ]],
       { activeFrameIdx: 0, activeLayerIdx: 0 },
       ['Layer 1', 'Layer 2']
@@ -74,9 +71,9 @@ describe('Unsaved changes', () => {
     cy.startApp(seed);
     cy.drawAtCanvasPixel(0, 0);
     cy.get('[data-testid="btn-add-layer"]').click();
-    cy.contains('h3', TITLE + '*').should('exist', '* appears after change');
+    cy.contains('h3', title + '*').should('exist', '* appears after change');
     cy.tick(300000);
-    cy.contains('h3', TITLE + '*').should('not.exist', '* disappears after backup');
+    cy.contains('h3', title + '*').should('not.exist', '* disappears after backup');
     cy.contains('.ant-notification-notice-message', 'Auto-backup').should('be.visible');
 
     cy.visit('/index.html');
@@ -85,8 +82,7 @@ describe('Unsaved changes', () => {
 
     cy.assertTimelineCelsAndVisiblePixels(
       [[
-        [[b, t, t, t, t], E, E, E, E],
-        [E, E, E, E, E],
+        [[b, t], [t, t]],
       ]],
       { activeFrameIdx: 0, activeLayerIdx: 0 },
       ['Layer 1', 'Layer 2']
