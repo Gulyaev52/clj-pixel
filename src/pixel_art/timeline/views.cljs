@@ -318,16 +318,17 @@
                          :on-click open}])
          [onion-skin-settings]]]]]
 
-     [:div {:style {:display :flex}}
-      [:<>
-       [sprite-preview-modal]
-       [button {:on-click (fn [] (re-frame/dispatch [::sprite-preview.events/open]))} "Show preview"]]
+     [:div {:style {:display :flex}} 
       [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
-       [typography "Duration (ms)"]
+       [typography "Frame duration (ms)"]
        [input-number {:value (:duration current-frame)
                       :testid "input-frame-duration"
                       :on-blur (fn [duration]
-                                 (re-frame/dispatch [::events/set-frame-duration (:idx current-frame) duration]))}]]]]))
+                                 (re-frame/dispatch [::events/set-frame-duration (:idx current-frame) duration]))}]]
+      [:<>
+       [sprite-preview-modal]
+       [:div {:style {:margin-top "auto"}}
+        [button {:on-click (fn [] (re-frame/dispatch [::sprite-preview.events/open]))} "Show preview"]]]]]))
 
 (def dndScrollingVerticalStrength (react-dnd-scrolling/createVerticalStrength 50))
 
