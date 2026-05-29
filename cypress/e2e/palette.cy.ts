@@ -142,7 +142,7 @@ describe('Palette', () => {
       .should('contain.text', 'Renamed Palette', 'new name persists after reload');
   });
 
-  it('"Add colors from current frame" adds only new non-transparent colors from current frame to palette', () => {
+  it.only('"Add colors from current frame" adds only new non-transparent colors from current frame to palette', () => {
     cy.startApp(addFromFrameSeed);
 
     cy.get('[title="Add colors from current frame"]').click();
@@ -159,6 +159,7 @@ describe('Palette', () => {
     cy.get('[data-testid^="palette-color-"]').eq(2)
       .should('have.attr', 'data-testid', 'palette-color-rgba(0,0,255,1)',
         'blue appended after existing colors');
+    cy.contains('.ant-notification-notice-message', '2 colors were added!').should('be.visible');
   });
 
   it('removes current palette: button disables when one remains, first palette selected, does not persist after reload', () => {

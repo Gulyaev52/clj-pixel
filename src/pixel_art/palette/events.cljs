@@ -67,14 +67,18 @@
  (fn [{:keys [db]}]
    (let [sprite (:sprite db)
          cels (sprite/get-frame-cels (sprite/get-current-frame-idx sprite) sprite)
-         colors (->> cels
-                     (mapcat :pixels)
-                     distinct
-                     (remove #(= transparent-color-int %)))]
+         cels-colors (->> cels
+                          (mapcat :pixels)
+                          distinct
+                          (remove #(= transparent-color-int %)))
+         old-colors (:colors (get-current-palette db))
+         actual-colors (->> (concat old-colors cels-colors)
+                            distinct
+                            vec)
+         new-colors-count (- (count actual-colors) (count old-colors))]
      {:db (-> db
-              (update-in [:palettes (get-current-palette-idx db) :colors] #(->> (concat % colors)
-                                                                                distinct
-                                                                                vec)))})))
+              (assoc-in [:palettes (get-current-palette-idx db) :colors] actual-colors))
+      :fx [[:show-notification {:type :success :message (str new-colors-count " colors were added!")}]]})))
 
 (re-frame/reg-event-fx
  ::import-palette
