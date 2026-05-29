@@ -1,17 +1,14 @@
 import { defaultDbSeed, getSpriteFromPixels, DBSeed } from '../support/data';
-import { rgba } from '../support/utils';
+import { r, t } from '../support/colors';
 
 const editTitleSeed: DBSeed = {
   ...defaultDbSeed,
   sprite: { ...defaultDbSeed.sprite, title: 'OriginalTitle' }
 };
 
-const T   = rgba(0, 0, 0, 0);
-const RED = rgba(255, 0, 0);
-
 const saveLoadSeed: DBSeed = {
   ...defaultDbSeed,
-  sprite: { ...getSpriteFromPixels([[RED, T], [T, T]]), title: 'SaveLoadTest' }
+  sprite: { ...getSpriteFromPixels([[r, t], [t, t]]), title: 'SaveLoadTest' }
 };
 
 describe('Project', () => {
@@ -35,7 +32,7 @@ describe('Project', () => {
     cy.get('[data-testid="btn-create-project"]').should('not.exist');
     cy.contains('h3', 'My Project').should('exist');
     cy.assertTimelineCelsAndVisiblePixels(
-      [[[[T, T], [T, T]]]],
+      [[[[t, t], [t, t]]]],
       { activeFrameIdx: 0, activeLayerIdx: 0 },
       ['Layer 1']
     );
@@ -83,7 +80,7 @@ describe('Project', () => {
 
         cy.get('h3').should('have.text', 'SaveLoadTest');
         cy.assertTimelineCelsAndVisiblePixels(
-          [[[[RED, T], [T, T]]]],
+          [[[[r, t], [t, t]]]],
           { activeFrameIdx: 0, activeLayerIdx: 0 },
           ['Layer 1']
         );
@@ -92,7 +89,7 @@ describe('Project', () => {
   });
 
   it('create project clears history — undo after create has no effect', () => {
-    cy.startApp(saveLoadSeed); // title='SaveLoadTest', RED at (0,0), 2×2
+    cy.startApp(saveLoadSeed); // title='SaveLoadTest', r at (0,0), 2×2
     cy.stubConfirm(true);
 
     cy.get('[data-testid="btn-new-project"]').click();

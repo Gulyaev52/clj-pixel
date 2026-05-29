@@ -1,10 +1,8 @@
 import { defaultDbSeed, DBSeed } from '../support/data';
-import { rgba } from '../support/utils';
+import { b, t } from '../support/colors';
 
 const TITLE = 'TestProject';
-const T = rgba(0, 0, 0, 0);
-const BLACK = rgba(0, 0, 0);
-const E = Array(5).fill(T); // empty row
+const E = Array(5).fill(t); // empty row
 
 const seed: DBSeed = {
   ...defaultDbSeed,
@@ -63,7 +61,7 @@ describe('Unsaved changes', () => {
 
     cy.assertTimelineCelsAndVisiblePixels(
       [[
-        [[BLACK, T, T, T, T], E, E, E, E],
+        [[b, t, t, t, t], E, E, E, E],
         [E, E, E, E, E],
       ]],
       { activeFrameIdx: 0, activeLayerIdx: 0 },
@@ -87,7 +85,7 @@ describe('Unsaved changes', () => {
 
     cy.assertTimelineCelsAndVisiblePixels(
       [[
-        [[BLACK, T, T, T, T], E, E, E, E],
+        [[b, t, t, t, t], E, E, E, E],
         [E, E, E, E, E],
       ]],
       { activeFrameIdx: 0, activeLayerIdx: 0 },

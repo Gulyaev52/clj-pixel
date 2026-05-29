@@ -1,17 +1,14 @@
 import { defaultDbSeed, getSpriteFromPixels, DBSeed } from '../support/data';
-import { rgba } from '../support/utils';
-
-const RED = rgba(255, 0, 0);
-const T   = rgba(0, 0, 0, 0);
+import { r, t } from '../support/colors';
 
 const diagonalSeed: DBSeed = {
   ...defaultDbSeed,
   sprite: getSpriteFromPixels([
-    [RED, T,   T,   T,   RED],
-    [T,   RED, T,   RED, T  ],
-    [T,   T,   RED, T,   T  ],
-    [T,   RED, T,   RED, T  ],
-    [RED, T,   T,   T,   RED],
+    [r, t, t, t, r],
+    [t, r, t, r, t],
+    [t, t, r, t, t],
+    [t, r, t, r, t],
+    [r, t, t, t, r],
   ])
 };
 

@@ -1,14 +1,12 @@
 import { defaultDbSeed, getSpriteFromPixels, DBSeed } from '../support/data';
-import { rgba } from '../support/utils';
-
-const T = rgba(0, 0, 0, 0);
+import { t } from '../support/colors';
 
 const size3x2Seed: DBSeed = {
   ...defaultDbSeed,
   sprite: {
     ...getSpriteFromPixels([
-      [T, T, T],
-      [T, T, T],
+      [t, t, t],
+      [t, t, t],
     ])
   }
 };
