@@ -79,19 +79,19 @@ describe('Timeline', () => {
       // Move to frame-1
       cy.get('[data-testid="cel-1-0"]').click();
       cy.get('[data-testid="frame-1"][data-current="true"]').should('exist', 'frame-1 is active before remove');
-      cy.get('[title="remove frame"]').click();
+      cy.get('[data-testid="btn-remove-frame"]').click();
 
       // Only frame-0 remains, previous frame is selected
       cy.assertTimelineCelsAndVisiblePixels([
         [[[r, t], [t, t]], [[t, t], [t, r]]],
       ], { activeFrameIdx: 0, activeLayerIdx: 0 }, ['Layer 1', 'Layer 2']);
-      cy.get('[title="remove frame"]').should('be.disabled', 'remove frame button is disabled when only one frame exists');
+      cy.get('[data-testid="btn-remove-frame"]').should('be.disabled', 'remove frame button is disabled when only one frame exists');
     });
 
     it('duplicate frame → copy inserted after current, new frame becomes active', () => {
       cy.startApp(twoFramesTwoLayersSeed);
 
-      cy.get('[title="duplicate frame"]').click();
+      cy.get('[data-testid="btn-duplicate-frame"]').click();
 
       cy.assertTimelineCelsAndVisiblePixels([
         [[[r, t], [t, t]], [[t, t], [t, r]]],           // frame-0: unchanged
@@ -104,38 +104,38 @@ describe('Timeline', () => {
       cy.startApp(twoFramesTwoLayersSeed);
 
       cy.get('[data-testid="cel-0-1"]').click();
-      cy.get('[title="move frame right"]').should('not.be.disabled', 'button enabled when not on last frame');
+      cy.get('[data-testid="btn-move-frame-right"]').should('not.be.disabled', 'button enabled when not on last frame');
 
-      cy.get('[title="move frame right"]').click();
+      cy.get('[data-testid="btn-move-frame-right"]').click();
 
       cy.assertTimelineCelsAndVisiblePixels([
         [[[t, t], [t, g]], [[g, t], [t, t]]],   // frame-0: was frame-1
         [[[r, t], [t, t]], [[t, t], [t, r]]],       // frame-1: was frame-0 (active)
       ], { activeFrameIdx: 1, activeLayerIdx: 1 }, ['Layer 1', 'Layer 2']);
 
-      cy.get('[title="move frame right"]').should('be.disabled', 'button disabled on last frame');
+      cy.get('[data-testid="btn-move-frame-right"]').should('be.disabled', 'button disabled on last frame');
     });
 
     it('move frame left → frame moves to previous position, button disabled on first frame', () => {
       cy.startApp(twoFramesTwoLayersSeed);
 
       cy.get('[data-testid="cel-1-1"]').click();
-      cy.get('[title="move frame left"]').should('not.be.disabled', 'button enabled when not on first frame');
+      cy.get('[data-testid="btn-move-frame-left"]').should('not.be.disabled', 'button enabled when not on first frame');
 
-      cy.get('[title="move frame left"]').click();
+      cy.get('[data-testid="btn-move-frame-left"]').click();
 
       cy.assertTimelineCelsAndVisiblePixels([
         [[[t, t], [t, g]], [[g, t], [t, t]]],   // frame-0: was frame-1 (active)
         [[[r, t], [t, t]], [[t, t], [t, r]]],       // frame-1: was frame-0
       ], { activeFrameIdx: 0, activeLayerIdx: 1 }, ['Layer 1', 'Layer 2']);
 
-      cy.get('[title="move frame left"]').should('be.disabled', 'button disabled on first frame');
+      cy.get('[data-testid="btn-move-frame-left"]').should('be.disabled', 'button disabled on first frame');
     });
 
     it('add empty frame → new frame is active, is empty, draw works', () => {
       cy.startApp(twoFramesTwoLayersSeed);
 
-      cy.get('[title="add empty frame"]').click();
+      cy.get('[data-testid="btn-add-empty-frame"]').click();
 
       cy.assertTimelineCelsAndVisiblePixels([
         [[[r, t], [t, t]], [[t, t], [t, r]]],   // frame-0: layer-0 red | layer-1 red(1,1)
@@ -157,7 +157,7 @@ describe('Timeline', () => {
     it('add layer → new layer inserted after current, becomes active', () => {
       cy.startApp(twoFramesTwoLayersSeed);
 
-      cy.get('[title="add layer"]').click();
+      cy.get('[data-testid="btn-add-layer"]').click();
 
       cy.assertTimelineCelsAndVisiblePixels([
         [[[r, t], [t, t]], [[t, t], [t, t]], [[t, t], [t, r]]],      // frame-0: L1 | new empty (active) | L2
@@ -548,12 +548,12 @@ describe('Timeline', () => {
       cy.startApp(twoFramesTwoLayersSeed);
 
       // Disabled by default — canvas is empty
-      cy.get('[title="enable onion skin"]').should('exist');
+      cy.get('[data-testid="btn-toggle-onion-skin"]').should('have.attr', 'title', 'enable onion skin');
       cy.assertOnionSkinPixels([[t, t], [t, t]], 'canvas empty when disabled');
 
       // Enable
       cy.get('[data-testid="btn-toggle-onion-skin"]').click();
-      cy.get('[title="disable onion skin"]').should('exist');
+      cy.get('[data-testid="btn-toggle-onion-skin"]').should('have.attr', 'title', 'disable onion skin');
 
       // Frame-0 active → shows frame-1 (layer-0: g at bottom-right)
       cy.assertOnionSkinPixels([[t, t], [t, g]], 'frame-1 pixels visible when frame-0 active');
@@ -565,7 +565,7 @@ describe('Timeline', () => {
 
       // Disable → canvas clears
       cy.get('[data-testid="btn-toggle-onion-skin"]').click();
-      cy.get('[title="enable onion skin"]').should('exist');
+      cy.get('[data-testid="btn-toggle-onion-skin"]').should('have.attr', 'title', 'enable onion skin');
       cy.assertOnionSkinPixels([[t, t], [t, t]], 'canvas empty after disable');
     });
 
@@ -573,7 +573,7 @@ describe('Timeline', () => {
       cy.startApp(threeFramesTwoLayersSeed);
 
       cy.get('[data-testid="btn-toggle-onion-skin"]').click();
-      cy.get('[title="onion skin settings"]').click();
+      cy.get('[data-testid="btn-onion-skin-settings"]').click();
 
       // Next Frames = 2 → #{1,2} iterates [1,2]; frame-2 drawn last → shows frame-2 layer-0 (blue at top-right)
       cy.get('[data-testid="input-next-frames"]').clear().type('2').blur();
@@ -603,7 +603,7 @@ describe('Timeline', () => {
       cy.assertOnionSkinPixels([[t, t], [t, g]], 'frame-1 visible when frame-2 active (prev=1)');
 
       // Reopen settings
-      cy.get('[title="onion skin settings"]').click();
+      cy.get('[data-testid="btn-onion-skin-settings"]').click();
 
       // Previous Frames = 0 → canvas clears (frame-2 active, no prev or next)
       cy.get('[data-testid="input-prev-frames"]').clear().type('0').blur();

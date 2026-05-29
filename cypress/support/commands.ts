@@ -257,8 +257,8 @@ Cypress.Commands.add('stubConfirm', (returnValue: boolean) => {
 
 Cypress.Commands.add('undo', () => { cy.realPress(['Control', 'z']); });
 Cypress.Commands.add('redo', () => { cy.realPress(['Control', 'y']); });
-Cypress.Commands.add('addLayer', () => { cy.get('[title="add layer"]').click(); });
-Cypress.Commands.add('addFrame', () => { cy.get('[title="add empty frame"]').click(); });
+Cypress.Commands.add('addLayer', () => { cy.get('[data-testid="btn-add-layer"]').click(); });
+Cypress.Commands.add('addFrame', () => { cy.get('[data-testid="btn-add-empty-frame"]').click(); });
 Cypress.Commands.add('assertCanvasPixels', (pixels: string[][], assertMessage?: string) => {
   cy.assertVisibleCanvasPixels(pixels, assertMessage);
 });

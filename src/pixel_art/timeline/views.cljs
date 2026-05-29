@@ -222,32 +222,38 @@
      [space
       [timeline-panel-section "Frames" [[icon-button {:src :add
                                                       :title "add empty frame"
+                                                      :data-testid "btn-add-empty-frame"
                                                       :disabled (:add-frame disabled-actions)
                                                       :size :sm
                                                       :on-click (fn [] (re-frame/dispatch [::events/add-frame]))}]
                                         [icon-button {:src :remove
                                                       :title "remove frame"
+                                                      :data-testid "btn-remove-frame"
                                                       :disabled (:remove-frame disabled-actions)
                                                       :size :sm
                                                       :on-click (fn [] (re-frame/dispatch [::events/remove-frame]))}]
                                         [icon-button {:src :duplicate
                                                       :title "duplicate frame"
+                                                      :data-testid "btn-duplicate-frame"
                                                       :disabled (:duplicate-frame disabled-actions)
                                                       :size :sm
                                                       :on-click (fn [] (re-frame/dispatch [::events/duplicate-frame]))}]
                                         [icon-button {:src :arrow-left
                                                       :title "move frame left"
+                                                      :data-testid "btn-move-frame-left"
                                                       :disabled (:move-frame-left disabled-actions)
                                                       :size :sm
                                                       :on-click (fn [] (re-frame/dispatch [::events/move-frame-left]))}]
                                         [icon-button {:src :arrow-right
                                                       :title "move frame right"
+                                                      :data-testid "btn-move-frame-right"
                                                       :disabled (:move-frame-right disabled-actions)
                                                       :size :sm
                                                       :on-click (fn [] (re-frame/dispatch [::events/move-frame-right]))}]]]
 
       [timeline-panel-section "Layers" [[icon-button {:src :add
                                                       :title "add layer"
+                                                      :data-testid "btn-add-layer"
                                                       :disabled (:add-layer disabled-actions)
                                                       :size :sm
                                                       :on-click (fn [] (re-frame/dispatch [::events/add-layer]))}]
@@ -314,6 +320,7 @@
          (fn [open]
            [icon-button {:src :cog
                          :title "onion skin settings"
+                         :data-testid "btn-onion-skin-settings"
                          :size :sm
                          :on-click open}])
          [onion-skin-settings]]]]]
