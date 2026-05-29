@@ -1,14 +1,14 @@
 import { defaultDbSeed, DBSeed, getSpriteFromPixels } from '../support/data';
-import { rgbaToInt } from '../support/utils';
-import { r, t, y, g } from '../support/colors';
+import { rgbaToInt, rgba } from '../support/utils';
+import { r, t, y } from '../support/colors';
 
 describe('Palette', () => {
   const addFromFrameSeed: DBSeed = {
     ...defaultDbSeed,
     palettes: [{ name: 'default', current: true, colors: [rgbaToInt(255, 0, 0)] }],
     sprite: getSpriteFromPixels([
-      [r, g],
-      [y, t]
+      [r, rgba(0, 255, 0)],  // red (уже в палитре), lime green (новый)
+      [y, t]                 // blue (новый), transparent (пропускается)
     ])
   };
 

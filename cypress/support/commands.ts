@@ -13,8 +13,6 @@ declare global {
       moveAtCanvasPixel(px: number, py: number, options?: { rightClick?: boolean }): Chainable<void>;
       finishDrawAtCanvasPixel(px: number, py: number, options?: { rightClick?: boolean }): Chainable<void>;
       assertVisibleCanvasPixels(pixels: string[][], assertMessage?: string): Chainable<void>;
-      // Reads all canvas pixels into pixels[x][y]=[r,g,b,a] and runs check inside
-      // should() so Cypress retries until all assertions inside pass.
       assertHighlightedPixels(grid: boolean[][], assertMessage?: string): Chainable<void>;
       stubPrompt(returnValue: string | null): Chainable<void>;
       stubConfirm(returnValue: boolean): Chainable<void>;
@@ -28,12 +26,13 @@ declare global {
       redo(): Chainable<void>;
       drag(sourceSelector: string, targetSelector: string): Chainable<void>;
       assertCelGroupNumber(options: { frameIdx: number; layerIdx: number; groupNumber: number | null }): Chainable<void>;
+      addLayer(): Chainable<void>;
+      addFrame(): Chainable<void>;
+      assertCanvasPixels(pixels: string[][], assertMessage?: string): Chainable<void>;
     }
   }
 }
 
-// Visits the page, seeds IndexedDB with a fresh 20×20 sprite, then reloads so the
-// app initializes from our data (no "New Project" modal).
 Cypress.Commands.add('startApp', (dbSeed: DBSeed) => {
   cy.visit('/index.html', {
     onBeforeLoad(window) {
@@ -63,31 +62,13 @@ Cypress.Commands.add('selectTool', (toolName: string) => {
   Cypress.log({ name: 'selectTool', message: `Selected tool: ${toolName}` });
 });
 
-// Triggers mouse events at a specific canvas buffer pixel (px, py).
-// Coordinates are computed dynamically from the canvas element's bounding rect.
 Cypress.Commands.add('drawAtCanvasPixel', (px: number, py: number, options: { rightClick?: boolean; toX?: number; toY?: number } = {}) => {
-  cy.get('[data-testid="canvas-viewport"]', { log: false }).then(($vp) => {
-    cy.get('[data-testid="current-layer"]', { log: false }).then(($canvas) => {
-      const vpRect = $vp[0].getBoundingClientRect();
-      const cvRect = ($canvas[0] as HTMLCanvasElement).getBoundingClientRect();
-      const bufferW = ($canvas[0] as HTMLCanvasElement).width;
-      const bufferH = ($canvas[0] as HTMLCanvasElement).height;
-      const scaleX = cvRect.width / bufferW;
-      const scaleY = cvRect.height / bufferH;
-      const x = cvRect.left - vpRect.left + (px + 0.5) * scaleX;
-      const y = cvRect.top - vpRect.top + (py + 0.5) * scaleY;
-      const toX = options.toX !== undefined
-        ? cvRect.left - vpRect.left + (options.toX + 0.5) * scaleX
-        : x + 1;
-      const toY = options.toY !== undefined
-        ? cvRect.top - vpRect.top + (options.toY + 0.5) * scaleY
-        : y + 1;
-      const btn = options.rightClick ? 2 : 0;
-      cy.get('[data-testid="canvas-viewport"]', { log: false })
-        .trigger('mousedown', x, y, { button: btn, force: true,})
-        .trigger('mousemove', toX, toY, { button: btn, force: true })
-        .trigger('mouseup', toX, toY, { button: btn, force: true, });
-    });
+  withCanvasCoords(px, py, options.rightClick, (viewportCanvas, { x, y, btn, scaleX, scaleY, offsetX, offsetY }) => {
+    const toX = options.toX !== undefined ? offsetX + (options.toX + 0.5) * scaleX : x + 1;
+    const toY = options.toY !== undefined ? offsetY + (options.toY + 0.5) * scaleY : y + 1;
+    viewportCanvas.trigger('mousedown', x, y, { button: btn, force: true })
+      .trigger('mousemove', toX, toY, { button: btn, force: true })
+      .trigger('mouseup', toX, toY, { button: btn, force: true });
   });
   if (options.toX !== undefined && options.toY !== undefined) {
     Cypress.log({ name: 'drawAtCanvasPixel', message: `Drew at canvas pixels (${px}, ${py}) to (${options.toX}, ${options.toY}) (${options.rightClick ? "right-click" : "left-click"})` });
@@ -97,60 +78,24 @@ Cypress.Commands.add('drawAtCanvasPixel', (px: number, py: number, options: { ri
 });
 
 Cypress.Commands.add('startDrawAtCanvasPixel', (px: number, py: number, options: { rightClick?: boolean } = {}) => {
-  cy.get('[data-testid="canvas-viewport"]', { log: false }).then(($vp) => {
-    cy.get('[data-testid="current-layer"]', { log: false }).then(($canvas) => {
-      const vpRect = $vp[0].getBoundingClientRect();
-      const cvRect = ($canvas[0] as HTMLCanvasElement).getBoundingClientRect();
-      const bufferW = ($canvas[0] as HTMLCanvasElement).width;
-      const bufferH = ($canvas[0] as HTMLCanvasElement).height;
-      const scaleX = cvRect.width / bufferW;
-      const scaleY = cvRect.height / bufferH;
-      const x = cvRect.left - vpRect.left + (px + 0.5) * scaleX;
-      const y = cvRect.top - vpRect.top + (py + 0.5) * scaleY;
-      const btn = options.rightClick ? 2 : 0;
-      cy.get('[data-testid="canvas-viewport"]', { log: false })
-        .trigger('mousedown', x, y, { button: btn, force: true, log: false });
-    });
+  withCanvasCoords(px, py, options.rightClick, (viewportCanvas, { x, y, btn }) => {
+    viewportCanvas.trigger('mousedown', x, y, { button: btn, force: true, log: false });
   });
   Cypress.log({ name: 'startDrawAtCanvasPixel', message: `mousedown at (${px}, ${py})` });
 });
 
 Cypress.Commands.add('finishDrawAtCanvasPixel', (px: number, py: number, options: { rightClick?: boolean } = {}) => {
-  cy.get('[data-testid="canvas-viewport"]', { log: false }).then(($vp) => {
-    cy.get('[data-testid="current-layer"]', { log: false }).then(($canvas) => {
-      const vpRect = $vp[0].getBoundingClientRect();
-      const cvRect = ($canvas[0] as HTMLCanvasElement).getBoundingClientRect();
-      const bufferW = ($canvas[0] as HTMLCanvasElement).width;
-      const bufferH = ($canvas[0] as HTMLCanvasElement).height;
-      const scaleX = cvRect.width / bufferW;
-      const scaleY = cvRect.height / bufferH;
-      const x = cvRect.left - vpRect.left + (px + 0.5) * scaleX;
-      const y = cvRect.top - vpRect.top + (py + 0.5) * scaleY;
-      const btn = options.rightClick ? 2 : 0;
-      cy.get('[data-testid="canvas-viewport"]', { log: false })
-        .trigger('mousemove', x, y, { button: btn, force: true, log: false })
-        .wait(1) // почему то без ожидания mouseup срабатывает раньше чем mousemove
-        .trigger('mouseup', x, y, { button: btn, force: true, log: false });
-    });
+  withCanvasCoords(px, py, options.rightClick, (viewportCanvas, { x, y, btn }) => {
+    viewportCanvas.trigger('mousemove', x, y, { button: btn, force: true, log: false })
+      .wait(1) // почему то без ожидания mouseup срабатывает раньше чем mousemove
+      .trigger('mouseup', x, y, { button: btn, force: true, log: false });
   });
   Cypress.log({ name: 'finishDrawAtCanvasPixel', message: `mousemove + mouseup at (${px}, ${py})` });
 });
 
 Cypress.Commands.add('moveAtCanvasPixel', (px: number, py: number, options: { rightClick?: boolean } = {}) => {
-  cy.get('[data-testid="canvas-viewport"]', { log: false }).then(($vp) => {
-    cy.get('[data-testid="current-layer"]', { log: false }).then(($canvas) => {
-      const vpRect = $vp[0].getBoundingClientRect();
-      const cvRect = ($canvas[0] as HTMLCanvasElement).getBoundingClientRect();
-      const bufferW = ($canvas[0] as HTMLCanvasElement).width;
-      const bufferH = ($canvas[0] as HTMLCanvasElement).height;
-      const scaleX = cvRect.width / bufferW;
-      const scaleY = cvRect.height / bufferH;
-      const x = cvRect.left - vpRect.left + (px + 0.5) * scaleX;
-      const y = cvRect.top - vpRect.top + (py + 0.5) * scaleY;
-      const btn = options.rightClick ? 2 : 0;
-      cy.get('[data-testid="canvas-viewport"]', { log: false })
-        .trigger('mousemove', x, y, { button: btn, force: true, log: false });
-    });
+  withCanvasCoords(px, py, options.rightClick, (viewportCanvas, { x, y, btn }) => {
+    viewportCanvas.trigger('mousemove', x, y, { button: btn, force: true, log: false });
   });
   Cypress.log({ name: 'moveAtCanvasPixel', message: `mousemove at (${px}, ${py})` });
 });
@@ -159,11 +104,7 @@ Cypress.Commands.add('assertVisibleCanvasPixels', (expectedPixels: string[][], a
   cy.get('[data-testid="current-layer"]', { log: false }).should(($canvas) => {
     const canvas = $canvas[0] as HTMLCanvasElement;
     const actualPixels = readCompositePixels(canvas.ownerDocument, canvas.width, canvas.height);
-    const actualObj = Object.fromEntries(actualPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
-    const expectedObj = Object.fromEntries(expectedPixels.flatMap((row, y) =>
-      row.map((color, x) => [`${x},${y}`, color])
-    ));
-    expect(actualObj, assertMessage).to.deep.equal(expectedObj);
+    expect(pixelsToMap(actualPixels), assertMessage).to.deep.equal(pixelsToMap(expectedPixels));
   });
   Cypress.log({
     name: 'assertVisibleCanvasPixels',
@@ -186,9 +127,7 @@ Cypress.Commands.add('assertOnionSkinPixels', (expectedPixels: string[][], asser
           : rgba(0, 0, 0, 0);
       })
     );
-    const actualObj = Object.fromEntries(actualPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
-    const expectedObj = Object.fromEntries(expectedPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
-    expect(actualObj, assertMessage).to.deep.equal(expectedObj);
+    expect(pixelsToMap(actualPixels), assertMessage).to.deep.equal(pixelsToMap(expectedPixels));
   });
 });
 
@@ -214,18 +153,21 @@ Cypress.Commands.add('assertHighlightedPixels', (expectedGrid: boolean[][], asse
 });
 
 Cypress.Commands.add('assertCelPreview', (frameIdx: number, layerIdx: number, expectedPixels: string[][], assertMessage?: string) => {
-  cy.get(`[data-testid="cel-${frameIdx}-${layerIdx}"] img`, { log: false })
-    .should(($img) => {
-      expect(($img[0] as HTMLImageElement).complete).to.be.true;
-      expect(($img[0] as HTMLImageElement).naturalWidth).to.be.greaterThan(0);
-    })
-    .should(($img) => {
-      const actualPixels = readImgPixels($img[0] as HTMLImageElement);
-      const actualObj = Object.fromEntries(actualPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
-      const expectedObj = Object.fromEntries(expectedPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
-      expect(actualObj, assertMessage).to.deep.equal(expectedObj);
-    });
+  assertImgPixels(
+    cy.get(`[data-testid="cel-${frameIdx}-${layerIdx}"] img`, { log: false }),
+    expectedPixels,
+    assertMessage
+  );
   Cypress.log({ name: 'assertCelPreview', message: assertMessage || `cel-${frameIdx}-${layerIdx}` });
+});
+
+Cypress.Commands.add('assertResizePreviewPixels', (frameIdx: number, expectedPixels: string[][], assertMessage?: string) => {
+  assertImgPixels(
+    cy.get(`[data-testid="preview-frame-${frameIdx}"]`, { log: false }).find('img', { log: false }),
+    expectedPixels,
+    assertMessage
+  );
+  Cypress.log({ name: 'assertResizePreviewPixels', message: assertMessage || `frame-${frameIdx}` });
 });
 
 Cypress.Commands.add('assertDownloadedPngPixels', (filePath: string, expectedPixels: string[][], assertMessage?: string) => {
@@ -251,28 +193,10 @@ Cypress.Commands.add('assertDownloadedPngPixels', (filePath: string, expectedPix
         img.src = `data:image/png;base64,${base64}`;
       });
     }).then((actualPixels: string[][]) => {
-      const actualObj = Object.fromEntries(actualPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
-      const expectedObj = Object.fromEntries(expectedPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
-      expect(actualObj, assertMessage).to.deep.equal(expectedObj);
+      expect(pixelsToMap(actualPixels), assertMessage).to.deep.equal(pixelsToMap(expectedPixels));
     });
   });
   Cypress.log({ name: 'assertDownloadedPngPixels', message: assertMessage || filePath });
-});
-
-Cypress.Commands.add('assertResizePreviewPixels', (frameIdx: number, expectedPixels: string[][], assertMessage?: string) => {
-  cy.get(`[data-testid="preview-frame-${frameIdx}"]`, { log: false })
-    .find('img', { log: false })
-    .should(($img) => {
-      expect(($img[0] as HTMLImageElement).complete).to.be.true;
-      expect(($img[0] as HTMLImageElement).naturalWidth).to.be.greaterThan(0);
-    })
-    .should(($img) => {
-      const actualPixels = readImgPixels($img[0] as HTMLImageElement);
-      const actualObj = Object.fromEntries(actualPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
-      const expectedObj = Object.fromEntries(expectedPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
-      expect(actualObj, assertMessage).to.deep.equal(expectedObj);
-    });
-  Cypress.log({ name: 'assertResizePreviewPixels', message: assertMessage || `frame-${frameIdx}` });
 });
 
 Cypress.Commands.add('assertTimelineCelsAndVisiblePixels', (
@@ -333,6 +257,11 @@ Cypress.Commands.add('stubConfirm', (returnValue: boolean) => {
 
 Cypress.Commands.add('undo', () => { cy.realPress(['Control', 'z']); });
 Cypress.Commands.add('redo', () => { cy.realPress(['Control', 'y']); });
+Cypress.Commands.add('addLayer', () => { cy.get('[title="add layer"]').click(); });
+Cypress.Commands.add('addFrame', () => { cy.get('[title="add empty frame"]').click(); });
+Cypress.Commands.add('assertCanvasPixels', (pixels: string[][], assertMessage?: string) => {
+  cy.assertVisibleCanvasPixels(pixels, assertMessage);
+});
 
 Cypress.Commands.add('assertCelGroupNumber', ({ frameIdx, layerIdx, groupNumber }: { frameIdx: number; layerIdx: number; groupNumber: number | null }) => {
   const sel = `[data-testid="cel-group-${frameIdx}-${layerIdx}"]`;
@@ -369,6 +298,52 @@ Cypress.on('window:before:load', function (window) {
     set: function () { }
   })
 })
+
+// helpers
+
+
+type CanvasCoords = {
+  x: number; y: number; btn: number;
+  scaleX: number; scaleY: number; offsetX: number; offsetY: number;
+};
+
+function withCanvasCoords(
+  px: number, py: number, rightClick: boolean | undefined,
+  fn: (canvasViewport: Cypress.Chainable<JQuery>, canvasCoords: CanvasCoords) => void
+) {
+  cy.get('[data-testid="canvas-viewport"]', { log: false }).then(($vp) => {
+    cy.get('[data-testid="current-layer"]', { log: false }).then(($canvas) => {
+      const vpRect = $vp[0].getBoundingClientRect();
+      const cvRect = ($canvas[0] as HTMLCanvasElement).getBoundingClientRect();
+      const scaleX = cvRect.width / ($canvas[0] as HTMLCanvasElement).width;
+      const scaleY = cvRect.height / ($canvas[0] as HTMLCanvasElement).height;
+      const offsetX = cvRect.left - vpRect.left;
+      const offsetY = cvRect.top - vpRect.top;
+      fn(cy.get('[data-testid="canvas-viewport"]', { log: false }), {
+        x: offsetX + (px + 0.5) * scaleX,
+        y: offsetY + (py + 0.5) * scaleY,
+        btn: rightClick ? 2 : 0,
+        scaleX, scaleY, offsetX, offsetY,
+      });
+    });
+  });
+}
+
+function pixelsToMap(pixels: string[][]): Record<string, string> {
+  return Object.fromEntries(pixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
+}
+
+function assertImgPixels(imgChain: Cypress.Chainable<JQuery>, expectedPixels: string[][], assertMessage?: string) {
+  imgChain
+    .should(($img) => {
+      expect(($img[0] as HTMLImageElement).complete).to.be.true;
+      expect(($img[0] as HTMLImageElement).naturalWidth).to.be.greaterThan(0);
+    })
+    .should(($img) => {
+      expect(pixelsToMap(readImgPixels($img[0] as HTMLImageElement)), assertMessage)
+        .to.deep.equal(pixelsToMap(expectedPixels));
+    });
+}
 
 function readCompositePixels(doc: Document, width: number, height: number): string[][] {
   const below   = doc.getElementById('layers-below')  as HTMLCanvasElement;
