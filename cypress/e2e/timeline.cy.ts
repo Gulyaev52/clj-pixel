@@ -504,18 +504,15 @@ describe('Timeline', () => {
     });
   });
 
-  describe.skip('Layer automatic linking', () => {
+  describe('Layer automatic linking', () => {
     it('toggle layer automatic linking → draw propagates to linked cels', () => {
       cy.startApp(undoRedoSeed); // 1 frame, 1 layer, RED@(0,0), auto-link=false
 
       cy.get('[data-testid="btn-toggle-layer-automatic-linking-0"]').click(); // enable
       cy.addFrame(); // frame-1 active (linked to frame-0, same pixels RED@(0,0))
-      cy.pause();
       cy.selectTool('pen');
-      cy.pause();
 
       cy.drawAtCanvasPixel(1, 1); // draw BLACK at (1,1) on frame-1
-      cy.pause();
 
 
       // draw propagated to frame-0 via linking
