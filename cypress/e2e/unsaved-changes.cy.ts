@@ -46,7 +46,7 @@ describe('Unsaved changes', () => {
 
   it('save in browser → * disappears, notification shown, backup applied after reload', () => {
     cy.startApp(seed);
-    cy.drawAtCanvasPixel(0, 0);
+    cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
     cy.get('[data-testid="btn-add-layer"]').click();
     cy.contains('h3', title + '*').should('exist', '* appears after change');
     cy.get('[data-testid="btn-save-in-browser"]').click();
@@ -69,7 +69,7 @@ describe('Unsaved changes', () => {
   it('auto-backup (5 min) → * disappears, notification shown, backup applied after reload', () => {
     cy.clock(Date.now(), ['setInterval', 'clearInterval']);
     cy.startApp(seed);
-    cy.drawAtCanvasPixel(0, 0);
+    cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
     cy.get('[data-testid="btn-add-layer"]').click();
     cy.contains('h3', title + '*').should('exist', '* appears after change');
     cy.tick(300000);

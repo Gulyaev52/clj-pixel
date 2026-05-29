@@ -21,7 +21,7 @@ describe('Drawing Tools', () => {
     cy.contains('Pixel size').should('be.visible');
     cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true });
 
-    cy.startDrawAtCanvasPixel(0, 0);
+    cy.mouseDownOnCanvas({x: 0, y: 0});
     cy.assertVisibleCanvasPixels([
       [b, t, t, t],
       [t, t, t, t],
@@ -29,7 +29,7 @@ describe('Drawing Tools', () => {
       [t, t, t, t],
     ], 'mousedown: single pixel drawn at (0,0)');
 
-    cy.moveAtCanvasPixel(1, 1);
+    cy.mouseMoveOnCanvas({x: 1, y: 1});
     cy.assertVisibleCanvasPixels([
       [b, b, t, t],
       [b, b, t, t],
@@ -37,7 +37,7 @@ describe('Drawing Tools', () => {
       [t, t, t, t],
     ], 'mousemove to (1,1): 2×2 block drawn');
 
-    cy.finishDrawAtCanvasPixel(3, 3);
+    cy.mouseMoveAndUpOnCanvas({x: 3, y: 3});
     cy.assertVisibleCanvasPixels([
       [b, b, t, t],
       [b, b, b, t],
@@ -57,7 +57,7 @@ describe('Eraser Tool', () => {
     cy.contains('Pixel size').should('be.visible');
     cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true }); // pixel size = 2
 
-    cy.startDrawAtCanvasPixel(0, 0);
+    cy.mouseDownOnCanvas({x: 0, y: 0});
     cy.assertVisibleCanvasPixels([
       [t, b, b, b],
       [b, b, b, b],
@@ -65,7 +65,7 @@ describe('Eraser Tool', () => {
       [b, b, b, b],
     ], 'mousedown: single pixel erased at (0,0)');
 
-    cy.moveAtCanvasPixel(1, 1);
+    cy.mouseMoveOnCanvas({x: 1, y: 1});
     cy.assertVisibleCanvasPixels([
       [t, t, b, b],
       [t, t, b, b],
@@ -73,7 +73,7 @@ describe('Eraser Tool', () => {
       [b, b, b, b],
     ], 'mousemove to (1,1): 2×2 block erased');
 
-    cy.finishDrawAtCanvasPixel(3, 3);
+    cy.mouseMoveAndUpOnCanvas({x: 3, y: 3});
     cy.assertVisibleCanvasPixels([
       [t, t, b, b],
       [t, t, t, b],
@@ -96,11 +96,11 @@ describe('Color Picker Tool', () => {
   });
 
   it('picks primary and secondary color from canvas pixel', () => {
-    cy.drawAtCanvasPixel(0, 0);
+    cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
     cy.get('[data-testid="primary-color-swatch"]')
       .should('have.css', 'background-color', 'rgb(0, 128, 0)');
 
-    cy.drawAtCanvasPixel(1, 0, { rightClick: true });
+    cy.mouseDownThenUpOnCanvas({x: 1, y: 0}, { rightClick: true });
     cy.get('[data-testid="secondary-color-swatch"]')
       .should('have.css', 'background-color', 'rgb(0, 0, 255)');
   });
@@ -120,7 +120,7 @@ describe('Rectangle Tool', () => {
     cy.selectTool('rectangle');
 
     // Step 1: mousedown at (0,0) — user sees original + black pixel at (0,0)
-    cy.startDrawAtCanvasPixel(0, 0);
+    cy.mouseDownOnCanvas({x: 0, y: 0});
     cy.assertVisibleCanvasPixels([
       [b, t, t, t],
       [t, g, g, t],
@@ -129,7 +129,7 @@ describe('Rectangle Tool', () => {
     ], 'step 1: user sees start pixel, original pixels unchanged underneath');
 
     // Steps 2–3: intermediate drag to (1,1) — user sees original + 2×2 black outline
-    cy.moveAtCanvasPixel(1, 1);
+    cy.mouseMoveOnCanvas({x: 1, y: 1});
     cy.assertVisibleCanvasPixels([
       [b, b, t, t],
       [b, b, g, t],
@@ -138,7 +138,7 @@ describe('Rectangle Tool', () => {
     ], 'steps 2-3: user sees 2×2 preview outline — green pixel (1,1) visible under transparent preview');
 
     // Steps 3-4: intermediate drag to (2,2) — user sees original + 3×3 black outline
-    cy.moveAtCanvasPixel(2, 2);
+    cy.mouseMoveOnCanvas({x: 2, y: 2});
     cy.assertVisibleCanvasPixels([
       [b, b, b, t],
       [b, g, b, t],
@@ -147,7 +147,7 @@ describe('Rectangle Tool', () => {
     ], 'steps 3-4: user sees 3×3 preview outline — green pixel (2,2) visible under transparent preview');
 
     // Step 5: mouseup at (3,3) — user sees committed rectangle
-    cy.finishDrawAtCanvasPixel(3, 3);
+    cy.mouseMoveAndUpOnCanvas({x: 3, y: 3});
     cy.assertVisibleCanvasPixels([
       [b, b, b, b],
       [b, g, g, b],
@@ -168,7 +168,7 @@ describe('Rectangle Tool', () => {
     });
     cy.selectTool('rectangle');
     cy.contains('Fill').click();
-    cy.drawAtCanvasPixel(0, 0, { toX: 3, toY: 3 });
+    cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 3, y: 3});
     cy.assertVisibleCanvasPixels([
       [b, b, b, b],
       [b, b, b, b],
@@ -191,7 +191,7 @@ describe('Rectangle Tool', () => {
     });
     cy.selectTool('rectangle');
     cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true }); // pixel-size = 2
-    cy.drawAtCanvasPixel(0, 0, { toX: 5, toY: 5 });
+    cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 5, y: 5});
     cy.assertVisibleCanvasPixels([
       [b, b, b, b, b, b],
       [b, b, b, b, b, b],
@@ -214,7 +214,7 @@ describe('Rectangle Tool', () => {
     });
     cy.selectTool('rectangle');
     cy.contains('Keep ration').click();
-    cy.drawAtCanvasPixel(0, 0, { toX: 3, toY: 2 }); // asymmetric drag: 4 wide, 3 tall
+    cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 3, y: 2}); // asymmetric drag: 4 wide, 3 tall
     cy.assertVisibleCanvasPixels([
       [b, b, b, t],
       [b, t, b, t],
@@ -233,7 +233,7 @@ describe('Rectangle Selection Tool', () => {
     });
     cy.selectTool('rectangle-selection');
 
-    cy.startDrawAtCanvasPixel(0, 0);
+    cy.mouseDownOnCanvas({x: 0, y: 0});
     cy.assertHighlightedPixels([
       [true, false, false, false],
       [false, false, false, false],
@@ -241,7 +241,7 @@ describe('Rectangle Selection Tool', () => {
       [false, false, false, false],
     ], 'mousedown: single pixel highlighted');
 
-    cy.moveAtCanvasPixel(1, 1);
+    cy.mouseMoveOnCanvas({x: 1, y: 1});
     cy.assertHighlightedPixels([
       [true, true, false, false],
       [true, true, false, false],
@@ -250,7 +250,7 @@ describe('Rectangle Selection Tool', () => {
     ], 'mousemove to (1,1): 2×2 selection highlighted');
     cy.assertVisibleCanvasPixels(initialPixels, 'canvas pixels unchanged during selection');
 
-    cy.finishDrawAtCanvasPixel(1, 1);
+    cy.mouseMoveAndUpOnCanvas({x: 1, y: 1});
     cy.assertHighlightedPixels([
       [true, true, false, false],
       [true, true, false, false],
@@ -259,7 +259,7 @@ describe('Rectangle Selection Tool', () => {
     ], 'mouseup: highlight stays, transitioned to drag state');
 
     // Click outside selection — resets to select, old highlight cleared
-    cy.startDrawAtCanvasPixel(3, 3);
+    cy.mouseDownOnCanvas({x: 3, y: 3});
     cy.assertHighlightedPixels([
       [false, false, false, false],
       [false, false, false, false],
@@ -267,7 +267,7 @@ describe('Rectangle Selection Tool', () => {
       [false, false, false, false],
     ], 'mousedown outside: old selection cleared');
     cy.assertVisibleCanvasPixels(initialPixels, 'canvas pixels still all black — nothing committed');
-    cy.moveAtCanvasPixel(2, 2);
+    cy.mouseMoveOnCanvas({x: 2, y: 2});
     cy.assertHighlightedPixels([
       [false, false, false, false],
       [false, false, false, false],
@@ -299,10 +299,10 @@ describe('Rectangle Selection Tool', () => {
     cy.selectTool('rectangle-selection');
 
     // Select 2×2 top-left region
-    cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
+    cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 1, y: 1});
 
-    cy.startDrawAtCanvasPixel(0, 0);
-    cy.moveAtCanvasPixel(1, 1);
+    cy.mouseDownOnCanvas({x: 0, y: 0});
+    cy.mouseMoveOnCanvas({x: 1, y: 1});
     cy.assertVisibleCanvasPixels([
       [t, t, b, b],
       [t, r, r, b],
@@ -316,7 +316,7 @@ describe('Rectangle Selection Tool', () => {
       [false, false, false, false],
     ]);
 
-    cy.finishDrawAtCanvasPixel(2, 2);
+    cy.mouseMoveAndUpOnCanvas({x: 2, y: 2});
     cy.assertVisibleCanvasPixels([
       [t, t, b, b],
       [t, t, b, b],
@@ -330,7 +330,7 @@ describe('Rectangle Selection Tool', () => {
       [false, false, true, true],
     ]);
 
-    cy.drawAtCanvasPixel(2, 2, { toX: 2, toY: 1 });
+    cy.mouseDownThenMoveThenUpOnCanvas({x: 2, y: 2}, {x: 2, y: 1});
     cy.assertVisibleCanvasPixels([
       [t, t, b, b],
       [t, t, r, r],
@@ -339,7 +339,7 @@ describe('Rectangle Selection Tool', () => {
     ]);
 
     // Click outside selection to commit
-    cy.drawAtCanvasPixel(0, 0);
+    cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
     cy.assertVisibleCanvasPixels([
       [t, t, b, b],
       [t, t, r, r],
@@ -370,7 +370,7 @@ describe('Rectangle Selection Tool', () => {
       cy.selectTool('rectangle-selection');
 
       // Select 2×2 top-left region
-      cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
+      cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 1, y: 1});
       cy.realPress(['Control', 'c']);
       cy.realPress(['Control', 'v']);
       cy.assertHighlightedPixels([
@@ -381,7 +381,7 @@ describe('Rectangle Selection Tool', () => {
       ]);
       cy.assertVisibleCanvasPixels(initialPixels);
 
-      cy.drawAtCanvasPixel(0, 0, { toX: 2, toY: 2 });
+      cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 2, y: 2});
       cy.assertVisibleCanvasPixels([
         [r, r, b, b],
         [r, r, b, b],
@@ -395,7 +395,7 @@ describe('Rectangle Selection Tool', () => {
         [false, false, true, true],
       ]);
 
-      cy.drawAtCanvasPixel(0, 0);
+      cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
       cy.assertVisibleCanvasPixels([
         [r, r, b, b],
         [r, r, b, b],
@@ -423,7 +423,7 @@ describe('Rectangle Selection Tool', () => {
       });
       cy.selectTool('rectangle-selection');
 
-      cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
+      cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 1, y: 1});
       cy.realPress(['Control', 'Backspace']); // in reality here should be only "Backspace" but for some reason this test doesn't work without "Control" key
       cy.assertVisibleCanvasPixels([
         [t, t, b, b],
@@ -438,7 +438,7 @@ describe('Rectangle Selection Tool', () => {
         [false, false, false, false],
       ], "selection should remain after delete");
 
-      cy.drawAtCanvasPixel(0, 0, { toX: 2, toY: 2 });
+      cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 2, y: 2});
       cy.realPress(['Control', 'Delete']); // in reality here should be only "Delete" but for some reason this test doesn't work without "Control" key
       cy.assertVisibleCanvasPixels([
         [t, t, t, b],
@@ -467,10 +467,10 @@ describe('Rectangle Selection Tool', () => {
       });
       cy.selectTool('rectangle-selection');
 
-      cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
+      cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 1, y: 1});
       cy.realPress(['Control', 'c']);
       cy.realPress(['Control', 'v']);
-      cy.drawAtCanvasPixel(1, 1, { toX: 2, toY: 1 });
+      cy.mouseDownThenMoveThenUpOnCanvas({x: 1, y: 1}, {x: 2, y: 1});
       cy.realPress(['Control', 'Backspace']);
       cy.assertVisibleCanvasPixels(initialPixels, "delete pasted selection should not affect underlying pixels only pasted ones");
     });
@@ -491,10 +491,10 @@ describe('Rectangle Selection Tool', () => {
       cy.selectTool('rectangle-selection');
 
       // Select 2×2 top-left region
-      cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
+      cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 1, y: 1});
 
       // Drag selection to bottom-right
-      cy.drawAtCanvasPixel(0, 0, { toX: 2, toY: 2 });
+      cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 2, y: 2});
       cy.assertVisibleCanvasPixels([
         [t, t, b, b],
         [t, t, b, b],
@@ -538,7 +538,7 @@ describe('Rectangle Selection Tool', () => {
       cy.selectTool('rectangle-selection');
 
       // Select 2×2 top-left region, copy and paste
-      cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
+      cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 1, y: 1});
       cy.realPress(['Control', 'c']);
       cy.realPress(['Control', 'v']);
       cy.assertHighlightedPixels([
@@ -550,7 +550,7 @@ describe('Rectangle Selection Tool', () => {
       cy.assertVisibleCanvasPixels(initialPixels, "underlying pixels unchanged after paste");
 
       // Drag pasted selection to bottom-right
-      cy.drawAtCanvasPixel(0, 0, { toX: 2, toY: 2 });
+      cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 2, y: 2});
       cy.assertVisibleCanvasPixels([
         [r, r, b, b],
         [r, r, b, b],
@@ -594,9 +594,9 @@ describe('Rectangle Selection Tool', () => {
       cy.selectTool('rectangle-selection');
 
       // Select 2×2 top-left region and cut
-      cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
+      cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 1, y: 1});
       // move
-      cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
+      cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 1, y: 1});
       cy.realPress(['Control', 'x']);
       cy.assertVisibleCanvasPixels([
         [t, t, b, b],
@@ -627,7 +627,7 @@ describe('Rectangle Selection Tool', () => {
       ], "cut pixels available in clipboard — float over transparent area restores appearance");
 
       // commit
-      cy.drawAtCanvasPixel(0, 0);
+      cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
       cy.assertHighlightedPixels([
         [false, false, false, false],
         [false, false, false, false],
@@ -656,10 +656,10 @@ describe('Rectangle Selection Tool', () => {
       cy.selectTool('rectangle-selection');
 
       // Select, copy, paste and move the pasted selection
-      cy.drawAtCanvasPixel(0, 0, { toX: 1, toY: 1 });
+      cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 1, y: 1});
       cy.realPress(['Control', 'c']);
       cy.realPress(['Control', 'v']);
-      cy.drawAtCanvasPixel(0, 0, { toX: 2, toY: 2 });
+      cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 2, y: 2});
       cy.assertVisibleCanvasPixels([
         [r, r, b, b],
         [r, r, b, b],
@@ -699,7 +699,7 @@ describe('Line Tool', () => {
     });
     cy.selectTool('line');
 
-    cy.startDrawAtCanvasPixel(0, 0);
+    cy.mouseDownOnCanvas({x: 0, y: 0});
     cy.assertVisibleCanvasPixels([
       [b, t, t, t],
       [t, t, t, t],
@@ -707,7 +707,7 @@ describe('Line Tool', () => {
       [t, t, t, t],
     ], 'step 1: mousedown at (0,0) — single pixel on preview');
 
-    cy.moveAtCanvasPixel(2, 1);
+    cy.mouseMoveOnCanvas({x: 2, y: 1});
     cy.assertVisibleCanvasPixels([
       [b, b, t, t],
       [t, t, b, t],
@@ -715,7 +715,7 @@ describe('Line Tool', () => {
       [t, t, t, t],
     ], 'step 2: mousemove to (2,1) — Bresenham line on preview');
 
-    cy.finishDrawAtCanvasPixel(3, 3);
+    cy.mouseMoveAndUpOnCanvas({x: 3, y: 3});
     cy.assertVisibleCanvasPixels([
       [b, t, t, t],
       [t, b, t, t],
@@ -738,7 +738,7 @@ describe('Line Tool', () => {
     cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true }); // pixel size = 2
     cy.contains('Straight').click();
 
-    cy.drawAtCanvasPixel(0, 0, { toX: 2, toY: 3 });
+    cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 2, y: 3});
     cy.assertVisibleCanvasPixels([
       [b, b, t, t],
       [b, b, b, t],
@@ -762,9 +762,9 @@ describe('Circle Tool', () => {
     cy.selectTool('circle');
 
     // circle with start=end produces no pixels (zero-radius), so no assertion after mousedown
-    cy.startDrawAtCanvasPixel(0, 0);
+    cy.mouseDownOnCanvas({x: 0, y: 0});
 
-    cy.moveAtCanvasPixel(2, 2);
+    cy.mouseMoveOnCanvas({x: 2, y: 2});
     cy.assertVisibleCanvasPixels([
       [t, b, t, t],
       [b, t, b, t],
@@ -772,7 +772,7 @@ describe('Circle Tool', () => {
       [t, t, t, t],
     ], 'step 2: mousemove to (2,2) — circle outline preview');
 
-    cy.finishDrawAtCanvasPixel(3, 3);
+    cy.mouseMoveAndUpOnCanvas({x: 3, y: 3});
     cy.assertVisibleCanvasPixels([
       [t, b, b, t],
       [b, t, t, b],
@@ -795,7 +795,7 @@ describe('Circle Tool', () => {
     cy.contains('Keep ration').click();
 
     // asymmetric drag (0,0)→(3,2); keep-ratio constrains to effective endpoint (2,2)
-    cy.drawAtCanvasPixel(0, 0, { toX: 3, toY: 2 });
+    cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 3, y: 2});
     cy.assertVisibleCanvasPixels([
       [t, b, t, t],
       [b, t, b, t],
@@ -815,7 +815,7 @@ describe('Circle Tool', () => {
       ]),
     });
     cy.selectTool('circle');
-    cy.drawAtCanvasPixel(0, 0, { toX: 3, toY: 3 });
+    cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 3, y: 3});
     cy.assertVisibleCanvasPixels([
       [t, b, b, t],
       [b, t, t, b],
@@ -840,7 +840,7 @@ describe('Bucket Tool', () => {
     cy.selectTool('bucket');
 
     // left-click fills the entire connected transparent region with primary color (black)
-    cy.drawAtCanvasPixel(2, 2);
+    cy.mouseDownThenUpOnCanvas({x: 2, y: 2});
     let expectedPixels = [
       [t, g, g, t],
       [g, b, b, g],
@@ -849,7 +849,7 @@ describe('Bucket Tool', () => {
     ];
     cy.assertCanvasPixels(expectedPixels, 'flood-fill fills the connected region with primary color');
 
-    cy.drawAtCanvasPixel(2, 2, { rightClick: true });
+    cy.mouseDownThenUpOnCanvas({x: 2, y: 2}, { rightClick: true });
     expectedPixels = [
       [t, g, g, t],
       [g, r, r, g],
@@ -873,7 +873,7 @@ describe('Bucket Tool', () => {
     cy.selectTool('bucket');
 
     cy.contains('All the same color').click(); // todo: check checkbox state
-    cy.drawAtCanvasPixel(0, 0);
+    cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
     const expectedPixels = [
       [b, g, g],
       [g, t, t],
@@ -894,8 +894,8 @@ describe('Shading Tool', () => {
       ]),
     });
     cy.selectTool('shading');
-    cy.drawAtCanvasPixel(0, 0); // red pixel — should darken
-    cy.drawAtCanvasPixel(1, 0); // transparent pixel — should stay transparent
+    cy.mouseDownThenUpOnCanvas({x: 0, y: 0}); // red pixel — should darken
+    cy.mouseDownThenUpOnCanvas({x: 1, y: 0}); // transparent pixel — should stay transparent
     cy.assertVisibleCanvasPixels([
       [rgba(224, 0, 0), t],
       [r, t],
@@ -912,7 +912,7 @@ describe('Shading Tool', () => {
     });
     cy.selectTool('shading');
     cy.contains('Lighten').click();
-    cy.drawAtCanvasPixel(0, 0);
+    cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
     cy.assertVisibleCanvasPixels([
       [rgba(255, 31, 31), r],
       [r, r],
@@ -929,7 +929,7 @@ describe('Shading Tool', () => {
     });
     cy.selectTool('shading');
     cy.get('.ant-slider-handle').eq(1).focus().type('{rightarrow}{rightarrow}{rightarrow}{rightarrow}', { force: true }); // amount = 10
-    cy.drawAtCanvasPixel(0, 0);
+    cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
     cy.assertVisibleCanvasPixels([
       [rgba(204, 0, 0), r],
       [r, r],
@@ -949,7 +949,7 @@ describe('Shading Tool', () => {
     });
     cy.selectTool('shading');
     cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true }); // pixel-size = 2
-    cy.drawAtCanvasPixel(1, 1); // cursor at (1,1): block expands top-left to (0,0)-(1,1)
+    cy.mouseDownThenUpOnCanvas({x: 1, y: 1}); // cursor at (1,1): block expands top-left to (0,0)-(1,1)
     cy.assertVisibleCanvasPixels([
       [d, d, r, r],
       [d, d, r, r],
@@ -966,7 +966,7 @@ describe('undo/redo', () => {
       sprite: getSpriteFromPixels([[t, t], [t, t]]),
     });
     cy.selectTool('pen');
-    cy.drawAtCanvasPixel(0, 0);
+    cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
     cy.assertVisibleCanvasPixels([[b, t], [t, t]], 'pixel drawn');
 
     cy.undo();
@@ -983,13 +983,13 @@ describe('undo/redo', () => {
     });
     cy.selectTool('pen');
 
-    cy.drawAtCanvasPixel(0, 0);
+    cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
     cy.assertVisibleCanvasPixels([[b, t], [t, t]], 'after draw (0,0)');
 
-    cy.drawAtCanvasPixel(1, 0);
+    cy.mouseDownThenUpOnCanvas({x: 1, y: 0});
     cy.assertVisibleCanvasPixels([[b, b], [t, t]], 'after draw (1,0)');
 
-    cy.drawAtCanvasPixel(0, 1);
+    cy.mouseDownThenUpOnCanvas({x: 0, y: 1});
     cy.assertVisibleCanvasPixels([[b, b], [b, t]], 'after draw (0,1)');
 
     cy.undo();
@@ -1028,7 +1028,7 @@ describe('Shape Selection Tool', () => {
     cy.selectTool('shape-selection');
 
     // Single click — flood-fill selects only the 3 connected red pixels at top-left
-    cy.drawAtCanvasPixel(0, 0);
+    cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
     cy.assertHighlightedPixels([
       [true, true, false, false],
       [true, false, false, false],
@@ -1038,8 +1038,8 @@ describe('Shape Selection Tool', () => {
     cy.assertVisibleCanvasPixels(initialPixels, 'canvas pixels unchanged after selection');
 
     // Drag selection by (+1, +1)
-    cy.startDrawAtCanvasPixel(0, 0);
-    cy.moveAtCanvasPixel(1, 1);
+    cy.mouseDownOnCanvas({x: 0, y: 0});
+    cy.mouseMoveOnCanvas({x: 1, y: 1});
     cy.assertVisibleCanvasPixels([
       [t, t, b, b],
       [t, r, r, b],
@@ -1047,7 +1047,7 @@ describe('Shape Selection Tool', () => {
       [b, b, r, r],
     ], 'selection floats: originals transparent, preview at new position');
 
-    cy.finishDrawAtCanvasPixel(1, 1);
+    cy.mouseMoveAndUpOnCanvas({x: 1, y: 1});
     cy.assertHighlightedPixels([
       [false, false, false, false],
       [false, true, true, false],
@@ -1056,7 +1056,7 @@ describe('Shape Selection Tool', () => {
     ], 'highlight follows selection to new position');
 
     // Commit by clicking outside
-    cy.drawAtCanvasPixel(0, 3);
+    cy.mouseDownThenUpOnCanvas({x: 0, y: 3});
     cy.assertVisibleCanvasPixels([
       [t, t, b, b],
       [t, r, r, b],

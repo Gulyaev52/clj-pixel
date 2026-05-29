@@ -144,7 +144,7 @@ describe('Timeline', () => {
       ], { activeFrameIdx: 1, activeLayerIdx: 0 }, ['Layer 1', 'Layer 2']);
 
       cy.selectTool('pen');
-      cy.drawAtCanvasPixel(0, 0);
+      cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
       cy.assertTimelineCelsAndVisiblePixels([
         [[[r, t], [t, t]], [[t, t], [t, r]]],   // frame-0: unchanged
         [[[b, t], [t, t]], [[t, t], [t, t]]],   // frame-1: black pixel drawn
@@ -304,7 +304,7 @@ describe('Timeline', () => {
       // Draw b at (1,1) on frame-0-layer-0 (group A) → propagates to frame-1-layer-0 only
       cy.get('[data-testid="cel-0-0"]').click();
       cy.selectTool('pen');
-      cy.drawAtCanvasPixel(1, 1);
+      cy.mouseDownThenUpOnCanvas({x: 1, y: 1});
       cy.get('[data-testid="cel-0-0"]').click();  // reset: draw propagation copies selected state to linked cels
 
       cy.assertTimelineCelsAndVisiblePixels([
@@ -342,7 +342,7 @@ describe('Timeline', () => {
       // Draw on cel-0-0 → no longer propagates to cel-1-0
       cy.get('[data-testid="cel-0-0"]').click();
       cy.selectTool('pen');
-      cy.drawAtCanvasPixel(0, 0);
+      cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
       cy.get('[data-testid="cel-0-0"]').click();  // reset selected state
 
       cy.assertTimelineCelsAndVisiblePixels([
@@ -381,7 +381,7 @@ describe('Timeline', () => {
       // Draw on cel-0-0 → no propagation
       cy.get('[data-testid="cel-0-0"]').click();
       cy.selectTool('pen');
-      cy.drawAtCanvasPixel(0, 0);
+      cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
       cy.get('[data-testid="cel-0-0"]').click();  // reset selected state
 
       cy.assertTimelineCelsAndVisiblePixels([
@@ -506,7 +506,7 @@ describe('Timeline', () => {
       cy.get('[data-testid="btn-add-empty-frame"]').click(); // frame-1 active (linked to frame-0, same pixels r@(0,0))
       cy.selectTool('pen');
 
-      cy.drawAtCanvasPixel(1, 1); // draw b at (1,1) on frame-1
+      cy.mouseDownThenUpOnCanvas({x: 1, y: 1}); // draw b at (1,1) on frame-1
 
 
       // draw propagated to frame-0 via linking
@@ -525,11 +525,11 @@ describe('Timeline', () => {
 
       // draw on layer 0, frame 1
       cy.selectTool('pen');
-      cy.drawAtCanvasPixel(0, 1); // b at (0,1)
+      cy.mouseDownThenUpOnCanvas({x: 0, y: 1}); // b at (0,1)
 
       // switch to layer 1, frame 1 — draw there too
       cy.get('[data-testid="cel-1-1"]').click();
-      cy.drawAtCanvasPixel(1, 0); // b at (1,0)
+      cy.mouseDownThenUpOnCanvas({x: 1, y: 0}); // b at (1,0)
 
       // both layers' draws propagated to frame-0
       cy.assertTimelineCelsAndVisiblePixels(

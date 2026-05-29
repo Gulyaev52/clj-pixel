@@ -24,10 +24,10 @@ describe('drawing-info', () => {
 
     // --- mouse pos ---
     cy.startApp(defaultDbSeed);
-    cy.moveAtCanvasPixel(0, 0);
+    cy.mouseMoveOnCanvas({x: 0, y: 0});
     cy.get('[data-testid="drawing-info-mouse-pos"]')
       .should('have.text', '0:0', 'mouse pos at (0,0)');
-    cy.moveAtCanvasPixel(2, 3);
+    cy.mouseMoveOnCanvas({x: 2, y: 3});
     cy.get('[data-testid="drawing-info-mouse-pos"]')
       .should('have.text', '2:3', 'mouse pos at (2,3)');
 

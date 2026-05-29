@@ -8,10 +8,11 @@ declare global {
     interface Chainable {
       startApp(dbSeed: DBSeed): Chainable<void>;
       selectTool(toolName: string): Chainable<void>;
-      drawAtCanvasPixel(px: number, py: number, options?: { rightClick?: boolean; toX?: number; toY?: number }): Chainable<void>;
-      startDrawAtCanvasPixel(px: number, py: number, options?: { rightClick?: boolean }): Chainable<void>;
-      moveAtCanvasPixel(px: number, py: number, options?: { rightClick?: boolean }): Chainable<void>;
-      finishDrawAtCanvasPixel(px: number, py: number, options?: { rightClick?: boolean }): Chainable<void>;
+      mouseDownThenUpOnCanvas(coords: { x: number; y: number }, options?: { rightClick?: boolean }): Chainable<void>;
+      mouseDownThenMoveThenUpOnCanvas(from: { x: number; y: number }, to: { x: number; y: number }, options?: { rightClick?: boolean }): Chainable<void>;
+      mouseDownOnCanvas(coords: { x: number; y: number }, options?: { rightClick?: boolean }): Chainable<void>;
+      mouseMoveOnCanvas(coords: { x: number; y: number }, options?: { rightClick?: boolean }): Chainable<void>;
+      mouseMoveAndUpOnCanvas(coords: { x: number; y: number }, options?: { rightClick?: boolean }): Chainable<void>;
       assertVisibleCanvasPixels(pixels: string[][], assertMessage?: string): Chainable<void>;
       assertHighlightedPixels(grid: boolean[][], assertMessage?: string): Chainable<void>;
       stubPrompt(returnValue: string | null): Chainable<void>;
@@ -60,43 +61,54 @@ Cypress.Commands.add('selectTool', (toolName: string) => {
   Cypress.log({ name: 'selectTool', message: `Selected tool: ${toolName}` });
 });
 
-Cypress.Commands.add('drawAtCanvasPixel', (px: number, py: number, options: { rightClick?: boolean; toX?: number; toY?: number } = {}) => {
-  withCanvasCoords(px, py, options.rightClick, (viewportCanvas, { x, y, btn, scaleX, scaleY, offsetX, offsetY }) => {
-    const toX = options.toX !== undefined ? offsetX + (options.toX + 0.5) * scaleX : x + 1;
-    const toY = options.toY !== undefined ? offsetY + (options.toY + 0.5) * scaleY : y + 1;
-    viewportCanvas.trigger('mousedown', x, y, { button: btn, force: true })
-      .trigger('mousemove', toX, toY, { button: btn, force: true })
-      .trigger('mouseup', toX, toY, { button: btn, force: true });
-  });
-  if (options.toX !== undefined && options.toY !== undefined) {
-    Cypress.log({ name: 'drawAtCanvasPixel', message: `Drew at canvas pixels (${px}, ${py}) to (${options.toX}, ${options.toY}) (${options.rightClick ? "right-click" : "left-click"})` });
-  } else {
-    Cypress.log({ name: 'drawAtCanvasPixel', message: `Drew at canvas pixel (${px}, ${py}) (${options.rightClick ? "right-click" : "left-click"})` });
-  }
+Cypress.Commands.add('mouseDownThenMoveThenUpOnCanvas', (start, to, options) => {
+  triggerMouseEventsOnCanvas([{ type: "mousedown", coords: start }, { type: "mousemove", coords: to }, { type: "mouseup", coords: to }], options ?? {});
+  Cypress.log({ name: 'mouseDownThenMoveThenUpOnCanvas', message: `(${start.x}, ${start.y}) → (${to.x}, ${to.y})` });
 });
 
-Cypress.Commands.add('startDrawAtCanvasPixel', (px: number, py: number, options: { rightClick?: boolean } = {}) => {
-  withCanvasCoords(px, py, options.rightClick, (viewportCanvas, { x, y, btn }) => {
-    viewportCanvas.trigger('mousedown', x, y, { button: btn, force: true, log: false });
-  });
-  Cypress.log({ name: 'startDrawAtCanvasPixel', message: `mousedown at (${px}, ${py})` });
+Cypress.Commands.add('mouseDownThenUpOnCanvas', (coords: { x: number; y: number }, options) => {
+  triggerMouseEventsOnCanvas([{ type: "mousedown", coords }, { type: "mouseup", coords }], options ?? {});
+  Cypress.log({ name: 'mouseDownThenUpOnCanvas', message: `(${coords.x}, ${coords.y})` });
 });
 
-Cypress.Commands.add('finishDrawAtCanvasPixel', (px: number, py: number, options: { rightClick?: boolean } = {}) => {
-  withCanvasCoords(px, py, options.rightClick, (viewportCanvas, { x, y, btn }) => {
-    viewportCanvas.trigger('mousemove', x, y, { button: btn, force: true, log: false })
-      .wait(1) // почему то без ожидания mouseup срабатывает раньше чем mousemove
-      .trigger('mouseup', x, y, { button: btn, force: true, log: false });
-  });
-  Cypress.log({ name: 'finishDrawAtCanvasPixel', message: `mousemove + mouseup at (${px}, ${py})` });
+Cypress.Commands.add('mouseDownOnCanvas', (coords: { x: number; y: number }, options) => {
+  triggerMouseEventsOnCanvas([{type:"mousedown", coords}], options ?? {});
+  Cypress.log({ name: 'mouseDownOnCanvas', message: `mousedown at (${coords.x}, ${coords.y})` });
 });
 
-Cypress.Commands.add('moveAtCanvasPixel', (px: number, py: number, options: { rightClick?: boolean } = {}) => {
-  withCanvasCoords(px, py, options.rightClick, (viewportCanvas, { x, y, btn }) => {
-    viewportCanvas.trigger('mousemove', x, y, { button: btn, force: true, log: false });
-  });
-  Cypress.log({ name: 'moveAtCanvasPixel', message: `mousemove at (${px}, ${py})` });
+Cypress.Commands.add('mouseMoveAndUpOnCanvas', (coords, options) => {
+  triggerMouseEventsOnCanvas([{type:"mousemove", coords}, {type:"mouseup", coords}], options ?? {});
+  Cypress.log({ name: 'mouseMoveAndUpOnCanvas', message: `mousemove + mouseup at (${coords.x}, ${coords.y})` });
 });
+
+Cypress.Commands.add('mouseMoveOnCanvas', (coords, options) => {
+  triggerMouseEventsOnCanvas([{type:"mousemove", coords}], options ?? {});
+  Cypress.log({ name: 'mouseMoveOnCanvas', message: `mousemove at (${coords.x}, ${coords.y})` });
+});
+
+const triggerMouseEventsOnCanvas = (events: Array<{ type: "mousedown" | "mousemove" | "mouseup"; coords: { x: number; y: number; }}>, options: { rightClick?: boolean; } = {}) => {
+  cy.get('[data-testid="canvas-viewport"]', { log: false }).then(($vp) => {
+    cy.get('[data-testid="current-layer"]', { log: false }).then(($canvas) => {
+      const vpRect = $vp[0].getBoundingClientRect();
+      const cvRect = ($canvas[0] as HTMLCanvasElement).getBoundingClientRect();
+      const scaleX = cvRect.width / ($canvas[0] as HTMLCanvasElement).width;
+      const scaleY = cvRect.height / ($canvas[0] as HTMLCanvasElement).height;
+      const offsetX = cvRect.left - vpRect.left;
+      const offsetY = cvRect.top - vpRect.top;
+      const btn = options.rightClick ? 2 : 0;
+
+      events.forEach((event, i) => {
+        if (events[i - 1]?.type === "mousemove" && event.type === "mouseup") {
+          cy.wait(1); // почему то без ожидания mouseup срабатывает раньше чем mousemove
+        }
+        const x = offsetX + (event.coords.x + 0.5) * scaleX;
+        const y = offsetY + (event.coords.y + 0.5) * scaleY;
+        cy.get('[data-testid="canvas-viewport"]', { log: false })
+          .trigger(event.type, x, y, { button: btn, force: true });
+      });
+    });
+  });
+};
 
 Cypress.Commands.add('assertVisibleCanvasPixels', (expectedPixels: string[][], assertMessage?: string) => {
   cy.get('[data-testid="current-layer"]', { log: false }).should(($canvas) => {
