@@ -4,17 +4,13 @@
    [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub
- ::spritesheet-settings
- events/get-spritesheet-settings)
-
-(re-frame/reg-sub
- ::image-settings
- events/get-image-settings)
+ ::settings
+ events/get-settings)
 
 (re-frame/reg-sub
  ::settings-valid?
  (fn [db]
-   (not (empty? (-> db :export-modal :common-settings :file-name)))))
+   (not (empty? (-> db :export-modal :settings :file-name)))))
 
 (re-frame/reg-sub
  ::preview

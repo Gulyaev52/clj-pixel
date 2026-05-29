@@ -12,21 +12,18 @@
 (defn init []
   {:opened false
    :current-tab :image
-   :preview {:data [] ;; coll of data-urls when :current-tab=:image; data-url when :current-tab=:spritesheet;
+   :preview {:data []
              :generation false}
-   :common-settings
+   :settings
    {:frames :all
     :layers {:type :visible}
     :direction :forward
     :file-name ""
     :file-type :png
     :scale min-scale
-    :split-layers false}
-   :image-settings
-   {:repeat true ;; only when gif
-    }
-   :spritesheet-settings
-   {:columns 1}
+    :split-layers false
+    :repeat true ;; only when gif
+    } 
    :exporting false})
 
 (defn- get-cels-for-rendering [settings sprite]
@@ -56,65 +53,34 @@
         (reverse $)
         $))))
 
-(defn- adjust-columns-if-need [columns db]
-  (let [cels-for-rendering (get-cels-for-rendering (-> db :export-modal :common-settings) (-> db :sprite))]
-    (min (max 1 columns) (count cels-for-rendering))))
-
-(defn get-common-settings-res [db]
-  (let [common-settings (-> db :export-modal :common-settings)
+(defn get-settings [db]
+  (let [settings (-> db :export-modal :settings)
         sprite-size (-> db :sprite sprite/get-size)
-        scaled-frame-size (update-vals sprite-size #(. js/Math (round (* (:scale common-settings) %))))]
-    (assoc common-settings :scaled-frame-size scaled-frame-size)))
-
-(defn get-spritesheet-settings [db]
-  (let [common-settings (get-common-settings-res db)
-        spritesheet-settings (-> db :export-modal :spritesheet-settings)
-        rows (->> (get-cels-for-rendering common-settings (-> db :sprite)) ;; todo: pass it as arg?
-                  (partition-all (:columns spritesheet-settings))
-                  count)]
-    (-> spritesheet-settings
-        (assoc :rows rows)
-        (merge common-settings))))
-
-(defn get-image-settings [db]
-  (let [common-settings (get-common-settings-res db)]
-    (merge common-settings (-> db :export-modal :image-settings))))
+        scaled-frame-size (update-vals sprite-size #(. js/Math (round (* (:scale settings) %))))]
+    (assoc settings :scaled-frame-size scaled-frame-size)))
 
 (defn generate-preview [db]
   (let [db (assoc-in db [:export-modal :preview :generation] true)
-        {:keys [sprite export-modal]} db]
-    (case (:current-tab export-modal)
-      :spritesheet
-      (let [settings (get-spritesheet-settings db)
-            size (sprite/get-size sprite)
-            spritesheet-size {:width (* (:width size) (:columns settings))
-                              :height (* (:height size) (:rows settings))}
-            img (->> (get-cels-for-rendering settings sprite)
-                     (map #(canvas/draw-cels-on-single-canvas % (canvas/create-canvas size)))
-                     (canvas/combine size spritesheet-size (:columns settings))
-                     (#(canvas/to-data-url % "png")))]
-        {:db (assoc-in db [:export-modal :preview] {:data img :generation false})})
-
-      :image
-      (let [settings (get-image-settings db)
-            size (sprite/get-size sprite)
-            rendered-frames
-            (->> (get-cels-for-rendering settings sprite)
-                 (map (fn [cels]
-                        {:canvas (canvas/draw-cels-on-single-canvas cels (canvas/create-canvas size))
-                         :cels cels})))]
-        (case (:file-type settings)
-          :png
-          (let [data (map #(canvas/to-data-url (:canvas %) "png") rendered-frames)]
-            {:db (assoc-in db [:export-modal :preview] {:data data :generation false})})
-
-          :gif
-          {:db db
-           :fx [[::generate-gif {:rendered-frames rendered-frames
-                                 :repeat (:repeat settings)
-                                 :base64 true
-                                 :size size
-                                 :on-finish [::generate-gif-preview-success]}]]})))))
+        {:keys [sprite]} db
+        settings (get-settings db)
+        size (sprite/get-size sprite)
+        rendered-frames
+        (->> (get-cels-for-rendering settings sprite)
+             (map (fn [cels]
+                    {:canvas (canvas/draw-cels-on-single-canvas cels (canvas/create-canvas size))
+                     :cels cels})))]
+    (case (:file-type settings)
+      :png
+      (let [data (map #(canvas/to-data-url (:canvas %) "png") rendered-frames)]
+        {:db (assoc-in db [:export-modal :preview] {:data data :generation false})})
+    
+      :gif
+      {:db db
+       :fx [[::generate-gif {:rendered-frames rendered-frames
+                             :repeat (:repeat settings)
+                             :base64 true
+                             :size size
+                             :on-finish [::generate-gif-preview-success]}]]})))
 
 (re-frame/reg-event-fx
  ::set-opened
@@ -122,35 +88,15 @@
    (if opened
      (-> db
          (assoc-in [:export-modal :opened] opened)
-         (assoc-in [:export-modal :common-settings :file-name] (-> db :sprite :title))
-         (update-in [:export-modal :spritesheet-settings :columns]
-                    #(adjust-columns-if-need % db))
+         (assoc-in [:export-modal :settings :file-name] (-> db :sprite :title)) 
          generate-preview)
      {:db (assoc-in db [:export-modal :opened] opened)})))
 
 (re-frame/reg-event-fx
- ::select-tab
- (fn [{:keys [db]} [_ tab]]
-   (-> (cond-> db
-         true (assoc-in [:export-modal :current-tab] tab)
-         (= tab :spritesheet) (update-in [:export-modal :common-settings :file-type]
-                                         #(if (= % :gif) :png %)))
-       generate-preview)))
-
-(re-frame/reg-event-fx
  ::set-settings-option
  (fn [{:keys [db]} [_ option-key value]]
-   (-> (case option-key
-         :columns (-> db
-                      (assoc-in [:export-modal :spritesheet-settings option-key] value))
-         :repeat (-> db
-                     (assoc-in [:export-modal :image-settings option-key] value))
-         (-> db
-             (assoc-in [:export-modal :common-settings option-key] value)))
-       (#(if (some #{option-key} [:columns :frames :layers :split-layers])
-           (update-in % [:export-modal :spritesheet-settings :columns]
-                      (fn [value] (adjust-columns-if-need value %)))
-           %))
+   (-> db
+       (assoc-in [:export-modal :settings option-key] value) 
        (#(if-not (some #{option-key} [:file-name :scale])
            (generate-preview %)
            {:db %})))))
@@ -159,62 +105,44 @@
  ::export
  (fn [{:keys [db]}]
    (let [db (assoc-in db [:export-modal :exporting] true)
-         {:keys [sprite export-modal]} db]
-     (case (:current-tab export-modal)
-       :spritesheet
-       (let [settings (get-spritesheet-settings db)
-             size (sprite/get-size sprite)
-             scaled-size (:scaled-frame-size settings)
-             scaled-spritesheet-size {:width (* (:width scaled-size) (:columns settings))
-                                      :height (* (:height scaled-size) (:rows settings))}
-             image-canvas (->> (get-cels-for-rendering settings sprite)
-                               (map (fn [cels]
-                                      (->> (canvas/create-canvas size)
-                                           (canvas/draw-cels-on-single-canvas cels)
-                                           (canvas/scale size scaled-size))))
-                               (canvas/combine scaled-size scaled-spritesheet-size (:columns settings)))]
+         {:keys [sprite]} db
+         settings (get-settings db)
+         size (sprite/get-size sprite)
+         scaled-size (:scaled-frame-size settings)
+         rendered-frames
+         (->> (get-cels-for-rendering settings sprite)
+              (map (fn [cels]
+                     {:canvas (->> (canvas/create-canvas size)
+                                   (canvas/draw-cels-on-single-canvas cels)
+                                   (canvas/scale size scaled-size))
+                      :cels cels})))]
+     (case (:file-type settings)
+       :png
+       (if (= (count rendered-frames) 1)
          {:db db
-          :fx [[::generate-plain-image {:canvas image-canvas
-                                        :on-finish [::download-generated-blob (:file-name settings)]}]]})
-
-       :image
-       (let [settings (get-image-settings db)
-             size (sprite/get-size sprite)
-             scaled-size (:scaled-frame-size settings)
-             rendered-frames
-             (->> (get-cels-for-rendering settings sprite)
-                  (map (fn [cels]
-                         {:canvas (->> (canvas/create-canvas size)
-                                       (canvas/draw-cels-on-single-canvas cels)
-                                       (canvas/scale size scaled-size))
-                          :cels cels})))]
-         (case (:file-type settings)
-           :png
-           (if (= (count rendered-frames) 1)
-             {:db db
-              :fx [[::generate-plain-image {:canvas (:canvas (first rendered-frames))
-                                            :on-finish [::download-generated-blob (:file-name settings)]}]]}
-             (let [files-desc
-                   (->> rendered-frames
-                        (map (fn [{:keys [canvas cels]}]
-                               {:content (canvas/to-base64 canvas "png")
-                                :file-name (let [cel (first cels)
-                                                 frame-idx (-> cel :pos :frame-idx inc)]
-                                             (if (:split-layers settings)
-                                               (let [layer-name (string/replace (-> cel :layer :name) #"\s+" "_")]
-                                                 (str (:file-name settings) "_" frame-idx "_" layer-name ".png"))
-                                               (str (:file-name settings) "_" frame-idx ".png")))})))]
-               {:db db
-                :fx [[::generate-zip {:files-desc files-desc
-                                      :on-finish [::download-generated-blob (:file-name settings)]}]]}))
-
-           :gif
+          :fx [[::generate-image {:canvas (:canvas (first rendered-frames))
+                                        :on-finish [::download-generated-blob (:file-name settings)]}]]}
+         (let [files-desc
+               (->> rendered-frames
+                    (map (fn [{:keys [canvas cels]}]
+                           {:content (canvas/to-base64 canvas "png")
+                            :file-name (let [cel (first cels)
+                                             frame-idx (-> cel :pos :frame-idx inc)]
+                                         (if (:split-layers settings)
+                                           (let [layer-name (string/replace (-> cel :layer :name) #"\s+" "_")]
+                                             (str (:file-name settings) "_" frame-idx "_" layer-name ".png"))
+                                           (str (:file-name settings) "_" frame-idx ".png")))})))]
            {:db db
-            :fx [[::generate-gif {:rendered-frames rendered-frames
-                                  :repeat (:repeat settings)
-                                  :size size
-                                  :on-finish [::download-generated-blob (:file-name settings)] ;; todo: fix
-                                  }]]}))))))
+            :fx [[::generate-zip {:files-desc files-desc
+                                  :on-finish [::download-generated-blob (:file-name settings)]}]]}))
+
+       :gif
+       {:db db
+        :fx [[::generate-gif {:rendered-frames rendered-frames
+                              :repeat (:repeat settings)
+                              :size size
+                              :on-finish [::download-generated-blob (:file-name settings)] ;; todo: fix
+                              }]]}))))
 
 (re-frame/reg-event-fx
  ::download-generated-blob
@@ -239,7 +167,7 @@
                  (re-frame/dispatch (conj on-finish blob))))))))
 
 (re-frame/reg-fx
- ::generate-plain-image ;; png, jpg and so on. todo: rename? 
+ ::generate-image 
  (fn [{:keys [canvas on-finish]}]
    (.. (canvas/->blob-promise canvas)
        (then (fn [images]
