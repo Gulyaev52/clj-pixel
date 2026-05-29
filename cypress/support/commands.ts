@@ -1,115 +1,24 @@
 import { DBSeed } from "./data";
-import { mergeFrameLayers, rgba, rgbaToInt } from "./utils";
+import { mergeFrameLayers, rgba } from "./utils";
 
-// pixels[x][y] = [r, g, b, a]
-type Rgba = [number, number, number, number];
 export type CanvasPixels = Array<{ pos: [number, number], color: string }>;
-
-function readDrawedCanvasPixels(canvas: HTMLCanvasElement) {
-  const { width, height } = canvas;
-  const { data } = canvas.getContext('2d')!.getImageData(0, 0, width, height);
-  return Array.from({ length: width }, (_, x) =>
-    Array.from({ length: height }, (_, y) => {
-      const i = (y * width + x) * 4;
-      const colors = [data[i], data[i + 1], data[i + 2], data[i + 3]] as const;
-      if (colors.every(x => x === 0)) {
-        return undefined;
-      }
-      return {pos: [x, y], color: rgba(...colors)} satisfies { pos: [number, number], color: string };
-    }).filter(Boolean)
-  ).flat();
-}
-
-function readCanvasPixels(canvas: HTMLCanvasElement) {
-  const { width, height } = canvas;
-  const { data } = canvas.getContext('2d')!.getImageData(0, 0, width, height);
-  return Array.from({ length: width }, (_, x) =>
-    Array.from({ length: height }, (_, y) => {
-      const i = (y * width + x) * 4;
-      const colors = [data[i], data[i + 1], data[i + 2], data[i + 3]] as const;
-      return {pos: [x, y], color: rgba(...colors)} satisfies { pos: [number, number], color: string };
-    }).filter(Boolean)
-  ).flat();
-}
-
-
-function readTransparentCanvasPixels(canvas: HTMLCanvasElement) {
-  const { width, height } = canvas;
-  const { data } = canvas.getContext('2d')!.getImageData(0, 0, width, height);
-  return Array.from({ length: width }, (_, x) =>
-    Array.from({ length: height }, (_, y) => {
-      const i = (y * width + x) * 4;
-      const colors = [data[i], data[i + 1], data[i + 2], data[i + 3]] as const;
-      if (!colors.every(x => x === 0)) {
-        return undefined;
-      }
-      return {pos: [x, y], color: rgba(0, 0, 0, 0)} satisfies { pos: [number, number], color: string };
-    }).filter(Boolean)
-  ).flat();
-}
-
-function readCompositePixels(doc: Document, width: number, height: number): string[][] {
-  const below   = doc.getElementById('layers-below')  as HTMLCanvasElement;
-  const current = doc.getElementById('current-layer') as HTMLCanvasElement;
-  const above   = doc.getElementById('layers-above')  as HTMLCanvasElement;
-
-  const belowData   = below.getContext('2d')!.getImageData(0, 0, width, height).data;
-  const currentData = current.getContext('2d')!.getImageData(0, 0, width, height).data;
-  const aboveData   = above.getContext('2d')!.getImageData(0, 0, width, height).data;
-
-  return Array.from({ length: height }, (_, y) =>
-    Array.from({ length: width }, (_, x) => {
-      const i = (y * width + x) * 4;
-      for (const data of [aboveData, currentData, belowData]) {
-        if (data[i + 3] > 0) {
-          return rgba(data[i], data[i + 1], data[i + 2], data[i + 3]);
-        }
-      }
-      return rgba(0, 0, 0, 0);
-    })
-  );
-}
-
-function readImgPixels(img: HTMLImageElement): string[][] {
-  const { naturalWidth: width, naturalHeight: height } = img;
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  canvas.getContext('2d')!.drawImage(img, 0, 0);
-  const { data } = canvas.getContext('2d')!.getImageData(0, 0, width, height);
-  return Array.from({ length: height }, (_, y) =>
-    Array.from({ length: width }, (_, x) => {
-      const i = (y * width + x) * 4;
-      return rgba(data[i], data[i + 1], data[i + 2], data[i + 3]);
-    })
-  );
-}
 
 declare global {
   namespace Cypress {
     interface Chainable {
       startApp(dbSeed: DBSeed): Chainable<void>;
       selectTool(toolName: string): Chainable<void>;
-      selectColor(idx: number, colorType?: 'primary' | 'secondary'): Chainable<void>;
-      drawOnCanvas(x: number, y: number): Chainable<void>;
       drawAtCanvasPixel(px: number, py: number, options?: { rightClick?: boolean; toX?: number; toY?: number }): Chainable<void>;
       startDrawAtCanvasPixel(px: number, py: number, options?: { rightClick?: boolean }): Chainable<void>;
       moveAtCanvasPixel(px: number, py: number, options?: { rightClick?: boolean }): Chainable<void>;
       finishDrawAtCanvasPixel(px: number, py: number, options?: { rightClick?: boolean }): Chainable<void>;
-      assertPreviewCanvasPixels(pixels: string[][], assertMessage?: string): Chainable<void>;
       assertVisibleCanvasPixels(pixels: string[][], assertMessage?: string): Chainable<void>;
       // Reads all canvas pixels into pixels[x][y]=[r,g,b,a] and runs check inside
       // should() so Cypress retries until all assertions inside pass.
-      getDrawedCanvasPixels(check: (pixels: CanvasPixels) => void): Chainable<void>;
-      assertDrawedCanvasPixels(pixels: CanvasPixels, assertMessage?: string): Chainable<void>;
-      assertCanvasPixels(pixels: string[][], assertMessage?: string): Chainable<void>;
-      assertTransparentCanvasPixels(pixels: CanvasPixels, assertMessage?: string): Chainable<void>;
       assertHighlightedPixels(grid: boolean[][], assertMessage?: string): Chainable<void>;
-      addFrame(): Chainable<void>;
-      addLayer(): Chainable<void>;
       stubPrompt(returnValue: string | null): Chainable<void>;
       stubConfirm(returnValue: boolean): Chainable<void>;
-      getCelPreview(frameIdx: number, layerIdx: number, expectedPixels: string[][], assertMessage?: string): Chainable<void>;
+      assertCelPreview(frameIdx: number, layerIdx: number, expectedPixels: string[][], assertMessage?: string): Chainable<void>;
       assertResizePreviewPixels(frameIdx: number, pixels: string[][], assertMessage?: string): Chainable<void>;
       assertDownloadedPngPixels(filePath: string, pixels: string[][], assertMessage?: string): Chainable<void>;
       assertTimelineCelsAndVisiblePixels(cels: string[][][][], active: { activeFrameIdx: number; activeLayerIdx: number }, layerNames: string[]): Chainable<void>;
@@ -152,24 +61,6 @@ Cypress.Commands.add('startApp', (dbSeed: DBSeed) => {
 Cypress.Commands.add('selectTool', (toolName: string) => {
   cy.get(`[data-testid="tool-${toolName}"]`, { log: false }).click();
   Cypress.log({ name: 'selectTool', message: `Selected tool: ${toolName}` });
-});
-
-// Left-click selects the color as primary; right-click selects it as secondary.
-Cypress.Commands.add('selectColor', (idx: number, colorType: 'primary' | 'secondary' = 'primary') => {
-  const el = cy.get(`[data-testid="palette-color-${idx}"]`);
-  if (colorType === 'secondary') {
-    el.rightclick();
-  } else {
-    el.click();
-  }
-});
-
-Cypress.Commands.add('drawOnCanvas', (x: number, y: number) => {
-  cy.get('[data-testid="canvas-viewport"]', { log: false })
-    .trigger('mousedown', x, y, { button: 0, force: true, log: false })
-    .trigger('mousemove', x + 5, y + 5, { button: 0, force: true, log: false })
-    .trigger('mouseup', x + 5, y + 5, { button: 0, force: true, log: false });
-  Cypress.log({ name: 'drawOnCanvas', message: `Drew on canvas at (${x}, ${y})` });
 });
 
 // Triggers mouse events at a specific canvas buffer pixel (px, py).
@@ -264,22 +155,6 @@ Cypress.Commands.add('moveAtCanvasPixel', (px: number, py: number, options: { ri
   Cypress.log({ name: 'moveAtCanvasPixel', message: `mousemove at (${px}, ${py})` });
 });
 
-Cypress.Commands.add('assertPreviewCanvasPixels', (expectedPixels: string[][], assertMessage?: string) => {
-  cy.get('[data-testid="current-layer"]', { log: false }).should(($canvas) => {
-    const actualPixels = readCanvasPixels($canvas[0] as HTMLCanvasElement);
-    const actualObj = Object.fromEntries(actualPixels.map(p => [p.pos.join(','), p.color]));
-    const expectedObj = Object.fromEntries(expectedPixels.flatMap((row, y) =>
-      row.map((color, x) => [`${x},${y}`, color])
-    ));
-    expect(actualObj, assertMessage).to.deep.equal(expectedObj);
-  });
-  Cypress.log({
-    name: 'assertPreviewCanvasPixels',
-    message: assertMessage || '',
-    consoleProps: () => ({ expectedPixels })
-  });
-});
-
 Cypress.Commands.add('assertVisibleCanvasPixels', (expectedPixels: string[][], assertMessage?: string) => {
   cy.get('[data-testid="current-layer"]', { log: false }).should(($canvas) => {
     const canvas = $canvas[0] as HTMLCanvasElement;
@@ -317,45 +192,6 @@ Cypress.Commands.add('assertOnionSkinPixels', (expectedPixels: string[][], asser
   });
 });
 
-// Reads all canvas pixels inside a should() callback so Cypress retries until
-// all assertions inside check() pass. pixels[x][y] = [r, g, b, a].
-Cypress.Commands.add('getDrawedCanvasPixels', (check: (pixels: CanvasPixels) => void) => {
-  cy.get('[data-testid="current-layer"]').should(($canvas) => {
-    check(readDrawedCanvasPixels($canvas[0] as HTMLCanvasElement));
-  });
-});
-
-Cypress.Commands.add('assertDrawedCanvasPixels', (expectedPixels: CanvasPixels, assertMessage?: string) => {
-  cy.get('[data-testid="current-layer"]', { log: false }).should(($canvas) => {
-    const actualPixels = readDrawedCanvasPixels($canvas[0] as HTMLCanvasElement);
-    const actualObj = Object.fromEntries(actualPixels.map(p => [p.pos.join(','), p.color]));
-    const expectedObj = Object.fromEntries(expectedPixels.map(p => [p.pos.join(','), p.color]));
-    expect(actualObj, assertMessage).to.deep.equal(expectedObj);
-  });
-  Cypress.log({
-    name: 'assertDrawedCanvasPixels',
-    message: assertMessage || '',
-    consoleProps: () => ({ expectedPixels })
-  });
-});
-
-Cypress.Commands.add('assertCanvasPixels', (expectedPixels: string[][], assertMessage?: string) => {
-  cy.get('[data-testid="current-layer"]', { log: false }).should(($canvas) => {
-    const canvas = $canvas[0] as HTMLCanvasElement;
-    const actualPixels = readCompositePixels(canvas.ownerDocument, canvas.width, canvas.height);
-    const actualObj = Object.fromEntries(actualPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
-    const expectedObj = Object.fromEntries(expectedPixels.flatMap((row, y) =>
-      row.map((color, x) => [`${x},${y}`, color])
-    ));
-    expect(actualObj, assertMessage).to.deep.equal(expectedObj);
-  });
-  Cypress.log({
-    name: 'assertCanvasPixels',
-    message: assertMessage || '',
-    consoleProps: () => ({ expectedPixels })
-  });
-});
-
 Cypress.Commands.add('assertHighlightedPixels', (expectedGrid: boolean[][], assertMessage?: string) => {
   cy.get('[data-testid="current-layer"]', { log: false }).should(($canvas) => {
     const canvas = $canvas[0] as HTMLCanvasElement;
@@ -377,21 +213,7 @@ Cypress.Commands.add('assertHighlightedPixels', (expectedGrid: boolean[][], asse
   Cypress.log({ name: 'assertHighlightedPixels', message: assertMessage ?? '' });
 });
 
-Cypress.Commands.add('assertTransparentCanvasPixels', (expectedPixels: CanvasPixels, assertMessage?: string) => {
-  cy.get('[data-testid="current-layer"]', { log: false }).should(($canvas) => {
-    const actualPixels = readTransparentCanvasPixels($canvas[0] as HTMLCanvasElement);
-    const actualObj = Object.fromEntries(actualPixels.map(p => [p.pos.join(','), p.color]));
-    const expectedObj = Object.fromEntries(expectedPixels.map(p => [p.pos.join(','), p.color]));
-    expect(actualObj, assertMessage).to.deep.equal(expectedObj);
-  });
-  Cypress.log({
-    name: 'assertTransparentCanvasPixels',
-    message: assertMessage || '',
-    consoleProps: () => ({ expectedPixels })
-  });
-});
-
-Cypress.Commands.add('getCelPreview', (frameIdx: number, layerIdx: number, expectedPixels: string[][], assertMessage?: string) => {
+Cypress.Commands.add('assertCelPreview', (frameIdx: number, layerIdx: number, expectedPixels: string[][], assertMessage?: string) => {
   cy.get(`[data-testid="cel-${frameIdx}-${layerIdx}"] img`, { log: false })
     .should(($img) => {
       expect(($img[0] as HTMLImageElement).complete).to.be.true;
@@ -403,7 +225,7 @@ Cypress.Commands.add('getCelPreview', (frameIdx: number, layerIdx: number, expec
       const expectedObj = Object.fromEntries(expectedPixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
       expect(actualObj, assertMessage).to.deep.equal(expectedObj);
     });
-  Cypress.log({ name: 'getCelPreview', message: assertMessage || `cel-${frameIdx}-${layerIdx}` });
+  Cypress.log({ name: 'assertCelPreview', message: assertMessage || `cel-${frameIdx}-${layerIdx}` });
 });
 
 Cypress.Commands.add('assertDownloadedPngPixels', (filePath: string, expectedPixels: string[][], assertMessage?: string) => {
@@ -469,7 +291,7 @@ Cypress.Commands.add('assertTimelineCelsAndVisiblePixels', (
     frameCels.forEach((pixels, layerIdx) => {
       const isActiveCel = isActiveFrame && layerIdx === active.activeLayerIdx;
       cy.get(`[data-testid="cel-${frameIdx}-${layerIdx}"]`).should('be.visible');
-      cy.getCelPreview(frameIdx, layerIdx, pixels, `cel-${frameIdx}-${layerIdx} pixels`);
+      cy.assertCelPreview(frameIdx, layerIdx, pixels, `cel-${frameIdx}-${layerIdx} pixels`);
       cy.get(`[data-testid="cel-${frameIdx}-${layerIdx}"][data-selected="${isActiveCel}"]`)
         .should('exist', `cel-${frameIdx}-${layerIdx} data-selected=${isActiveCel}`);
     });
@@ -495,14 +317,6 @@ Cypress.Commands.add('assertTimelineLabels', (frameCount: number, layerNames: st
     cy.get('[data-testid^="layer-"]').eq(i)
       .should('contain.text', name, `layer at position ${i} shows "${name}"`);
   });
-});
-
-Cypress.Commands.add('addFrame', () => {
-  cy.get('[title="add empty frame"]').click();
-});
-
-Cypress.Commands.add('addLayer', () => {
-  cy.get('[title="add layer"]').click();
 });
 
 Cypress.Commands.add('stubPrompt', (returnValue: string | null) => {
@@ -555,3 +369,40 @@ Cypress.on('window:before:load', function (window) {
     set: function () { }
   })
 })
+
+function readCompositePixels(doc: Document, width: number, height: number): string[][] {
+  const below   = doc.getElementById('layers-below')  as HTMLCanvasElement;
+  const current = doc.getElementById('current-layer') as HTMLCanvasElement;
+  const above   = doc.getElementById('layers-above')  as HTMLCanvasElement;
+
+  const belowData   = below.getContext('2d')!.getImageData(0, 0, width, height).data;
+  const currentData = current.getContext('2d')!.getImageData(0, 0, width, height).data;
+  const aboveData   = above.getContext('2d')!.getImageData(0, 0, width, height).data;
+
+  return Array.from({ length: height }, (_, y) =>
+    Array.from({ length: width }, (_, x) => {
+      const i = (y * width + x) * 4;
+      for (const data of [aboveData, currentData, belowData]) {
+        if (data[i + 3] > 0) {
+          return rgba(data[i], data[i + 1], data[i + 2], data[i + 3]);
+        }
+      }
+      return rgba(0, 0, 0, 0);
+    })
+  );
+}
+
+function readImgPixels(img: HTMLImageElement): string[][] {
+  const { naturalWidth: width, naturalHeight: height } = img;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext('2d')!.drawImage(img, 0, 0);
+  const { data } = canvas.getContext('2d')!.getImageData(0, 0, width, height);
+  return Array.from({ length: height }, (_, y) =>
+    Array.from({ length: width }, (_, x) => {
+      const i = (y * width + x) * 4;
+      return rgba(data[i], data[i + 1], data[i + 2], data[i + 3]);
+    })
+  );
+}

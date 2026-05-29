@@ -1,5 +1,5 @@
 import { defaultDbSeed, DBSeed, getSpriteFromPixels } from '../support/data';
-import { rgbaToInt, rgba } from '../support/utils';
+import { rgbaToInt } from '../support/utils';
 import { r, t, y, g } from '../support/colors';
 
 describe('Palette', () => {
