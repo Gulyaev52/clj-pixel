@@ -24,7 +24,7 @@
 
 (def types (map :type tools))
 
-(def tools-m (zipmap types tools)) ;; todo: remove
+(def tools-m (zipmap types tools))
 
 (def options-specs (zipmap types
                            (map :options-spec tools)))

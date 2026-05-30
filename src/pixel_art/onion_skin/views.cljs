@@ -4,7 +4,7 @@
    [pixel-art.onion-skin.subs :as subs]
    [pixel-art.onion-skin.utils :refer [get-onion-skin-frames-idx]]
    [pixel-art.utils.canvas :as canvas]
-   [pixel-art.utils.sprite-canvas :as sprite-canvas]
+   [pixel-art.model.sprite-canvas :as sprite-canvas]
    [pixel-art.views.ui-kit :refer [form form-item input-number select slider]]
    [re-frame.core :as re-frame]
    [react :as react]))

@@ -40,7 +40,6 @@
 (defn ->blob-promise [canvas]
   (js/Promise. (fn [resolve] (. canvas (toBlob resolve)))))
 
-;; todo: scale fn above?
 (defn resize [target-size canvas]
   (let [target-canvas (create-canvas target-size)
         target-canvas-ctx (. target-canvas (getContext "2d"))]

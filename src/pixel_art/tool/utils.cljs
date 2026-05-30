@@ -46,12 +46,12 @@
                     db))))}
       (assoc-in [:db :tool] tool-init)))
 
-;; Resize the pixel at {col, row} for the provided size. Will return the array of pixels centered
-;; * around the original pixel, forming a pixel square of side=size
-;; todo: refactoring
+
 (defn resize-pixel [point size]
+  "Resize the pixel at point for the provided size. Will return the array of pixels centered
+   * around the original pixel, forming a pixel square of side=size"
   (when point
-    (let [x (or (aget point 0) (:x point)) ;; todo wtf
+    (let [x (or (aget point 0) (:x point)) ;; todo fix this
           y (or (aget point 1) (:y point))]
       (for [j (range 0 size)
             i (range 0 size)]
@@ -61,7 +61,7 @@
 (defn with-highlight-cel-under-cursor [events-handlers]
   (merge
    events-handlers
-   {:mouse-move-without-mouse-down ;; todo: rename
+   {:mouse-move-without-mouse-down
     (fn [db event]
       (let [handler-res (if-let [f (:mouse-move events-handlers)]
                           (f db event)

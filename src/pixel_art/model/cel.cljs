@@ -47,7 +47,7 @@
 (defn remove-all-pixels [cel]
   (update cel :pixels #(mapv (fn [_] color/transparent-color-int) %)))
 
-(defn set-pixels-map [pixels-map cel]
+(defn set-pixels-from-map [pixels-map cel]
   (update cel :pixels #(update-pixels-coll pixels-map (:size cel) %)))
 
 (defn set-pixels [pixels cel]
@@ -65,10 +65,10 @@
                                (:pixels below-cel)))))
 (comment
   (def above-cel (->> (create {:width 2 :height 2})
-                      (set-pixels-map {{:x 0 :y 0} (color/int 0 0 0 1)
+                      (set-pixels-from-map {{:x 0 :y 0} (color/int 0 0 0 1)
                                        {:x 1 :y 1} (color/int 0 0 0 1)})))
   (def below-cel (->> (create {:width 2 :height 2})
-                      (set-pixels-map {{:x 0 :y 0} (color/int 255 0 0)
+                      (set-pixels-from-map {{:x 0 :y 0} (color/int 255 0 0)
                                        {:x 0 :y 1} (color/int 0 255 0)})))
   (merge-cels below-cel above-cel))
 

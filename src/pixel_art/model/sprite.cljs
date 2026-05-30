@@ -45,7 +45,6 @@
                            (:cels sprite))]
     (assoc sprite :cels new-cels)))
 
-;; todo: rename
 (defn- select-cel [cel-pos sprite]
   (let [current-cel-pos (get-current-cel-pos sprite)]
     (->> sprite
@@ -97,12 +96,10 @@
     (->> (reduce #(select-cel %2 %1) sprite new-selected-cels)
          (select-cel cel-pos))))
 
-;; todo: rename потому что не понятно что остальные дропаются?
 (defn select-frame [idx sprite]
   (let [current-pos (get-current-cel-pos sprite)]
     (select-only-1-cel (assoc current-pos :frame-idx idx) sprite)))
 
-;; todo: ?
 (defn select-layer [idx sprite]
   (let [current-pos (get-current-cel-pos sprite)]
     (select-only-1-cel (assoc current-pos :layer-idx idx) sprite)))
@@ -122,8 +119,6 @@
          (map-indexed (fn [idx cel]
                         (assoc cel :layer (nth layers idx)))))))
 
-;; todo: rename; do we need get-frame-cels-with-layers, get-frame-cels?
-;; todo: они сгруппированы по фреймам а в назв не отражено
 (defn get-denormalized-cels [sprite]
   (let [{:keys [cels layers frames]} sprite]
     (->> cels
@@ -159,9 +154,8 @@
         (#(update-cel (fn [_] updated-current-cel) current-cel-pos %))
         (#(update-cels (fn [cel] (assoc cel :pixels (:pixels updated-current-cel))) linked-cels-pos %)))))
 
-;; todo: rename
-(defn set-current-cel-pixels-map [pixels-map sprite]
-  (update-current-cel-and-linked #(cel/set-pixels-map pixels-map %) sprite))
+(defn set-current-cel-from-pixels-map [pixels-map sprite]
+  (update-current-cel-and-linked #(cel/set-pixels-from-map pixels-map %) sprite))
 
 (defn set-current-cel-pixels [pixels sprite]
   (update-current-cel-and-linked #(cel/set-pixels pixels %) sprite))
@@ -219,7 +213,7 @@
                                  (dissoc to-cel :group-number))
                        (assoc-in [(:frame-idx to-pos) (:layer-idx to-pos)]
                                  (dissoc from-cel :group-number)))]
-      (assoc sprite :cels new-cels)))) ;; todo: linked?
+      (assoc sprite :cels new-cels))))
 
 ;; type: group | single
 ;; type: implement for group

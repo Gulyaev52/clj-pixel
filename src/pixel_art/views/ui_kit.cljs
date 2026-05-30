@@ -42,7 +42,6 @@
    [typography label]
    control])
 
-;; todo: comment
 (defn- popover-children [props]
   (reag/as-element (. props (children (. props -onClick)))))
 
@@ -160,7 +159,6 @@
                                       :light "white"
                                       :dark "black")}}]])
 
-;; todo: integer input number
 (def-func-component input-number [{:keys [value min max block on-blur testid]}]
   (let [[curr-value set-curr-value] (react/useState value)]
     (react/useEffect (fn []

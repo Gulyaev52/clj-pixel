@@ -1,4 +1,4 @@
-(ns pixel-art.palette.events ;; todo: rename to palette-manager?
+(ns pixel-art.palette.events
   (:require [pixel-art.model.color :refer [transparent-color-int]]
             [pixel-art.model.sprite :as sprite]
             [pixel-art.palette.gimp-file :as gimp-file]

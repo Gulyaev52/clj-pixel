@@ -2,7 +2,7 @@
   (:require
    [pixel-art.sprite-resizer.utils :refer [resize-sprite]]
    [pixel-art.utils.canvas :as canvas]
-   [pixel-art.utils.sprite-canvas :as sprite-canvas]
+   [pixel-art.model.sprite-canvas :as sprite-canvas]
    [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub

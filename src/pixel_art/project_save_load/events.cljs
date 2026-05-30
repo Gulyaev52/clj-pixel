@@ -2,10 +2,8 @@
   (:require
    [pixel-art.project-save-load.backup :as backup]
    [pixel-art.project-save-load.sprite-serialization :as sprite-serialization]
-   [pixel-art.db :as db]
+   [pixel-art.db.utils :as db.utils]
    [re-frame.core :as re-frame]))
-
-;; todo: rename this feature
 
 (def file-ext "json")
 
@@ -19,7 +17,7 @@
                                  clj->js
                                  (#(. js/JSON (stringify %))))
                     :content-type :json}]
-     {:db (db/mark-unsaved-changes-saved db)
+     {:db (db.utils/mark-unsaved-changes-saved db)
       :fx [[:download-file file-desc]]})))
 
 (re-frame/reg-event-fx
@@ -67,7 +65,7 @@
 (re-frame/reg-event-fx
  ::save-backup-if-need
  (fn [{:keys [db]}]
-   (if (db/check-unsaved-changes-exist db)
+   (if (db.utils/check-unsaved-changes-exist db)
      {:db db
       :fx [[::save-backup {:backup (select-keys db [:sprite])
                            :success-message "Auto-backup"}]]}
@@ -76,7 +74,7 @@
 (re-frame/reg-event-fx
  ::handle-save-backup-result
  (fn [{:keys [db]} [_ type message]]
-   {:db (if (= type :success) (db/mark-unsaved-changes-saved db) db)
+   {:db (if (= type :success) (db.utils/mark-unsaved-changes-saved db) db)
     :fx [[:show-notification {:type type
                               :message message}]]}))
 

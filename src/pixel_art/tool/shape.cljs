@@ -16,5 +16,5 @@
             {:db (assoc db :preview (draw db event))})
           :mouse-up
           (fn [db event]
-            (let [preview (draw db event)] ;; todo а надо ли на ап рисовать?
+            (let [preview (draw db event)]
               (commit-preview-and-init-tool db preview (init))))}))}))

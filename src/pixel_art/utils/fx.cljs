@@ -23,7 +23,7 @@
 (re-frame/reg-fx
  :download-file
  (fn [{:keys [file-name content content-type]}]
-   (let [data-blob (if (= content-type :json) ;; todo: remove json
+   (let [data-blob (if (= content-type :json)
                      (js/Blob. #js [content] #js {:type "application/json"})
                      content)
          link (.createElement js/document "a")]

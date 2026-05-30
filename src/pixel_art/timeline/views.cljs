@@ -1,17 +1,18 @@
 (ns pixel-art.timeline.views
   (:require
-   ["react-dnd-scrolling" :as react-dnd-scrolling]
    ["antd" :as antd]
    ["react-dnd" :as react-dnd]
+   ["react-dnd-scrolling" :as react-dnd-scrolling]
    [clojure.string :as string]
-   [pixel-art.utils.canvas :as canvas]
-   [pixel-art.timeline.subs :as subs]
-   [pixel-art.timeline.events :as events]
+   [pixel-art.model.sprite-canvas :as sprite-canvas]
    [pixel-art.onion-skin.events :as onion-skin.events]
    [pixel-art.onion-skin.subs :as onion-skin.subs]
    [pixel-art.onion-skin.views :refer [onion-skin-settings]]
    [pixel-art.sprite-preview.events :as sprite-preview.events]
    [pixel-art.sprite-preview.views :refer [sprite-preview-modal]]
+   [pixel-art.timeline.events :as events]
+   [pixel-art.timeline.subs :as subs]
+   [pixel-art.utils.canvas :as canvas]
    [pixel-art.utils.coll :as coll]
    [pixel-art.views.constants :refer [preview-container-bg-color]]
    [pixel-art.views.preview :refer [preview-image]]
@@ -144,7 +145,7 @@
                                           "collect" (fn [^js monitor]
                                                       {:dragging (.. monitor isDragging)})}))
         cel-preview (react/useMemo (fn []
-                                     (canvas/generate-data-url #(canvas/draw-cel cel %)
+                                     (canvas/generate-data-url #(sprite-canvas/draw-cel cel %)
                                                                (:size cel)))
                                    (array cel))
         theme-token (use-theme-token)]
@@ -341,7 +342,7 @@
 
 (def-func-component timeline-panel []
   (let [{:keys [cels layers frames disabled-actions some-layer-visible all-frames-duration some-layer-automatic-linking]} @(re-frame/subscribe [::subs/timeline])
-        current-frame (coll/find-first :current frames) ;; todo: to subs? 
+        current-frame (coll/find-first :current frames)
         cels-by-layers (-> cels
                            (#(group-by (fn [c] (-> c :pos :layer-idx)) %))
                            (update-vals (fn [cels] (sort-by #(-> % :pos :frame-idx) cels))))

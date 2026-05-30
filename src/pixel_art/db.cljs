@@ -39,17 +39,3 @@
     :sprite-resizer (sprite-resizer.events/init)
     :last-saved-history-idx 0} ;; TODO: Find a better solutiion. This approach is not reliabe on 100% since history has max size.
    (get-initial-drawing-settings (:size sprite) viewport-size)))
-
-(defn mark-unsaved-changes-saved [db]
-  (let [current-idx (-> db :history :current-idx)]
-    (assoc db :last-saved-history-idx current-idx)))
-
-(defn check-unsaved-changes-exist [db]
-  (not= (:last-saved-history-idx db) (-> db :history :current-idx)))
-
-(defn set-sprite [db sprite {:keys [prev-sprite viewport-size]}]
-  (-> db
-      (assoc :sprite sprite)
-      (#(if (not= (:size sprite) (:size prev-sprite))
-          (merge % (get-initial-drawing-settings (:size sprite) viewport-size))
-          %))))

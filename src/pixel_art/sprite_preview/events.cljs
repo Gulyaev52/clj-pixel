@@ -1,20 +1,11 @@
 (ns pixel-art.sprite-preview.events
   (:require
-   [pixel-art.model.sprite :as sprite]
-   [pixel-art.utils.canvas :as canvas]
-   [pixel-art.utils.sprite-canvas :as sprite-canvas]
    [re-frame.core :as re-frame]))
 
 (defn init []
   {:size :default
    :opened false
-   :displayed-frame-idx 0
-   :frame-imgs {}})
-
-(re-frame/reg-event-fx
- ::set-size
- (fn [{:keys [db]} [_ size]]
-   {:db (assoc-in db [:sprite-preview :size] size)}))
+   :displayed-frame-idx 0})
 
 (defn- dispatch-display-next-frame [idx db]
   (let [duration (-> db :sprite :frames (nth idx) :duration)]
@@ -26,16 +17,9 @@
  (fn [{:keys [db]} _]
    (let [sprite (:sprite db)
          frames (:frames sprite)
-         frame-imgs (->> (for [frame-idx (range 0 (count frames))]
-                           [frame-idx
-                            (canvas/generate-data-url
-                             #(sprite-canvas/draw-frame-on-single-canvas frame-idx sprite %)
-                             (sprite/get-size sprite))])
-                         (into {})) ;; todo: в подписку
          ]
      {:db (-> db
-              (assoc-in [:sprite-preview :opened] true)
-              (assoc-in [:sprite-preview :frame-imgs] frame-imgs))
+              (assoc-in [:sprite-preview :opened] true))
       :fx (when (> (count frames) 1)
             [(dispatch-display-next-frame 0 db)])})))
 

@@ -12,6 +12,8 @@
 
 (def auto-backup-in-ms (* 60000 5)) ;; every 5 min
 
+(def history-max-size)
+
 (defn get-layer-name [type layers-count]
   (str (if (= type :group) "Group " "Layer ") (inc layers-count)))
 
@@ -38,6 +40,6 @@
      default-palettes-and-current-colors
      :sprite
      (->> (create-empty-sprite "Example" sprite-size)
-          (sprite/set-current-cel-pixels-map (for [x (range 0 (:width sprite-size))
+          (sprite/set-current-cel-from-pixels-map (for [x (range 0 (:width sprite-size))
                                                    y (range 0 (:height sprite-size))]
                                                [{:x x :y y} (color/int (rand-int 255) (rand-int 255) (rand-int 255))]))))))

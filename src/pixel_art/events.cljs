@@ -1,5 +1,6 @@
 (ns pixel-art.events
   (:require
+   [pixel-art.db.utils :as db.utils]
    [pixel-art.db :as db]
    [pixel-art.drawing.events]
    [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
@@ -102,7 +103,7 @@
                                         :value fields}]]})))))
 
 (defn show-warning-when-leave-with-unsaved-changes [e]
-  (when (db/check-unsaved-changes-exist @re-frame.db/app-db)
+  (when (db.utils/check-unsaved-changes-exist @re-frame.db/app-db)
     (let [confirmMessage "Your current sprite has unsaved changes. Are you sure you want to quit?"]
       (when-let [e (or e (. js/window -event))]
         (set! (. e -returnValue) confirmMessage)

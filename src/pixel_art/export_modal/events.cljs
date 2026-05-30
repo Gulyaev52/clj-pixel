@@ -3,7 +3,7 @@
    ["jszip" :as jszip]
    [clojure.string :as string]
    [pixel-art.utils.canvas :as canvas]
-   [pixel-art.utils.sprite-canvas :as sprite-canvas]
+   [pixel-art.model.sprite-canvas :as sprite-canvas]
    [pixel-art.model.sprite :as sprite]
    [re-frame.core :as re-frame]))
 

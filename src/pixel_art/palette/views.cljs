@@ -14,7 +14,6 @@
    [sc.api])
   (:require-macros [pixel-art.views.reagent :refer [def-func-component]]))
 
-;; todo: зачем-это?
 (defn- replace-transparent-color [color]
   (if (= color color/transparent-color-int)
     (color/int 0 0 0)
@@ -44,7 +43,7 @@
 (def-func-component palette-colors [{:keys [colors primary-color secondary-color]}]
   (let [theme-token (use-theme-token)]
     [:div {:style {:display :grid
-                   :grid-template-columns "repeat(auto-fill, 35px)" ;; todo: dynamic
+                   :grid-template-columns "repeat(auto-fill, 35px)"
                    :grid-auto-rows "35px"
                    :grid-gap "2px"
                    :height "100%"
