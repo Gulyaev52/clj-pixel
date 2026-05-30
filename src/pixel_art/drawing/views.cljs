@@ -1,6 +1,7 @@
 (ns pixel-art.drawing.views
   (:require
-   [pixel-art.canvas :as canvas]
+   [pixel-art.utils.canvas :as canvas]
+   [pixel-art.model.sprite-canvas :as sprite-canvas]
    [pixel-art.drawing.events :as events]
    [pixel-art.drawing.subs :as subs]
    [pixel-art.model.sprite :as sprite]
@@ -76,7 +77,7 @@
     (react/useEffect (fn []
                        (when preview
                          (let [current-layer (. js/document (getElementById "current-layer"))]
-                           (canvas/draw-cel {:size sprite-size :pixels preview} current-layer))))
+                           (sprite-canvas/draw-cel {:size sprite-size :pixels preview} current-layer))))
                      (array preview sprite-size))
     [:div]))
 
@@ -86,7 +87,7 @@
     (react/useEffect (fn []
                        (when (and sprite (not preview))
                          (canvas/clear-canvases (vec (. js/document (getElementsByClassName "layer"))))
-                         (canvas/draw-frame (sprite/get-current-frame-idx sprite) sprite)))
+                         (sprite-canvas/draw-frame (sprite/get-current-frame-idx sprite) sprite)))
                      (array sprite preview))
     [:div]))
 

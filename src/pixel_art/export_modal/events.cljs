@@ -2,7 +2,8 @@
   (:require
    ["jszip" :as jszip]
    [clojure.string :as string]
-   [pixel-art.canvas :as canvas]
+   [pixel-art.utils.canvas :as canvas]
+   [pixel-art.utils.sprite-canvas :as sprite-canvas]
    [pixel-art.model.sprite :as sprite]
    [re-frame.core :as re-frame]))
 
@@ -67,7 +68,7 @@
         rendered-frames
         (->> (get-cels-for-rendering settings sprite)
              (map (fn [cels]
-                    {:canvas (canvas/draw-cels-on-single-canvas cels (canvas/create-canvas size))
+                    {:canvas (sprite-canvas/draw-cels-on-single-canvas cels (canvas/create-canvas size))
                      :cels cels})))]
     (case (:file-type settings)
       :png
@@ -113,7 +114,7 @@
          (->> (get-cels-for-rendering settings sprite)
               (map (fn [cels]
                      {:canvas (->> (canvas/create-canvas size)
-                                   (canvas/draw-cels-on-single-canvas cels)
+                                   (sprite-canvas/draw-cels-on-single-canvas cels)
                                    (canvas/scale size scaled-size))
                       :cels cels})))]
      (case (:file-type settings)

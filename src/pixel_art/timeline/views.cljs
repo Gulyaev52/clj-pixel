@@ -4,7 +4,7 @@
    ["antd" :as antd]
    ["react-dnd" :as react-dnd]
    [clojure.string :as string]
-   [pixel-art.canvas :as canvas]
+   [pixel-art.utils.canvas :as canvas]
    [pixel-art.timeline.subs :as subs]
    [pixel-art.timeline.events :as events]
    [pixel-art.onion-skin.events :as onion-skin.events]

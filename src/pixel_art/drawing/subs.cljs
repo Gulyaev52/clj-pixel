@@ -25,7 +25,7 @@
    (some? (:start-viewport-scroll db))))
 
 (re-frame/reg-sub
- ::mouse-was-down ;; todo: rename?
+ ::mouse-was-down
  (fn [db]
    (some? (:initial-mouse-down-pos db))))
 

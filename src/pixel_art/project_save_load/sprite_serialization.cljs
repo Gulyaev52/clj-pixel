@@ -1,13 +1,14 @@
 (ns pixel-art.project-save-load.sprite-serialization ;; todo: rename to project-serialization?
   (:require
-   [pixel-art.canvas :as canvas]
+   [pixel-art.utils.canvas :as canvas]
+   [pixel-art.model.sprite-canvas :as sprite-canvas]
    [pixel-art.utils.coll :as coll]))
 
 (defn serialize [sprite]
   (let [cels (coll/map-matrix
               (fn [cel]
                 ;; todo: add comment why we save data-url not pixels
-                (let [data-url (canvas/generate-data-url #(canvas/draw-cel cel %) (:size sprite))]
+                (let [data-url (canvas/generate-data-url #(sprite-canvas/draw-cel cel %) (:size sprite))]
                   (-> cel
                       (dissoc :pixels :current :selected)
                       (assoc :data-url data-url))))

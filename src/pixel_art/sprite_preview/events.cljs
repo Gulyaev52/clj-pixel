@@ -1,7 +1,8 @@
 (ns pixel-art.sprite-preview.events
   (:require
-   [pixel-art.canvas :as canvas]
    [pixel-art.model.sprite :as sprite]
+   [pixel-art.utils.canvas :as canvas]
+   [pixel-art.utils.sprite-canvas :as sprite-canvas]
    [re-frame.core :as re-frame]))
 
 (defn init []
@@ -28,7 +29,7 @@
          frame-imgs (->> (for [frame-idx (range 0 (count frames))]
                            [frame-idx
                             (canvas/generate-data-url
-                             #(canvas/draw-frame-on-single-canvas frame-idx sprite %)
+                             #(sprite-canvas/draw-frame-on-single-canvas frame-idx sprite %)
                              (sprite/get-size sprite))])
                          (into {})) ;; todo: в подписку
          ]
