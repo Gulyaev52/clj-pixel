@@ -1,15 +1,14 @@
 (ns pixel-art.events
   (:require
-   [pixel-art.project-save-load.backup :as backup]
    [pixel-art.db :as db]
    [pixel-art.drawing.events]
    [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
+   [pixel-art.project-save-load.backup :as backup]
    [pixel-art.project-save-load.events :as project-save-load]
    [pixel-art.project-settings :as project-settings]
    [pixel-art.re-pressed.core :as rp]
    [pixel-art.tool.core :as tool]
-   [pixel-art.tool.utils :refer [check-unsaved-changes-exist
-                                 commit-preview-and-init-tool]]
+   [pixel-art.tool.utils :refer [commit-preview-and-init-tool]]
    [pixel-art.utils.fx]
    [pixel-art.utils.fx.local-storage :as local-storage]
    [pixel-art.utils.interceptor :refer [on-paths-change]]
@@ -36,7 +35,7 @@
    (.. (backup/init-db+)
        (then backup/get-backup+)
        (then (fn [backup]
-               (re-frame/dispatch [:initialize-db backup]))) ;; todo: fix
+               (re-frame/dispatch [:initialize-db backup])))
        (catch (fn []
                 (re-frame/dispatch [:initialize-db]))))))
 
@@ -103,7 +102,7 @@
                                         :value fields}]]})))))
 
 (defn show-warning-when-leave-with-unsaved-changes [e]
-  (when (check-unsaved-changes-exist @re-frame.db/app-db)
+  (when (db/check-unsaved-changes-exist @re-frame.db/app-db)
     (let [confirmMessage "Your current sprite has unsaved changes. Are you sure you want to quit?"]
       (when-let [e (or e (. js/window -event))]
         (set! (. e -returnValue) confirmMessage)
@@ -115,8 +114,6 @@
    (. js/window (removeEventListener "beforeunload" show-warning-when-leave-with-unsaved-changes))
    (. js/window (addEventListener "beforeunload" show-warning-when-leave-with-unsaved-changes))))
 
-;; todo: move bellow actions?
-
 (re-frame/reg-event-fx
  ::select-tool
  (fn [{:keys [db]} [_ tool-type]]
@@ -124,7 +121,7 @@
      (commit-preview-and-init-tool db (:preview db) tool))))
 
 (re-frame/reg-event-fx
- ::change-tool-option ;; todo: set
+ ::set-tool-option
  (fn [{:keys [db]} [_ field value]]
    (let [tool-type (-> db :tool :type)]
      {:db (assoc-in db [:tools-options tool-type field] value)})))

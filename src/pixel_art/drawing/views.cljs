@@ -38,8 +38,8 @@
                                                prev-scale (:scale @db/app-db)
                                                delta (if (< (. e -deltaY) 0) 1.1 (/ 1 1.1))
                                                new-scale (-> (* prev-scale delta)
-                                                             (min project-settings/max-scale)
-                                                             (max project-settings/min-scale))]
+                                                             (min project-settings/max-zoom-scale)
+                                                             (max project-settings/min-zoom-scale))]
                                            (when (not= prev-scale new-scale)
                                              (set! (.-current view-render-after-zoom-ref) false) ;; todo: add comment
                                              (re-frame/dispatch [::events/zoom delta new-scale center-pos mouse-offset-pos])))))]

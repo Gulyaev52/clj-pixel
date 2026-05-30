@@ -129,7 +129,7 @@
      (doall
       (for [[idx option-spec] (map-indexed vector options-spec)]
         (let [value (get options (:field option-spec))
-              on-change #(re-frame/dispatch [::events/change-tool-option (:field option-spec) %])
+              on-change #(re-frame/dispatch [::events/set-tool-option (:field option-spec) %])
               props (assoc option-spec
                            :value value
                            :on-change on-change

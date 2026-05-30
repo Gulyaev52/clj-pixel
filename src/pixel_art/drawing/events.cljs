@@ -55,7 +55,7 @@
  (fn [{:keys [db]} [_ delta new-scale center-pos mouse-offset-pos]]
    (let [prev-scale (:scale db)]
      (if (not= prev-scale new-scale)
-       (let [delta (if (#{project-settings/max-scale project-settings/min-scale} new-scale)
+       (let [delta (if (#{project-settings/max-zoom-scale project-settings/min-zoom-scale} new-scale)
                      (/ new-scale prev-scale)
                      delta)
              old-canvas-size (-> db :sprite :size (update-vals #(* % (:scale db))))

@@ -1,7 +1,7 @@
 (ns pixel-art.sprite-resizer.events
   (:require
+   [pixel-art.db :as db]
    [pixel-art.history :as history]
-   [pixel-art.project-settings :as project-settings]
    [pixel-art.sprite-resizer.utils :refer [resize-sprite]]
    [re-frame.core :as re-frame]))
 
@@ -30,7 +30,7 @@
    (let [{:keys [sprite] {:keys [settings]} :sprite-resizer} db
          resized-sprite (resize-sprite sprite settings)]
      {:db (-> db
-              (project-settings/set-sprite resized-sprite {:prev-sprite (:sprite db)
-                                                           :viewport-size viewport-size})
+              (db/set-sprite resized-sprite {:prev-sprite (:sprite db)
+                                             :viewport-size viewport-size})
               (assoc-in [:sprite-resizer :opened] false)
               history/save-sprite)})))

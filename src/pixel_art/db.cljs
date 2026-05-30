@@ -1,11 +1,11 @@
 (ns pixel-art.db
   (:require
+   [pixel-art.drawing.initial-settings :refer [get-initial-drawing-settings]]
    [pixel-art.export-modal.events :as export-modal.events]
    [pixel-art.history :as history.events]
-   [pixel-art.new-project-modal.events :as new-project-modal.events]
    [pixel-art.keyboard-shortcuts-modal.events :as keyboard-shortcuts-modal.events]
+   [pixel-art.new-project-modal.events :as new-project-modal.events]
    [pixel-art.onion-skin.events :as onion-skin.events]
-   [pixel-art.project-settings :as project-settings.events]
    [pixel-art.sprite-preview.events :as sprite-preview.events]
    [pixel-art.sprite-resizer.events :as sprite-resizer.events]
    [pixel-art.tool.core :as tool]
@@ -38,4 +38,18 @@
     :export-modal (export-modal.events/init)
     :sprite-resizer (sprite-resizer.events/init)
     :last-saved-history-idx 0} ;; TODO: Find a better solutiion. This approach is not reliabe on 100% since history has max size.
-   (project-settings.events/get-initial-drawing-settings (:size sprite) viewport-size)))
+   (get-initial-drawing-settings (:size sprite) viewport-size)))
+
+(defn mark-unsaved-changes-saved [db]
+  (let [current-idx (-> db :history :current-idx)]
+    (assoc db :last-saved-history-idx current-idx)))
+
+(defn check-unsaved-changes-exist [db]
+  (not= (:last-saved-history-idx db) (-> db :history :current-idx)))
+
+(defn set-sprite [db sprite {:keys [prev-sprite viewport-size]}]
+  (-> db
+      (assoc :sprite sprite)
+      (#(if (not= (:size sprite) (:size prev-sprite))
+          (merge % (get-initial-drawing-settings (:size sprite) viewport-size))
+          %))))
