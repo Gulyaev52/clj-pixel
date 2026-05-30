@@ -4,7 +4,7 @@
    [pixel-art.tool.core :as tool]
    [re-frame.core :as re-frame]))
 
-(defn run-events-handlers [events events-handlers db event]
+(defn- run-events-handlers [events events-handlers db event]
   (->> (keep #(get events-handlers %) events)
        (reduce (fn [res h]
                  (let [new-res (h (:db res) event)]
