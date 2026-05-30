@@ -1,22 +1,9 @@
-import { defaultDbSeed, getSpriteFromPixels, DBSeed } from '../support/data';
-import { rgba } from '../support/utils';
-
-const editTitleSeed: DBSeed = {
-  ...defaultDbSeed,
-  sprite: { ...defaultDbSeed.sprite, title: 'OriginalTitle' }
-};
-
-const T   = rgba(0, 0, 0, 0);
-const RED = rgba(255, 0, 0);
-
-const saveLoadSeed: DBSeed = {
-  ...defaultDbSeed,
-  sprite: { ...getSpriteFromPixels([[RED, T], [T, T]]), title: 'SaveLoadTest' }
-};
+import { _4x4EmptySeed, twoFramesTwoLayersSeed } from '../support/data';
+import { g, r, t } from '../support/colors';
 
 describe('Project', () => {
   it('new project → inputs show set values; canvas, title, and timeline update on create', () => {
-    cy.startApp(defaultDbSeed);
+    cy.startApp(_4x4EmptySeed);
     cy.stubConfirm(true);
 
     cy.get('[data-testid="btn-new-project"]').click();
@@ -35,7 +22,7 @@ describe('Project', () => {
     cy.get('[data-testid="btn-create-project"]').should('not.exist');
     cy.contains('h3', 'My Project').should('exist');
     cy.assertTimelineCelsAndVisiblePixels(
-      [[[[T, T], [T, T]]]],
+      [[[[t, t], [t, t]]]],
       { activeFrameIdx: 0, activeLayerIdx: 0 },
       ['Layer 1']
     );
@@ -43,21 +30,21 @@ describe('Project', () => {
 
   describe('Save and Load', () => {
     it('save as file → downloads JSON with correct sprite data', () => {
-      cy.exec('rm -f "cypress/downloads/SaveLoadTest.json"', { failOnNonZeroExit: false });
-      cy.startApp(saveLoadSeed);
+      cy.exec(`rm -f "cypress/downloads/${_4x4EmptySeed.sprite.title}.json"`, { failOnNonZeroExit: false });
+      cy.startApp(_4x4EmptySeed);
 
       cy.get('[data-testid="btn-save-as-file"]').click();
 
-      cy.readFile('cypress/downloads/SaveLoadTest.json', { timeout: 10000 }).then((content) => {
+      cy.readFile(`cypress/downloads/${_4x4EmptySeed.sprite.title}.json`, { timeout: 10000 }).then((content) => {
         const expected = {
           version: '1',
           project: {
             sprite: {
-              title: 'SaveLoadTest',
-              size: { width: 2, height: 2 },
+              title: _4x4EmptySeed.sprite.title,
+              size: { width: 4, height: 4 },
               frames: [{ duration: 100 }],
               layers: [{ name: 'Layer 1', 'visible?': true, 'automatic-linking?': false }],
-              cels: [[{ size: { width: 2, height: 2 }, 'data-url': saveLoadSeed.sprite.cels[0][0]['data-url'] }]]
+              cels: [[{ size: { width: 4, height: 4 }, 'data-url': _4x4EmptySeed.sprite.cels[0][0]['data-url'] }]]
             }
           }
         };
@@ -67,32 +54,35 @@ describe('Project', () => {
     });
 
     it('load from file → restores project name, pixels, and timeline', () => {
-      cy.exec('rm -f "cypress/downloads/SaveLoadTest.json"', { failOnNonZeroExit: false });
-      cy.startApp(saveLoadSeed);
+      cy.exec(`rm -f "cypress/downloads/${_4x4EmptySeed.sprite.title}.json"`, { failOnNonZeroExit: false });
+      cy.startApp(_4x4EmptySeed);
       cy.get('[data-testid="btn-save-as-file"]').click();
 
-      cy.readFile('cypress/downloads/SaveLoadTest.json', { timeout: 10000 }).then((fileContent) => {
-        cy.startApp(defaultDbSeed);
+      cy.readFile(`rm -f "cypress/downloads/${_4x4EmptySeed.sprite.title}.json"`, { timeout: 10000 }).then((fileContent) => {
+        cy.startApp(twoFramesTwoLayersSeed);
         cy.stubConfirm(true);
 
         cy.get('[data-testid="input-load-from-file"]').selectFile({
           contents: Cypress.Buffer.from(JSON.stringify(fileContent)),
-          fileName: 'SaveLoadTest.json',
+          fileName: `${_4x4EmptySeed.sprite.title}.json`,
           mimeType: 'application/json'
         }, { force: true });
 
-        cy.get('h3').should('have.text', 'SaveLoadTest');
+        cy.get('h3').should('have.text', _4x4EmptySeed.sprite.title);
         cy.assertTimelineCelsAndVisiblePixels(
-          [[[[RED, T], [T, T]]]],
+          [
+            [[[r, t], [t, t]], [[t, t], [t, r]]],
+            [[[t, t], [t, g]], [[g, t], [t, t]]],
+          ],
           { activeFrameIdx: 0, activeLayerIdx: 0 },
-          ['Layer 1']
+          ['Layer 1', "Layer 2"]
         );
       });
     });
   });
 
   it('create project clears history — undo after create has no effect', () => {
-    cy.startApp(saveLoadSeed); // title='SaveLoadTest', RED at (0,0), 2×2
+    cy.startApp(_4x4EmptySeed);
     cy.stubConfirm(true);
 
     cy.get('[data-testid="btn-new-project"]').click();
@@ -110,7 +100,7 @@ describe('Project', () => {
 
   describe('Edit title', () => {
     it('enter new title → header updates to new title', () => {
-      cy.startApp(editTitleSeed);
+      cy.startApp(_4x4EmptySeed);
       cy.stubPrompt('NewTitle');
 
       cy.get('[data-testid="btn-edit-title"]').click();

@@ -1,18 +1,19 @@
-import { defaultDbSeed, DBSeed, getSpriteFromPixels } from '../support/data';
+import { _4x4EmptySeed, DBSeed, getSpriteFromPixels } from '../support/data';
 import { rgbaToInt, rgba } from '../support/utils';
+import { r, t, y } from '../support/colors';
 
 describe('Palette', () => {
   const addFromFrameSeed: DBSeed = {
-    ...defaultDbSeed,
+    ..._4x4EmptySeed,
     palettes: [{ name: 'default', current: true, colors: [rgbaToInt(255, 0, 0)] }],
     sprite: getSpriteFromPixels([
-      [rgba(255, 0, 0), rgba(0, 255, 0)],  // red (уже в палитре), green (новый)
-      [rgba(0, 0, 255), rgba(0, 0, 0, 0)]  // blue (новый), transparent (пропускается)
+      [r, rgba(0, 255, 0)],
+      [y, t]
     ])
   };
 
   const twopaletteSeed: DBSeed = {
-    ...defaultDbSeed,
+    ..._4x4EmptySeed,
     palettes: [
       { name: 'default', current: false, colors: [] },
       { name: 'Second', current: true, colors: [] }
@@ -20,9 +21,9 @@ describe('Palette', () => {
   };
 
   it('adds a color via Hex input', () => {
-    cy.startApp(defaultDbSeed);
+    cy.startApp(_4x4EmptySeed);
 
-    cy.get('[title="Add color"]').click();
+    cy.get('[data-testid="btn-add-color"]').click();
     cy.get('[data-testid="color-picker-hex-input"]').clear().type('FF8800');
     cy.get('[data-testid="add-color-confirm-button"]').click();
 
@@ -31,9 +32,9 @@ describe('Palette', () => {
   });
 
   it('adds a color via R/G/B inputs', () => {
-    cy.startApp(defaultDbSeed);
+    cy.startApp(_4x4EmptySeed);
 
-    cy.get('[title="Add color"]').click();
+    cy.get('[data-testid="btn-add-color"]').click();
     cy.get('[data-testid="color-picker-r-input"]').clear().type('100');
     cy.get('[data-testid="color-picker-g-input"]').clear().type('200');
     cy.get('[data-testid="color-picker-b-input"]').clear().type('50');
@@ -44,7 +45,7 @@ describe('Palette', () => {
   });
 
   it('removes only the specified color', () => {
-    cy.startApp(defaultDbSeed);
+    cy.startApp(_4x4EmptySeed);
 
     cy.get('[data-testid="remove-palette-color-1"]').click({ force: true });
 
@@ -55,7 +56,7 @@ describe('Palette', () => {
   });
 
   it('left click selects primary color, right click selects secondary color', () => {
-    cy.startApp(defaultDbSeed);
+    cy.startApp(_4x4EmptySeed);
 
     cy.get('[data-testid="palette-color-rgba(0,0,255,1)"]').click({ force: true });
     cy.get('[data-testid="primary-color-swatch"]')
@@ -75,7 +76,7 @@ describe('Palette', () => {
   });
 
   it('same color as primary and secondary shows both L and R markers', () => {
-    cy.startApp(defaultDbSeed);
+    cy.startApp(_4x4EmptySeed);
 
     cy.get('[data-testid="palette-color-rgba(0,0,255,1)"]').click({ force: true });
     cy.get('[data-testid="palette-color-rgba(0,0,255,1)"]').rightclick({ force: true });
@@ -90,10 +91,10 @@ describe('Palette', () => {
   });
 
   it('creates new palette, allows adding and selecting colors, and persists after reload', () => {
-    cy.startApp(defaultDbSeed);
+    cy.startApp(_4x4EmptySeed);
 
     cy.stubPrompt('My Palette');
-    cy.get('[title="Add palette"]').click();
+    cy.get('[data-testid="btn-add-palette"]').click();
     cy.get('[data-testid="palette-select"]')
       .should('contain.text', 'My Palette', 'new palette is selected');
     cy.get('[data-testid^="palette-color-"]')
@@ -105,7 +106,7 @@ describe('Palette', () => {
     cy.contains('.ant-select-item-option-content', 'My Palette')
       .should('be.visible', 'My Palette still in options');
 
-    cy.get('[title="Add color"]').click({ force: true });
+    cy.get('[data-testid="btn-add-color"]').click({ force: true });
     cy.get('[data-testid="color-picker-hex-input"]').clear().type('FF0000');
     cy.get('[data-testid="add-color-confirm-button"]').click();
     cy.get('[data-testid="palette-color-rgba(255,0,0,1)"]')
@@ -125,7 +126,7 @@ describe('Palette', () => {
   });
 
   it('renames current palette and persists after reload', () => {
-    cy.startApp(defaultDbSeed);
+    cy.startApp(_4x4EmptySeed);
 
     cy.stubPrompt('Renamed Palette');
     cy.get('[data-testid="rename-palette-button"]').click();
@@ -145,7 +146,7 @@ describe('Palette', () => {
   it('"Add colors from current frame" adds only new non-transparent colors from current frame to palette', () => {
     cy.startApp(addFromFrameSeed);
 
-    cy.get('[title="Add colors from current frame"]').click();
+    cy.get('[data-testid="btn-add-colors-from-frame"]').click();
 
     cy.get('[data-testid^="palette-color-"]')
       .should('have.length', 3, 'exactly 3 distinct non-transparent colors');
@@ -207,7 +208,7 @@ describe('Palette', () => {
     ].join('\n');
 
     it('exports current palette as GPL file', () => {
-      cy.startApp(defaultDbSeed);
+      cy.startApp(_4x4EmptySeed);
       cy.exec('rm -f cypress/downloads/default.gpl', { failOnNonZeroExit: false });
 
       cy.get('[data-testid="export-palette-button"]').click();
@@ -218,7 +219,7 @@ describe('Palette', () => {
     });
 
     it('imports valid GPL file, appends palette at end, and persists after reload', () => {
-      cy.startApp(defaultDbSeed);
+      cy.startApp(_4x4EmptySeed);
 
       cy.get('[data-testid="import-palette-input"]').selectFile({
         contents: Cypress.Buffer.from(importedGplContent),
@@ -247,7 +248,7 @@ describe('Palette', () => {
     });
 
     it('shows error alert when importing invalid GPL file and does not change palette', () => {
-      cy.startApp(defaultDbSeed);
+      cy.startApp(_4x4EmptySeed);
 
       cy.window().then((win) => {
         cy.stub(win, 'alert').as('alertStub');

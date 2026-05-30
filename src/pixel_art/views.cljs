@@ -96,12 +96,11 @@
                     :size :sm
                     :on-click (fn [] (re-frame/dispatch [::events/swap-current-colors]))}]]]))
 
-(def-func-component tools-panel []
+(def-func-component left-sidebar []
   (let [tool @(re-frame/subscribe [::subs/tool])
         theme-token (use-theme-token)]
     [:div {:style {:width "100px"
                    :border-right (str "1px solid " (.-colorBorder theme-token))}}
-
      [:div {:style {:display "grid"
                     :grid-template-columns "1fr 1fr"
                     :gap "1px"
@@ -165,11 +164,32 @@
               :data-testid "btn-redo"}
       "Redo"]]))
 
+(defn project-title []
+  (let [unsaved-changes-exist @(re-frame/subscribe [::subs/unsaved-changes-exist])
+        sprite-title @(re-frame/subscribe [::subs/sprite-title])]
+    [space {:style {:min-width 0} :styles {:item {:min-width 0}}}
+     [title {:level 3 :style {:margin 0
+                              :white-space "nowrap"
+                              :overflow "hidden"
+                              :text-overflow "ellipsis"}}
+      (str sprite-title (when unsaved-changes-exist "*"))]
+     [icon-button {:src :pen
+                   :title "edit title"
+                   :data-testid "btn-edit-title"
+                   :size :xs
+                   :on-click (fn []
+                               (let [new-title (js/prompt "Title")]
+                                 (when-not (string/blank? new-title)
+                                   (re-frame/dispatch [::events/set-sprite-title new-title]))))}]]))
+
+(defn pixels-grid-checkbox []
+  (let [pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])]
+    [checkbox {:value pixels-grid-enabled
+               :label "Grid"
+               :on-change (fn [checked] (re-frame/dispatch [::drawing.events/enable-pixels-grid checked]))}]))
+
 (def-func-component header []
-  (let [pixels-grid-enabled @(re-frame/subscribe [::subs/pixels-grid-enabled])
-        unsaved-changes-exist @(re-frame/subscribe [::subs/unsaved-changes-exist])
-        sprite-title @(re-frame/subscribe [::subs/sprite-title])
-        theme-token (use-theme-token)]
+  (let [theme-token (use-theme-token)]
     [:div {:style {:display "flex"
                    :align-items "center"
                    :padding "5px"
@@ -209,22 +229,10 @@
       [button {:on-click (fn [] (re-frame/dispatch [::keyboard-shortcuts-modal.events/set-opened true]))
                :data-testid "btn-keyboard-shortcuts"}
        "Keyboard shortcuts"]]
-     [checkbox {:value pixels-grid-enabled
-                :label "Grid"
-                :on-change (fn [checked] (re-frame/dispatch [::drawing.events/enable-pixels-grid checked]))}]
-     [undo-redo-buttons]
-     [space
-      [title {:level 3 :style {:margin 0}}
-       (str sprite-title (when unsaved-changes-exist "*"))]
-      [icon-button {:src :pen
-                    :title "edit title"
-                    :data-testid "btn-edit-title"
-                    :size :xs
-                    :on-click (fn []
-                                (let [new-title (js/prompt "Title")]
-                                  (when-not (string/blank? new-title)
-                                    (re-frame/dispatch [::events/set-sprite-title new-title]))))}]]
-     [:div {:style {:margin-left "auto"}}
+     [pixels-grid-checkbox]
+     [undo-redo-buttons] 
+     [project-title]
+     [:div {:style {:margin-left "auto" :flex-shrink 0}}
       [drawing-info]]]))
 
 (def-func-component app-content []
@@ -255,7 +263,7 @@
                      :flex-grow 1
                      :min-height 0
                      :width "100%"}}
-       [tools-panel]
+       [left-sidebar]
        [:div {:style {:display :flex
                       :flex-direction :column
                       :min-width 0

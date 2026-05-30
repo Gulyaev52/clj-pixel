@@ -1,31 +1,27 @@
-import { defaultDbSeed, DBSeed } from '../support/data';
-import { rgba } from '../support/utils';
-
-const TITLE = 'TestProject';
-const T = rgba(0, 0, 0, 0);
-const BLACK = rgba(0, 0, 0);
-const E = Array(5).fill(T); // empty row
+import { DBSeed, _4x4EmptySeed, getSpriteFromPixels } from '../support/data';
+import { b, r, t } from '../support/colors';
 
 const seed: DBSeed = {
-  ...defaultDbSeed,
-  sprite: { ...defaultDbSeed.sprite, title: TITLE }
+  ..._4x4EmptySeed,
+  sprite: getSpriteFromPixels([[r, t], [t, t]]),
 };
+const title = _4x4EmptySeed.sprite.title!;
 
 // похожие тесты в project
 describe('Unsaved changes', () => {
   it('* appears next to title after a change', () => {
     cy.startApp(seed);
-    cy.addLayer();
-    cy.contains('h3', TITLE + '*').should('exist');
+    cy.get('[data-testid="btn-add-layer"]').click();
+    cy.contains('h3', title + '*').should('exist');
   });
 
   it('* disappears after save as file', () => {
     cy.exec('rm -f "cypress/downloads/TestProject.json"', { failOnNonZeroExit: false });
     cy.startApp(seed);
-    cy.addLayer();
-    cy.contains('h3', TITLE + '*').should('exist', '* appears after change');
+    cy.get('[data-testid="btn-add-layer"]').click();
+    cy.contains('h3', title + '*').should('exist', '* appears after change');
     cy.get('[data-testid="btn-save-as-file"]').click();
-    cy.contains('h3', TITLE + '*').should('not.exist', '* disappears after save');
+    cy.contains('h3', title + '*').should('not.exist', '* disappears after save');
   });
 
   it('warns on page close when there are unsaved changes', () => {
@@ -38,7 +34,7 @@ describe('Unsaved changes', () => {
     });
 
     cy.startApp(seed);
-    cy.addLayer();
+    cy.get('[data-testid="btn-add-layer"]').click();
 
     cy.window().then(win => {
       const handler = (win as any).__beforeunloadHandler;
@@ -50,11 +46,11 @@ describe('Unsaved changes', () => {
 
   it('save in browser → * disappears, notification shown, backup applied after reload', () => {
     cy.startApp(seed);
-    cy.drawAtCanvasPixel(0, 0);
-    cy.addLayer();
-    cy.contains('h3', TITLE + '*').should('exist', '* appears after change');
+    cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
+    cy.get('[data-testid="btn-add-layer"]').click();
+    cy.contains('h3', title + '*').should('exist', '* appears after change');
     cy.get('[data-testid="btn-save-in-browser"]').click();
-    cy.contains('h3', TITLE + '*').should('not.exist', '* disappears after save');
+    cy.contains('h3', title + '*').should('not.exist', '* disappears after save');
     cy.contains('.ant-notification-notice-message', 'Successfully saved!').should('be.visible');
 
     cy.visit('/index.html');
@@ -63,8 +59,7 @@ describe('Unsaved changes', () => {
 
     cy.assertTimelineCelsAndVisiblePixels(
       [[
-        [[BLACK, T, T, T, T], E, E, E, E],
-        [E, E, E, E, E],
+        [[b, t], [t, t]],
       ]],
       { activeFrameIdx: 0, activeLayerIdx: 0 },
       ['Layer 1', 'Layer 2']
@@ -74,11 +69,11 @@ describe('Unsaved changes', () => {
   it('auto-backup (5 min) → * disappears, notification shown, backup applied after reload', () => {
     cy.clock(Date.now(), ['setInterval', 'clearInterval']);
     cy.startApp(seed);
-    cy.drawAtCanvasPixel(0, 0);
-    cy.addLayer();
-    cy.contains('h3', TITLE + '*').should('exist', '* appears after change');
+    cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
+    cy.get('[data-testid="btn-add-layer"]').click();
+    cy.contains('h3', title + '*').should('exist', '* appears after change');
     cy.tick(300000);
-    cy.contains('h3', TITLE + '*').should('not.exist', '* disappears after backup');
+    cy.contains('h3', title + '*').should('not.exist', '* disappears after backup');
     cy.contains('.ant-notification-notice-message', 'Auto-backup').should('be.visible');
 
     cy.visit('/index.html');
@@ -87,8 +82,7 @@ describe('Unsaved changes', () => {
 
     cy.assertTimelineCelsAndVisiblePixels(
       [[
-        [[BLACK, T, T, T, T], E, E, E, E],
-        [E, E, E, E, E],
+        [[b, t], [t, t]],
       ]],
       { activeFrameIdx: 0, activeLayerIdx: 0 },
       ['Layer 1', 'Layer 2']

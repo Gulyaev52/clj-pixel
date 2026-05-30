@@ -103,6 +103,7 @@
        (fn [close]
          [icon-button {:src :add
                        :title "Add color"
+                       :data-testid "btn-add-color"
                        :size :sm
                        :on-click close}])
        (fn [close]
@@ -111,6 +112,7 @@
       [:div
        [icon-button {:src :new-palette
                      :title "Add palette"
+                     :data-testid "btn-add-palette"
                      :size :sm
                      :on-click (fn []
                                  (when-let [name (js/prompt "palette name")]
@@ -132,6 +134,7 @@
                                    (re-frame/dispatch [::events/rename-selected-palette name])))}]
        [icon-button {:src :adjust
                      :title "Add colors from current frame"
+                     :data-testid "btn-add-colors-from-frame"
                      :size :sm
                      :on-click (fn []
                                  (re-frame/dispatch [::events/add-colors-from-frame]))}]]

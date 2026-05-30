@@ -1,3 +1,4 @@
+import { g, r, t } from "./colors";
 import { rgbaToInt } from "./utils";
 
 export interface DBSeed {
@@ -5,7 +6,7 @@ export interface DBSeed {
   "secondary-color": number;
   palettes: Array<{ name: string; current: boolean; colors: number[] }>;
   sprite: {
-    title?: string;
+    title: string;
     size: { width: number; height: number };
     frames: Array<{ duration: number }>;
     cels: Array<Array<{ size: { width: number; height: number }; 'data-url': string }>>;
@@ -13,20 +14,9 @@ export interface DBSeed {
   };
 }
 
-export const defaultDbSeed: DBSeed = {
-  'primary-color': rgbaToInt(0, 0, 0),
-  'secondary-color': rgbaToInt(255, 0, 0),
-  palettes: [{ name: 'default', current: true, colors: [rgbaToInt(0, 0, 0), rgbaToInt(255, 0, 0), rgbaToInt(0, 0, 255), rgbaToInt(0, 128, 0)] }],
-  sprite: {
-    size: { width: 5, height: 5 },
-    frames: [{ duration: 100 }],
-    cels: [[{ size: { width: 5, height: 5 }, 'data-url': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAKElEQVQ4T2NkoDJgpLJ5DKMGUh6io2E4GoZkhMBosiEj0NC0jMAwBABIxgAVO+SUsAAAAABJRU5ErkJggg==' }]],
-    layers: [{ 'visible?': true, 'automatic-linking?': false, name: 'Layer 1' }]
-  }
-};
-
 export const getSpriteFromPixels = (pixels: string[][]): DBSeed['sprite'] => {
   return {
+    title: "ProjectTitle",
     size: { width: pixels[0].length, height: pixels.length },
     frames: [{ duration: 100 }],
     cels: [[{ size: { width: pixels[0].length, height: pixels.length }, 'data-url': pixelsToDataURL(pixels) }]],
@@ -43,6 +33,7 @@ export const getSpriteFromCels = (
   const height = cels[0][0].length;
   const width = cels[0][0][0].length;
   return {
+    title: "ProjectTitle",
     size: { width, height },
     frames,
     layers,
@@ -55,7 +46,7 @@ export const getSpriteFromCels = (
   };
 };
 
-export const getEmptyPixels = (width: number, height: number, color?: string) => {
+export const getPixels = (width: number, height: number, color?: string) => {
   const pixels = Array(height).fill(null).map(() => Array(width).fill([0, 0, 0, 0]));
   if (color) {
     pixels.forEach(row => row.fill(color));
@@ -101,3 +92,30 @@ function pixelsToDataURL(pixels: string[][]): string {
 
   return canvas.toDataURL();
 }
+
+export const _4x4EmptySeed: DBSeed = {
+  'primary-color': rgbaToInt(0, 0, 0),
+  'secondary-color': rgbaToInt(255, 0, 0),
+  palettes: [{ name: 'default', current: true, colors: [rgbaToInt(0, 0, 0), rgbaToInt(255, 0, 0), rgbaToInt(0, 0, 255), rgbaToInt(0, 128, 0)] }],
+  sprite: getSpriteFromPixels(getPixels(4, 4))
+};
+
+export const _2x2Seed: DBSeed = {
+  ..._4x4EmptySeed,
+  sprite: getSpriteFromPixels([[r, t], [t, t]])
+};
+
+export const twoFramesTwoLayersSeed: DBSeed = {
+  ..._4x4EmptySeed,
+  sprite: getSpriteFromCels(
+    [
+      [[[r, t], [t, t]], [[t, t], [t, r]]],   // frame-0: layer-0 red(0,0) | layer-1 red(1,1)
+      [[[t, t], [t, g]], [[g, t], [t, t]]], // frame-1: layer-0 green(1,1) | layer-1 empty
+    ],
+    [{ duration: 150 }, { duration: 100 }],
+    [
+      { 'visible?': true, 'automatic-linking?': false, name: 'Layer 1' },
+      { 'visible?': true, 'automatic-linking?': false, name: 'Layer 2' }
+    ]
+  )
+};
