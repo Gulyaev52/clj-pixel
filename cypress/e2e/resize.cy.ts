@@ -1,19 +1,9 @@
-import { defaultDbSeed, getSpriteFromPixels, DBSeed } from '../support/data';
+import { _4x4EmptySeed, getSpriteFromPixels, DBSeed, _2x2Seed } from '../support/data';
 import { r, t } from '../support/colors';
-
-const anchorSeed: DBSeed = {
-  ...defaultDbSeed,
-  sprite: getSpriteFromPixels([[r, t], [t, t]])
-};
-
-const solidSeed: DBSeed = {
-  ...defaultDbSeed,
-  sprite: getSpriteFromPixels([[r, r], [r, r]])
-};
 
 describe('Resize canvas', () => {
   it('anchor positions correctly translate pixels', () => {
-    cy.startApp(anchorSeed);
+    cy.startApp(_2x2Seed);
     cy.get('[data-testid="btn-resize-canvas"]').click();
 
     cy.get('[data-testid="resize-width"]').clear().type('4').blur();
@@ -44,7 +34,7 @@ describe('Resize canvas', () => {
   });
 
   it('resize → undo reverts size and pixels', () => {
-    cy.startApp(anchorSeed); // 2×2, r at (0,0)
+    cy.startApp(_2x2Seed);
     cy.get('[data-testid="btn-resize-canvas"]').click();
     cy.get('[data-testid="resize-width"]').clear().type('4').blur();
     cy.get('[data-testid="resize-height"]').clear().type('4').blur();
@@ -67,7 +57,10 @@ describe('Resize canvas', () => {
   });
 
   it('resize contents scales pixels', () => {
-    cy.startApp(solidSeed);
+    cy.startApp({
+      ..._4x4EmptySeed,
+      sprite: getSpriteFromPixels([[r, r], [r, r]])
+    });
     cy.get('[data-testid="btn-resize-canvas"]').click();
 
     cy.get('[data-testid="resize-width"]').clear().type('4').blur();

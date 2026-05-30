@@ -1,11 +1,11 @@
-import { DBSeed, defaultDbSeed, getSpriteFromPixels } from '../support/data';
+import { DBSeed, _4x4EmptySeed, getSpriteFromPixels } from '../support/data';
 import { b, r, t } from '../support/colors';
 
 const seed: DBSeed = {
-  ...defaultDbSeed,
+  ..._4x4EmptySeed,
   sprite: getSpriteFromPixels([[r, t], [t, t]]),
 };
-const title = defaultDbSeed.sprite.title!;
+const title = _4x4EmptySeed.sprite.title!;
 
 // похожие тесты в project
 describe('Unsaved changes', () => {

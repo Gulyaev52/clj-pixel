@@ -2,21 +2,13 @@
 // Primary  = black  → pixels[x][y] = [0,   0, 0, 255]
 // Secondary = red   → pixels[x][y] = [255, 0, 0, 255]
 
-import { DBSeed, defaultDbSeed, getEmptyPixels as getPixels, getSpriteFromPixels } from "../support/data";
+import { _2x2Seed, DBSeed, _4x4EmptySeed, getPixels as getPixels, getSpriteFromPixels } from "../support/data";
 import { rgba } from "../support/utils";
 import { b, g, r, t, y } from "../support/colors";
 
 describe('Drawing Tools', () => {
   it("pen", () => {
-    cy.startApp({
-      ...defaultDbSeed,
-      sprite: getSpriteFromPixels([
-        [t, t, t, t],
-        [t, t, t, t],
-        [t, t, t, t],
-        [t, t, t, t],
-      ]),
-    });
+    cy.startApp(_4x4EmptySeed);
     cy.selectTool('pen');
     cy.contains('Pixel size').should('be.visible');
     cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true });
@@ -50,7 +42,7 @@ describe('Drawing Tools', () => {
 describe('Eraser Tool', () => {
   it('eraser tool erases correctly', () => {
     cy.startApp({
-      ...defaultDbSeed,
+      ..._4x4EmptySeed,
       sprite: getSpriteFromPixels(getPixels(4, 4, b)),
     });
     cy.selectTool('eraser');
@@ -86,7 +78,7 @@ describe('Eraser Tool', () => {
 describe('Color Picker Tool', () => {
   beforeEach(() => {
     cy.startApp({
-      ...defaultDbSeed,
+      ..._4x4EmptySeed,
       sprite: getSpriteFromPixels([
         [g, y],
         [t, t],
@@ -109,7 +101,7 @@ describe('Color Picker Tool', () => {
 describe('Rectangle Tool', () => {
   it('step-by-step: mousedown → intermediate drag → mouseup commits outline', () => {
     cy.startApp({
-      ...defaultDbSeed,
+      ..._4x4EmptySeed,
       sprite: getSpriteFromPixels([
         [t, t, t, t],
         [t, g, g, t],
@@ -157,15 +149,7 @@ describe('Rectangle Tool', () => {
   });
 
   it('fill option: paints all pixels inside the rectangle', () => {
-    cy.startApp({
-      ...defaultDbSeed,
-      sprite: getSpriteFromPixels([
-        [t, t, t, t],
-        [t, t, t, t],
-        [t, t, t, t],
-        [t, t, t, t],
-      ]),
-    });
+    cy.startApp(_4x4EmptySeed);
     cy.selectTool('rectangle');
     cy.contains('Fill').click();
     cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 3, y: 3});
@@ -179,7 +163,7 @@ describe('Rectangle Tool', () => {
 
   it('pixel-size option: thickens the outline border', () => {
     cy.startApp({
-      ...defaultDbSeed,
+      ..._4x4EmptySeed,
       sprite: getSpriteFromPixels([
         [t, t, t, t, t, t],
         [t, t, t, t, t, t],
@@ -203,15 +187,7 @@ describe('Rectangle Tool', () => {
   });
 
   it('keep-ratio option: constrains rectangle to a square', () => {
-    cy.startApp({
-      ...defaultDbSeed,
-      sprite: getSpriteFromPixels([
-        [t, t, t, t],
-        [t, t, t, t],
-        [t, t, t, t],
-        [t, t, t, t],
-      ]),
-    });
+    cy.startApp(_4x4EmptySeed);
     cy.selectTool('rectangle');
     cy.contains('Keep ration').click();
     cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 3, y: 2}); // asymmetric drag: 4 wide, 3 tall
@@ -225,12 +201,19 @@ describe('Rectangle Tool', () => {
 });
 
 describe('Rectangle Selection Tool', () => {
+  const initialPixels = [
+    [r, r, b, b],
+    [r, r, b, b],
+    [b, b, b, b],
+    [b, b, b, b],
+  ];
+  const seed: DBSeed = {
+    ..._4x4EmptySeed,
+    sprite: getSpriteFromPixels(initialPixels),
+  };
+
   it('select state', () => {
-    const initialPixels = getPixels(4, 4, b);
-    cy.startApp({
-      ...defaultDbSeed,
-      sprite: getSpriteFromPixels(initialPixels),
-    });
+    cy.startApp(seed);
     cy.selectTool('rectangle-selection');
 
     cy.mouseDownOnCanvas({x: 0, y: 0});
@@ -286,16 +269,7 @@ describe('Rectangle Selection Tool', () => {
   });
 
   it('select + highlight + drag + commit', () => {
-    const initialPixels = [
-      [r, r, b, b],
-      [r, r, b, b],
-      [b, b, b, b],
-      [b, b, b, b],
-    ];
-    cy.startApp({
-      ...defaultDbSeed,
-      sprite: getSpriteFromPixels(initialPixels),
-    });
+    cy.startApp(seed);
     cy.selectTool('rectangle-selection');
 
     // Select 2×2 top-left region
@@ -357,16 +331,7 @@ describe('Rectangle Selection Tool', () => {
 
   describe("actions", () => {
     it("copy + paste action", () => {
-      const initialPixels = [
-        [r, r, b, b],
-        [r, r, b, b],
-        [b, b, b, b],
-        [b, b, b, b],
-      ];
-      cy.startApp({
-        ...defaultDbSeed,
-        sprite: getSpriteFromPixels(initialPixels),
-      });
+      cy.startApp(seed);
       cy.selectTool('rectangle-selection');
 
       // Select 2×2 top-left region
@@ -411,16 +376,7 @@ describe('Rectangle Selection Tool', () => {
     });
 
     it("delete selection", () => {
-      const initialPixels = [
-        [r, r, b, b],
-        [r, r, b, b],
-        [b, b, b, b],
-        [b, b, b, b],
-      ];
-      cy.startApp({
-        ...defaultDbSeed,
-        sprite: getSpriteFromPixels(initialPixels),
-      });
+      cy.startApp(seed);
       cy.selectTool('rectangle-selection');
 
       cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 1, y: 1});
@@ -455,16 +411,7 @@ describe('Rectangle Selection Tool', () => {
     });
 
     it("delete pasted selection", () => {
-      const initialPixels = [
-        [r, r, b, b],
-        [r, r, b, b],
-        [b, b, b, b],
-        [b, b, b, b],
-      ];
-      cy.startApp({
-        ...defaultDbSeed,
-        sprite: getSpriteFromPixels(initialPixels),
-      });
+      cy.startApp(seed);
       cy.selectTool('rectangle-selection');
 
       cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 1, y: 1});
@@ -478,16 +425,7 @@ describe('Rectangle Selection Tool', () => {
     it("paste when another tool is active");
 
     it("commit moved selection with Enter", () => {
-      const initialPixels = [
-        [r, r, b, b],
-        [r, r, b, b],
-        [b, b, b, b],
-        [b, b, b, b],
-      ];
-      cy.startApp({
-        ...defaultDbSeed,
-        sprite: getSpriteFromPixels(initialPixels),
-      });
+      cy.startApp(seed);
       cy.selectTool('rectangle-selection');
 
       // Select 2×2 top-left region
@@ -525,16 +463,7 @@ describe('Rectangle Selection Tool', () => {
     });
 
     it("commit pasted and moved selection with Enter", () => {
-      const initialPixels = [
-        [r, r, b, b],
-        [r, r, b, b],
-        [b, b, b, b],
-        [b, b, b, b],
-      ];
-      cy.startApp({
-        ...defaultDbSeed,
-        sprite: getSpriteFromPixels(initialPixels),
-      });
+      cy.startApp(seed);
       cy.selectTool('rectangle-selection');
 
       // Select 2×2 top-left region, copy and paste
@@ -581,16 +510,7 @@ describe('Rectangle Selection Tool', () => {
     });
 
     it("cut selection", () => {
-      const initialPixels = [
-        [r, r, b, b],
-        [r, r, b, b],
-        [b, b, b, b],
-        [b, b, b, b],
-      ];
-      cy.startApp({
-        ...defaultDbSeed,
-        sprite: getSpriteFromPixels(initialPixels),
-      });
+      cy.startApp(seed);
       cy.selectTool('rectangle-selection');
 
       // Select 2×2 top-left region and cut
@@ -643,16 +563,7 @@ describe('Rectangle Selection Tool', () => {
     });
 
     it("cut pasted selection preserves underlying pixels", () => {
-      const initialPixels = [
-        [r, r, b, b],
-        [r, r, b, b],
-        [b, b, b, b],
-        [b, b, b, b],
-      ];
-      cy.startApp({
-        ...defaultDbSeed,
-        sprite: getSpriteFromPixels(initialPixels),
-      });
+      cy.startApp(seed);
       cy.selectTool('rectangle-selection');
 
       // Select, copy, paste and move the pasted selection
@@ -688,15 +599,7 @@ describe('Rectangle Selection Tool', () => {
 
 describe('Line Tool', () => {
   it('step-by-step: mousedown → intermediate drag → mouseup commits line', () => {
-    cy.startApp({
-      ...defaultDbSeed,
-      sprite: getSpriteFromPixels([
-        [t, t, t, t],
-        [t, t, t, t],
-        [t, t, t, t],
-        [t, t, t, t],
-      ]),
-    });
+    cy.startApp(_4x4EmptySeed);
     cy.selectTool('line');
 
     cy.mouseDownOnCanvas({x: 0, y: 0});
@@ -725,15 +628,7 @@ describe('Line Tool', () => {
   });
 
   it('pixel size 2 and Straight option produce correct pixels', () => {
-    cy.startApp({
-      ...defaultDbSeed,
-      sprite: getSpriteFromPixels([
-        [t, t, t, t],
-        [t, t, t, t],
-        [t, t, t, t],
-        [t, t, t, t],
-      ]),
-    });
+    cy.startApp(_4x4EmptySeed);
     cy.selectTool('line');
     cy.get('.ant-slider-handle').first().focus().type('{rightarrow}', { force: true }); // pixel size = 2
     cy.contains('Straight').click();
@@ -750,15 +645,7 @@ describe('Line Tool', () => {
 
 describe('Circle Tool', () => {
   it('step-by-step: mousedown → intermediate drag → mouseup commits circle', () => {
-    cy.startApp({
-      ...defaultDbSeed,
-      sprite: getSpriteFromPixels([
-        [t, t, t, t],
-        [t, t, t, t],
-        [t, t, t, t],
-        [t, t, t, t],
-      ]),
-    });
+    cy.startApp(_4x4EmptySeed);
     cy.selectTool('circle');
 
     // circle with start=end produces no pixels (zero-radius), so no assertion after mousedown
@@ -782,15 +669,7 @@ describe('Circle Tool', () => {
   });
 
   it('Keep ration option constrains bounding box to a square', () => {
-    cy.startApp({
-      ...defaultDbSeed,
-      sprite: getSpriteFromPixels([
-        [t, t, t, t],
-        [t, t, t, t],
-        [t, t, t, t],
-        [t, t, t, t],
-      ]),
-    });
+    cy.startApp(_4x4EmptySeed);
     cy.selectTool('circle');
     cy.contains('Keep ration').click();
 
@@ -805,15 +684,7 @@ describe('Circle Tool', () => {
   });
 
   it('pixel-size option: thickens the circle outline', () => {
-    cy.startApp({
-      ...defaultDbSeed,
-      sprite: getSpriteFromPixels([
-        [t, t, t, t],
-        [t, t, t, t],
-        [t, t, t, t],
-        [t, t, t, t],
-      ]),
-    });
+    cy.startApp(_4x4EmptySeed);
     cy.selectTool('circle');
     cy.mouseDownThenMoveThenUpOnCanvas({x: 0, y: 0}, {x: 3, y: 3});
     cy.assertVisibleCanvasPixels([
@@ -828,7 +699,7 @@ describe('Circle Tool', () => {
 describe('Bucket Tool', () => {
   it('flood-fills the connected region with primary or secondary color', () => {
     const db: DBSeed = {
-      ...defaultDbSeed,
+      ..._4x4EmptySeed,
       sprite: getSpriteFromPixels([
         [t, g, g, t],
         [g, t, t, g],
@@ -861,7 +732,7 @@ describe('Bucket Tool', () => {
 
   it('"All the same color" fills every matching pixel regardless of adjacency', () => {
     const db: DBSeed = {
-      ...defaultDbSeed,
+      ..._4x4EmptySeed,
       sprite: getSpriteFromPixels([
         [y, g, g],
         [g, t, t],
@@ -887,7 +758,7 @@ describe('Bucket Tool', () => {
 describe('Shading Tool', () => {
   it('darken: darkens non-transparent pixels, skips transparent', () => {
     cy.startApp({
-      ...defaultDbSeed,
+      ..._4x4EmptySeed,
       sprite: getSpriteFromPixels([
         [r, t],
         [r, t],
@@ -904,7 +775,7 @@ describe('Shading Tool', () => {
 
   it('lighten: lightens non-transparent pixels', () => {
     cy.startApp({
-      ...defaultDbSeed,
+      ..._4x4EmptySeed,
       sprite: getSpriteFromPixels([
         [r, r],
         [r, r],
@@ -921,7 +792,7 @@ describe('Shading Tool', () => {
 
   it('amount option: larger amount causes stronger darkening', () => {
     cy.startApp({
-      ...defaultDbSeed,
+      ..._4x4EmptySeed,
       sprite: getSpriteFromPixels([
         [r, r],
         [r, r],
@@ -939,7 +810,7 @@ describe('Shading Tool', () => {
   it('pixel-size option: enlarges brush', () => {
     const d = rgba(224, 0, 0); // darkened red (darken 6%)
     cy.startApp({
-      ...defaultDbSeed,
+      ..._4x4EmptySeed,
       sprite: getSpriteFromPixels([
         [r, r, r, r],
         [r, r, r, r],
@@ -961,26 +832,20 @@ describe('Shading Tool', () => {
 
 describe('undo/redo', () => {
   it('draw → undo → redo restores pixel', () => {
-    cy.startApp({
-      ...defaultDbSeed,
-      sprite: getSpriteFromPixels([[t, t], [t, t]]),
-    });
+    cy.startApp(_2x2Seed);
     cy.selectTool('pen');
     cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
     cy.assertVisibleCanvasPixels([[b, t], [t, t]], 'pixel drawn');
 
     cy.undo();
-    cy.assertVisibleCanvasPixels([[t, t], [t, t]], 'undo: pixel gone');
+    cy.assertVisibleCanvasPixels([[r, t], [t, t]], 'undo: pixel gone');
 
     cy.redo();
     cy.assertVisibleCanvasPixels([[b, t], [t, t]], 'redo: pixel back');
   });
 
   it('3-step chain: draw → draw → draw → undo×3 → redo×3', () => {
-    cy.startApp({
-      ...defaultDbSeed,
-      sprite: getSpriteFromPixels([[t, t], [t, t]]),
-    });
+    cy.startApp(_2x2Seed);
     cy.selectTool('pen');
 
     cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
@@ -999,7 +864,7 @@ describe('undo/redo', () => {
     cy.assertVisibleCanvasPixels([[b, t], [t, t]], 'undo 2: (1,0) gone');
 
     cy.undo();
-    cy.assertVisibleCanvasPixels([[t, t], [t, t]], 'undo 3: all gone');
+    cy.assertVisibleCanvasPixels([[r, t], [t, t]], 'undo 3: all gone');
 
     cy.redo();
     cy.assertVisibleCanvasPixels([[b, t], [t, t]], 'redo 1: (0,0) back');
@@ -1022,7 +887,7 @@ describe('Shape Selection Tool', () => {
     ];
 
     cy.startApp({
-      ...defaultDbSeed,
+      ..._4x4EmptySeed,
       sprite: getSpriteFromPixels(initialPixels),
     });
     cy.selectTool('shape-selection');

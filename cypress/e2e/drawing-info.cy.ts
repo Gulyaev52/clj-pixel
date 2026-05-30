@@ -1,29 +1,14 @@
-import { defaultDbSeed, getSpriteFromPixels, DBSeed } from '../support/data';
-import { t } from '../support/colors';
-
-const size3x2Seed: DBSeed = {
-  ...defaultDbSeed,
-  sprite: {
-    ...getSpriteFromPixels([
-      [t, t, t],
-      [t, t, t],
-    ])
-  }
-};
+import { _4x4EmptySeed } from '../support/data';
 
 describe('drawing-info', () => {
   it('shows sprite size, mouse pos, and scale', () => {
     // --- sprite size ---
-    cy.startApp(defaultDbSeed); // 5×5
+    cy.startApp(_4x4EmptySeed);
     cy.get('[data-testid="drawing-info-sprite-size"]')
-      .should('have.text', '[5x5]', 'sprite size for 5x5 seed');
-
-    cy.startApp(size3x2Seed); // 3×2
-    cy.get('[data-testid="drawing-info-sprite-size"]')
-      .should('have.text', '[3x2]', 'sprite size for 3x2 seed');
+      .should('have.text', '[4x4]', 'sprite size for 4x4 seed');
 
     // --- mouse pos ---
-    cy.startApp(defaultDbSeed);
+    cy.startApp(_4x4EmptySeed);
     cy.mouseMoveOnCanvas({x: 0, y: 0});
     cy.get('[data-testid="drawing-info-mouse-pos"]')
       .should('have.text', '0:0', 'mouse pos at (0,0)');

@@ -1,9 +1,9 @@
-import { defaultDbSeed, getSpriteFromCels, getSpriteFromPixels, DBSeed } from '../support/data';
+import { _4x4EmptySeed, getSpriteFromCels, getSpriteFromPixels, DBSeed, _2x2Seed } from '../support/data';
 import { r, t, y } from '../support/colors';
 
 // 2 frames × 1 layer: frame0 = all r, frame1 = all y (2×2)
 const twoFramesSeed: DBSeed = {
-  ...defaultDbSeed,
+  ..._4x4EmptySeed,
   sprite: getSpriteFromCels(
     [
       [[[r, r], [r, r]]],
@@ -19,7 +19,7 @@ const twoFramesSeed: DBSeed = {
 // so the last-drawn layer (layer0, drawn after reversal) always wins the composite.
 // "Visible layers" → shows layer0 (all r).  "Layer 2 only" → shows layer1 (all y).
 const twoLayersSeed: DBSeed = {
-  ...defaultDbSeed,
+  ..._4x4EmptySeed,
   sprite: getSpriteFromCels(
     [
       [
@@ -37,23 +37,14 @@ const twoLayersSeed: DBSeed = {
 
 // 1 frame × 1 layer, r at (0,0), rest transparent
 const singleSeed: DBSeed = {
-  ...defaultDbSeed,
+  ..._4x4EmptySeed,
   sprite: getSpriteFromPixels([[r, t], [t, t]]),
 };
 
 // 1 frame × 1 layer, all r (solid — deterministic in GIF encoding)
 const solidRedSeed: DBSeed = {
-  ...defaultDbSeed,
+  ..._4x4EmptySeed,
   sprite: getSpriteFromPixels([[r, r], [r, r]]),
-};
-
-// Seed with title set so that the Export button is enabled (file-name is auto-filled from title)
-const namedSeed: DBSeed = {
-  ...defaultDbSeed,
-  sprite: {
-    title: 'export-test',
-    ...getSpriteFromPixels([[r, t], [t, t]]),
-  },
 };
 
 describe('Export modal — Image tab', () => {
@@ -129,7 +120,7 @@ describe('Export modal — Image tab', () => {
     cy.exec('rm -f cypress/downloads/my-sprite.png', { failOnNonZeroExit: false });
 
     // namedSeed has title = 'export-test', so Export button is enabled from the start
-    cy.startApp(namedSeed);
+    cy.startApp(_2x2Seed);
     cy.get('[data-testid="btn-export"]').click();
 
     cy.assertResizePreviewPixels(0, [[r, t], [t, t]], 'file test - preview');
@@ -183,5 +174,4 @@ describe('Export modal — Image tab', () => {
     cy.assertResizePreviewPixels(0, [[r, r], [r, r]], 'split on - layer 0 frame');
     cy.assertResizePreviewPixels(1, [[y, y], [y, y]], 'split on - layer 1 frame');
   });
-
 });
