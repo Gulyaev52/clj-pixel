@@ -1,14 +1,14 @@
-import { defaultDbSeed } from '../support/data';
+import { _4x4EmptySeed } from '../support/data';
 
 describe('drawing-info', () => {
   it('shows sprite size, mouse pos, and scale', () => {
     // --- sprite size ---
-    cy.startApp(defaultDbSeed); // 5×5
+    cy.startApp(_4x4EmptySeed);
     cy.get('[data-testid="drawing-info-sprite-size"]')
-      .should('have.text', '[5x5]', 'sprite size for 5x5 seed');
+      .should('have.text', '[4x4]', 'sprite size for 4x4 seed');
 
     // --- mouse pos ---
-    cy.startApp(defaultDbSeed);
+    cy.startApp(_4x4EmptySeed);
     cy.mouseMoveOnCanvas({x: 0, y: 0});
     cy.get('[data-testid="drawing-info-mouse-pos"]')
       .should('have.text', '0:0', 'mouse pos at (0,0)');

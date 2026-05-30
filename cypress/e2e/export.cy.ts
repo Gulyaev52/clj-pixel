@@ -1,9 +1,9 @@
-import { defaultDbSeed, getSpriteFromCels, getSpriteFromPixels, DBSeed, _2x2Seed } from '../support/data';
+import { _4x4EmptySeed, getSpriteFromCels, getSpriteFromPixels, DBSeed, _2x2Seed } from '../support/data';
 import { r, t, y } from '../support/colors';
 
 // 2 frames × 1 layer: frame0 = all r, frame1 = all y (2×2)
 const twoFramesSeed: DBSeed = {
-  ...defaultDbSeed,
+  ..._4x4EmptySeed,
   sprite: getSpriteFromCels(
     [
       [[[r, r], [r, r]]],
@@ -19,7 +19,7 @@ const twoFramesSeed: DBSeed = {
 // so the last-drawn layer (layer0, drawn after reversal) always wins the composite.
 // "Visible layers" → shows layer0 (all r).  "Layer 2 only" → shows layer1 (all y).
 const twoLayersSeed: DBSeed = {
-  ...defaultDbSeed,
+  ..._4x4EmptySeed,
   sprite: getSpriteFromCels(
     [
       [
@@ -37,13 +37,13 @@ const twoLayersSeed: DBSeed = {
 
 // 1 frame × 1 layer, r at (0,0), rest transparent
 const singleSeed: DBSeed = {
-  ...defaultDbSeed,
+  ..._4x4EmptySeed,
   sprite: getSpriteFromPixels([[r, t], [t, t]]),
 };
 
 // 1 frame × 1 layer, all r (solid — deterministic in GIF encoding)
 const solidRedSeed: DBSeed = {
-  ...defaultDbSeed,
+  ..._4x4EmptySeed,
   sprite: getSpriteFromPixels([[r, r], [r, r]]),
 };
 
