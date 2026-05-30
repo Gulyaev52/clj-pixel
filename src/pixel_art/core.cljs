@@ -2,9 +2,9 @@
   (:require
    [reagent.dom :as rdom]
    [re-frame.core :as re-frame]
-   [pixel-art.events :as events]
+   [pixel-art.app.events :as events]
    [pixel-art.utils.event-collector]
-   [pixel-art.views :as views]))
+   [pixel-art.app.views :as views]))
 
 (defn ^:dev/after-load mount-root []
   (re-frame/clear-subscription-cache!)

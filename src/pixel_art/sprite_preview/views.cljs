@@ -1,7 +1,7 @@
 (ns pixel-art.sprite-preview.views
   (:require
    [pixel-art.sprite-preview.events :as events]
-   [pixel-art.subs :as common-subs]
+   [pixel-art.app.subs :as common-subs]
    [pixel-art.sprite-preview.subs :as subs]
    [pixel-art.views.preview :refer [preview-image]]
    [re-frame.core :as re-frame]

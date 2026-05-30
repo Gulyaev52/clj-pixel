@@ -22,7 +22,7 @@
                       {:label (string/replace (name tool) #"\-" " ")
                        :keys [keys]
                        :tool tool
-                       :action [:pixel-art.events/select-tool tool]})))
+                       :action [:pixel-art.app.events/select-tool tool]})))
    :misc [{:label "undo"
            :keys [{:key "z"
                    :ctrlKey true}]

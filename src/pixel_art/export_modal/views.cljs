@@ -1,7 +1,7 @@
 (ns pixel-art.export-modal.views
   (:require
    [pixel-art.export-modal.events :as events]
-   [pixel-art.subs :as common-subs]
+   [pixel-art.app.subs :as common-subs]
    [pixel-art.export-modal.subs :as subs]
    [pixel-art.views.preview :refer [previews-container
                                     previews-grid-items]]

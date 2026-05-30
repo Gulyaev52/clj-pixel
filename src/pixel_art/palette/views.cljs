@@ -4,7 +4,7 @@
    [pixel-art.palette.events :as events]
    [pixel-art.palette.subs :as subs]
    [pixel-art.palette.gimp-file :as gimp-file]
-   [pixel-art.subs :as common-subs]
+   [pixel-art.app.subs :as common-subs]
    [pixel-art.utils.coll :as coll]
    [pixel-art.views.color-picker :refer [color-picker]]
    [pixel-art.views.ui-kit :refer [button custom-popover file-uploader

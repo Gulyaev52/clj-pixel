@@ -1,4 +1,4 @@
-(ns pixel-art.db
+(ns pixel-art.db.core
   (:require
    [pixel-art.drawing.initial-settings :refer [get-initial-drawing-settings]]
    [pixel-art.export-modal.events :as export-modal.events]
@@ -11,13 +11,13 @@
    [pixel-art.tool.core :as tool]
    [sc.api]))
 
-(defn get-initial-options [m]
+(defn- get-initial-options [m]
   (-> m
       (update-vals #(->> %
                          (map (fn [{:keys [field initial-value]}] [field initial-value]))
                          (into {})))))
 
-(defn get-db [{:keys [sprite tool-type primary-color palettes secondary-color pixels-grid-enabled new-project-modal-opened]} viewport-size]
+(defn create [{:keys [sprite tool-type primary-color palettes secondary-color pixels-grid-enabled new-project-modal-opened]} viewport-size]
   (merge
    {:size (:size sprite)
     :preview nil

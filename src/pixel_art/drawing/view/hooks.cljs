@@ -6,7 +6,7 @@
    [pixel-art.drawing.subs :as subs]
    [pixel-art.model.sprite :as sprite]
    [pixel-art.project-config :as project-config]
-   [pixel-art.subs :as common-subs]
+   [pixel-art.app.subs :as common-subs]
    [re-frame.core :as re-frame]
    [re-frame.db :as db]
    [react :as react]

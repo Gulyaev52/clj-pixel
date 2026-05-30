@@ -2,7 +2,7 @@
   (:require
    [pixel-art.model.sprite :as sprite]
    [pixel-art.onion-skin.subs :as onion-skin.subs]
-   [pixel-art.subs :as subs]
+   [pixel-art.app.subs :as subs]
    [re-frame.core :as re-frame]
    [sc.api :as api]))
 

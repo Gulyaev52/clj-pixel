@@ -1,7 +1,7 @@
-(ns pixel-art.events
+(ns pixel-art.app.events
   (:require
    [pixel-art.db.utils :as db.utils]
-   [pixel-art.db :as db]
+   [pixel-art.db.core :as db]
    [pixel-art.drawing.events]
    [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
    [pixel-art.project-save-load.backup :as backup]
@@ -74,8 +74,8 @@
  (fn [{:keys [viewport-size] :as cofx} [_ initial-app-data]]
    (let [saved-data (into {} (filter (fn [[_ v]] (some? v)) (get cofx saved-settings-local-storage-key)))
          initial-db (if initial-app-data
-                      (db/get-db (merge initial-app-data saved-data) viewport-size)
-                      (db/get-db (merge (assoc project-config/default-palettes-and-current-colors
+                      (db/create (merge initial-app-data saved-data) viewport-size)
+                      (db/create (merge (assoc project-config/default-palettes-and-current-colors
                                                :sprite (project-config/create-empty-sprite "Untitled" {:width 4 :height 4})
                                                :new-project-modal-opened false)
                                         saved-data)

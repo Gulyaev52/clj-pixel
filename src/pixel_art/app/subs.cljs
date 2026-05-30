@@ -1,8 +1,10 @@
-(ns pixel-art.subs
+(ns pixel-art.app.subs
   (:require
    [pixel-art.db.utils :refer [check-unsaved-changes-exist]]
    [pixel-art.tool.utils :refer [get-tool-options]]
    [re-frame.core :as re-frame]))
+
+;; global subs
 
 (re-frame/reg-sub
  ::initial-loading

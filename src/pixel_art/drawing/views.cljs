@@ -7,7 +7,7 @@
                                          use-visual-effects-comp use-zoom]]
    [pixel-art.onion-skin.subs :as onion-skin.subs]
    [pixel-art.onion-skin.views :refer [use-draw-onion-skin]]
-   [pixel-art.subs :as common-subs]
+   [pixel-art.app.subs :as common-subs]
    [pixel-art.utils.view :as utils.view]
    [pixel-art.views.constants :refer [drawing-border
                                       preview-container-bg-color
