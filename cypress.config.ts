@@ -8,5 +8,7 @@ export default defineConfig({
     setupNodeEvents(_on, _config) {},
     viewportWidth: 1700,
     viewportHeight: 1280,
+    video: false,
+    screenshotOnRunFailure: false,
   },
 });
