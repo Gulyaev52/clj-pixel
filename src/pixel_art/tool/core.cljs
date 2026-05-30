@@ -10,8 +10,6 @@
             [pixel-art.tool.shading :as shading]
             [pixel-art.tool.shape-selection :as shape-selection]))
 
-;; todo: исп полиморфизм?
-
 (def tools
   [pen/tool
    eraser/tool

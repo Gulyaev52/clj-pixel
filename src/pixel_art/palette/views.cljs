@@ -2,6 +2,7 @@
   (:require
    [pixel-art.model.color :as color]
    [pixel-art.palette.events :as events]
+   [pixel-art.palette.subs :as subs]
    [pixel-art.palette.gimp-file :as gimp-file]
    [pixel-art.subs :as common-subs]
    [pixel-art.utils.coll :as coll]
@@ -22,7 +23,7 @@
 (defn add-new-color-picker []
   (let [primary-color (replace-transparent-color @(re-frame/subscribe [::common-subs/primary-color]))
         secondary-color (replace-transparent-color @(re-frame/subscribe [::common-subs/secondary-color]))
-        last-color (replace-transparent-color (last (:colors @(re-frame/subscribe [::common-subs/current-palette]))))
+        last-color (replace-transparent-color (last (:colors @(re-frame/subscribe [::subs/current-palette]))))
         !temp-new-value (reag/atom primary-color)]
     (fn [{:keys [on-close]}]
       [color-picker {:value @!temp-new-value
@@ -81,7 +82,7 @@
                                       (re-frame/dispatch [::events/remove-color idx]))}]]])))]))
 
 (defn palettes-section []
-  (let [palettes @(re-frame/subscribe [::common-subs/palettes])
+  (let [palettes @(re-frame/subscribe [::subs/palettes])
         current-palette-idx (coll/find-first-idx :current palettes)
         current-palette (coll/find-first :current palettes)
         primary-color @(re-frame/subscribe [::common-subs/primary-color])

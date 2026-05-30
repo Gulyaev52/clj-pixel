@@ -41,7 +41,7 @@
                                                              (min project-config/max-zoom-scale)
                                                              (max project-config/min-zoom-scale))]
                                            (when (not= prev-scale new-scale)
-                                             (set! (.-current view-render-after-zoom-ref) false) ;; todo: add comment
+                                             (set! (.-current view-render-after-zoom-ref) false)
                                              (re-frame/dispatch [::events/zoom delta new-scale center-pos mouse-offset-pos])))))]
                          (.. viewport-ref -current (addEventListener "wheel" handler))
                          (fn []
@@ -49,8 +49,8 @@
                              (.. viewport-ref -current (removeEventListener "wheel" handler))))))
                      (array viewport-ref))))
 
-(defn- is-right-button? [e] ;; todo: -which уже не поддерживается
-  (or (= (. e -button) 2) (= (. e -which) 3)))
+(defn- is-right-button? [e]
+  (= (. e -button) 2))
 
 (defn- is-middle-button? [e]
   (= (. e -button) 1))
@@ -68,7 +68,7 @@
      :y (. js/Math (floor (/ (- (:y mouse-pos)
                                 (. canvas-layers-rect -top)) scale)))}))
 
-(def !last-mouse-pos (atom nil)) ;; todo: into component?
+(def !last-mouse-pos (atom nil))
 
 (def-func-component preview-comp []
   (let [sprite @(re-frame/subscribe [::common-subs/sprite])
@@ -215,7 +215,7 @@
                        :top "50%"
                        :transform "translate(-50%, -50%)"
                        :background-image transparent-color-img
-                       :outline drawing-border ;; todo: why not border
+                       :outline drawing-border
                        }
                       scaled-sprite-size)}
         [:canvas (merge
@@ -272,7 +272,7 @@
                            :image-rendering "pixelated"
                            :z-index (if (= (:position onion-skin) :front)
                                       (count layers)
-                                      0);; todo: подумать тут
+                                      0)
                            :width "100%"
                            :height "100%"}}
                   sprite-size)]

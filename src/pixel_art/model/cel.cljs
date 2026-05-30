@@ -39,7 +39,7 @@
   ([size]
    (create size (create-pixels-coll size)))
   ([size pixels]
-   {:pixels pixels ;; todo: везде работает с pixels-map а тут нет
+   {:pixels pixels
     :size size
     :current false
     :selected false}))
@@ -47,7 +47,6 @@
 (defn remove-all-pixels [cel]
   (update cel :pixels #(mapv (fn [_] color/transparent-color-int) %)))
 
-;; todo: rename
 (defn set-pixels-map [pixels-map cel]
   (update cel :pixels #(update-pixels-coll pixels-map (:size cel) %)))
 

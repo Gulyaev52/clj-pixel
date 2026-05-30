@@ -21,7 +21,7 @@
            :mouse-down
            (let [updated-db (assoc db
                                    :initial-mouse-down-pos (:pos event)
-                                   :mouse-pos (:pos event))] ;; todo: зачем это надо
+                                   :mouse-pos (:pos event))]
              (run-events-handlers [:mouse-down :mouse-down-or-mouse-down-and-move] tool-events-handlers updated-db event))
 
            :mouse-move

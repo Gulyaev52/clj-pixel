@@ -142,7 +142,7 @@
         :fx [[::generate-gif {:rendered-frames rendered-frames
                               :repeat (:repeat settings)
                               :size size
-                              :on-finish [::download-generated-blob (:file-name settings)] ;; todo: fix
+                              :on-finish [::download-generated-blob (:file-name settings)]
                               }]]}))))
 
 (re-frame/reg-event-fx

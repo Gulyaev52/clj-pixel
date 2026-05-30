@@ -2,7 +2,6 @@
   (:require
    [pixel-art.db :refer [check-unsaved-changes-exist]]
    [pixel-art.tool.utils :refer [get-tool-options]]
-   [pixel-art.utils.coll :as coll]
    [re-frame.core :as re-frame]))
 
 ;;
@@ -58,15 +57,3 @@
 (re-frame/reg-sub
  ::unsaved-changes-exist
  check-unsaved-changes-exist)
-
-;; todo: move to palette
-
-(re-frame/reg-sub
- ::current-palette
- (fn [db]
-   (coll/find-first :current (:palettes db))))
-
-(re-frame/reg-sub
- ::palettes
- (fn [db]
-   (:palettes db)))

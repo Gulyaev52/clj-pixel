@@ -118,7 +118,7 @@
 
 (defn tool-options-panel []
   (let [tool @(re-frame/subscribe [::subs/tool])
-        options @(re-frame/subscribe [::subs/tool-options]) ;; todo: объединить спеку и опции
+        options @(re-frame/subscribe [::subs/tool-options])
         options-spec (tool/options-specs (:type tool))]
     [:div {:style {:display :flex
                    :align-items :center
