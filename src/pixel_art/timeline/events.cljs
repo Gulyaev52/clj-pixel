@@ -5,12 +5,10 @@
    [pixel-art.model.frame :as frame]
    [pixel-art.model.layer :as layer]
    [pixel-art.model.sprite :as sprite]
-   [pixel-art.project-settings :as project-settings]
+   [pixel-art.project-config :as project-config]
    [pixel-art.tool.core :as tool]
    [pixel-art.tool.utils :refer [commit-preview-and-init-tool]]
-   [re-frame.core :as re-frame]
-   [sc.api :as api]
-   [re-frame.db :as db]))
+   [re-frame.core :as re-frame]))
 
 (defn commit-preview-from-db-and-init-tool [db]
   (let [tool (tool/init (-> db :tool :type))]
@@ -77,7 +75,7 @@
 (re-frame/reg-event-fx
  ::add-layer
  (fn [{:keys [db]}]
-   (let [layer-name (project-settings/get-layer-name :single (-> db :sprite :layers count))
+   (let [layer-name (project-config/get-layer-name :single (-> db :sprite :layers count))
          layer (layer/create layer-name)]
      (-> db
          commit-preview-from-db-and-init-tool

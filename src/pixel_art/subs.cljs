@@ -1,6 +1,7 @@
 (ns pixel-art.subs
   (:require
-   [pixel-art.tool.utils :refer [check-unsaved-changes-exist get-tool-options]]
+   [pixel-art.db :refer [check-unsaved-changes-exist]]
+   [pixel-art.tool.utils :refer [get-tool-options]]
    [pixel-art.utils.coll :as coll]
    [re-frame.core :as re-frame]))
 

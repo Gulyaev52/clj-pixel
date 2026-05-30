@@ -1,6 +1,6 @@
 (ns pixel-art.drawing.initial-settings 
   (:require
-    [pixel-art.project-settings :refer [max-zoom-scale min-zoom-scale]]))
+    [pixel-art.project-config :refer [max-zoom-scale min-zoom-scale]]))
 
 (defn get-viewport-scroll-pos-to-center [canvas-size drawing-container-size viewport-size]
   (let [scroll-dim 15

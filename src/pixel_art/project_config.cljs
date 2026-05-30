@@ -1,4 +1,4 @@
-(ns pixel-art.project-settings
+(ns pixel-art.project-config
   (:require [pixel-art.model.cel :as cel]
             [pixel-art.model.color :as color]
             [pixel-art.model.frame :as frame]

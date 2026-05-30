@@ -1,6 +1,6 @@
 (ns pixel-art.drawing.events
   (:require
-   [pixel-art.project-settings :as project-settings]
+   [pixel-art.project-config :as project-config]
    [pixel-art.tool.core :as tool]
    [re-frame.core :as re-frame]))
 
@@ -55,7 +55,7 @@
  (fn [{:keys [db]} [_ delta new-scale center-pos mouse-offset-pos]]
    (let [prev-scale (:scale db)]
      (if (not= prev-scale new-scale)
-       (let [delta (if (#{project-settings/max-zoom-scale project-settings/min-zoom-scale} new-scale)
+       (let [delta (if (#{project-config/max-zoom-scale project-config/min-zoom-scale} new-scale)
                      (/ new-scale prev-scale)
                      delta)
              old-canvas-size (-> db :sprite :size (update-vals #(* % (:scale db))))

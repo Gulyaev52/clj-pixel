@@ -7,7 +7,7 @@
    [pixel-art.model.sprite :as sprite]
    [pixel-art.onion-skin.subs :as onion-skin.subs]
    [pixel-art.onion-skin.views :refer [use-draw-onion-skin]]
-   [pixel-art.project-settings :as project-settings]
+   [pixel-art.project-config :as project-config]
    [pixel-art.subs :as common-subs]
    [pixel-art.views.constants :refer [drawing-border
                                       preview-container-bg-color
@@ -38,8 +38,8 @@
                                                prev-scale (:scale @db/app-db)
                                                delta (if (< (. e -deltaY) 0) 1.1 (/ 1 1.1))
                                                new-scale (-> (* prev-scale delta)
-                                                             (min project-settings/max-zoom-scale)
-                                                             (max project-settings/min-zoom-scale))]
+                                                             (min project-config/max-zoom-scale)
+                                                             (max project-config/min-zoom-scale))]
                                            (when (not= prev-scale new-scale)
                                              (set! (.-current view-render-after-zoom-ref) false) ;; todo: add comment
                                              (re-frame/dispatch [::events/zoom delta new-scale center-pos mouse-offset-pos])))))]

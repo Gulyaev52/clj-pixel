@@ -1,6 +1,6 @@
 (ns pixel-art.sprite-resizer.views
   (:require
-   [pixel-art.project-settings :as project-settings]
+   [pixel-art.project-config :as project-config]
    [pixel-art.sprite-resizer.subs :as subs]
    [pixel-art.sprite-resizer.events :as events]
    [pixel-art.views.preview :refer [previews-container previews-grid-items]]
@@ -46,7 +46,7 @@
         [form-item {:label "Width"
                     :control [input-number {:value (-> settings :target-size :width)
                                             :type "number"
-                                            :max project-settings/max-sprite-dim
+                                            :max project-config/max-sprite-dim
                                             :testid "resize-width"
                                             :block true
                                             :on-blur (fn [value]
@@ -57,7 +57,7 @@
                     :control [input-number {:value (-> settings :target-size :height)
                                             :type "number"
                                             :testid "resize-height"
-                                            :max project-settings/max-sprite-dim
+                                            :max project-config/max-sprite-dim
                                             :block true
                                             :on-blur (fn [value]
                                                        (re-frame/dispatch [::events/set-settings-option

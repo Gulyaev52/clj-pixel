@@ -5,7 +5,7 @@
    [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
    [pixel-art.project-save-load.backup :as backup]
    [pixel-art.project-save-load.events :as project-save-load]
-   [pixel-art.project-settings :as project-settings]
+   [pixel-art.project-config :as project-config]
    [pixel-art.re-pressed.core :as rp]
    [pixel-art.tool.core :as tool]
    [pixel-art.tool.utils :refer [commit-preview-and-init-tool]]
@@ -74,8 +74,8 @@
    (let [saved-data (into {} (filter (fn [[_ v]] (some? v)) (get cofx saved-settings-local-storage-key)))
          initial-db (if initial-app-data
                       (db/get-db (merge initial-app-data saved-data) viewport-size)
-                      (db/get-db (merge (assoc project-settings/default-palettes-and-current-colors
-                                               :sprite (project-settings/create-empty-sprite "Untitled" {:width 4 :height 4})
+                      (db/get-db (merge (assoc project-config/default-palettes-and-current-colors
+                                               :sprite (project-config/create-empty-sprite "Untitled" {:width 4 :height 4})
                                                :new-project-modal-opened false)
                                         saved-data)
                                  viewport-size))]
@@ -84,7 +84,7 @@
            dispatch-set-keydown-rules
            [:dispatch-interval {:dispatch [::project-save-load/save-backup-if-need]
                                 :id :backup
-                                :ms project-settings/auto-backup-in-ms ;; 1 min
+                                :ms project-config/auto-backup-in-ms ;; 1 min
                                 }]
            [::show-warning-when-leave-with-unsaved-changes]
            [::register-global-interceptors]]})))
