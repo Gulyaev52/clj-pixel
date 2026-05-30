@@ -1,5 +1,7 @@
 import tinycolor from "tinycolor2";
 
+// todo: rewrite to cljs
+
 export const rgbaToInt = function rgbaToInt (r, g, b, a) {
   var a = Math.round(a * 255);
   var intValue = (a << 24 >>> 0) + (b << 16) + (g << 8) + r;

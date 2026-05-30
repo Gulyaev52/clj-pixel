@@ -4,8 +4,6 @@
    [pixel-art.tool.utils :refer [get-tool-options]]
    [re-frame.core :as re-frame]))
 
-;;
-
 (re-frame/reg-sub
  ::initial-loading
  (fn [db] (-> db :initial-loading)))

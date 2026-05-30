@@ -4,13 +4,7 @@
    [re-frame.core :as re-frame]
    [pixel-art.events :as events]
    [pixel-art.utils.event-collector]
-   [pixel-art.views :as views]
-   [pixel-art.config :as config]))
-
-
-(defn dev-setup []
-  (when config/debug?
-    (println "dev mode")))
+   [pixel-art.views :as views]))
 
 (defn ^:dev/after-load mount-root []
   (re-frame/clear-subscription-cache!)
@@ -21,5 +15,4 @@
 
 (defn init []
   (re-frame/dispatch-sync [::events/start-app])
-  (dev-setup)
   (mount-root))

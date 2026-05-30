@@ -19,7 +19,7 @@
     (color/int 0 0 0)
     color))
 
-(defn add-new-color-picker []
+(defn- add-new-color-picker []
   (let [primary-color (replace-transparent-color @(re-frame/subscribe [::common-subs/primary-color]))
         secondary-color (replace-transparent-color @(re-frame/subscribe [::common-subs/secondary-color]))
         last-color (replace-transparent-color (last (:colors @(re-frame/subscribe [::subs/current-palette]))))

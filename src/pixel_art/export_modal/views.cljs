@@ -12,7 +12,7 @@
    [re-frame.core :as re-frame]
    [sc.api]))
 
-(defn settings-form []
+(defn- settings-form []
   (let [settings @(re-frame/subscribe [::subs/settings])
         layers @(re-frame/subscribe [::common-subs/layers])
         layer-options (concat

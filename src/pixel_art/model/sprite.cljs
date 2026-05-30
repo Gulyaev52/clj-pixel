@@ -53,11 +53,6 @@
              %))
          (update-cel (fn [c] (assoc c :current true :selected true)) cel-pos))))
 
-(defn get-selected-cels [sprite]
-  (->> sprite
-       get-cels-with-pos-as-coll
-       (filter :selected)))
-
 (defn get-selected-cels-pos [sprite]
   (->> sprite
        get-cels-with-pos-as-coll
@@ -192,9 +187,6 @@
 (defn unlink-selected-cels [sprite]
   (let [selected-cels-pos (get-selected-cels-pos sprite)]
     (update-cels #(dissoc % :group-number) selected-cels-pos sprite)))
-
-(defn clear-cel [sprite]
-  (update-current-cel-and-linked cel/remove-all-pixels sprite))
 
 (defn move-cel [from-pos to-pos sprite]
   (if (= (:layer-idx from-pos) (:layer-idx to-pos))

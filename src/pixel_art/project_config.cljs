@@ -12,7 +12,7 @@
 
 (def auto-backup-in-ms (* 60000 5)) ;; every 5 min
 
-(def history-max-size)
+(def history-max-size 200)
 
 (defn get-layer-name [type layers-count]
   (str (if (= type :group) "Group " "Layer ") (inc layers-count)))
