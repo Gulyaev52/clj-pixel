@@ -8,11 +8,11 @@
    [pixel-art.utils.coll :as coll]
    [pixel-art.views.color-picker :refer [color-picker]]
    [pixel-art.views.ui-kit :refer [button custom-popover file-uploader
-                                   icon-button select use-theme-token]]
+                                   icon-button select]]
    [re-frame.core :as re-frame]
    [reagent.core :as reag]
-   [sc.api])
-  (:require-macros [pixel-art.views.reagent :refer [def-func-component]]))
+   [sc.api]
+   [shadow.css :refer (css)]))
 
 (defn- replace-transparent-color [color]
   (if (= color color/transparent-color-int)
@@ -40,45 +40,42 @@
                      :on-cancel (fn []
                                   (on-close))}])))
 
-(def-func-component palette-colors [{:keys [colors primary-color secondary-color]}]
-  (let [theme-token (use-theme-token)]
-    [:div {:style {:display :grid
-                   :grid-template-columns "repeat(auto-fill, 35px)"
-                   :grid-auto-rows "35px"
-                   :grid-gap "2px"
-                   :height "100%"
-                   :overflow "auto"}}
-     (doall
-      (for [[idx color] (map-indexed vector colors)]
-        (let [color-dark? (.. (color/->tinycolor color) isDark)
-              color-str (color/int->rgb-str color)]
-          ^{:key color}
-          [:div {:className "color-container"
-                 :data-testid (str "palette-color-" color-str)
-                 :style {:background-color color-str
-                         :position "relative"
-                         :cursor "pointer"
-                         :color (if color-dark? (.-colorText theme-token) (.-colorBgBase theme-token))}
-                 :on-click (fn []
-                             (re-frame/dispatch [::events/select-color idx false]))
-                 :on-context-menu (fn [e]
-                                    (. e preventDefault)
-                                    (re-frame/dispatch [::events/select-color idx true]))}
-           (when (= color primary-color) "L")
-           (when (= color secondary-color) "R")
-           [:div {:className "remove-color-button"
-                  :style {:position "absolute"
-                          :right "1px"
-                          :top "1px"
-                          :opacity 0}}
-            [icon-button {:src :close
-                          :icon-theme (if color-dark? :light :dark)
-                          :title "remove color"
-                          :data-testid (str "remove-palette-color-" idx)
-                          :size :xs
-                          :on-click (fn [e]
-                                      (.. e (stopPropagation))
-                                      (re-frame/dispatch [::events/remove-color idx]))}]]])))]))
+(def color-text-dark (css {:color "var(--pixel-color-text)"}))
+(def color-text-light (css {:color "var(--pixel-color-bg-base)"}))
+
+(defn palette-colors [{:keys [colors primary-color secondary-color]}]
+  [:div {:class (css {:display "grid"
+                      :grid-template-columns "repeat(auto-fill, 35px)"
+                      :grid-auto-rows "35px"
+                      :grid-gap "2px"
+                      :height "100%"
+                      :overflow "auto"})}
+   (doall
+    (for [[idx color] (map-indexed vector colors)]
+      (let [color-dark? (.. (color/->tinycolor color) isDark)
+            color-str (color/int->rgb-str color)]
+        ^{:key color}
+        [:div {:class [(css {:position "relative" :cursor "pointer"}
+                            ["&:hover .remove-color-button" {:opacity "1 !important"}])
+                       (if color-dark? color-text-dark color-text-light)]
+               :data-testid (str "palette-color-" color-str)
+               :style {:background-color color-str}
+               :on-click (fn [] (re-frame/dispatch [::events/select-color idx false]))
+               :on-context-menu (fn [e]
+                                  (. e preventDefault)
+                                  (re-frame/dispatch [::events/select-color idx true]))}
+         (when (= color primary-color) "L")
+         (when (= color secondary-color) "R")
+         [:div {:class ["remove-color-button"
+                        (css {:position "absolute" :right "1px" :top "1px" :opacity "0"})]}
+          [icon-button {:src :close
+                        :icon-theme (if color-dark? :light :dark)
+                        :title "remove color"
+                        :data-testid (str "remove-palette-color-" idx)
+                        :size :xs
+                        :on-click (fn [e]
+                                    (.. e (stopPropagation))
+                                    (re-frame/dispatch [::events/remove-color idx]))}]]])))]) 
 
 (defn palettes-section []
   (let [palettes @(re-frame/subscribe [::subs/palettes])
@@ -87,9 +84,9 @@
         primary-color @(re-frame/subscribe [::common-subs/primary-color])
         secondary-color @(re-frame/subscribe [::common-subs/secondary-color])
         can-delete-palette? (> (count palettes) 1)]
-    [:div {:style {:display "flex"
-                   :flex-direction "column"
-                   :height "300px"}}
+    [:div {:class (css {:display "flex"
+                       :flex-direction "column"
+                       :height "300px"})}
      [select {:value current-palette-idx
               :options (map-indexed (fn [idx p] {:value idx :label (:name p)}) palettes)
               :block true
@@ -98,7 +95,7 @@
               :on-change (fn [idx]
                            (re-frame/dispatch [::events/select-palette idx]))}]
 
-     [:div {:style {:display "flex" :justify-content "space-between"}}
+     [:div {:class (css {:display "flex" :justify-content "space-between"})}
       [custom-popover
        (fn [close]
          [icon-button {:src :add
@@ -155,7 +152,7 @@
                         :size :sm
                         :on-click on-click}])]]]
 
-     [:div {:style {:flex-grow 1 :min-height 0}}
+     [:div {:class (css {:flex-grow "1" :min-height "0"})}
       [palette-colors {:colors (:colors current-palette)
                        :primary-color primary-color
                        :secondary-color secondary-color}]]]))

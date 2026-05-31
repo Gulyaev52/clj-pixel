@@ -10,7 +10,8 @@
                                    input-text modal select
                                    slider space]]
    [re-frame.core :as re-frame]
-   [sc.api]))
+   [sc.api]
+   [shadow.css :refer (css)]))
 
 (defn- settings-form []
   (let [settings @(re-frame/subscribe [::subs/settings])
@@ -95,5 +96,5 @@
        [space {:direction "vertical" :block true} 
         [previews-container {:loading (:generation preview)}
          [previews-grid-items (:data preview)]]
-        [:div {:style {:display :grid}}
+        [:div {:class (css {:display "grid"})}
          [settings-form]]]])))

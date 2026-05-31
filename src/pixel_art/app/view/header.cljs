@@ -18,10 +18,10 @@
    [pixel-art.app.subs :as subs]
    [pixel-art.views.ui-kit :refer [button checkbox file-uploader icon-button
                                    replace-current-project-confirm
-                                   space title use-theme-token]]
+                                   space title]]
    [re-frame.core :as re-frame]
-   [sc.api])
-  (:require-macros [pixel-art.views.reagent :refer [def-func-component]]))
+   [sc.api]
+   [shadow.css :refer (css)]))
 
 (defn- undo-redo-buttons []
   (let [undo-available? @(re-frame/subscribe [::history.subs/undo-available?])
@@ -39,11 +39,11 @@
 (defn- project-title []
   (let [unsaved-changes-exist @(re-frame/subscribe [::subs/unsaved-changes-exist])
         sprite-title @(re-frame/subscribe [::subs/sprite-title])]
-    [space {:style {:min-width 0} :styles {:item {:min-width 0}}}
-     [title {:level 3 :style {:margin 0
-                              :white-space "nowrap"
-                              :overflow "hidden"
-                              :text-overflow "ellipsis"}}
+    [space {:class (css {:min-width "0"} ["& > .ant-space-item:first-child" {:min-width "0"}])}
+     [title {:level 3 :class (css {:margin "0 !important"
+                                   :white-space "nowrap"
+                                   :overflow "hidden"
+                                   :text-overflow "ellipsis"})}
       (str sprite-title (when unsaved-changes-exist "*"))]
      [icon-button {:src :pen
                    :title "edit title"
@@ -60,13 +60,12 @@
                :label "Grid"
                :on-change (fn [checked] (re-frame/dispatch [::drawing.events/enable-pixels-grid checked]))}]))
 
-(def-func-component header []
-  (let [theme-token (use-theme-token)]
-    [:div {:style {:display "flex"
-                   :align-items "center"
-                   :padding "5px"
-                   :gap "4px"
-                   :border-bottom (str "1px solid " (.-colorBorder theme-token))}}
+(defn header []
+  [:div {:class (css {:display "flex"
+                      :align-items "center"
+                      :padding "5px"
+                      :gap "4px"
+                      :border-bottom "1px solid var(--pixel-color-border)"})}
      [:<>
       [new-project-modal]
       [button {:on-click (fn [] (re-frame/dispatch [::new-project-modal.events/set-opened true]))
@@ -104,5 +103,5 @@
      [pixels-grid-checkbox]
      [undo-redo-buttons]
      [project-title]
-     [:div {:style {:margin-left "auto" :flex-shrink 0}}
-      [drawing-info]]]))
+     [:div {:class (css {:margin-left "auto" :flex-shrink "0"})}
+      [drawing-info]]])

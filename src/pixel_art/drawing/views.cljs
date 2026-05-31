@@ -9,14 +9,12 @@
    [pixel-art.onion-skin.views :refer [use-draw-onion-skin]]
    [pixel-art.app.subs :as common-subs]
    [pixel-art.utils.view :as utils.view]
-   [pixel-art.views.constants :refer [drawing-border
-                                      preview-container-bg-color
-                                      transparent-color-img]]
    [pixel-art.views.ui-kit :refer [space typography]]
    [re-frame.core :as re-frame]
    [re-frame.db :as db]
    [react :as react]
-   [sc.api])
+   [sc.api]
+   [shadow.css :refer (css)])
   (:require-macros [pixel-art.views.reagent :refer [def-func-component]]))
 
 (defn- canvas-pos->frame-pos [event scale]
@@ -74,11 +72,11 @@
      [:div {:id "canvas-viewport"
             :data-testid "canvas-viewport"
             :ref viewport-ref
-            :style {:overflow "auto"
-                    :position "relative"
-                    :background-color preview-container-bg-color
-                    :width "100%"
-                    :flex-grow 1}
+            :class (css {:overflow "auto"
+                        :position "relative"
+                        :width "100%"
+                        :flex-grow "1"
+                        :background-color "var(--pixel-preview-bg)"})
             :on-context-menu (fn [event]
                                (. event preventDefault))
             :on-mouse-down (fn [event]
@@ -127,26 +125,26 @@
                                    (reset! !last-mouse-pos mouse-pos)
                                    (re-frame/dispatch [::events/handle-mouse-event :mouse-move mouse-pos (utils.view/is-right-button? event)])))))}
       [:div {:id "drawing-canvas-container"
-             :style (merge {:position "relative"} drawing-container-size)}
+             :class (css {:position "relative"})
+             :style drawing-container-size}
        [:div {:id "canvas-layers"
               :data-testid "canvas-layers"
-              :style (merge
-                      {:position "relative"
-                       :left "50%"
-                       :top "50%"
-                       :transform "translate(-50%, -50%)"
-                       :background-image transparent-color-img
-                       :outline drawing-border}
-                      scaled-sprite-size)}
+              :class (css {:position "relative"
+                           :left "50%"
+                           :top "50%"
+                           :transform "translate(-50%, -50%)"
+                           :background-image "var(--pixel-transparent-img)"
+                           :outline "var(--pixel-drawing-border)"})
+              :style scaled-sprite-size}
         [drawing-canvas
          {:id "layers-below"
-          :className "layer"}
+          :class "layer"}
          {:z-index 0}
          sprite-size]
         [drawing-canvas
          {:id "current-layer"
           :data-testid "current-layer"
-          :className "layer"}
+          :class "layer"}
          {:z-index 1}
          sprite-size]
         [drawing-canvas
@@ -155,7 +153,7 @@
          sprite-size]
         [drawing-canvas
          {:id "layers-above"
-          :className "layer"}
+          :class "layer"}
          {:z-index 2}
          sprite-size]
         [drawing-canvas

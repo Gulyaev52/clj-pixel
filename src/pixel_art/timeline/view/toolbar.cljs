@@ -11,18 +11,19 @@
    [pixel-art.views.ui-kit :refer [button hint icon-button input-number
                                    popover space typography]]
    [re-frame.core :as re-frame]
-   [sc.api]))
+   [sc.api]
+   [shadow.css :refer (css)]))
 
 (defn- section [title children]
   [:> antd/Card {:size "small"}
    [space
     [typography title]
-    (into [:div {:style {:display "flex" :align-items "center"}}]
+    (into [:div {:class (css {:display "flex" :align-items "center"})}]
           children)]])
 
 (defn toolbar [{:keys [disabled-actions current-frame]}]
   (let [onion-skin-enabled @(re-frame/subscribe [::onion-skin.subs/enabled])]
-    [:div {:style {:display "flex" :justify-content "space-between"}}
+    [:div {:class (css {:display "flex" :justify-content "space-between"})}
      [space
       [section "Frames" [[icon-button {:src :add
                                        :title "add empty frame"
@@ -132,8 +133,8 @@
                          :on-click open}])
          [onion-skin-settings]]]]]
 
-     [:div {:style {:display :flex}}
-      [:div {:style {:display "flex" :flex-direction "column" :gap "4px"}}
+     [:div {:class (css {:display "flex"})}
+      [:div {:class (css {:display "flex" :flex-direction "column" :gap "4px"})}
        [typography "Frame duration (ms)"]
        [input-number {:value (:duration current-frame)
                       :testid "input-frame-duration"
@@ -141,5 +142,5 @@
                                  (re-frame/dispatch [::events/set-frame-duration (:idx current-frame) duration]))}]]
       [:<>
        [sprite-preview-modal]
-       [:div {:style {:margin-top "auto"}}
+       [:div {:class (css {:margin-top "auto"})}
         [button {:on-click (fn [] (re-frame/dispatch [::sprite-preview.events/open]))} "Show preview"]]]]]))
