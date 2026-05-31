@@ -8,8 +8,8 @@
    [pixel-art.sprite-preview.events :as sprite-preview.events]
    [pixel-art.sprite-preview.views :refer [sprite-preview-modal]]
    [pixel-art.timeline.events :as events]
-   [pixel-art.views.ui-kit :refer [button icon-button input-number popover
-                                   space typography]]
+   [pixel-art.views.ui-kit :refer [button hint icon-button input-number
+                                   popover space typography]]
    [re-frame.core :as re-frame]
    [sc.api]))
 
@@ -53,7 +53,8 @@
                                        :data-testid "btn-move-frame-right"
                                        :disabled (:move-frame-right disabled-actions)
                                        :size :sm
-                                       :on-click (fn [] (re-frame/dispatch [::events/move-frame-right]))}]]]
+                                       :on-click (fn [] (re-frame/dispatch [::events/move-frame-right]))}]
+                         [hint "A frame is one snapshot in time of your animation. Drag a frame by its number to reorder it."]]]
 
       [section "Layers" [[icon-button {:src :add
                                        :title "add layer"
@@ -99,7 +100,8 @@
                                                    (. e stopPropagation)
                                                    (when-let [new-name (js/prompt "New layer name" (:name current-frame))]
                                                      (when (seq (string/trim new-name))
-                                                       (re-frame/dispatch [::events/rename-layer new-name]))))}]]]
+                                                       (re-frame/dispatch [::events/rename-layer new-name]))))}]
+                         [hint "A layer is a transparent sheet you draw on. Layers stack on top of each other to form the final image. Drag a layer by its name to reorder it."]]]
 
       [section "Cels" [[icon-button {:src :link
                                      :title "link cels"
@@ -112,7 +114,8 @@
                                      :data-testid "btn-unlink-cels"
                                      :disabled (:unlink-cel disabled-actions)
                                      :size :sm
-                                     :on-click (fn [] (re-frame/dispatch [::events/unlink-selected-cels]))}]]]
+                                     :on-click (fn [] (re-frame/dispatch [::events/unlink-selected-cels]))}]
+                       [hint "A cel (from celluloid) is one image in a specific frame and layer, at a specific xy-coordinate in the canvas. Cels can be linked. Linked cels share the same pixels — editing one updates all cels linked to it across frames. To select: Ctrl+Click cels on the same layer, then press 'Link Cels'."]]]
 
       [section "Onion skin"
        [[icon-button {:src (if onion-skin-enabled :layers-off :layers)

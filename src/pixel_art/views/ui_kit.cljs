@@ -1,6 +1,7 @@
 (ns pixel-art.views.ui-kit
   (:require
    ["antd" :as antd]
+   ["@ant-design/icons" :as antd-icons]
    [reagent.core :as reag]
    [react :as react]
    [sc.api]
@@ -209,7 +210,7 @@
                       :onOk on-ok
                       :okText ok-text
                       :okButtonProps (cond-> {:disabled ok-disabled}
-                                      ok-data-testid (assoc :data-testid ok-data-testid))
+                                       ok-data-testid (assoc :data-testid ok-data-testid))
                       :onCancel on-cancel
                       :cancelText cancel-text
                       :footer (fn [_ props]
@@ -246,3 +247,7 @@
 
 (defn replace-current-project-confirm []
   (js/confirm "This will replace the current project. Are you sure?"))
+
+(defn hint [title]
+  [:> antd/Tooltip {"placement" "top" "title" title}
+   [:> antd-icons/QuestionCircleOutlined]])
