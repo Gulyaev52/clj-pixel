@@ -2,6 +2,7 @@
 	"name": "pixel-art",
 	"scripts": {
 		"ancient": "clojure -Sdeps '{:deps {com.github.liquidz/antq {:mvn/version \"RELEASE\"}}}' -m antq.core",
+		"css": "npx shadow-cljs run build/css-release",
 		"watch": "npx shadow-cljs watch app browser-test karma-test",
 		"release": "npx shadow-cljs release app",
 		"build-report": "npx shadow-cljs run shadow.cljs.build-report app target/build-report.html",
