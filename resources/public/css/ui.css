@@ -430,18 +430,18 @@
   align-items: center;
   display: flex;
 }
-.pixel_art_sprite_resizer_views__L13_C17 {
+.pixel_art_sprite_resizer_views__L12_C17 {
   display: grid;
   gap: 1px;
   grid-template-columns: min-content min-content min-content;
 }
-.pixel_art_sprite_resizer_views__L22_C21 {
+.pixel_art_sprite_resizer_views__L21_C21 {
   background-color: #444;
   border-radius: 4px;
   height: 24px;
   width: 24px;
 }
-.pixel_art_sprite_resizer_views__L28_C23 {
+.pixel_art_sprite_resizer_views__L27_C23 {
   background-color: var(--pixel-color-primary-active);
 }
 .pixel_art_app_view_current_colors_selection__L26_C20 {

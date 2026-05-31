@@ -6,10 +6,9 @@
    [pixel-art.views.preview :refer [previews-container previews-grid-items]]
    [pixel-art.views.ui-kit :refer [checkbox form form-item input-number modal]]
    [re-frame.core :as re-frame]
-   [shadow.css :refer (css)])
-  (:require-macros [pixel-art.views.reagent :refer [def-func-component]]))
+   [shadow.css :refer (css)]))
 
-(def-func-component anchor [settings]
+(defn anchor [settings]
   [:div {:class (css {:display "grid"
                       :grid-template-columns "min-content min-content min-content"
                       :gap "1px"})
