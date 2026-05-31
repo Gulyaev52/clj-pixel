@@ -160,6 +160,7 @@
 (def-func-component timeline-panel []
   (let [{:keys [cels layers frames disabled-actions some-layer-visible all-frames-duration some-layer-automatic-linking]} @(re-frame/subscribe [::subs/timeline])
         current-frame (coll/find-first :current frames)
+        current-layer (coll/find-first :current layers)
         cels-by-layers (-> cels
                            (#(group-by (fn [c] (-> c :pos :layer-idx)) %))
                            (update-vals (fn [cels] (sort-by #(-> % :pos :frame-idx) cels))))
@@ -183,6 +184,7 @@
                          :align-self "center"})}]
 
      [toolbar {:current-frame current-frame
+               :current-layer current-layer
                :disabled-actions disabled-actions
                :all-frames-duration all-frames-duration}]
 

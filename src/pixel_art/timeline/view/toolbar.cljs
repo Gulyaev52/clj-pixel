@@ -21,7 +21,7 @@
     (into [:div {:class (css {:display "flex" :align-items "center"})}]
           children)]])
 
-(defn toolbar [{:keys [disabled-actions current-frame]}]
+(defn toolbar [{:keys [disabled-actions current-frame current-layer]}]
   (let [onion-skin-enabled @(re-frame/subscribe [::onion-skin.subs/enabled])]
     [:div {:class (css {:display "flex" :justify-content "space-between"})}
      [space
@@ -99,7 +99,7 @@
                                        :size :sm
                                        :on-click (fn [e]
                                                    (. e stopPropagation)
-                                                   (when-let [new-name (js/prompt "New layer name" (:name current-frame))]
+                                                   (when-let [new-name (js/prompt "New layer name" (:name current-layer))]
                                                      (when (seq (string/trim new-name))
                                                        (re-frame/dispatch [::events/rename-layer new-name]))))}]
                          [hint "A layer is a transparent sheet you draw on. Layers stack on top of each other to form the final image. Drag a layer by its name to reorder it."]]]
