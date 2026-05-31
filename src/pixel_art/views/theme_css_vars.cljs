@@ -9,6 +9,9 @@
     (react/useLayoutEffect
      (fn []
        (let [style (.. js/document -documentElement -style)]
+         (.setProperty style "--pixel-preview-bg" "#A0A0A0")
+         (.setProperty style "--pixel-drawing-border" "1px solid black")
+         (.setProperty style "--pixel-transparent-img" "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABlBMVEVMTExVVVUnhsEkAAAAHUlEQVR4AWOAAUYoQOePEAUj3v9oYDQ9gMBoegAAJFwCAbLaTIMAAAAASUVORK5CYII=')")
          (.setProperty style "--pixel-color-bg-container" (.-colorBgContainer t))
          (.setProperty style "--pixel-color-border" (.-colorBorder t))
          (.setProperty style "--pixel-color-primary-active" (.-colorPrimaryActive t))
