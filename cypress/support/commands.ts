@@ -320,34 +320,6 @@ Cypress.on('window:before:load', function (window) {
 
 // helpers
 
-
-type CanvasCoords = {
-  x: number; y: number; btn: number;
-  scaleX: number; scaleY: number; offsetX: number; offsetY: number;
-};
-
-function withCanvasCoords(
-  px: number, py: number, rightClick: boolean | undefined,
-  fn: (canvasViewport: Cypress.Chainable<JQuery>, canvasCoords: CanvasCoords) => void
-) {
-  cy.get('[data-testid="canvas-viewport"]', { log: false }).then(($vp) => {
-    cy.get('[data-testid="current-layer"]', { log: false }).then(($canvas) => {
-      const vpRect = $vp[0].getBoundingClientRect();
-      const cvRect = ($canvas[0] as HTMLCanvasElement).getBoundingClientRect();
-      const scaleX = cvRect.width / ($canvas[0] as HTMLCanvasElement).width;
-      const scaleY = cvRect.height / ($canvas[0] as HTMLCanvasElement).height;
-      const offsetX = cvRect.left - vpRect.left;
-      const offsetY = cvRect.top - vpRect.top;
-      fn(cy.get('[data-testid="canvas-viewport"]', { log: false }), {
-        x: offsetX + (px + 0.5) * scaleX,
-        y: offsetY + (py + 0.5) * scaleY,
-        btn: rightClick ? 2 : 0,
-        scaleX, scaleY, offsetX, offsetY,
-      });
-    });
-  });
-}
-
 function pixelsToMap(pixels: string[][]): Record<string, string> {
   return Object.fromEntries(pixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));
 }

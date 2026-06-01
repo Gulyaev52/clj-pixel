@@ -47,6 +47,8 @@ describe('Timeline', () => {
         [[[t, t], [t, g]], [[g, t], [t, t]]],
       ], { activeFrameIdx: 1, activeLayerIdx: 1 }, ['Layer 1', 'Layer 2']);
       cy.get('[data-testid="input-frame-duration"]').should('have.value', '100', 'frame-1 duration is 100');
+      // scroll the sprite into view so the centered canvas is captured in the screenshot
+      cy.get('[data-testid="canvas-layers"]').scrollIntoView();
       cy.screenshot("timeline");
     });
   });
@@ -536,6 +538,8 @@ describe('Timeline', () => {
 
       // Frame-0 active → shows frame-1 composited (layer-0 g@(1,1) + layer-1 g@(0,0))
       cy.assertOnionSkinPixels([[g, t], [t, g]], 'frame-1 pixels visible when frame-0 active');
+      // scroll the sprite into view so the centered canvas (with onion skin) is captured
+      cy.get('[data-testid="canvas-layers"]').scrollIntoView();
       cy.screenshot("onion-skin");
 
       // Navigate to frame-1 → shows frame-0 composited (layer-0 r@(0,0) + layer-1 r@(1,1))
