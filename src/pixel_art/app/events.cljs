@@ -5,7 +5,7 @@
    [pixel-art.drawing.events]
    [pixel-art.example-project :refer [get-example-project+]]
    [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
-   [pixel-art.project-config :as project-config]
+   [pixel-art.project-config :as project-config :refer [fallback-project]]
    [pixel-art.project-save-load.backup :as backup]
    [pixel-art.project-save-load.events :as project-save-load]
    [pixel-art.re-pressed.core :as rp]
@@ -75,11 +75,7 @@
    (let [saved-data (into {} (filter (fn [[_ v]] (some? v)) (get cofx saved-settings-local-storage-key)))
          initial-db (if initial-app-data
                       (db/create (merge initial-app-data saved-data) viewport-size)
-                      (db/create (merge (assoc project-config/default-palettes-and-current-colors
-                                               :sprite (project-config/create-empty-sprite "Untitled" {:width 4 :height 4})
-                                               :new-project-modal-opened false)
-                                        saved-data)
-                                 viewport-size))]
+                      (db/create (merge fallback-project saved-data) viewport-size))]
      {:db initial-db
       :fx [[:dispatch [::rp/add-keyboard-event-listener "keydown"]]
            dispatch-set-keydown-rules

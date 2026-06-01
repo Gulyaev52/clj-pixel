@@ -13,8 +13,8 @@
                 (re-frame/dispatch [:show-notification {:type "error"
                                                         :message "Failed to load example project"}]))))))
 
-(defn init [opened]
-  {:opened opened
+(defn init []
+  {:opened false
    :settings {:title "Untitled" :size {:width 100 :height 100}}})
 
 (re-frame/reg-event-fx

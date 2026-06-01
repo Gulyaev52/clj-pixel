@@ -17,13 +17,13 @@
                          (map (fn [{:keys [field initial-value]}] [field initial-value]))
                          (into {})))))
 
-(defn create [{:keys [sprite tool-type primary-color palettes secondary-color pixels-grid-enabled new-project-modal-opened]} viewport-size]
+(defn create [{:keys [sprite tool-type primary-color palettes secondary-color pixels-grid-enabled]} viewport-size]
   (merge
    {:size (:size sprite)
     :preview nil
     :visual-effects nil
     :pixels-grid-enabled (if (some? pixels-grid-enabled) pixels-grid-enabled true)
-    :new-project-modal (new-project-modal.events/init new-project-modal-opened)
+    :new-project-modal (new-project-modal.events/init)
     :sprite sprite
     :tool (tool/init (or tool-type :pen))
     :tools-options (get-initial-options tool/options-specs)

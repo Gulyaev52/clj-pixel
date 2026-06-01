@@ -33,3 +33,8 @@
                   :frame (frame/create initial-frame-duration)
                   :cel (cel/create size)
                   :title title}))
+
+;; this project is used if backup or example project is failed to load by some reasons
+(def fallback-project
+  (assoc default-palettes-and-current-colors
+         :sprite (create-empty-sprite "Untitled" {:width 4 :height 4})))
