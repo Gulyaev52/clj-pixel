@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Avoid duplicate/superseded runs (push + PR on the same ref, or rapid pushes)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build (release + css)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm run release
+      - run: npm run css
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: |
+            resources/public/js/compiled
+            resources/public/css
+          retention-days: 7
+
+  e2e:
+    name: E2E (Cypress)
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4          # committed static assets (index.html, gif.js, imgs)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/download-artifact@v4 # overlay compiled js + css from the build job
+        with:
+          name: web-build
+          path: resources/public
+      - uses: cypress-io/github-action@v6
+        with:
+          browser: chrome
+          start: npx http-server resources/public -p 8280 -c-1 --silent
+          wait-on: 'http://localhost:8280'
+          wait-on-timeout: 120
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+          if-no-files-found: ignore
