@@ -52,6 +52,7 @@
     (react/useEffect (fn []
                        (when preview
                          (let [current-layer (. js/document (getElementById "current-layer"))]
+                           (canvas/clear-canvas current-layer)
                            (sprite-canvas/draw-cel {:size sprite-size :pixels preview} current-layer))))
                      (array preview sprite-size))
     [:div]))
