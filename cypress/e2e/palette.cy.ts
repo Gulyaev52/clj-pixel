@@ -60,7 +60,9 @@ describe('Palette', () => {
 
     cy.get('[data-testid="palette-color-rgba(0,0,255,1)"]').click({ force: true });
     cy.get('[data-testid="primary-color-swatch"]')
-      .should('have.css', 'background-color', 'rgb(0, 0, 255)', 'primary swatch updated to blue');
+      .should(($el) => {
+        expect($el, 'primary swatch updated to blue').to.have.css('background-color', 'rgb(0, 0, 255)');
+      });
     cy.get('[data-testid="palette-color-rgba(0,0,255,1)"]')
       .should('contain.text', 'L', 'L marker on selected primary color');
     cy.get('[data-testid="palette-color-rgba(0,0,0,1)"]')
@@ -68,7 +70,9 @@ describe('Palette', () => {
 
     cy.get('[data-testid="palette-color-rgba(0,128,0,1)"]').rightclick({ force: true });
     cy.get('[data-testid="secondary-color-swatch"]')
-      .should('have.css', 'background-color', 'rgb(0, 128, 0)', 'secondary swatch updated to green');
+      .should(($el) => {
+        expect($el, 'secondary swatch updated to green').to.have.css('background-color', 'rgb(0, 128, 0)');
+      });
     cy.get('[data-testid="palette-color-rgba(0,128,0,1)"]')
       .should('contain.text', 'R', 'R marker on selected secondary color');
     cy.get('[data-testid="palette-color-rgba(255,0,0,1)"]')
@@ -82,9 +86,13 @@ describe('Palette', () => {
     cy.get('[data-testid="palette-color-rgba(0,0,255,1)"]').rightclick({ force: true });
 
     cy.get('[data-testid="primary-color-swatch"]')
-      .should('have.css', 'background-color', 'rgb(0, 0, 255)', 'primary swatch is blue');
+      .should(($el) => {
+        expect($el, 'primary swatch is blue').to.have.css('background-color', 'rgb(0, 0, 255)');
+      });
     cy.get('[data-testid="secondary-color-swatch"]')
-      .should('have.css', 'background-color', 'rgb(0, 0, 255)', 'secondary swatch is blue');
+      .should(($el) => {
+        expect($el, 'secondary swatch is blue').to.have.css('background-color', 'rgb(0, 0, 255)');
+      });
     cy.get('[data-testid="palette-color-rgba(0,0,255,1)"]')
       .should('contain.text', 'L', 'L marker present')
       .and('contain.text', 'R', 'R marker present');
@@ -114,7 +122,9 @@ describe('Palette', () => {
 
     cy.get('[data-testid="palette-color-rgba(255,0,0,1)"]').click({ force: true });
     cy.get('[data-testid="primary-color-swatch"]')
-      .should('have.css', 'background-color', 'rgb(255, 0, 0)', 'added color selected as primary');
+      .should(($el) => {
+        expect($el, 'added color selected as primary').to.have.css('background-color', 'rgb(255, 0, 0)');
+      });
 
     cy.reload();
     cy.get('[data-testid="canvas-viewport"]', { timeout: 10000 }).should('be.visible');
