@@ -799,7 +799,15 @@ describe('Shading Tool', () => {
       ]),
     });
     cy.selectTool('shading');
-    cy.get('.ant-slider-handle').eq(1).focus().type('{rightarrow}{rightarrow}{rightarrow}{rightarrow}', { force: true }); // amount = 10
+    // Raise amount from default 6 to 10. Send arrows one at a time (separate Cypress
+    // commands, asserting each increment): the slider is a controlled component whose
+    // value round-trips through re-frame, and a single fast multi-key .type() drops one
+    // increment in the optimized release build.
+    cy.get('.ant-slider-handle').eq(1).focus();
+    for (let amount = 7; amount <= 10; amount++) {
+      cy.get('.ant-slider-handle').eq(1).type('{rightarrow}', { force: true });
+      cy.get('[data-testid="amount"]').should('contain.text', `(${amount})`);
+    }
     cy.mouseDownThenUpOnCanvas({x: 0, y: 0});
     cy.assertVisibleCanvasPixels([
       [rgba(204, 0, 0), r],
