@@ -92,7 +92,7 @@ describe('Export modal — Image tab', () => {
     cy.get('[data-testid="export-file-name"]').should('have.value', 'my-sprite');
 
     // Export and verify the downloaded file name and pixel content
-    cy.get('[data-testid="btn-open-export-modal-ok"]').click();
+    cy.get('[data-testid="btn-export-ok"]').click();
     cy.assertDownloadedPngPixels('cypress/downloads/my-sprite.png', [[r, t], [t, r]], 'downloaded png pixels');
   });
 
