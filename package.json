@@ -2,6 +2,7 @@
 	"name": "pixel-art",
 	"scripts": {
 		"ancient": "clojure -Sdeps '{:deps {com.github.liquidz/antq {:mvn/version \"RELEASE\"}}}' -m antq.core",
+		"css": "npx shadow-cljs run build/css-release",
 		"watch": "npx shadow-cljs watch app browser-test karma-test",
 		"release": "npx shadow-cljs release app",
 		"build-report": "npx shadow-cljs run shadow.cljs.build-report app target/build-report.html",
@@ -29,9 +30,6 @@
 		"cypress": "^15.15.0",
 		"cypress-diff": "^0.0.6",
 		"cypress-real-events": "^1.15.0",
-		"@testing-library/react": "^12.1.5",
-		"@testing-library/react-hooks": "^8.0.1",
-		"@testing-library/user-event": "^13.5.0",
 		"fake-indexeddb": "^6.0.1",
 		"karma": "6.4.0",
 		"karma-chrome-launcher": "3.1.1",

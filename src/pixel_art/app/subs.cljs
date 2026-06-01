@@ -1,10 +1,10 @@
-(ns pixel-art.subs
+(ns pixel-art.app.subs
   (:require
-   [pixel-art.tool.utils :refer [check-unsaved-changes-exist get-tool-options]]
-   [pixel-art.utils.coll :as coll]
+   [pixel-art.db.utils :refer [check-unsaved-changes-exist]]
+   [pixel-art.tool.utils :refer [get-tool-options]]
    [re-frame.core :as re-frame]))
 
-;;
+;; global subs
 
 (re-frame/reg-sub
  ::initial-loading
@@ -57,15 +57,3 @@
 (re-frame/reg-sub
  ::unsaved-changes-exist
  check-unsaved-changes-exist)
-
-;; todo: move to palette
-
-(re-frame/reg-sub
- ::current-palette
- (fn [db]
-   (coll/find-first :current (:palettes db))))
-
-(re-frame/reg-sub
- ::palettes
- (fn [db]
-   (:palettes db)))

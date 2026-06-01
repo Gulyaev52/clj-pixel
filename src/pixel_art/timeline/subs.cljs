@@ -2,7 +2,7 @@
   (:require
    [pixel-art.model.sprite :as sprite]
    [pixel-art.onion-skin.subs :as onion-skin.subs]
-   [pixel-art.subs :as subs]
+   [pixel-art.app.subs :as subs]
    [re-frame.core :as re-frame]
    [sc.api :as api]))
 
@@ -17,7 +17,7 @@
      {:cels (sprite/get-cels-with-pos-as-coll sprite)
       :layers (map-indexed (fn [idx layer]
                              (merge layer {:current (= idx (:layer-idx current-cel-pos))
-                                           :selected (some? ((set (map :layer-idx selected-cels-pos)) idx)) ;; todo: почему current
+                                           :selected (some? ((set (map :layer-idx selected-cels-pos)) idx))
                                            :idx idx}))
                            layers)
       :some-layer-visible (some :visible? layers)

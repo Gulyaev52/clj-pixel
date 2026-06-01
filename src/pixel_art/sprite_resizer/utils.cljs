@@ -1,8 +1,9 @@
 (ns pixel-art.sprite-resizer.utils
   (:require
-   [pixel-art.canvas :as canvas]
    [pixel-art.model.cel :as cel]
    [pixel-art.model.color :as color]
+   [pixel-art.model.sprite-canvas :as sprite-canvas]
+   [pixel-art.utils.canvas :as canvas]
    [pixel-art.utils.coll :as coll]))
 
 (defn- translate-x [x width resized-width anchor-x]
@@ -20,7 +21,7 @@
 (defn- resize-cel [cel {:keys [target-size resize-content anchor]}]
   (if resize-content
     (->> (canvas/create-canvas (:size cel))
-         (canvas/draw-cel cel)
+         (sprite-canvas/draw-cel cel)
          (canvas/resize target-size)
          ((fn [canvas]
             (assoc cel

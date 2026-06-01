@@ -1,8 +1,7 @@
 (ns pixel-art.history
   (:require
-   [pixel-art.project-settings :as project-settings]))
-
-(def stack-max-size 200)
+   [pixel-art.db.utils :as db.utils]
+   [pixel-art.project-config :refer [history-max-size]]))
 
 (defn init [{:keys [sprite]}]
   {:current-idx 0
@@ -11,8 +10,8 @@
 (defn- save-state [db history-item]
   (let [{:keys [history]} db]
     (-> history
-        (update :stack #(if (= (count %) stack-max-size)
-                          (take-last stack-max-size %)
+        (update :stack #(if (= (count %) history-max-size)
+                          (take-last history-max-size %)
                           %))
         (update :stack #(if (not= (:current-idx history) (- (count %) 1))
                           (subvec % 0 (inc (:current-idx history)))
@@ -28,8 +27,8 @@
   (let [{:keys [history]} db
         {:keys [stack]} history
         changes (nth stack idx)]
-    (project-settings/set-sprite db (:sprite changes) {:prev-sprite (:sprite db)
-                                                       :viewport-size viewport-size})))
+    (db.utils/set-sprite db (:sprite changes) {:prev-sprite (:sprite db)
+                                               :viewport-size viewport-size})))
 
 (defn check-undo-available? [db]
   (> (get-in db [:history :current-idx]) 0))

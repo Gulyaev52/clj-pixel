@@ -5,12 +5,10 @@
    [pixel-art.model.frame :as frame]
    [pixel-art.model.layer :as layer]
    [pixel-art.model.sprite :as sprite]
-   [pixel-art.project-settings :as project-settings]
+   [pixel-art.project-config :as project-config]
    [pixel-art.tool.core :as tool]
    [pixel-art.tool.utils :refer [commit-preview-and-init-tool]]
-   [re-frame.core :as re-frame]
-   [sc.api :as api]
-   [re-frame.db :as db]))
+   [re-frame.core :as re-frame]))
 
 (defn commit-preview-from-db-and-init-tool [db]
   (let [tool (tool/init (-> db :tool :type))]
@@ -77,7 +75,7 @@
 (re-frame/reg-event-fx
  ::add-layer
  (fn [{:keys [db]}]
-   (let [layer-name (project-settings/get-layer-name :single (-> db :sprite :layers count))
+   (let [layer-name (project-config/get-layer-name :single (-> db :sprite :layers count))
          layer (layer/create layer-name)]
      (-> db
          commit-preview-from-db-and-init-tool
@@ -137,7 +135,7 @@
  ::rename-layer
  (fn [{:keys [db]} [_ new-name]]
    (-> db
-       commit-preview-from-db-and-init-tool ;; todo: нужно ли?
+       commit-preview-from-db-and-init-tool
        (update-in [:db :sprite] (fn [sprite]
                                   (sprite/update-layer (sprite/get-current-layer-idx sprite) #(assoc % :name new-name) sprite))))))
 
@@ -145,7 +143,7 @@
  ::toggle-all-layers-visibility
  (fn [{:keys [db]} [_]]
    (-> db
-       commit-preview-from-db-and-init-tool ;; todo: нужно ли?
+       commit-preview-from-db-and-init-tool
        (update-in [:db :sprite] (fn [sprite]
                                   (let [layers (:layers sprite)
                                         some-visible? (some :visible? layers)
@@ -156,7 +154,7 @@
  ::toggle-layer-visibility
  (fn [{:keys [db]} [_ idx]]
    (-> db
-       commit-preview-from-db-and-init-tool ;; todo: нужно ли?
+       commit-preview-from-db-and-init-tool
        (update-in [:db :sprite] (fn [sprite]
                                   (sprite/update-layer idx #(update % :visible? not) sprite))))))
 
@@ -164,7 +162,7 @@
  ::toggle-all-layers-automatic-linking
  (fn [{:keys [db]} [_]]
    (-> db
-       commit-preview-from-db-and-init-tool ;; todo: нужно ли?
+       commit-preview-from-db-and-init-tool
        (update-in [:db :sprite] (fn [sprite]
                                   (let [layers (:layers sprite)
                                         some-automatic-linking? (some :automatic-linking? layers)
@@ -175,7 +173,7 @@
  ::toggle-layer-automatic-linking
  (fn [{:keys [db]} [_ idx]]
    (-> db
-       commit-preview-from-db-and-init-tool ;; todo: нужно ли?
+       commit-preview-from-db-and-init-tool
        (update-in [:db :sprite] (fn [sprite]
                                   (sprite/update-layer idx #(update % :automatic-linking? not) sprite))))))
 

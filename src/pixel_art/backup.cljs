@@ -1,6 +1,8 @@
-(ns pixel-art.project-save-load.backup
+(ns pixel-art.backup
   (:require
-   [pixel-art.project-save-load.sprite-serialization :as sprite-serialization]))
+   [pixel-art.db.utils :as db.utils]
+   [pixel-art.project-save-load.sprite-serialization :as sprite-serialization]
+   [re-frame.core :as re-frame]))
 
 (defonce !db (atom nil))
 
@@ -21,8 +23,7 @@
                (fn [event]
                  (let [db (.. event -target -result)
                        _ (.. db (createObjectStore "pixel" #js {"keyPath" "id"}))]
-                   (reset! !db db)
-                   (resolve db))))
+                   (reset! !db db))))
 
          (set! (. open-request -onsuccess) (fn [event]
                                              (let [db (.. event -target -result)]
@@ -53,3 +54,38 @@
                                 (update :sprite sprite-serialization/serialize))}
                    clj->js)]
     (request->promise (. store (put record)))))
+
+;; move events and fx to another ns?
+
+(re-frame/reg-event-fx
+ ::save-backup
+ (fn [{:keys [db]} [_ success-message]]
+   {:db db
+    :fx [[::save-backup {:backup (select-keys db [:sprite])
+                         :success-message success-message}]]}))
+
+(re-frame/reg-event-fx
+ ::save-backup-if-need
+ (fn [{:keys [db]} [_ success-message]]
+   (if (db.utils/check-unsaved-changes-exist db)
+     {:db db
+      :fx [[::save-backup {:backup (select-keys db [:sprite])
+                           :success-message success-message}]]}
+     {:db db})))
+
+(re-frame/reg-fx
+ ::save-backup
+ (fn [{:keys [backup success-message failure-message]}]
+   (. (put-backup+ @!db backup)
+      (then #(when success-message
+               (re-frame/dispatch [::handle-save-backup-result :success success-message]))
+            #(when failure-message
+               (re-frame/dispatch [:show-notification {:type :error
+                                                       :message failure-message}]))))))
+
+(re-frame/reg-event-fx
+ ::handle-save-backup-result
+ (fn [{:keys [db]} [_ type message]]
+   {:db (if (= type :success) (db.utils/mark-unsaved-changes-saved db) db)
+    :fx [[:show-notification {:type type
+                              :message message}]]}))

@@ -1,11 +1,12 @@
 (ns pixel-art.sprite-preview.views
   (:require
    [pixel-art.sprite-preview.events :as events]
-   [pixel-art.subs :as common-subs]
+   [pixel-art.app.subs :as common-subs]
    [pixel-art.sprite-preview.subs :as subs]
    [pixel-art.views.preview :refer [preview-image]]
    [re-frame.core :as re-frame]
-   [react :as react])
+   [react :as react]
+   [shadow.css :refer (css)])
   (:require-macros [pixel-art.views.reagent :refer [def-func-component]]))
 
 (def-func-component sprite-preview-modal-component []
@@ -22,16 +23,17 @@
                                                                            (when (= (.. e -code) "Escape")
                                                                              (re-frame/dispatch [::events/close]))))))
                            (array))]
-    [:div {:style {:position "fixed"
-                   :display "flex"
-                   :z-index 1000
-                   :alignItems "center"
-                   :justifyContent "center"
-                   :left 0
-                   :right 0
-                   :bottom 0
-                   :top 0
-                   :backgroundColor "rgba(37, 37, 37, 0.9)"}}
+    [:div {:data-testid "sprite-preview"
+           :class (css {:position "fixed"
+                       :display "flex"
+                       :z-index 1000
+                       :align-items "center"
+                       :justify-content "center"
+                       :left "0"
+                       :right "0"
+                       :bottom "0"
+                       :top "0"
+                       :background-color "rgba(37, 37, 37, 0.9)"})}
      [preview-image frame-img {:height (:height image-size)}]]))
 
 (defn sprite-preview-modal []

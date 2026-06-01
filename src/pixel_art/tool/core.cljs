@@ -10,8 +10,6 @@
             [pixel-art.tool.shading :as shading]
             [pixel-art.tool.shape-selection :as shape-selection]))
 
-;; todo: исп полиморфизм?
-
 (def tools
   [pen/tool
    eraser/tool
@@ -26,7 +24,7 @@
 
 (def types (map :type tools))
 
-(def tools-m (zipmap types tools)) ;; todo: remove
+(def tools-m (zipmap types tools))
 
 (def options-specs (zipmap types
                            (map :options-spec tools)))

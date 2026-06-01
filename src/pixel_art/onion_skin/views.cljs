@@ -1,9 +1,10 @@
 (ns pixel-art.onion-skin.views
   (:require
-   [pixel-art.canvas :as canvas]
-   [pixel-art.onion-skin.utils :refer [get-onion-skin-frames-idx get-onion-skin-frames]]
    [pixel-art.onion-skin.events :as events]
    [pixel-art.onion-skin.subs :as subs]
+   [pixel-art.onion-skin.utils :refer [get-onion-skin-frames-idx]]
+   [pixel-art.utils.canvas :as canvas]
+   [pixel-art.model.sprite-canvas :as sprite-canvas]
    [pixel-art.views.ui-kit :refer [form form-item input-number select slider]]
    [re-frame.core :as re-frame]
    [react :as react]))
@@ -13,7 +14,7 @@
         onion-frames-idx (get-onion-skin-frames-idx sprite frames-count)]
     (. ctx (clearRect 0 0 (. canvas -width) (. canvas -height)))
     (doseq [frame-idx onion-frames-idx]
-      (canvas/draw-frame-on-single-canvas frame-idx sprite canvas))))
+      (sprite-canvas/draw-frame-on-single-canvas frame-idx sprite canvas))))
 
 (defn- hide-onion-skin [canvas]
   (canvas/clear-canvas canvas))

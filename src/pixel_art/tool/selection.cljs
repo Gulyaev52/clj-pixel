@@ -37,7 +37,7 @@
   (let [type (-> db :tool :type)]
     (commit-preview-and-init-tool db (:preview db) (init type))))
 
-(defn cut-initial-selection-from-preview-if-need [preview initial-selection pasted?] ;; todo: remove
+(defn cut-initial-selection-from-preview-if-need [preview initial-selection pasted?]
   (if (not pasted?)
     (do
       (doseq [tuple initial-selection]
@@ -48,7 +48,7 @@
 (defn- move-selection [db tool initial-mouse-down-pos event]
   (let [{:keys [prev-pos]} db
         offset-pos (merge-with - (:pos event) (or prev-pos initial-mouse-down-pos))
-        offset-x (:x offset-pos) ;; todo: desctruc
+        offset-x (:x offset-pos)
         offset-y (:y offset-pos)
         {:keys [initial-selection-image selection-image pasted?]} (:state tool)
         preview-with-deleted-initial-selection (or (:preview-with-deleted-initial-selection (:state tool))
@@ -187,7 +187,7 @@
 (re-frame/reg-event-fx
  ::past-selection
  (fn [{:keys [db]} _]
-   (if (-> db :selection-manager :selection-image) ;; todo: copied-selection? оно сущ только когда есть копирование
+   (if (-> db :selection-manager :selection-image)
      (let [{:keys [selection-image tool-type]} (:selection-manager db)
            new-tool {:type tool-type
                      :state {:mode :move-selection

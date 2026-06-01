@@ -1,9 +1,10 @@
 (ns pixel-art.new-project-modal.events
-  (:require [pixel-art.project-settings :as project-settings]
+  (:require [pixel-art.example-project :refer [get-example-project+]]
+            [pixel-art.project-config :as project-config]
             [re-frame.core :as re-frame]))
 
-(defn init [opened]
-  {:opened opened
+(defn init []
+  {:opened false
    :settings {:title "Untitled" :size {:width 100 :height 100}}})
 
 (re-frame/reg-event-fx
@@ -31,14 +32,23 @@
 (re-frame/reg-event-fx
  ::create-example-project
  (fn []
-   {:fx [[:dispatch
-          [:initialize-db (project-settings/get-example-project)]]]}))
+   {:fx [[::create-example-project]]}))
 
 (re-frame/reg-event-fx
  ::create
  (fn [{:keys [db]}]
    (let [settings (-> db :new-project-modal :settings)]
      {:fx [[:dispatch
-            [:initialize-db
-             (assoc project-settings/default-palettes-and-current-colors
-                    :sprite (project-settings/create-empty-sprite (:title settings) (:size settings)))]]]})))
+            [:create-project
+             (assoc project-config/default-palettes-and-current-colors
+                    :sprite (project-config/create-empty-sprite (:title settings) (:size settings)))]]]})))
+
+(re-frame/reg-fx
+ ::create-example-project
+ (fn []
+   (.. (get-example-project+)
+       (then (fn [project]
+               (re-frame/dispatch [:create-project project])))
+       (catch (fn [_]
+                (re-frame/dispatch [:show-notification {:type "error"
+                                                        :message "Failed to create example project"}]))))))

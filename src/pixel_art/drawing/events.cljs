@@ -1,10 +1,10 @@
 (ns pixel-art.drawing.events
   (:require
-   [pixel-art.project-settings :as project-settings]
+   [pixel-art.project-config :as project-config]
    [pixel-art.tool.core :as tool]
    [re-frame.core :as re-frame]))
 
-(defn run-events-handlers [events events-handlers db event]
+(defn- run-events-handlers [events events-handlers db event]
   (->> (keep #(get events-handlers %) events)
        (reduce (fn [res h]
                  (let [new-res (h (:db res) event)]
@@ -21,7 +21,7 @@
            :mouse-down
            (let [updated-db (assoc db
                                    :initial-mouse-down-pos (:pos event)
-                                   :mouse-pos (:pos event))] ;; todo: зачем это надо
+                                   :mouse-pos (:pos event))]
              (run-events-handlers [:mouse-down :mouse-down-or-mouse-down-and-move] tool-events-handlers updated-db event))
 
            :mouse-move
@@ -55,7 +55,7 @@
  (fn [{:keys [db]} [_ delta new-scale center-pos mouse-offset-pos]]
    (let [prev-scale (:scale db)]
      (if (not= prev-scale new-scale)
-       (let [delta (if (#{project-settings/max-scale project-settings/min-scale} new-scale)
+       (let [delta (if (#{project-config/max-zoom-scale project-config/min-zoom-scale} new-scale)
                      (/ new-scale prev-scale)
                      delta)
              old-canvas-size (-> db :sprite :size (update-vals #(* % (:scale db))))

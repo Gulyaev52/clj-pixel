@@ -19,6 +19,7 @@ declare global {
       stubConfirm(returnValue: boolean): Chainable<void>;
       assertCelPreview(frameIdx: number, layerIdx: number, expectedPixels: string[][], assertMessage?: string): Chainable<void>;
       assertResizePreviewPixels(frameIdx: number, pixels: string[][], assertMessage?: string): Chainable<void>;
+      assertSpritePreviewPixels(pixels: string[][], assertMessage?: string): Chainable<void>;
       assertDownloadedPngPixels(filePath: string, pixels: string[][], assertMessage?: string): Chainable<void>;
       assertTimelineCelsAndVisiblePixels(cels: string[][][][], active: { activeFrameIdx: number; activeLayerIdx: number }, layerNames: string[]): Chainable<void>;
       assertTimelineLabels(frameCount: number, layerNames: string[]): Chainable<void>;
@@ -180,6 +181,15 @@ Cypress.Commands.add('assertResizePreviewPixels', (frameIdx: number, expectedPix
   Cypress.log({ name: 'assertResizePreviewPixels', message: assertMessage || `frame-${frameIdx}` });
 });
 
+Cypress.Commands.add('assertSpritePreviewPixels', (expectedPixels: string[][], assertMessage?: string) => {
+  assertImgPixels(
+    cy.get('[data-testid="sprite-preview"]', { log: false }).find('img', { log: false }),
+    expectedPixels,
+    assertMessage
+  );
+  Cypress.log({ name: 'assertSpritePreviewPixels', message: assertMessage || 'sprite-preview' });
+});
+
 Cypress.Commands.add('assertDownloadedPngPixels', (filePath: string, expectedPixels: string[][], assertMessage?: string) => {
   cy.readFile(filePath, 'base64', { timeout: 10000 }).then((base64: string) => {
     cy.window().then((win) => {
@@ -309,34 +319,6 @@ Cypress.on('window:before:load', function (window) {
 })
 
 // helpers
-
-
-type CanvasCoords = {
-  x: number; y: number; btn: number;
-  scaleX: number; scaleY: number; offsetX: number; offsetY: number;
-};
-
-function withCanvasCoords(
-  px: number, py: number, rightClick: boolean | undefined,
-  fn: (canvasViewport: Cypress.Chainable<JQuery>, canvasCoords: CanvasCoords) => void
-) {
-  cy.get('[data-testid="canvas-viewport"]', { log: false }).then(($vp) => {
-    cy.get('[data-testid="current-layer"]', { log: false }).then(($canvas) => {
-      const vpRect = $vp[0].getBoundingClientRect();
-      const cvRect = ($canvas[0] as HTMLCanvasElement).getBoundingClientRect();
-      const scaleX = cvRect.width / ($canvas[0] as HTMLCanvasElement).width;
-      const scaleY = cvRect.height / ($canvas[0] as HTMLCanvasElement).height;
-      const offsetX = cvRect.left - vpRect.left;
-      const offsetY = cvRect.top - vpRect.top;
-      fn(cy.get('[data-testid="canvas-viewport"]', { log: false }), {
-        x: offsetX + (px + 0.5) * scaleX,
-        y: offsetY + (py + 0.5) * scaleY,
-        btn: rightClick ? 2 : 0,
-        scaleX, scaleY, offsetX, offsetY,
-      });
-    });
-  });
-}
 
 function pixelsToMap(pixels: string[][]): Record<string, string> {
   return Object.fromEntries(pixels.flatMap((row, y) => row.map((color, x) => [`${x},${y}`, color])));

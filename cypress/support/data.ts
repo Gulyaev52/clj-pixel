@@ -47,7 +47,7 @@ export const getSpriteFromCels = (
 };
 
 export const getPixels = (width: number, height: number, color?: string) => {
-  const pixels = Array(height).fill(null).map(() => Array(width).fill([0, 0, 0, 0]));
+  const pixels = Array(height).fill(null).map(() => Array(width).fill(t));
   if (color) {
     pixels.forEach(row => row.fill(color));
   }

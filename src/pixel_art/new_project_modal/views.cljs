@@ -3,7 +3,7 @@
    [pixel-art.new-project-modal.events :as events]
    [pixel-art.new-project-modal.subs :as subs]
    [pixel-art.project-save-load.events :as project-save-load.events]
-   [pixel-art.project-settings :as project-settings]
+   [pixel-art.project-config :as project-config]
    [pixel-art.views.ui-kit :refer [button file-uploader form form-item
                                    input-number input-text modal
                                    replace-current-project-confirm]]
@@ -44,7 +44,7 @@
                     :control [input-number {:value (-> settings :size :width)
                                             :block true
                                             :min 1
-                                            :max project-settings/max-sprite-dim
+                                            :max project-config/max-sprite-dim
                                             :testid "input-project-width"
                                             :on-blur (fn [value]
                                                        (re-frame/dispatch [::events/set-width value]))}]}]
@@ -52,7 +52,7 @@
                     :control [input-number {:value (-> settings :size :height)
                                             :block true
                                             :min 1
-                                            :max project-settings/max-sprite-dim
+                                            :max project-config/max-sprite-dim
                                             :testid "input-project-height"
                                             :on-blur (fn [value]
                                                        (re-frame/dispatch [::events/set-height value]))}]}]]])))

@@ -10,7 +10,3 @@
                          (inc (min (+ current-frame-idx (:next frames-count))
                                    (dec (count frames)))))]
     (set (concat prev-idxs next-idxs))))
-
-(defn get-onion-skin-frames [sprite frames-count]
-  (->> (get-onion-skin-frames-idx sprite frames-count)
-       (map #(sprite/get-frame-cels % sprite))))

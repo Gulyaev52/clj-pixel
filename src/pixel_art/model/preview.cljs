@@ -37,8 +37,5 @@
    (let [setColor (.-setColor preview)]
      (setColor preview x y color))))
 
-(defn clear [preview]
-  (js/Uint32Array. (.-length preview)))
-
 (defn changed? [^js preview]
   (. preview -changed))

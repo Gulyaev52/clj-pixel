@@ -1,10 +1,7 @@
 (ns pixel-art.utils.geometry
   (:require
    ["./shapeTool.js" :as shape-tool]
-   [clojure.string :as string]
-   [sc.api :as api]))
-
-;; todo: pixels?
+   [clojure.string :as string]))
 
 (defn get-ordered-rectangle-points [points]
   {:top-left {:x (apply min (map :x points))
@@ -69,7 +66,7 @@
 (defn get-uniform-line-pixels [p1 p2]
   (shape-tool/getUniformLinePixels (:x p1) (:x p2) (:y p1) (:y p2)))
 
-(defn get-circle-pixels [p1 p2 pixel-size f] ;; todo: тут точно надо функцию?
+(defn get-circle-pixels [p1 p2 pixel-size f]
   (shape-tool/getCirclePixels (:x p1) (:y p1) (:x p2) (:y p2) pixel-size f))
 
 (defn get-scaled-points

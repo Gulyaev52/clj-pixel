@@ -1,15 +1,15 @@
-(ns pixel-art.events
+(ns pixel-art.app.events
   (:require
-   [pixel-art.project-save-load.backup :as backup]
-   [pixel-art.db :as db]
+   [pixel-art.db.core :as db]
+   [pixel-art.db.utils :as db.utils]
    [pixel-art.drawing.events]
+   [pixel-art.example-project :refer [get-example-project+]]
    [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
-   [pixel-art.project-save-load.events :as project-save-load]
-   [pixel-art.project-settings :as project-settings]
+   [pixel-art.project-config :as project-config :refer [fallback-project]]
+   [pixel-art.backup :as backup]
    [pixel-art.re-pressed.core :as rp]
    [pixel-art.tool.core :as tool]
-   [pixel-art.tool.utils :refer [check-unsaved-changes-exist
-                                 commit-preview-and-init-tool]]
+   [pixel-art.tool.utils :refer [commit-preview-and-init-tool]]
    [pixel-art.utils.fx]
    [pixel-art.utils.fx.local-storage :as local-storage]
    [pixel-art.utils.interceptor :refer [on-paths-change]]
@@ -23,12 +23,9 @@
 
 (re-frame/reg-event-fx
  ::start-app
- (fn [_ [_ initial-app-data-for-test]]
-   (if initial-app-data-for-test
-     {:db {:initial-loading true}
-      :fx [[:dispatch [:initialize-db initial-app-data-for-test]]]}
-     {:db {:initial-loading true}
-      :fx [[::load-initial-data]]})))
+ (fn []
+   {:db {:initial-loading true}
+    :fx [[::load-initial-data]]}))
 
 (re-frame/reg-fx
  ::load-initial-data
@@ -36,7 +33,9 @@
    (.. (backup/init-db+)
        (then backup/get-backup+)
        (then (fn [backup]
-               (re-frame/dispatch [:initialize-db backup]))) ;; todo: fix
+               (if backup backup (get-example-project+))))
+       (then (fn [project]
+               (re-frame/dispatch [:initialize-db project])))
        (catch (fn []
                 (re-frame/dispatch [:initialize-db]))))))
 
@@ -74,21 +73,23 @@
  (fn [{:keys [viewport-size] :as cofx} [_ initial-app-data]]
    (let [saved-data (into {} (filter (fn [[_ v]] (some? v)) (get cofx saved-settings-local-storage-key)))
          initial-db (if initial-app-data
-                      (db/get-db (merge initial-app-data saved-data) viewport-size)
-                      (db/get-db (merge (assoc project-settings/default-palettes-and-current-colors
-                                               :sprite (project-settings/create-empty-sprite "Untitled" {:width 4 :height 4})
-                                               :new-project-modal-opened false)
-                                        saved-data)
-                                 viewport-size))]
+                      (db/create (merge initial-app-data saved-data) viewport-size)
+                      (db/create (merge fallback-project saved-data) viewport-size))]
      {:db initial-db
       :fx [[:dispatch [::rp/add-keyboard-event-listener "keydown"]]
            dispatch-set-keydown-rules
-           [:dispatch-interval {:dispatch [::project-save-load/save-backup-if-need]
+           [:dispatch-interval {:dispatch [::backup/save-backup-if-need "Auto-backup"]
                                 :id :backup
-                                :ms project-settings/auto-backup-in-ms ;; 1 min
+                                :ms project-config/auto-backup-in-ms
                                 }]
            [::show-warning-when-leave-with-unsaved-changes]
            [::register-global-interceptors]]})))
+
+(re-frame/reg-event-fx
+ :create-project
+ (fn [_ [_ project]]
+   {:fx [[:dispatch [:initialize-db project]]
+         [:dispatch [::backup/save-backup]]]}))
 
 (re-frame/reg-fx
  ::register-global-interceptors
@@ -103,7 +104,7 @@
                                         :value fields}]]})))))
 
 (defn show-warning-when-leave-with-unsaved-changes [e]
-  (when (check-unsaved-changes-exist @re-frame.db/app-db)
+  (when (db.utils/check-unsaved-changes-exist @re-frame.db/app-db)
     (let [confirmMessage "Your current sprite has unsaved changes. Are you sure you want to quit?"]
       (when-let [e (or e (. js/window -event))]
         (set! (. e -returnValue) confirmMessage)
@@ -115,8 +116,6 @@
    (. js/window (removeEventListener "beforeunload" show-warning-when-leave-with-unsaved-changes))
    (. js/window (addEventListener "beforeunload" show-warning-when-leave-with-unsaved-changes))))
 
-;; todo: move bellow actions?
-
 (re-frame/reg-event-fx
  ::select-tool
  (fn [{:keys [db]} [_ tool-type]]
@@ -124,7 +123,7 @@
      (commit-preview-and-init-tool db (:preview db) tool))))
 
 (re-frame/reg-event-fx
- ::change-tool-option ;; todo: set
+ ::set-tool-option
  (fn [{:keys [db]} [_ field value]]
    (let [tool-type (-> db :tool :type)]
      {:db (assoc-in db [:tools-options tool-type field] value)})))

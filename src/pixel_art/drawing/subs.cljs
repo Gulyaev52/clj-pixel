@@ -1,6 +1,6 @@
 (ns pixel-art.drawing.subs
   (:require
-   [pixel-art.project-settings :as project-settings]
+   [pixel-art.project-config :as project-config]
    [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub
@@ -25,7 +25,7 @@
    (some? (:start-viewport-scroll db))))
 
 (re-frame/reg-sub
- ::mouse-was-down ;; todo: rename?
+ ::mouse-was-down
  (fn [db]
    (some? (:initial-mouse-down-pos db))))
 
@@ -43,4 +43,4 @@
  (fn [db]
    (let [scale (:scale db)]
      (when (:pixels-grid-enabled db)
-       (str "data:image/svg+xml,%3Csvg width='" scale "' height='" scale "' opacity='" (min (/ scale project-settings/max-scale) 1) "' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='" scale "' height='" scale "' vector-effect='non-scaling-stroke' fill='transparent' stroke='blue' /%3E%3C/svg%3E")))))
+       (str "data:image/svg+xml,%3Csvg width='" scale "' height='" scale "' opacity='" (min (/ scale project-config/max-zoom-scale) 1) "' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='" scale "' height='" scale "' vector-effect='non-scaling-stroke' fill='transparent' stroke='blue' /%3E%3C/svg%3E")))))

@@ -47,6 +47,8 @@ describe('Timeline', () => {
         [[[t, t], [t, g]], [[g, t], [t, t]]],
       ], { activeFrameIdx: 1, activeLayerIdx: 1 }, ['Layer 1', 'Layer 2']);
       cy.get('[data-testid="input-frame-duration"]').should('have.value', '100', 'frame-1 duration is 100');
+      // scroll the sprite into view so the centered canvas is captured in the screenshot
+      cy.get('[data-testid="canvas-layers"]').scrollIntoView();
       cy.screenshot("timeline");
     });
   });
@@ -534,13 +536,15 @@ describe('Timeline', () => {
       cy.get('[data-testid="btn-toggle-onion-skin"]').click();
       cy.get('[data-testid="btn-toggle-onion-skin"]').should('have.attr', 'title', 'disable onion skin');
 
-      // Frame-0 active → shows frame-1 (layer-0: g at bottom-right)
-      cy.assertOnionSkinPixels([[t, t], [t, g]], 'frame-1 pixels visible when frame-0 active');
+      // Frame-0 active → shows frame-1 composited (layer-0 g@(1,1) + layer-1 g@(0,0))
+      cy.assertOnionSkinPixels([[g, t], [t, g]], 'frame-1 pixels visible when frame-0 active');
+      // scroll the sprite into view so the centered canvas (with onion skin) is captured
+      cy.get('[data-testid="canvas-layers"]').scrollIntoView();
       cy.screenshot("onion-skin");
 
-      // Navigate to frame-1 → shows frame-0 (layer-0: r at top-left)
+      // Navigate to frame-1 → shows frame-0 composited (layer-0 r@(0,0) + layer-1 r@(1,1))
       cy.get('[data-testid="cel-1-0"]').click();
-      cy.assertOnionSkinPixels([[r, t], [t, t]], 'frame-0 pixels visible when frame-1 active');
+      cy.assertOnionSkinPixels([[r, t], [t, r]], 'frame-0 pixels visible when frame-1 active');
 
       // Disable → canvas clears
       cy.get('[data-testid="btn-toggle-onion-skin"]').click();
@@ -554,13 +558,14 @@ describe('Timeline', () => {
       cy.get('[data-testid="btn-toggle-onion-skin"]').click();
       cy.get('[data-testid="btn-onion-skin-settings"]').click();
 
-      // Next Frames = 2 → #{1,2} iterates [1,2]; frame-2 drawn last → shows frame-2 layer-0 (blue at top-right)
+      // Next Frames = 2 → #{1,2} iterates [1,2]; both frames composited and stacked
+      // (frame-2 drawn last): frame-1 g@(0,0) + frame-2 y@(1,0) + frame-2 y@(1,1) over frame-1 g@(1,1)
       cy.get('[data-testid="input-next-frames"]').clear().type('2').blur();
-      cy.assertOnionSkinPixels([[t, y], [t, t]], 'frame-2 visible when next=2');
+      cy.assertOnionSkinPixels([[g, y], [t, y]], 'frames 1 and 2 stacked when next=2');
 
-      // Next Frames = 1 (restore) → only #{1} → shows frame-1 layer-0 (green at bottom-right)
+      // Next Frames = 1 (restore) → only #{1} → shows frame-1 composited (g@(0,0) + g@(1,1))
       cy.get('[data-testid="input-next-frames"]').clear().type('1').blur();
-      cy.assertOnionSkinPixels([[t, t], [t, g]], 'frame-1 visible when next=1');
+      cy.assertOnionSkinPixels([[g, t], [t, g]], 'frame-1 visible when next=1');
 
       // Opacity: default 0.3, right ×2 → 0.5
       // rc-slider is a controlled component: must wait for re-render between key presses
@@ -577,9 +582,9 @@ describe('Timeline', () => {
       cy.get('#onion-skin').should('have.css', 'z-index', '0');
 
       // Navigate to frame-2 (Ant Design Popover auto-closes on outside click)
-      // frame-2 is last frame: no next frames; prev=1 shows frame-1 layer-0
+      // frame-2 is last frame: no next frames; prev=1 shows frame-1 composited (g@(0,0) + g@(1,1))
       cy.get('[data-testid="cel-2-0"]').click();
-      cy.assertOnionSkinPixels([[t, t], [t, g]], 'frame-1 visible when frame-2 active (prev=1)');
+      cy.assertOnionSkinPixels([[g, t], [t, g]], 'frame-1 visible when frame-2 active (prev=1)');
 
       // Reopen settings
       cy.get('[data-testid="btn-onion-skin-settings"]').click();
@@ -588,9 +593,9 @@ describe('Timeline', () => {
       cy.get('[data-testid="input-prev-frames"]').clear().type('0').blur();
       cy.assertOnionSkinPixels([[t, t], [t, t]], 'canvas empty when prev=0');
 
-      // Previous Frames = 1 (restore) → shows frame-1 layer-0
+      // Previous Frames = 1 (restore) → shows frame-1 composited (g@(0,0) + g@(1,1))
       cy.get('[data-testid="input-prev-frames"]').clear().type('1').blur();
-      cy.assertOnionSkinPixels([[t, t], [t, g]], 'frame-1 visible with prev=1');
+      cy.assertOnionSkinPixels([[g, t], [t, g]], 'frame-1 visible with prev=1');
     });
   });
 

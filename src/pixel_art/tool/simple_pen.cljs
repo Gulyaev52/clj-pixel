@@ -5,7 +5,7 @@
                                  get-tool-options resize-pixel
                                  with-highlight-cel-under-cursor]]
    [pixel-art.utils.geometry :as geometry]
-   [pixel-art.model.preview :as preview])) ;; todo: rename
+   [pixel-art.model.preview :as preview]))
 
 (defn- get-interpolated-pixels
   "The pen movement is too fast for the mousemove frequency, there is a gap between the

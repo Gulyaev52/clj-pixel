@@ -1,34 +1,32 @@
 (ns pixel-art.sprite-resizer.views
   (:require
-   [pixel-art.project-settings :as project-settings]
+   [pixel-art.project-config :as project-config]
    [pixel-art.sprite-resizer.subs :as subs]
    [pixel-art.sprite-resizer.events :as events]
    [pixel-art.views.preview :refer [previews-container previews-grid-items]]
-   [pixel-art.views.ui-kit :refer [checkbox form form-item input-number modal
-                                   use-theme-token]]
-   [re-frame.core :as re-frame])
-  (:require-macros [pixel-art.views.reagent :refer [def-func-component]]))
+   [pixel-art.views.ui-kit :refer [checkbox form form-item input-number modal]]
+   [re-frame.core :as re-frame]
+   [shadow.css :refer (css)]))
 
-(def-func-component anchor [settings]
-  (let [theme-token (use-theme-token)]
-    [:div {:style {:display :grid
-                   :grid-template-columns "min-content min-content min-content"
-                   :gap "1px"
-                   :opacity (when (:resize-content settings) "0.6")}}
-     (for [y [:top :center :bottom]
-           x [:left :center :right]]
-       ^{:key (str y "-y-" x "-x")}
-       [:div {:data-testid (str "anchor-" (name y) "-" (name x))
-              :title (str (name y) "/" (name x))
-              :style {:border-radius "4px"
-                      :width "24px"
-                      :height "24px"
-                      :background-color (if (and (not (:resize-content settings))
-                                                 (= {:x x :y y} (:anchor settings)))
-                                          (.-colorPrimaryActive theme-token)
-                                          "#444")}
-              :on-click (fn []
-                          (re-frame/dispatch [::events/set-settings-option :anchor {:x x :y y}]))}])]))
+(defn anchor [settings]
+  [:div {:class (css {:display "grid"
+                      :grid-template-columns "min-content min-content min-content"
+                      :gap "1px"})
+         :style {:opacity (when (:resize-content settings) "0.6")}}
+   (for [y [:top :center :bottom]
+         x [:left :center :right]]
+     ^{:key (str y "-y-" x "-x")}
+     [:div {:data-testid (str "anchor-" (name y) "-" (name x))
+            :title (str (name y) "/" (name x))
+            :class [(css {:border-radius "4px"
+                          :width "24px"
+                          :height "24px"
+                          :background-color "#444"})
+                    (when (and (not (:resize-content settings))
+                               (= {:x x :y y} (:anchor settings)))
+                      (css {:background-color "var(--pixel-color-primary-active)"}))]
+            :on-click (fn []
+                        (re-frame/dispatch [::events/set-settings-option :anchor {:x x :y y}]))}])])
 
 (defn sprite-resizer-modal []
   (when @(re-frame/subscribe [::subs/opened])
@@ -46,7 +44,7 @@
         [form-item {:label "Width"
                     :control [input-number {:value (-> settings :target-size :width)
                                             :type "number"
-                                            :max project-settings/max-sprite-dim
+                                            :max project-config/max-sprite-dim
                                             :testid "resize-width"
                                             :block true
                                             :on-blur (fn [value]
@@ -57,7 +55,7 @@
                     :control [input-number {:value (-> settings :target-size :height)
                                             :type "number"
                                             :testid "resize-height"
-                                            :max project-settings/max-sprite-dim
+                                            :max project-config/max-sprite-dim
                                             :block true
                                             :on-blur (fn [value]
                                                        (re-frame/dispatch [::events/set-settings-option

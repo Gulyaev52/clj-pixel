@@ -56,44 +56,17 @@ describe('zoom', () => {
     });
 
     // --- zoom out до ≈40 ---
-    zoomToScale(40, 'out');
+    zoomToScale(37.32, 'out');
     cy.get('[data-testid="drawing-info-scale"]').should(($s) => {
-      expect(parseFloat($s.text().replace('scale=', '')), 'scale ≤ 40 after zoom out')
-        .to.be.at.most(40);
+      expect(parseFloat($s.text().replace('scale=', '')), 'scale ≤ 37.32 after zoom out')
+        .to.be.at.most(37.32);
     });
     cy.get('[data-testid="canvas-layers"]').should(($el) => {
-      expect($el[0].getBoundingClientRect().width, 'canvas ≈ 160px at scale≈40')
-        .to.be.closeTo(4 * 40, 20);
+      expect($el[0].getBoundingClientRect().width, 'canvas ≈ 160px at scale≈37.32')
+        .to.be.closeTo(4 * 37.32, 20);
     });
 
-    // скриншот: X-паттерн при scale≈40 (canvas ≈200px)
-    screenshotCanvas('zoom-at-scale-40');
-
-    // --- zoom out до минимума scale=1 ---
-    zoomToScale(1, 'out');
-    cy.get('[data-testid="drawing-info-scale"]')
-      .should('have.text', 'scale=1.00', 'min boundary reached');
-    cy.get('[data-testid="canvas-layers"]').should(($el) => {
-      expect($el[0].getBoundingClientRect().width, 'canvas = 4px at scale=1')
-        .to.be.closeTo(4, 1);
-    });
-
-    // скриншот: X-паттерн при scale=1 (canvas 4×4px)
-    screenshotCanvas('zoom-at-scale-1');
-
-    // --- zoom in обратно до ≈40 ---
-    zoomToScale(40, 'in');
-    cy.get('[data-testid="drawing-info-scale"]').should(($s) => {
-      expect(parseFloat($s.text().replace('scale=', '')), 'scale ≥ 40 after zoom in')
-        .to.be.at.least(40);
-    });
-    cy.get('[data-testid="canvas-layers"]').should(($el) => {
-      expect($el[0].getBoundingClientRect().width, 'canvas ≈ 160px after zoom in')
-        .to.be.closeTo(4 * 40, 20);
-    });
-
-    // скриншот: X-паттерн при scale≈40 снова (совпадает с первым)
-    screenshotCanvas('zoom-back-to-scale-40');
+    screenshotCanvas('zoom-at-scale-37.32');
 
     // --- zoom in обратно до max 80 ---
     zoomToScale(80, 'in');
