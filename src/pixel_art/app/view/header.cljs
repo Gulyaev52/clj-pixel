@@ -87,13 +87,13 @@
          "Load from file"])]
      [:<>
       [button {:on-click (fn [] (re-frame/dispatch [::export-modal.events/set-opened true]))
-               :data-testid "btn-export"}
+               :data-testid "btn-open-export-modal"}
        "Export"]
       [export-modal]]
      [:<>
       [sprite-resizer-modal]
       [button {:on-click (fn [] (re-frame/dispatch [::sprite-resizer.events/set-opened true]))
-               :data-testid "btn-resize-canvas"}
+               :data-testid "btn-open-resize-modal"}
        "Resize canvas"]]
      [:<>
       [keyboard-shortcuts-modal]

@@ -4,7 +4,7 @@ import { r, t } from '../support/colors';
 describe('Resize canvas', () => {
   it('anchor positions correctly translate pixels', () => {
     cy.startApp(_2x2Seed);
-    cy.get('[data-testid="btn-resize-canvas"]').click();
+    cy.get('[data-testid="btn-open-resize-modal"]').click();
 
     cy.get('[data-testid="resize-width"]').clear().type('4').blur();
     cy.get('[data-testid="resize-height"]').clear().type('4').blur();
@@ -35,7 +35,7 @@ describe('Resize canvas', () => {
 
   it('resize → undo reverts size and pixels', () => {
     cy.startApp(_2x2Seed);
-    cy.get('[data-testid="btn-resize-canvas"]').click();
+    cy.get('[data-testid="btn-open-resize-modal"]').click();
     cy.get('[data-testid="resize-width"]').clear().type('4').blur();
     cy.get('[data-testid="resize-height"]').clear().type('4').blur();
     cy.get('[data-testid="anchor-top-left"]').click();
@@ -61,7 +61,12 @@ describe('Resize canvas', () => {
       ..._4x4EmptySeed,
       sprite: getSpriteFromPixels([[r, r], [r, r]])
     });
-    cy.get('[data-testid="btn-resize-canvas"]').click();
+    // Regression: hovering populates :visual-effects sized to the OLD sprite. Resizing
+    // to a size whose buffer length isn't a multiple of 4*newWidth used to crash
+    // use-visual-effects-comp with ImageData IndexSizeError (2×2 buffer = 16 bytes,
+    // 4*3 = 12, 16 % 12 ≠ 0).
+    cy.mouseMoveOnCanvas({ x: 0, y: 0 });
+    cy.get('[data-testid="btn-open-resize-modal"]').click();
 
     cy.get('[data-testid="resize-width"]').clear().type('4').blur();
     cy.get('[data-testid="resize-height"]').clear().type('4').blur();

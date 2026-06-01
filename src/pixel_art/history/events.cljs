@@ -9,9 +9,7 @@
  (fn [{:keys [db viewport-size]} _]
    (if (history/check-undo-available? db)
      {:db (-> db
-              (assoc :tool (tool/init (-> db :tool :type))
-                     :visual-effects nil
-                     :preview nil)
+              (assoc :tool (tool/init (-> db :tool :type)))
               (history/undo viewport-size))}
      {:db db})))
 
@@ -21,8 +19,6 @@
  (fn [{:keys [db viewport-size]} _]
    (if (history/check-redo-available? db)
      {:db (-> db
-              (assoc :tool (tool/init (-> db :tool :type))
-                     :visual-effects nil
-                     :preview nil)
+              (assoc :tool (tool/init (-> db :tool :type)))
               (history/redo viewport-size))}
      {:db db})))

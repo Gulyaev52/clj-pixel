@@ -42,7 +42,7 @@
       text])))
 
 (defn form [& items]
-  (into [space {:direction "vertical" :class-name (css {:width "100%"})}] items))
+  (into [space {:direction "vertical" :style {:width "100%"}}] items))
 
 (defn form-item [{:keys [label control]}]
   [:div {:class (css {:display "grid"

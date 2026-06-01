@@ -13,5 +13,8 @@
   (-> db
       (assoc :sprite sprite)
       (#(if (not= (:size sprite) (:size prev-sprite))
-          (merge % (get-initial-drawing-settings (:size sprite) viewport-size))
+          (-> %
+              (assoc :visual-effects nil)
+              (assoc :preview nil)
+              (merge (get-initial-drawing-settings (:size sprite) viewport-size)))
           %))))
