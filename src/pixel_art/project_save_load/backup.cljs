@@ -21,8 +21,7 @@
                (fn [event]
                  (let [db (.. event -target -result)
                        _ (.. db (createObjectStore "pixel" #js {"keyPath" "id"}))]
-                   (reset! !db db)
-                   (resolve db))))
+                   (reset! !db db))))
 
          (set! (. open-request -onsuccess) (fn [event]
                                              (let [db (.. event -target -result)]

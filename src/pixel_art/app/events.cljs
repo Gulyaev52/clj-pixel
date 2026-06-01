@@ -1,12 +1,13 @@
 (ns pixel-art.app.events
   (:require
-   [pixel-art.db.utils :as db.utils]
    [pixel-art.db.core :as db]
+   [pixel-art.db.utils :as db.utils]
    [pixel-art.drawing.events]
+   [pixel-art.example-project :refer [get-example-project+]]
    [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
+   [pixel-art.project-config :as project-config]
    [pixel-art.project-save-load.backup :as backup]
    [pixel-art.project-save-load.events :as project-save-load]
-   [pixel-art.project-config :as project-config]
    [pixel-art.re-pressed.core :as rp]
    [pixel-art.tool.core :as tool]
    [pixel-art.tool.utils :refer [commit-preview-and-init-tool]]
@@ -23,12 +24,9 @@
 
 (re-frame/reg-event-fx
  ::start-app
- (fn [_ [_ initial-app-data-for-test]]
-   (if initial-app-data-for-test
-     {:db {:initial-loading true}
-      :fx [[:dispatch [:initialize-db initial-app-data-for-test]]]}
-     {:db {:initial-loading true}
-      :fx [[::load-initial-data]]})))
+ (fn []
+   {:db {:initial-loading true}
+    :fx [[::load-initial-data]]}))
 
 (re-frame/reg-fx
  ::load-initial-data
@@ -36,7 +34,9 @@
    (.. (backup/init-db+)
        (then backup/get-backup+)
        (then (fn [backup]
-               (re-frame/dispatch [:initialize-db backup])))
+               (if backup backup (get-example-project+))))
+       (then (fn [project]
+               (re-frame/dispatch [:initialize-db project])))
        (catch (fn []
                 (re-frame/dispatch [:initialize-db]))))))
 

@@ -1,17 +1,14 @@
 (ns pixel-art.new-project-modal.events
-  (:require [pixel-art.example-project :as example-project]
+  (:require [pixel-art.example-project :refer [get-example-project+]]
             [pixel-art.project-config :as project-config]
-            [pixel-art.project-save-load.sprite-serialization :as sprite-serialization]
             [re-frame.core :as re-frame]))
 
 (re-frame/reg-fx
  ::load-example-project
  (fn []
-   (.. (sprite-serialization/deserialize+ example-project/github-octopus-sprite)
-       (then (fn [sprite]
-               (assoc project-config/default-palettes-and-current-colors :sprite sprite)))
-       (then (fn [sprite]
-               (re-frame/dispatch [:initialize-db sprite])))
+   (.. (get-example-project+)
+       (then (fn [project]
+               (re-frame/dispatch [:initialize-db project])))
        (catch (fn [_]
                 (re-frame/dispatch [:show-notification {:type "error"
                                                         :message "Failed to load example project"}]))))))

@@ -1,4 +1,7 @@
-(ns pixel-art.example-project)
+(ns pixel-art.example-project 
+  (:require
+    [pixel-art.project-config :refer [default-palettes-and-current-colors]]
+    [pixel-art.project-save-load.sprite-serialization :as sprite-serialization]))
 
 (def github-octopus-sprite
   {:title "Example",
@@ -37,3 +40,8 @@
    :layers
    [{:visible? true, :automatic-linking? false, :name "Octopus"}
     {:visible? true, :automatic-linking? false, :name "Background"}]})
+
+(defn get-example-project+ []
+  (.. (sprite-serialization/deserialize+ github-octopus-sprite)
+      (then (fn [sprite]
+              (assoc default-palettes-and-current-colors :sprite sprite)))))
