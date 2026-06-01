@@ -6,8 +6,7 @@
    [pixel-art.example-project :refer [get-example-project+]]
    [pixel-art.keyboard-shortcuts :as keyboard-shortcuts]
    [pixel-art.project-config :as project-config :refer [fallback-project]]
-   [pixel-art.project-save-load.backup :as backup]
-   [pixel-art.project-save-load.events :as project-save-load]
+   [pixel-art.backup :as backup]
    [pixel-art.re-pressed.core :as rp]
    [pixel-art.tool.core :as tool]
    [pixel-art.tool.utils :refer [commit-preview-and-init-tool]]
@@ -79,7 +78,7 @@
      {:db initial-db
       :fx [[:dispatch [::rp/add-keyboard-event-listener "keydown"]]
            dispatch-set-keydown-rules
-           [:dispatch-interval {:dispatch [::project-save-load/save-backup "Auto-backup"]
+           [:dispatch-interval {:dispatch [::backup/save-backup-if-need "Auto-backup"]
                                 :id :backup
                                 :ms project-config/auto-backup-in-ms
                                 }]
@@ -90,7 +89,7 @@
  :create-project
  (fn [_ [_ project]]
    {:fx [[:dispatch [:initialize-db project]]
-         [:dispatch [::project-save-load/save-backup]]]}))
+         [:dispatch [::backup/save-backup]]]}))
 
 (re-frame/reg-fx
  ::register-global-interceptors

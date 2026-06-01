@@ -1,6 +1,6 @@
 (ns pixel-art.project-save-load.events
   (:require
-   [pixel-art.project-save-load.backup :as backup]
+   [pixel-art.backup :as backup]
    [pixel-art.project-save-load.sprite-serialization :as sprite-serialization]
    [pixel-art.db.utils :as db.utils]
    [re-frame.core :as re-frame]))
@@ -58,29 +58,6 @@
  ::save-in-browser
  (fn [{:keys [db]}]
    {:db db
-    :fx [[::save-backup {:backup (select-keys db [:sprite])
-                         :success-message "Successfully saved!"
-                         :failure-message "Something wrong!"}]]}))
-
-(re-frame/reg-event-fx
- ::save-backup
- (fn [{:keys [db]} [_ success-message]]
-   {:db db
-    :fx [[::save-backup {:backup (select-keys db [:sprite])
-                         :success-message success-message}]]}))
-
-(re-frame/reg-event-fx
- ::handle-save-backup-result
- (fn [{:keys [db]} [_ type message]]
-   {:db (if (= type :success) (db.utils/mark-unsaved-changes-saved db) db)
-    :fx [[:show-notification {:type type
-                              :message message}]]}))
-
-(re-frame/reg-fx
- ::save-backup
- (fn [{:keys [backup success-message failure-message]}]
-   (. (backup/put-backup+ @backup/!db backup)
-      (then #(when success-message
-               (re-frame/dispatch [::handle-save-backup-result :success success-message]))
-            #(when failure-message
-               (re-frame/dispatch [::handle-save-backup-result :error failure-message]))))))
+    :fx [[::backup/save-backup {:backup (select-keys db [:sprite])
+                                :success-message "Successfully saved!"
+                                :failure-message "Something wrong!"}]]}))
