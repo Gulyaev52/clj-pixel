@@ -149,9 +149,6 @@
         (#(update-cel (fn [_] updated-current-cel) current-cel-pos %))
         (#(update-cels (fn [cel] (assoc cel :pixels (:pixels updated-current-cel))) linked-cels-pos %)))))
 
-(defn set-current-cel-from-pixels-map [pixels-map sprite]
-  (update-current-cel-and-linked #(cel/set-pixels-from-map pixels-map %) sprite))
-
 (defn set-current-cel-pixels [pixels sprite]
   (update-current-cel-and-linked #(cel/set-pixels pixels %) sprite))
 
