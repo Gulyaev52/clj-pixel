@@ -23,6 +23,15 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      # Cache shadow-cljs' Maven deps + compile cache
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2
+            .shadow-cljs
+          key: cljs-${{ runner.os }}-${{ hashFiles('shadow-cljs.edn') }}
+          restore-keys: cljs-${{ runner.os }}-
+      - run: npm ci
       - run: npm run release
       - run: npm run css
       - uses: actions/upload-artifact@v4
@@ -31,14 +40,14 @@ jobs:
           path: |
             resources/public/js/compiled
             resources/public/css
-          retention-days: 7
+          retention-days: 1
 
   e2e:
     name: E2E (Cypress)
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4          # committed static assets (index.html, gif.js, imgs)
+      - uses: actions/checkout@v4 # committed static assets (index.html, gif.js, imgs)
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
