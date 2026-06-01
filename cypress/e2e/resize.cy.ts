@@ -64,23 +64,23 @@ describe('Resize canvas', () => {
     // Regression: hovering populates :visual-effects sized to the OLD sprite. Resizing
     // to a size whose buffer length isn't a multiple of 4*newWidth used to crash
     // use-visual-effects-comp with ImageData IndexSizeError (2×2 buffer = 16 bytes,
-    // 4*3 = 12, 16 % 12 ≠ 0).
+    // 4*6 = 24, 16 % 24 ≠ 0).
     cy.mouseMoveOnCanvas({ x: 0, y: 0 });
     cy.get('[data-testid="btn-open-resize-modal"]').click();
 
-    cy.get('[data-testid="resize-width"]').clear().type('4').blur();
-    cy.get('[data-testid="resize-height"]').clear().type('4').blur();
+    cy.get('[data-testid="resize-width"]').clear().type('6').blur();
+    cy.get('[data-testid="resize-height"]').clear().type('6').blur();
 
     cy.get('[data-testid="checkbox-resize-content"]').click();
 
     cy.assertResizePreviewPixels(0,
-      [[r, r, r, r], [r, r, r, r], [r, r, r, r], [r, r, r, r]],
+      [[r, r, r, r, r, r], [r, r, r, r, r, r], [r, r, r, r, r, r], [r, r, r, r, r, r], [r, r, r, r, r, r], [r, r, r, r, r, r]],
       'resize contents preview');
 
     cy.get('[data-testid="btn-resize"]').click();
 
     cy.assertTimelineCelsAndVisiblePixels(
-      [[[[r, r, r, r], [r, r, r, r], [r, r, r, r], [r, r, r, r]]]],
+      [[[[r, r, r, r, r, r], [r, r, r, r, r, r], [r, r, r, r, r, r], [r, r, r, r, r, r], [r, r, r, r, r, r], [r, r, r, r, r, r]]]],
       { activeFrameIdx: 0, activeLayerIdx: 0 },
       ['Layer 1']
     );
