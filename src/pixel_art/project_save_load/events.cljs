@@ -23,22 +23,10 @@
 (re-frame/reg-event-fx
  ::load-from-file
  (fn [_ [_ file-desc]]
-   {:fx [[::deserialize-from-file file-desc]]}))
-
-(re-frame/reg-event-fx
- ::deserialize-success
- (fn [{:keys [db]} [_ sprite]]
-   {:fx [[:dispatch [:initialize-db
-                     (merge {:sprite sprite}
-                            (select-keys db [:palettes :primary-color :secondary-color]))]]]}))
-
-(re-frame/reg-event-fx
- ::deserialize-from-file-error
- (fn [_ [_ error]]
-   {:fx [[:show-alert error]]}))
+   {:fx [[::load-from-file file-desc]]}))
 
 (re-frame/reg-fx
- ::deserialize-from-file
+ ::load-from-file
  (fn [file-desc]
    (.. (js/Promise. (fn [resolve]
                       (-> (. js/JSON (parse (:content file-desc)))
@@ -50,9 +38,21 @@
                   (then (fn [sprite]
                           (assoc project :sprite sprite))))))
        (then (fn [res]
-               (re-frame/dispatch [::deserialize-success (:sprite res)])))
+               (re-frame/dispatch [::load-from-file-success (:sprite res)])))
        (catch (fn []
-                (re-frame/dispatch [::deserialize-from-file-error "invalid format of file"]))))))
+                (re-frame/dispatch [::load-from-file-error "invalid format of file"]))))))
+
+(re-frame/reg-event-fx
+ ::load-from-file-success
+ (fn [{:keys [db]} [_ sprite]]
+   {:fx [[:dispatch [:create-project
+                     (merge {:sprite sprite}
+                            (select-keys db [:palettes :primary-color :secondary-color]))]]]}))
+
+(re-frame/reg-event-fx
+ ::load-from-file-error
+ (fn [_ [_ error]]
+   {:fx [[:show-alert error]]}))
 
 (re-frame/reg-event-fx
  ::save-in-browser
@@ -63,13 +63,11 @@
                          :failure-message "Something wrong!"}]]}))
 
 (re-frame/reg-event-fx
- ::save-backup-if-need
- (fn [{:keys [db]}]
-   (if (db.utils/check-unsaved-changes-exist db)
-     {:db db
-      :fx [[::save-backup {:backup (select-keys db [:sprite])
-                           :success-message "Auto-backup"}]]}
-     {})))
+ ::save-backup
+ (fn [{:keys [db]} [_ success-message]]
+   {:db db
+    :fx [[::save-backup {:backup (select-keys db [:sprite])
+                         :success-message success-message}]]}))
 
 (re-frame/reg-event-fx
  ::handle-save-backup-result
@@ -82,7 +80,7 @@
  ::save-backup
  (fn [{:keys [backup success-message failure-message]}]
    (. (backup/put-backup+ @backup/!db backup)
-      (then (when success-message
-              (re-frame/dispatch [::handle-save-backup-result :success success-message]))
+      (then #(when success-message
+               (re-frame/dispatch [::handle-save-backup-result :success success-message]))
             #(when failure-message
-               (re-frame/dispatch [::handle-save-backup-result :error success-message]))))))
+               (re-frame/dispatch [::handle-save-backup-result :error failure-message]))))))

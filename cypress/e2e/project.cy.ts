@@ -2,24 +2,35 @@ import { _4x4EmptySeed, twoFramesTwoLayersSeed } from '../support/data';
 import { g, r, t } from '../support/colors';
 
 describe('Project', () => {
-  it('new project → inputs show set values; canvas, title, and timeline update on create', () => {
+  it('create project', () => {
     cy.startApp(_4x4EmptySeed);
-    cy.stubConfirm(true);
-
+    
+    // create project with title "My Project" and dimensions 2x2
     cy.get('[data-testid="btn-new-project"]').click();
-
     cy.get('[data-testid="input-project-title"]').clear().type('My Project').blur();
     cy.get('[data-testid="input-project-title"]').should('have.value', 'My Project');
-
     cy.get('[data-testid="input-project-width"]').clear().type('2').blur();
     cy.get('[data-testid="input-project-width"]').should('have.value', '2');
-
     cy.get('[data-testid="input-project-height"]').clear().type('2').blur();
     cy.get('[data-testid="input-project-height"]').should('have.value', '2');
-
+    cy.stubConfirm(true);
     cy.get('[data-testid="btn-create-project"]').click();
 
+    // assert project created with correct title, dimensions, and default layer
     cy.get('[data-testid="btn-create-project"]').should('not.exist');
+    cy.contains('h3', 'My Project').should('exist');
+    cy.assertTimelineCelsAndVisiblePixels(
+      [[[[t, t], [t, t]]]],
+      { activeFrameIdx: 0, activeLayerIdx: 0 },
+      ['Layer 1']
+    );
+
+    // create project resets undo history — Ctrl+Z has no effect
+    cy.undo();
+    cy.contains('h3', 'My Project').should('exist');
+
+    // after page reload new project is still there
+    cy.visit("/index.html");
     cy.contains('h3', 'My Project').should('exist');
     cy.assertTimelineCelsAndVisiblePixels(
       [[[[t, t], [t, t]]]],
@@ -56,14 +67,15 @@ describe('Project', () => {
     it('load from file → restores project name, pixels, and timeline', () => {
       cy.exec(`rm -f "cypress/downloads/${_4x4EmptySeed.sprite.title}.json"`, { failOnNonZeroExit: false });
       cy.startApp(_4x4EmptySeed);
+
       cy.get('[data-testid="btn-save-as-file"]').click();
 
-      cy.readFile(`rm -f "cypress/downloads/${_4x4EmptySeed.sprite.title}.json"`, { timeout: 10000 }).then((fileContent) => {
+      cy.readFile(`cypress/downloads/${_4x4EmptySeed.sprite.title}.json`, { timeout: 10000 }).then((content) => {
         cy.startApp(twoFramesTwoLayersSeed);
         cy.stubConfirm(true);
 
         cy.get('[data-testid="input-load-from-file"]').selectFile({
-          contents: Cypress.Buffer.from(JSON.stringify(fileContent)),
+          contents: Cypress.Buffer.from(JSON.stringify(content)),
           fileName: `${_4x4EmptySeed.sprite.title}.json`,
           mimeType: 'application/json'
         }, { force: true });
@@ -79,23 +91,6 @@ describe('Project', () => {
         );
       });
     });
-  });
-
-  it('create project clears history — undo after create has no effect', () => {
-    cy.startApp(_4x4EmptySeed);
-    cy.stubConfirm(true);
-
-    cy.get('[data-testid="btn-new-project"]').click();
-    cy.get('[data-testid="input-project-title"]').clear().type('NewProject');
-    cy.get('[data-testid="input-project-width"]').clear().type('3').blur();
-    cy.get('[data-testid="input-project-height"]').clear().type('3').blur();
-    cy.get('[data-testid="btn-create-project"]').click();
-    cy.contains('h3', 'NewProject').should('exist');
-
-    // create project resets undo history — Ctrl+Z has no effect
-    cy.undo();
-    cy.contains('h3', 'NewProject').should('exist');
-    cy.assertTimelineLabels(1, ['Layer 1']);
   });
 
   describe('Edit title', () => {

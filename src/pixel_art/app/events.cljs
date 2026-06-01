@@ -79,12 +79,18 @@
      {:db initial-db
       :fx [[:dispatch [::rp/add-keyboard-event-listener "keydown"]]
            dispatch-set-keydown-rules
-           [:dispatch-interval {:dispatch [::project-save-load/save-backup-if-need]
+           [:dispatch-interval {:dispatch [::project-save-load/save-backup "Auto-backup"]
                                 :id :backup
-                                :ms project-config/auto-backup-in-ms ;; 1 min
+                                :ms project-config/auto-backup-in-ms
                                 }]
            [::show-warning-when-leave-with-unsaved-changes]
            [::register-global-interceptors]]})))
+
+(re-frame/reg-event-fx
+ :create-project
+ (fn [_ [_ project]]
+   {:fx [[:dispatch [:initialize-db project]]
+         [:dispatch [::project-save-load/save-backup]]]}))
 
 (re-frame/reg-fx
  ::register-global-interceptors

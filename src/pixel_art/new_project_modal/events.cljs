@@ -3,16 +3,6 @@
             [pixel-art.project-config :as project-config]
             [re-frame.core :as re-frame]))
 
-(re-frame/reg-fx
- ::load-example-project
- (fn []
-   (.. (get-example-project+)
-       (then (fn [project]
-               (re-frame/dispatch [:initialize-db project])))
-       (catch (fn [_]
-                (re-frame/dispatch [:show-notification {:type "error"
-                                                        :message "Failed to load example project"}]))))))
-
 (defn init []
   {:opened false
    :settings {:title "Untitled" :size {:width 100 :height 100}}})
@@ -42,13 +32,23 @@
 (re-frame/reg-event-fx
  ::create-example-project
  (fn []
-   {:fx [[::load-example-project]]}))
+   {:fx [[::create-example-project]]}))
 
 (re-frame/reg-event-fx
  ::create
  (fn [{:keys [db]}]
    (let [settings (-> db :new-project-modal :settings)]
      {:fx [[:dispatch
-            [:initialize-db
+            [:create-project
              (assoc project-config/default-palettes-and-current-colors
                     :sprite (project-config/create-empty-sprite (:title settings) (:size settings)))]]]})))
+
+(re-frame/reg-fx
+ ::create-example-project
+ (fn []
+   (.. (get-example-project+)
+       (then (fn [project]
+               (re-frame/dispatch [:create-project project])))
+       (catch (fn [_]
+                (re-frame/dispatch [:show-notification {:type "error"
+                                                        :message "Failed to create example project"}]))))))
