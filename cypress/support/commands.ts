@@ -19,6 +19,7 @@ declare global {
       stubConfirm(returnValue: boolean): Chainable<void>;
       assertCelPreview(frameIdx: number, layerIdx: number, expectedPixels: string[][], assertMessage?: string): Chainable<void>;
       assertResizePreviewPixels(frameIdx: number, pixels: string[][], assertMessage?: string): Chainable<void>;
+      assertSpritePreviewPixels(pixels: string[][], assertMessage?: string): Chainable<void>;
       assertDownloadedPngPixels(filePath: string, pixels: string[][], assertMessage?: string): Chainable<void>;
       assertTimelineCelsAndVisiblePixels(cels: string[][][][], active: { activeFrameIdx: number; activeLayerIdx: number }, layerNames: string[]): Chainable<void>;
       assertTimelineLabels(frameCount: number, layerNames: string[]): Chainable<void>;
@@ -178,6 +179,15 @@ Cypress.Commands.add('assertResizePreviewPixels', (frameIdx: number, expectedPix
     assertMessage
   );
   Cypress.log({ name: 'assertResizePreviewPixels', message: assertMessage || `frame-${frameIdx}` });
+});
+
+Cypress.Commands.add('assertSpritePreviewPixels', (expectedPixels: string[][], assertMessage?: string) => {
+  assertImgPixels(
+    cy.get('[data-testid="sprite-preview"]', { log: false }).find('img', { log: false }),
+    expectedPixels,
+    assertMessage
+  );
+  Cypress.log({ name: 'assertSpritePreviewPixels', message: assertMessage || 'sprite-preview' });
 });
 
 Cypress.Commands.add('assertDownloadedPngPixels', (filePath: string, expectedPixels: string[][], assertMessage?: string) => {

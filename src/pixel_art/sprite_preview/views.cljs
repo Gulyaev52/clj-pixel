@@ -23,7 +23,8 @@
                                                                            (when (= (.. e -code) "Escape")
                                                                              (re-frame/dispatch [::events/close]))))))
                            (array))]
-    [:div {:class (css {:position "fixed"
+    [:div {:data-testid "sprite-preview"
+           :class (css {:position "fixed"
                        :display "flex"
                        :z-index 1000
                        :align-items "center"

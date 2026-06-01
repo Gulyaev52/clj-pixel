@@ -143,4 +143,5 @@
       [:<>
        [sprite-preview-modal]
        [:div {:class (css {:margin-top "auto"})}
-        [button {:on-click (fn [] (re-frame/dispatch [::sprite-preview.events/open]))} "Show preview"]]]]]))
+        [button {:on-click (fn [] (re-frame/dispatch [::sprite-preview.events/open]))
+                 :data-testid "btn-show-preview"} "Show preview"]]]]]))
