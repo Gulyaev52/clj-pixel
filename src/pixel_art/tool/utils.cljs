@@ -74,9 +74,9 @@
 
             visual-effects (get-empty-visual-effects db)
             current-cel (get-current-cel db)]
-        (doseq [pos points]
-          (let [color (color/get-highlight-color (cel/get-pixel pos current-cel))]
-            (aset visual-effects (geometry/pos->idx (aget pos 0) (aget pos 1) size) color)))
+        (doseq [[x y] points]
+          (let [color (color/get-highlight-color (cel/get-pixel x y current-cel))]
+            (aset visual-effects (geometry/pos->idx x y size) color)))
         {:db (-> (or (:db handler-res) db)
                  (assoc :visual-effects visual-effects))}))
     :mouse-down

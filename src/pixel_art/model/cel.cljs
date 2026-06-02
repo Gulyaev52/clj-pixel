@@ -18,6 +18,7 @@
     (. arr (fill color/transparent-color-int))))
 
 (defn pos->idx
+  "the 3 arity version is for performance reasons, to avoid creating a pos object"
   ([pos width]
    (+ (:x pos) (* width (:y pos))))
   ([x y width]
@@ -73,10 +74,11 @@
   (merge-cels below-cel above-cel))
 
 (defn get-pixel
+  "the 3 arity version is for performance reasons, to avoid creating a pos object"
   ([pos cel]
    (let [{:keys [pixels size]} cel]
      (nth pixels (pos->idx pos (:width size)) color/transparent-color-int)))
-  ([x y cel]
+  ([x y cel] 
    (let [{:keys [pixels size]} cel]
      (nth pixels (pos->idx x y (:width size)) color/transparent-color-int))))
 

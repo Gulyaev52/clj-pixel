@@ -22,8 +22,8 @@
 
 (def transparent-color-int (int 0 0 0 0))
 
-(def highlight-dark-color (int 0 0 0 0.1))
-(def highlight-light-color (int 255 255 255 0.2))
+(def highlight-dark-color (int 0 0 0 0.3))
+(def highlight-light-color (int 255 255 255 0.4))
 
 (defn get-highlight-color [color]
   (let [res (color-js/getBrightness color)]
