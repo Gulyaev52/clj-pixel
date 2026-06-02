@@ -1,6 +1,5 @@
 (ns let-script
   (:require ["vscode" :as vscode]
-            ["ext://betterthantomorrow.calva$v0" :as calva]
             [clojure.walk]
             [clojure.string]
             [promesa.core :as p]

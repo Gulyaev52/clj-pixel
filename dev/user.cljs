@@ -8,4 +8,5 @@
    [clojure.string :as str]))
 
 (comment
-  (pprint (str/trim "This line suppresses some clj-kondo warnings.")))
+  (pprint
+   (str/trim "This line suppresses some clj-kondo warnings.")))
