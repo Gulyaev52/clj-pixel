@@ -197,10 +197,12 @@ const Sketch = /*#__PURE__*/React.forwardRef((props, ref) => {
         style: {
           marginLeft: 6
         },
-        rProps: { 'data-testid': 'color-picker-r-input' },
-        gProps: { 'data-testid': 'color-picker-g-input' },
-        bProps: { 'data-testid': 'color-picker-b-input' },
-        aProps: !disableAlpha ? {} : false,
+        // Quote these keys so Closure :advanced doesn't rename them — the external
+        // @uiw RGBA component reads props.rProps/gProps/bProps by literal name.
+        'rProps': { 'data-testid': 'color-picker-r-input' },
+        'gProps': { 'data-testid': 'color-picker-g-input' },
+        'bProps': { 'data-testid': 'color-picker-b-input' },
+        'aProps': !disableAlpha ? {} : false,
         onChange: result => handleChange(result.hsva)
       })]
     }), presetColors && presetColors.length > 0 && /*#__PURE__*/_jsx(Swatch, {
