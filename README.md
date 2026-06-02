@@ -22,7 +22,7 @@ Play with it here
 - **Line** — with optional straight (axis/45°) constraint.
 - **Rectangle** and **Circle** — with fill and keep-ratio options.
 - **Shading** — lighten/darken with an adjustable amount.
-- **Rectangle selection** `s` and **Shape selection** — move, copy/paste, cut and
+- **Rectangle selection** and **Shape selection** — move, copy/paste, cut and
   delete pixel regions.
 
 ### Colors & palettes
@@ -56,8 +56,7 @@ Play with it here
   [Reagent](https://github.com/reagent-project/reagent) →
   [React](https://reactjs.org/)
 - **Components:** [Ant Design](https://ant.design/) v5
-- **Drag & drop:** [react-dnd](https://github.com/react-dnd/react-dnd),
-  [@dnd-kit](https://dndkit.com/)
+- **Drag & drop:** [react-dnd](https://github.com/react-dnd/react-dnd)
 - **Build / dev tooling:** [shadow-cljs](https://github.com/thheller/shadow-cljs),
   [shadow-css](https://github.com/thheller/shadow-css)
 - **E2E tests:** [Cypress](https://www.cypress.io/) 15 (TypeScript)
