@@ -18,4 +18,4 @@
                               :label "Pixel size"
                               :initial-value 1
                               :min 1
-                              :max 64}))
+                              :max 20}))

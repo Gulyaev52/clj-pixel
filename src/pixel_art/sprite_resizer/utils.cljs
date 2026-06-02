@@ -1,7 +1,6 @@
 (ns pixel-art.sprite-resizer.utils
   (:require
    [pixel-art.model.cel :as cel]
-   [pixel-art.model.color :as color]
    [pixel-art.model.sprite-canvas :as sprite-canvas]
    [pixel-art.utils.canvas :as canvas]
    [pixel-art.utils.coll :as coll]))
@@ -27,22 +26,36 @@
             (assoc cel
                    :size target-size
                    :pixels (canvas/canvas->pixels canvas target-size)))))
-    (let [cel-size (:size cel)
-          translated-pixels-map
-          (cel/map-pixels (fn [pos color]
-                            (when (not= color color/transparent-color-int)
-                              [{:x (translate-x (:x pos) (:width cel-size) (:width target-size) (:x anchor))
-                                :y (translate-y (:y pos) (:height cel-size) (:height target-size) (:y anchor))}
-                               color]))
-                          cel)
-          new-pixels (->> (cel/create-pixels-coll target-size)
-                          (cel/update-pixels-coll translated-pixels-map target-size))]
+    ;; resize-content=false is a pure translation/crop: every pixel moves by the
+    ;; same offset (dx, dy) = (translate-x 0 ...), (translate-y 0 ...). So we copy
+    ;; the overlapping rectangle row-by-row with native Uint32Array set/subarray —
+    ;; no per-pixel maps, no intermediate seq (fast on 512x512).
+    (let [{source-width :width source-height :height} (:size cel)
+          {target-width :width target-height :height} target-size
+          dx (translate-x 0 source-width target-width (:x anchor))
+          dy (translate-y 0 source-height target-height (:y anchor))
+          ^js src (:pixels cel)
+          ^js dst (cel/create-pixels-coll target-size)
+          x-start (max 0 (- dx))                ;; source columns that land in [0, tw)
+          x-end   (min source-width (- target-width dx))
+          cols    (- x-end x-start)
+          y-start (max 0 (- dy))                ;; source rows that land in [0, th)
+          y-end   (min source-height (- target-height dy))]
+      (when (and (pos? cols) (< y-start y-end))
+        (loop [y y-start]
+          (when (< y y-end)
+            (let [src-off (+ (* y source-width) x-start)
+                  dst-off (+ (* (+ y dy) target-width) (+ x-start dx))]
+              (.set dst (.subarray src src-off (+ src-off cols)) dst-off))
+            (recur (inc y)))))
       (assoc cel
              :size target-size
-             :pixels new-pixels))))
+             :pixels dst))))
 
 (defn resize-sprite [sprite settings]
-  (let [resized-cels (coll/map-matrix #(resize-cel %1 settings) (:cels sprite))]
-    (assoc sprite
-           :cels resized-cels
-           :size (:target-size settings))))
+  (if (not= (:size sprite) (:target-size settings))
+    (let [resized-cels (coll/map-matrix #(resize-cel %1 settings) (:cels sprite))]
+      (assoc sprite
+             :cels resized-cels
+             :size (:target-size settings)))
+    sprite))
