@@ -10,6 +10,11 @@
 /.nrepl-port
 
 /cypress/downloads/
+/cypress/videos/
+/cypress/screenshots/
+
+# Generated demo screencast (uploaded to GitHub, not committed — see README)
+/demo-out/
 
 # Node.js dependencies
 /node_modules/

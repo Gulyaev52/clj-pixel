@@ -5,8 +5,14 @@ A browser-based **pixel-art and sprite-animation editor** built with ClojureScri
 work with layers, animate it frame by frame, and export the result as a PNG or an animated
 GIF — all in the browser, with your work saved automatically.
 
-<!-- TODO: add a screenshot at docs/screenshot.png and embed it here:
-![Pixel Art editor](docs/screenshot.png) -->
+<!--
+  Demo screencast. To (re)generate: `bash scripts/record-demo.sh` → demo-out/pixel-art-demo.mp4
+  (the MP4 is not committed). Then upload it to GitHub — drag the file into a new issue/PR
+  comment or a release — copy the resulting https://github.com/user-attachments/assets/… URL,
+  and paste it into the src below. GitHub renders that URL as an inline video player.
+-->
+<video src="https://github.com/user-attachments/assets/REPLACE-AFTER-UPLOAD"
+       controls muted loop width="100%"></video>
 
 ## Features
 

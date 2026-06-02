@@ -211,7 +211,7 @@
                                     (on-blur curr-value))}]))
 
 (defn modal [props & children]
-  (let [{:keys [on-cancel cancel-text on-ok ok-text ok-disabled hide-footer title additional-buttons ok-data-testid]} props]
+  (let [{:keys [on-cancel cancel-text on-ok ok-text ok-disabled hide-footer title additional-buttons ok-data-testid cancel-data-testid]} props]
     (into
      [:> antd/Modal (merge
                      {:title title
@@ -226,6 +226,7 @@
                       :okText ok-text
                       :okButtonProps (cond-> {:disabled ok-disabled}
                                        ok-data-testid (assoc :data-testid ok-data-testid))
+                      :cancelButtonProps :btn-cancel-modal
                       :onCancel on-cancel
                       :cancelText cancel-text
                       :footer (fn [_ props]
@@ -246,7 +247,7 @@
               :accept accept
               :data-testid data-testid
               :ref (fn [ref] (reset! !input-ref ref))
-              :class (css {:display "none"})
+              :style {:display "none"}
               :on-change (fn [e]
                            (let [files (.. e -target -files)]
                              (when-first [file files]

@@ -80,9 +80,6 @@
 .pixel_art_views_ui_kit__L36_C21 {
   margin-top: 0;
 }
-.pixel_art_views_ui_kit__L45_C51 {
-  width: 100%;
-}
 .pixel_art_views_ui_kit__L48_C17 {
   align-items: center;
   display: grid;
@@ -186,17 +183,14 @@
 .pixel_art_views_ui_kit__L186_C51 {
   width: 100%;
 }
-.pixel_art_views_ui_kit__L233_C54 {
+.pixel_art_views_ui_kit__L234_C54 {
   display: flex;
   gap: 6px;
 }
-.pixel_art_views_ui_kit__L235_C62 {
+.pixel_art_views_ui_kit__L236_C62 {
   display: flex;
   gap: 6px;
   margin-right: auto;
-}
-.pixel_art_views_ui_kit__L249_C22 {
-  display: none;
 }
 .pixel_art_app_view_header__L42_C20 {
   min-width: 0;
@@ -332,7 +326,7 @@
 .pixel_art_views_preview__L64_C23 {
   padding: 5px;
 }
-.pixel_art_sprite_preview_views__L26_C19 {
+.pixel_art_sprite_preview_views__L27_C19 {
   align-items: center;
   background-color: rgba(37, 37, 37, 0.9);
   bottom: 0;
