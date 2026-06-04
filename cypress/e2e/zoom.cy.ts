@@ -38,14 +38,14 @@ describe('zoom', () => {
   it('scroll wheel zooms in/out; scale clamped at max=80; canvas size reflects scale', () => {
     cy.startApp(diagonalSeed); // 4×4 → initial scale = 80 (max)
 
-    // --- max boundary: zoom in при scale=80 не превышает 80 ---
+    // max boundary: zoom in при scale=80 не превышает 80
     triggerZoom(-300);
     triggerZoom(-300);
     triggerZoom(-300);
     cy.get('[data-testid="drawing-info-scale"]')
       .should('have.text', 'scale=80.00', 'max boundary: scale stays at 80');
 
-    // --- drawing-info scale == canvas-layers.width / sprite_width ---
+    // drawing-info scale == canvas-layers.width / sprite_width
     cy.get('[data-testid="drawing-info-scale"]').then(($s) => {
       const displayedScale = parseFloat($s.text().replace('scale=', ''));
       cy.get('[data-testid="canvas-layers"]').then(($el) => {
@@ -55,7 +55,7 @@ describe('zoom', () => {
       });
     });
 
-    // --- zoom out до ≈40 ---
+    // zoom out до ≈40
     zoomToScale(37.32, 'out');
     cy.get('[data-testid="drawing-info-scale"]').should(($s) => {
       expect(parseFloat($s.text().replace('scale=', '')), 'scale ≤ 37.32 after zoom out')
@@ -68,7 +68,7 @@ describe('zoom', () => {
 
     screenshotCanvas('zoom-at-scale-37.32');
 
-    // --- zoom in обратно до max 80 ---
+    // zoom in обратно до max 80
     zoomToScale(80, 'in');
     cy.get('[data-testid="drawing-info-scale"]')
       .should('have.text', 'scale=80.00', 'scale restored to max 80');

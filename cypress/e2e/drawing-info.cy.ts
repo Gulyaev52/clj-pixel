@@ -2,12 +2,12 @@ import { _4x4EmptySeed } from '../support/data';
 
 describe('drawing-info', () => {
   it('shows sprite size, mouse pos, and scale', () => {
-    // --- sprite size ---
+    // sprite size
     cy.startApp(_4x4EmptySeed);
     cy.get('[data-testid="drawing-info-sprite-size"]')
       .should('have.text', '[4x4]', 'sprite size for 4x4 seed');
 
-    // --- mouse pos ---
+    // mouse pos
     cy.startApp(_4x4EmptySeed);
     cy.mouseMoveOnCanvas({x: 0, y: 0});
     cy.get('[data-testid="drawing-info-mouse-pos"]')
@@ -16,7 +16,7 @@ describe('drawing-info', () => {
     cy.get('[data-testid="drawing-info-mouse-pos"]')
       .should('have.text', '2:3', 'mouse pos at (2,3)');
 
-    // --- scale ---
+    // scale
     cy.get('[data-testid="drawing-info-scale"]')
       .invoke('text')
       .should('match', /^scale=\d+\.\d{2}$/, 'scale format');
